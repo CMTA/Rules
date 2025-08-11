@@ -1,0 +1,3 @@
+CMTAT/=lib/CMTAT/contracts/
+RuleEngine/=lib/RuleEngine/src/
+OZ/=lib/openzeppelin-contracts/contracts/
