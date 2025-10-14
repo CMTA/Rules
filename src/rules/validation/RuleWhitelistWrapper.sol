@@ -3,16 +3,17 @@
 pragma solidity ^0.8.20;
 
 import "OZ/access/AccessControl.sol";
-import "RuleEngine/modules/RuleEngineValidationCommon.sol";
 import "../../modules/MetaTxModuleStandalone.sol";
 import "./abstract/RuleAddressList/RuleAddressList.sol";
 import "./abstract/RuleWhitelistCommon.sol";
-
+import {RulesManagementModule} from "RuleEngine/modules/RulesManagementModule.sol";
+import {RuleEngineInvariantStorage} from "RuleEngine/modules/library/RuleEngineInvariantStorage.sol";
+import {IRule} from "RuleEngine/interfaces/IRule.sol";
 /**
  * @title Wrapper to call several different whitelist rules
  */
 contract RuleWhitelistWrapper is
-    RuleEngineValidationCommon,
+    RulesManagementModule,
     MetaTxModuleStandalone,
     RuleWhitelistCommon
 {
@@ -25,7 +26,7 @@ contract RuleWhitelistWrapper is
         address forwarderIrrevocable
     ) MetaTxModuleStandalone(forwarderIrrevocable) {
         if (admin == address(0)) {
-            revert RuleEngine_AdminWithAddressZeroNotAllowed();
+            revert RuleEngineInvariantStorage.RuleEngine_AdminWithAddressZeroNotAllowed();
         }
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
     }
@@ -46,11 +47,11 @@ contract RuleWhitelistWrapper is
         bool[] memory result = new bool[](2);
         targetAddress[0] = from;
         targetAddress[1] = to;
-        uint256 rulesLength = _rulesValidation.length;
+        uint256 rulesLength = rulesCount();
         // For each whitelist rule, we ask if from or to are in the whitelist
         for (uint256 i = 0; i < rulesLength; ++i) {
             // External call
-            isListed = RuleAddressList(_rulesValidation[i])
+            isListed = RuleAddressList(rule(i))
                 .addressIsListedBatch(targetAddress);
             if (isListed[0] && !result[0]) {
                 // Update if from is in the list
@@ -85,11 +86,11 @@ contract RuleWhitelistWrapper is
         targetAddress[0] = from;
         targetAddress[1] = to;
         targetAddress[2] = spender;
-        uint256 rulesLength = _rulesValidation.length;
+        uint256 rulesLength = rulesCount();
         // For each whitelist rule, we ask if from or to are in the whitelist
         for (uint256 i = 0; i < rulesLength; ++i) {
             // External call
-            isListed = RuleAddressList(_rulesValidation[i])
+            isListed = RuleAddressList(rule(i))
                 .addressIsListedBatch(targetAddress);
             if (isListed[0] && !result[0]) {
                 // Update if from is in the list
@@ -129,8 +130,10 @@ contract RuleWhitelistWrapper is
         // The Default Admin has all roles
         if (AccessControl.hasRole(DEFAULT_ADMIN_ROLE, account)) {
             return true;
+        } else {
+            return AccessControl.hasRole(role, account);
         }
-        return AccessControl.hasRole(role, account);
+   
     }
 
     /*//////////////////////////////////////////////////////////////

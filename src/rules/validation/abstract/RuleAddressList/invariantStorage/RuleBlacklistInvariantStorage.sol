@@ -5,6 +5,12 @@ pragma solidity ^0.8.20;
 import "../../RuleCommonInvariantStorage.sol";
 
 abstract contract RuleBlacklistInvariantStorage is RuleCommonInvariantStorage {
+        error RuleBlacklist_InvalidTransfer(
+        address from,
+        address to,
+        uint256 value,
+        uint8 code
+    );
     /* ============ String message ============ */
     string constant TEXT_ADDRESS_FROM_IS_BLACKLISTED =
         "The sender is blacklisted";

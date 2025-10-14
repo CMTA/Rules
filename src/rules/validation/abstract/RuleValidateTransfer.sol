@@ -2,9 +2,13 @@
 
 pragma solidity ^0.8.20;
 
-import {IRuleValidation} from "RuleEngine/interfaces/IRuleValidation.sol";
-import {IERC1404} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
-abstract contract RuleValidateTransfer is IRuleValidation {
+import {IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
+import {IERC3643ComplianceRead} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
+import {IERC7551Compliance} from "CMTAT/interfaces/tokenization/draft-IERC7551.sol";
+import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
+import {IRule} from "RuleEngine/interfaces/IRule.sol";
+
+abstract contract RuleValidateTransfer is IERC3643ComplianceRead, IERC7551Compliance,IRule {
     /**
      * @notice Validate a transfer
      * @param _from the origin address
@@ -16,11 +20,11 @@ abstract contract RuleValidateTransfer is IRuleValidation {
         address _from,
         address _to,
         uint256 _amount
-    ) public view override returns (bool isValid) {
+    ) public view override(IERC3643ComplianceRead) returns (bool isValid) {
         // does not work without `this` keyword => "Undeclared identifier"
         return
             this.detectTransferRestriction(_from, _to, _amount) ==
-            uint8(REJECTED_CODE_BASE.TRANSFER_OK);
+            uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
     }
 
     function canTransferFrom(
@@ -28,8 +32,8 @@ abstract contract RuleValidateTransfer is IRuleValidation {
         address from,
         address to,
         uint256 value
-    ) public view virtual override returns (bool) {
+    ) public view virtual override(IERC7551Compliance) returns (bool) {
         return this.detectTransferRestrictionFrom(spender, from, to, value)  ==
-            uint8(REJECTED_CODE_BASE.TRANSFER_OK);
+            uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
     }
 }

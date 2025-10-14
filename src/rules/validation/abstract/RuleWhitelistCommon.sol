@@ -5,10 +5,12 @@ pragma solidity ^0.8.20;
 import "./RuleAddressList/invariantStorage/RuleWhitelistInvariantStorage.sol";
 import "./RuleValidateTransfer.sol";
 
+
 abstract contract RuleWhitelistCommon is
     RuleValidateTransfer,
     RuleWhitelistInvariantStorage
 {
+
     /**
      * @notice To know if the restriction code is valid for this rule or not
      * @param _restrictionCode The target restriction code
@@ -40,5 +42,26 @@ abstract contract RuleWhitelistCommon is
         } else {
             return TEXT_CODE_NOT_FOUND;
         }
+    }
+
+    function transferred(address from, address to, uint256 value) public view {
+        uint8 code = this.detectTransferRestriction(from, to, value);
+        require(
+            code == uint8(REJECTED_CODE_BASE.TRANSFER_OK),
+            RuleWhitelist_InvalidTransfer(from, to, value, code)
+        );
+    }
+
+    function transferred(
+        address spender,
+        address from,
+        address to,
+        uint256 value
+    ) public view {
+        uint8 code = this.detectTransferRestrictionFrom(spender, from, to, value);
+        require(
+            code == uint8(REJECTED_CODE_BASE.TRANSFER_OK),
+            RuleWhitelist_InvalidTransfer(from, to, value, code)
+        );
     }
 }

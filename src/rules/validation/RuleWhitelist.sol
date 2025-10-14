@@ -5,6 +5,8 @@ pragma solidity ^0.8.20;
 import "./abstract/RuleAddressList/RuleAddressList.sol";
 import "./abstract/RuleWhitelistCommon.sol";
 
+import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
+
 /**
  * @title a whitelist manager
  */
@@ -17,6 +19,8 @@ contract RuleWhitelist is RuleAddressList, RuleWhitelistCommon {
         address admin,
         address forwarderIrrevocable
     ) RuleAddressList(admin, forwarderIrrevocable) {}
+
+
 
     /**
      * @notice Check if an addres is in the whitelist or not
@@ -44,10 +48,12 @@ contract RuleWhitelist is RuleAddressList, RuleWhitelistCommon {
         address to,
         uint256 value
     ) public view override returns (uint8) {
-        if (addressIsListed(spender)) {
+        if (!addressIsListed(spender)) {
             return CODE_ADDRESS_SPENDER_NOT_WHITELISTED;
         } else {
-            return detectTransferRestriction(from,to,value);
+            return detectTransferRestriction(from, to, value);
         }
     }
+
+
 }

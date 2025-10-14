@@ -5,7 +5,7 @@ pragma solidity ^0.8.20;
 import "./abstract/RuleAddressList/invariantStorage/RuleBlacklistInvariantStorage.sol";
 import "./abstract/RuleAddressList/RuleAddressList.sol";
 import "./abstract/RuleValidateTransfer.sol";
-
+//import {IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 /**
  * @title a blacklist manager
  */
@@ -15,6 +15,7 @@ contract RuleBlacklist is
     RuleAddressList,
     RuleBlacklistInvariantStorage
 {
+
     /**
      * @param admin Address of the contract (Access Control)
      * @param forwarderIrrevocable Address of the forwarder, required for the gasless support
@@ -40,7 +41,7 @@ contract RuleBlacklist is
         } else if (addressIsListed(to)) {
             return CODE_ADDRESS_TO_IS_BLACKLISTED;
         } else {
-            return uint8(REJECTED_CODE_BASE.TRANSFER_OK);
+            return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
         }
     }
 
@@ -90,5 +91,26 @@ contract RuleBlacklist is
         else {
             return TEXT_CODE_NOT_FOUND;
         }
+    }
+
+    function transferred(address from, address to, uint256 value) public view {
+        uint8 code = this.detectTransferRestriction(from, to, value);
+        require(
+            code == uint8(REJECTED_CODE_BASE.TRANSFER_OK),
+            RuleBlacklist_InvalidTransfer(from, to, value, code)
+        );
+    }
+
+    function transferred(
+        address spender,
+        address from,
+        address to,
+        uint256 value
+    ) public view {
+        uint8 code = this.detectTransferRestrictionFrom(spender, from, to, value);
+        require(
+            code == uint8(REJECTED_CODE_BASE.TRANSFER_OK),
+            RuleBlacklist_InvalidTransfer(from, to, value, code)
+        );
     }
 }

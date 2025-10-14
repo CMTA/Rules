@@ -7,6 +7,12 @@ import "./RuleCommonInvariantStorage.sol";
 abstract contract RuleSanctionlistInvariantStorage is
     RuleCommonInvariantStorage
 {
+    error RuleSanctionsList_InvalidTransfer(
+        address from,
+        address to,
+        uint256 value,
+        uint8 code
+    );
     /* ============ Event ============ */
     event SetSanctionListOracle(address newOracle);
     /* ============ Custom errors ============ */

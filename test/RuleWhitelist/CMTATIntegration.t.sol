@@ -31,7 +31,7 @@ contract CMTATIntegration is Test, HelperContract {
             address(CMTAT_CONTRACT)
         );
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock.addRuleValidation(ruleWhitelist);
+        ruleEngineMock.addRule(ruleWhitelist);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         CMTAT_CONTRACT.mint(ADDRESS1, ADDRESS1_BALANCE_INIT);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
@@ -49,10 +49,11 @@ contract CMTATIntegration is Test, HelperContract {
         vm.prank(ADDRESS1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                RuleEngine_InvalidTransfer.selector,
+                RuleWhitelist_InvalidTransfer.selector,
                 ADDRESS1,
                 ADDRESS2,
-                21
+                21,
+                CODE_ADDRESS_FROM_NOT_WHITELISTED
             )
         );
         // Act
@@ -68,10 +69,11 @@ contract CMTATIntegration is Test, HelperContract {
         vm.prank(ADDRESS1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                RuleEngine_InvalidTransfer.selector,
+                RuleWhitelist_InvalidTransfer.selector,
                 ADDRESS1,
                 ADDRESS2,
-                amount
+                amount,
+                CODE_ADDRESS_FROM_NOT_WHITELISTED
             )
         );
         // Act
@@ -87,10 +89,11 @@ contract CMTATIntegration is Test, HelperContract {
         vm.prank(ADDRESS1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                RuleEngine_InvalidTransfer.selector,
+                RuleWhitelist_InvalidTransfer.selector,
                 ADDRESS1,
                 ADDRESS2,
-                amount
+                amount,
+                CODE_ADDRESS_TO_NOT_WHITELISTED
             )
         );
         // Act

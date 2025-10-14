@@ -6,11 +6,9 @@ import "CMTAT/deployment/CMTATStandalone.sol";
 import "CMTAT/libraries/Errors.sol";
 
 // RuleEngine
-import {RuleEngineInvariantStorage} from "RuleEngine/modules/RuleEngineInvariantStorage.sol";
+import {RuleEngineInvariantStorage} from "RuleEngine/modules/library/RuleEngineInvariantStorage.sol";
 import {RuleEngine} from "RuleEngine/RuleEngine.sol";
-// RuleConditionalTransfer
-import {RuleConditionalTransferInvariantStorage} from "src/rules/operation/abstract/RuleConditionalTransferInvariantStorage.sol";
-import {RuleConditionalTransfer} from "src/rules/operation/RuleConditionalTransfer.sol";
+
 // RuleSanctionList
 import {RuleSanctionList} from "src/rules/validation/RuleSanctionList.sol";
 // RUleBlackList
@@ -24,11 +22,9 @@ import {RuleAddressListInvariantStorage} from "src/rules/validation/abstract/Rul
 
 import {RuleSanctionlistInvariantStorage}from "src/rules/validation/abstract/RuleSanctionListInvariantStorage.sol";
 // Rule interface
-import {IRuleValidation} from "RuleEngine/interfaces/IRuleValidation.sol";
-import {IRuleOperation} from "RuleEngine/interfaces/IRuleOperation.sol";
 
 // utils
-import "./utils/CMTATDeployment.sol";
+import "RuleEngine/../test/utils/CMTATDeployment.sol";
 
 /**
  * @title Constants used by the tests
@@ -38,8 +34,7 @@ abstract contract HelperContract is
     RuleBlacklistInvariantStorage,
     RuleAddressListInvariantStorage,
     RuleSanctionlistInvariantStorage,
-    RuleEngineInvariantStorage,
-    RuleConditionalTransferInvariantStorage
+    RuleEngineInvariantStorage
 {
     // Test result
     uint256 internal resUint256;
@@ -71,7 +66,6 @@ abstract contract HelperContract is
     // contract
     RuleBlacklist public ruleBlacklist;
     RuleWhitelist public ruleWhitelist;
-    RuleConditionalTransfer public ruleConditionalTransfer;
 
     // CMTAT
     CMTATDeployment cmtatDeployment;

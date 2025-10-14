@@ -33,7 +33,7 @@ contract CMTATIntegration is Test, HelperContract {
             address(CMTAT_CONTRACT)
         );
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock.addRuleValidation(ruleBlacklist);
+        ruleEngineMock.addRule(ruleBlacklist);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         CMTAT_CONTRACT.mint(ADDRESS1, ADDRESS1_BALANCE_INIT);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
@@ -47,10 +47,6 @@ contract CMTATIntegration is Test, HelperContract {
 
     /******* Transfer *******/
     function testCanTransferIfAddressNotBlacklisted() public {
-        // Arrange
-        /*vm.prank(ADDRESS1);
-        vm.expectRevert(
-        abi.encodeWithSelector(RuleEngine_InvalidTransfer.selector, ADDRESS1, ADDRESS2, 21));   */
         // Act
         vm.prank(ADDRESS1);
         CMTAT_CONTRACT.transfer(ADDRESS2, 21);
@@ -65,10 +61,11 @@ contract CMTATIntegration is Test, HelperContract {
         vm.prank(ADDRESS1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                RuleEngine_InvalidTransfer.selector,
+                RuleBlacklist_InvalidTransfer.selector,
                 ADDRESS1,
                 ADDRESS2,
-                amount
+                amount,
+                CODE_ADDRESS_TO_IS_BLACKLISTED
             )
         );
         // Act
@@ -84,10 +81,11 @@ contract CMTATIntegration is Test, HelperContract {
         vm.prank(ADDRESS1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                RuleEngine_InvalidTransfer.selector,
+                RuleBlacklist_InvalidTransfer.selector,
                 ADDRESS1,
                 ADDRESS2,
-                amount
+                amount,
+                CODE_ADDRESS_FROM_IS_BLACKLISTED
             )
         );
         // Act
@@ -113,10 +111,11 @@ contract CMTATIntegration is Test, HelperContract {
         vm.prank(ADDRESS1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                RuleEngine_InvalidTransfer.selector,
+                RuleBlacklist_InvalidTransfer.selector,
                 ADDRESS1,
                 ADDRESS2,
-                amount
+                amount,
+                CODE_ADDRESS_FROM_IS_BLACKLISTED
             )
         );
         CMTAT_CONTRACT.transfer(ADDRESS2, amount);
@@ -228,22 +227,20 @@ contract CMTATIntegration is Test, HelperContract {
     function testCannotMintIfAddressIsInTheBlacklist() public {
         uint256 amount = 11;
         // Arrange
-        // Add address zero to the blacklist
-        vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleBlacklist.addAddressToTheList(ZERO_ADDRESS);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         ruleBlacklist.addAddressToTheList(ADDRESS1);
         // Arrange - Assert
-        resBool = ruleBlacklist.addressIsListed(ZERO_ADDRESS);
+        resBool = ruleBlacklist.addressIsListed(ADDRESS1);
         assertEq(resBool, true);
 
         // Act
         vm.expectRevert(
             abi.encodeWithSelector(
-                RuleEngine_InvalidTransfer.selector,
+                RuleBlacklist_InvalidTransfer.selector,
                 ZERO_ADDRESS,
                 ADDRESS1,
-                amount
+                amount,
+                CODE_ADDRESS_TO_IS_BLACKLISTED
             )
         );
         vm.prank(DEFAULT_ADMIN_ADDRESS);

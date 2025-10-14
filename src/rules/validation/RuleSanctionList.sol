@@ -7,6 +7,7 @@ import "../../modules/MetaTxModuleStandalone.sol";
 import "./abstract/RuleSanctionListInvariantStorage.sol";
 import "./abstract/RuleValidateTransfer.sol";
 
+
 interface SanctionsList {
     function isSanctioned(address addr) external view returns (bool);
 }
@@ -17,6 +18,7 @@ contract RuleSanctionList is
     RuleValidateTransfer,
     RuleSanctionlistInvariantStorage
 {
+    
     SanctionsList public sanctionsList;
 
     /**
@@ -49,7 +51,7 @@ contract RuleSanctionList is
     }
 
     /**
-     * @notice Check if an addres is in the whitelist or not
+     * @notice Check if an addres is in the SanctionsList or not
      * @param from the origin address
      * @param to the destination address
      * @return The restricion code or REJECTED_CODE_BASE.TRANSFER_OK
@@ -119,6 +121,27 @@ contract RuleSanctionList is
         }
     }
 
+    function transferred(address from, address to, uint256 value) public view {
+        uint8 code = this.detectTransferRestriction(from, to, value);
+        require(
+            code == uint8(REJECTED_CODE_BASE.TRANSFER_OK),
+            RuleSanctionsList_InvalidTransfer(from, to, value, code)
+        );
+    }
+
+    function transferred(
+        address spender,
+        address from,
+        address to,
+        uint256 value
+    ) public view {
+        uint8 code = this.detectTransferRestrictionFrom(spender, from, to, value);
+        require(
+            code == uint8(REJECTED_CODE_BASE.TRANSFER_OK),
+            RuleSanctionsList_InvalidTransfer(from, to, value, code)
+        );
+    }
+
     /* ============ ACCESS CONTROL ============ */
     /**
      * @dev Returns `true` if `account` has been granted `role`.
@@ -130,8 +153,10 @@ contract RuleSanctionList is
         // The Default Admin has all roles
         if (AccessControl.hasRole(DEFAULT_ADMIN_ROLE, account)) {
             return true;
+        } else{
+            return AccessControl.hasRole(role, account);
         }
-        return AccessControl.hasRole(role, account);
+        
     }
 
     /*//////////////////////////////////////////////////////////////
