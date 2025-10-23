@@ -49,33 +49,16 @@ contract RuleWhitelistWrapper is
         uint256 /*value*/
     ) public view override returns (uint8) {
         address[] memory targetAddress = new address[](2);
-        bool[] memory isListed = new bool[](2);
-        bool[] memory result = new bool[](2);
         targetAddress[0] = from;
         targetAddress[1] = to;
-        uint256 rulesLength = rulesCount();
-        // For each whitelist rule, we ask if from or to are in the whitelist
-        for (uint256 i = 0; i < rulesLength; ++i) {
-            // External call
-            isListed = RuleAddressSet(rule(i))
-                .areAddressesListed(targetAddress);
-            if (isListed[0] && !result[0]) {
-                // Update if from is in the list
-                result[0] = true;
-            }
-            if (isListed[1] && !result[1]) {
-                // Update if to is in the list
-                result[1] = true;
-            }
-            if (result[0] && result[1]) {
-                break;
-            }
-        }
-        if (!result[0]) {
+        
+        bool[] memory result = _detectTransferRestriction(targetAddress);
+
+        if (!result[0]){
             return CODE_ADDRESS_FROM_NOT_WHITELISTED;
-        } else if (!result[1]) {
+        } else if (!result[1]){
             return CODE_ADDRESS_TO_NOT_WHITELISTED;
-        } else {
+        } else{
             return uint8(REJECTED_CODE_BASE.TRANSFER_OK);
         }
     }
@@ -86,48 +69,26 @@ contract RuleWhitelistWrapper is
         address to,
         uint256 value
     ) public view override returns (uint8) {
-        if(!_checkSpender){
-            return detectTransferRestriction(from, to, value);
-        } else {
-            address[] memory targetAddress = new address[](3);
-            bool[] memory isListed = new bool[](3);
-            bool[] memory result = new bool[](3);
-            targetAddress[0] = from;
-            targetAddress[1] = to;
-            targetAddress[2] = spender;
-            uint256 rulesLength = rulesCount();
-            // For each whitelist rule, we ask if from or to are in the whitelist
-            for (uint256 i = 0; i < rulesLength; ++i) {
-                // External call
-                isListed = RuleAddressSet(rule(i))
-                    .areAddressesListed(targetAddress);
-                if (isListed[0] && !result[0]) {
-                    // Update if from is in the list
-                    result[0] = true;
-                }
-                if (isListed[1] && !result[1]) {
-                    // Update if to is in the list
-                    result[1] = true;
-                }
-                if (isListed[2] && !result[2]) {
-                    // Update if spender is in the list
-                    result[2] = true;
-                }
-                if (result[0] && result[1] && result[2]) {
-                    break;
-                }
-            }
-            if (!result[0]) {
-                return CODE_ADDRESS_FROM_NOT_WHITELISTED;
-            } else if (!result[1]) {
-                return CODE_ADDRESS_TO_NOT_WHITELISTED;
-            } else if (!result[2]) {
-                return CODE_ADDRESS_SPENDER_NOT_WHITELISTED;
-            } else {
-                return uint8(REJECTED_CODE_BASE.TRANSFER_OK);
-            }
+       if (!_checkSpender) {
+        return detectTransferRestriction(from, to, value);
+    }
+
+        address[] memory targetAddress = new address[](2);
+        targetAddress[0] = from;
+        targetAddress[1] = to;
+        targetAddress[2] = spender;
+
+        bool[] memory result = _detectTransferRestriction(targetAddress);
+
+        if (!result[0]){
+            return CODE_ADDRESS_FROM_NOT_WHITELISTED;
+        } else if (!result[1]){
+            return CODE_ADDRESS_TO_NOT_WHITELISTED;
+        } else if (!result[2]){
+            return  CODE_ADDRESS_SPENDER_NOT_WHITELISTED;
+        } else{
+            return uint8(REJECTED_CODE_BASE.TRANSFER_OK);
         }
-        
     }
 
     /* ============ ACCESS CONTROL ============ */
@@ -146,6 +107,38 @@ contract RuleWhitelistWrapper is
         }
    
     }
+
+    function _detectTransferRestriction(address[] memory targetAddress)
+    internal
+    view
+    returns (bool[] memory)
+{
+    uint256 rulesLength = rulesCount();
+    bool[] memory result = new bool[](targetAddress.length);
+    for (uint256 i = 0; i < rulesLength; ++i) {
+        // Call the whitelist rules
+        bool[] memory isListed = RuleAddressSet(rule(i)).areAddressesListed(targetAddress);
+        for (uint256 j = 0; j < targetAddress.length; ++j) {
+            if (isListed[j]){
+                result[j] = true;
+            } 
+        }
+
+        // Break early if all listed
+        bool allListed = true;
+        for (uint256 k = 0; k < result.length; ++k) {
+            if (!result[k]) {
+                allListed = false;
+                break;
+            }
+        }
+        if (allListed){
+            break;
+        } 
+    }
+    return result;
+}
+    
 
     /*//////////////////////////////////////////////////////////////
                            ERC-2771
