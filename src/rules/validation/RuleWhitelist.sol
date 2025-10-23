@@ -14,19 +14,20 @@ import {IIdentityRegistryVerified} from "../interfaces/IIdentityRegistry.sol";
  * - Implements {IERC1404} to return specific restriction codes for non-whitelisted transfers.
  */
 contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistryVerified{
-    /*//////////////////////////////////////////////////////////////
+        /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
-
     /**
-     * @notice Initializes the RuleWhitelist contract.
-     * @param admin Address that will be granted the default admin role.
-     * @param forwarderIrrevocable Address of the ERC2771 trusted forwarder (for gasless transactions).
+     * @param admin Address of the contract (Access Control)
+     * @param forwarderIrrevocable Address of the forwarder, required for the gasless support
      */
     constructor(
         address admin,
-        address forwarderIrrevocable
-    ) RuleAddressSet(admin, forwarderIrrevocable) {}
+        address forwarderIrrevocable,
+        bool checkSpender
+    ) RuleAddressSet(admin, forwarderIrrevocable) {
+        _checkSpender = checkSpender;
+    }
 
     /*//////////////////////////////////////////////////////////////
                           TRANSFER RESTRICTION LOGIC
@@ -85,7 +86,7 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
         address to,
         uint256 value
     ) public view override returns (uint8 code) {
-        if (!isAddressListed(spender)) {
+        if (_checkSpender && !isAddressListed(spender)) {
             return CODE_ADDRESS_SPENDER_NOT_WHITELISTED;
         }
         return detectTransferRestriction(from, to, value);

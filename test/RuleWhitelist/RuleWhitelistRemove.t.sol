@@ -13,7 +13,8 @@ contract RuleWhitelistRemoveTest is Test, HelperContract {
         vm.prank(WHITELIST_OPERATOR_ADDRESS);
         ruleWhitelist = new RuleWhitelist(
             WHITELIST_OPERATOR_ADDRESS,
-            ZERO_ADDRESS
+            ZERO_ADDRESS,
+            true
         );
     }
 

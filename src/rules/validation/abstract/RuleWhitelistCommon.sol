@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity ^0.8.20;
 
-import "./RuleAddressSet/invariantStorage/RuleWhitelistInvariantStorage.sol";
-import "./RuleValidateTransfer.sol";
+import {RuleWhitelistInvariantStorage} from "./RuleAddressSet/invariantStorage/RuleWhitelistInvariantStorage.sol";
+import {RuleValidateTransfer} from "./RuleValidateTransfer.sol";
 
 /**
  * @title Rule Whitelist Common
@@ -16,10 +16,13 @@ abstract contract RuleWhitelistCommon is
     RuleValidateTransfer,
     RuleWhitelistInvariantStorage
 {
+    bool internal _checkSpender;
+
+
+
     /*//////////////////////////////////////////////////////////////
                           RESTRICTION CODE LOGIC
     //////////////////////////////////////////////////////////////*/
-
     /**
      * @notice Checks whether a restriction code is recognized by this rule.
      * @dev 

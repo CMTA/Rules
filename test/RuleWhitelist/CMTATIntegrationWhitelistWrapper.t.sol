@@ -21,12 +21,13 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
     // Arrange
     function setUp() public {
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelist = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
-        ruleWhitelist2 = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
-        ruleWhitelist3 = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
+        ruleWhitelist = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, true);
+        ruleWhitelist2 = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, true);
+        ruleWhitelist3 = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, true);
         ruleWhitelistWrapper = new RuleWhitelistWrapper(
             DEFAULT_ADMIN_ADDRESS,
-            ZERO_ADDRESS
+            ZERO_ADDRESS,
+            true
         );
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         ruleWhitelistWrapper.addRule(ruleWhitelist);
@@ -64,7 +65,8 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
         vm.expectRevert(RuleEngine_AdminWithAddressZeroNotAllowed.selector);
         ruleWhitelistWrapper = new RuleWhitelistWrapper(
             ZERO_ADDRESS,
-            ZERO_ADDRESS
+            ZERO_ADDRESS,
+            true
         );
     }
 

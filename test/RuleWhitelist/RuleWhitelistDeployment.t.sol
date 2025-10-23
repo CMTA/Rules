@@ -20,7 +20,8 @@ contract RuleWhitelistDeploymentTest is Test, HelperContract {
         vm.prank(WHITELIST_OPERATOR_ADDRESS);
         ruleWhitelist = new RuleWhitelist(
             WHITELIST_OPERATOR_ADDRESS,
-            address(forwarder)
+            address(forwarder),
+            true
         );
 
         // assert
@@ -47,6 +48,6 @@ contract RuleWhitelistDeploymentTest is Test, HelperContract {
             RuleAddressSet_AdminWithAddressZeroNotAllowed.selector
         );
         vm.prank(WHITELIST_OPERATOR_ADDRESS);
-        ruleWhitelist = new RuleWhitelist(address(0), address(forwarder));
+        ruleWhitelist = new RuleWhitelist(address(0), address(forwarder), true);
     }
 }

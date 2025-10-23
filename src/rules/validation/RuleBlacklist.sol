@@ -52,7 +52,7 @@ contract RuleBlacklist is
         uint256 value
     ) public view override returns (uint8) {
         if(isAddressListed(spender)){
-            return  CODE_ADDRESS_SPENDER_IS_BLACKLISTED;
+            return CODE_ADDRESS_SPENDER_IS_BLACKLISTED;
         } else {
             return detectTransferRestriction(from, to, value);
         }
