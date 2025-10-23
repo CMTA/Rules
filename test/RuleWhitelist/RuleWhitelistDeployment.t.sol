@@ -44,7 +44,7 @@ contract RuleWhitelistDeploymentTest is Test, HelperContract {
         MinimalForwarderMock forwarder = new MinimalForwarderMock();
         forwarder.initialize(ERC2771ForwarderDomain);
         vm.expectRevert(
-            RuleAddressList_AdminWithAddressZeroNotAllowed.selector
+            RuleAddressSet_AdminWithAddressZeroNotAllowed.selector
         );
         vm.prank(WHITELIST_OPERATOR_ADDRESS);
         ruleWhitelist = new RuleWhitelist(address(0), address(forwarder));

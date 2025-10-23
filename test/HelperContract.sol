@@ -10,17 +10,17 @@ import {RuleEngineInvariantStorage} from "RuleEngine/modules/library/RuleEngineI
 import {RuleEngine} from "RuleEngine/RuleEngine.sol";
 
 // RuleSanctionList
-import {RuleSanctionList} from "src/rules/validation/RuleSanctionList.sol";
+import {RuleSanctionsList} from "src/rules/validation/RuleSanctionsList.sol";
 // RUleBlackList
 import {RuleBlacklist} from "src/rules/validation/RuleBlacklist.sol";
-import {RuleBlacklistInvariantStorage} from "src/rules/validation/abstract/RuleAddressList/invariantStorage/RuleBlacklistInvariantStorage.sol";
+import {RuleBlacklistInvariantStorage} from "src/rules/validation/abstract/RuleAddressSet/invariantStorage/RuleBlacklistInvariantStorage.sol";
 // RuleWhitelist
 import {RuleWhitelist} from "src/rules/validation/RuleWhitelist.sol";
 import {RuleWhitelistWrapper} from "src/rules/validation/RuleWhitelistWrapper.sol";
-import {RuleWhitelistInvariantStorage} from "src/rules/validation/abstract/RuleAddressList/invariantStorage/RuleWhitelistInvariantStorage.sol";
-import {RuleAddressListInvariantStorage} from "src/rules/validation/abstract/RuleAddressList/invariantStorage/RuleAddressListInvariantStorage.sol";
+import {RuleWhitelistInvariantStorage} from "src/rules/validation/abstract/RuleAddressSet/invariantStorage/RuleWhitelistInvariantStorage.sol";
+import {RuleAddressSetInvariantStorage} from "src/rules/validation/abstract/RuleAddressSet/invariantStorage/RuleAddressSetInvariantStorage.sol";
 
-import {RuleSanctionlistInvariantStorage}from "src/rules/validation/abstract/RuleSanctionListInvariantStorage.sol";
+import {RuleSanctionsListInvariantStorage}from "src/rules/validation/abstract/RuleSanctionsListInvariantStorage.sol";
 // Rule interface
 
 // utils
@@ -32,8 +32,8 @@ import "RuleEngine/../test/utils/CMTATDeployment.sol";
 abstract contract HelperContract is
     RuleWhitelistInvariantStorage,
     RuleBlacklistInvariantStorage,
-    RuleAddressListInvariantStorage,
-    RuleSanctionlistInvariantStorage,
+    RuleAddressSetInvariantStorage,
+    RuleSanctionsListInvariantStorage,
     RuleEngineInvariantStorage
 {
     // Test result

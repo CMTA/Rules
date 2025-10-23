@@ -2,24 +2,21 @@
 
 pragma solidity ^0.8.20;
 
-import "OZ/access/AccessControl.sol";
-import "../../modules/MetaTxModuleStandalone.sol";
-import "./abstract/RuleSanctionListInvariantStorage.sol";
-import "./abstract/RuleValidateTransfer.sol";
+import {AccessControl} from "OZ/access/AccessControl.sol";
+import {MetaTxModuleStandalone, ERC2771Context, Context} from "../../modules/MetaTxModuleStandalone.sol";
+import {RuleSanctionsListInvariantStorage} from "./abstract/RuleSanctionsListInvariantStorage.sol";
+import {RuleValidateTransfer} from "./abstract/RuleValidateTransfer.sol";
+import {ISanctionsList } from "../interfaces/ISanctionsList.sol";
 
 
-interface SanctionsList {
-    function isSanctioned(address addr) external view returns (bool);
-}
-
-contract RuleSanctionList is
+contract RuleSanctionsList is
     AccessControl,
     MetaTxModuleStandalone,
     RuleValidateTransfer,
-    RuleSanctionlistInvariantStorage
+    RuleSanctionsListInvariantStorage
 {
     
-    SanctionsList public sanctionsList;
+    ISanctionsList public sanctionsList;
 
     /**
      * @param admin Address of the contract (Access Control)
@@ -28,12 +25,12 @@ contract RuleSanctionList is
     constructor(
         address admin,
         address forwarderIrrevocable,
-        address sanctionContractOracle_
+        ISanctionsList sanctionContractOracle_
     ) MetaTxModuleStandalone(forwarderIrrevocable) {
         if (admin == address(0)) {
             revert RuleSanctionList_AdminWithAddressZeroNotAllowed();
         }
-        if (sanctionContractOracle_ != address(0)) {
+        if (address(sanctionContractOracle_) != address(0)) {
             _setSanctionListOracle(sanctionContractOracle_);
         }
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
@@ -45,7 +42,7 @@ contract RuleSanctionList is
      * @dev zero address is authorized to authorize all transfers
      */
     function setSanctionListOracle(
-        address sanctionContractOracle_
+        ISanctionsList sanctionContractOracle_
     ) public onlyRole(SANCTIONLIST_ROLE) {
         _setSanctionListOracle(sanctionContractOracle_);
     }
@@ -163,9 +160,9 @@ contract RuleSanctionList is
                             INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function _setSanctionListOracle(address sanctionContractOracle_) internal {
-        sanctionsList = SanctionsList(sanctionContractOracle_);
-        emit SetSanctionListOracle(address(sanctionContractOracle_));
+    function _setSanctionListOracle(ISanctionsList sanctionContractOracle_) internal {
+        sanctionsList = sanctionContractOracle_;
+        emit SetSanctionListOracle(sanctionContractOracle_);
     }
 
     /*//////////////////////////////////////////////////////////////

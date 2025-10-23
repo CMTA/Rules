@@ -4,26 +4,26 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import "../HelperContract.sol";
 import "../utils/SanctionListOracle.sol";
-import {RuleSanctionList, SanctionsList} from "src/rules/validation/RuleSanctionList.sol";
+import {RuleSanctionsList, ISanctionsList} from "src/rules/validation/RuleSanctionsList.sol";
 /**
  * @title General functions of the ruleSanctionList
  */
 contract RuleSanctionlistTest is Test, HelperContract {
     SanctionListOracle sanctionlistOracle;
-    RuleSanctionList ruleSanctionList;
+    RuleSanctionsList ruleSanctionList;
 
     // Arrange
     function setUp() public {
         vm.prank(SANCTIONLIST_OPERATOR_ADDRESS);
         sanctionlistOracle = new SanctionListOracle();
         sanctionlistOracle.addToSanctionsList(ATTACKER);
-        ruleSanctionList = new RuleSanctionList(
+        ruleSanctionList = new RuleSanctionsList(
             SANCTIONLIST_OPERATOR_ADDRESS,
             ZERO_ADDRESS,
-            ZERO_ADDRESS
+            ISanctionsList(ZERO_ADDRESS)
         );
         vm.prank(SANCTIONLIST_OPERATOR_ADDRESS);
-        ruleSanctionList.setSanctionListOracle(address(sanctionlistOracle));
+        ruleSanctionList.setSanctionListOracle(sanctionlistOracle);
     }
 
     function testCanReturnTransferRestrictionCode() public {
