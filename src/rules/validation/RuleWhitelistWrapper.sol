@@ -12,24 +12,18 @@ import {IRule} from "RuleEngine/interfaces/IRule.sol";
 /**
  * @title Wrapper to call several different whitelist rules
  */
-contract RuleWhitelistWrapper is
-    RulesManagementModule,
-    MetaTxModuleStandalone,
-    RuleWhitelistCommon
-{
 
-        /*//////////////////////////////////////////////////////////////
+contract RuleWhitelistWrapper is RulesManagementModule, MetaTxModuleStandalone, RuleWhitelistCommon {
+    /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
     /**
      * @param admin Address of the contract (Access Control)
      * @param forwarderIrrevocable Address of the forwarder, required for the gasless support
      */
-    constructor(
-        address admin,
-        address forwarderIrrevocable,
-        bool checkSpender
-    ) MetaTxModuleStandalone(forwarderIrrevocable) {
+    constructor(address admin, address forwarderIrrevocable, bool checkSpender)
+        MetaTxModuleStandalone(forwarderIrrevocable)
+    {
         if (admin == address(0)) {
             revert RuleEngineInvariantStorage.RuleEngine_AdminWithAddressZeroNotAllowed();
         }
@@ -42,36 +36,38 @@ contract RuleWhitelistWrapper is
      * @param from the origin address
      * @param to the destination address
      * @return The restricion code or REJECTED_CODE_BASE.TRANSFER_OK
-     **/
-    function detectTransferRestriction(
-        address from,
-        address to,
-        uint256 /*value*/
-    ) public view override returns (uint8) {
+     *
+     */
+    function detectTransferRestriction(address from, address to, uint256 /*value*/ )
+        public
+        view
+        override
+        returns (uint8)
+    {
         address[] memory targetAddress = new address[](2);
         targetAddress[0] = from;
         targetAddress[1] = to;
-        
+
         bool[] memory result = _detectTransferRestriction(targetAddress);
 
-        if (!result[0]){
+        if (!result[0]) {
             return CODE_ADDRESS_FROM_NOT_WHITELISTED;
-        } else if (!result[1]){
+        } else if (!result[1]) {
             return CODE_ADDRESS_TO_NOT_WHITELISTED;
-        } else{
+        } else {
             return uint8(REJECTED_CODE_BASE.TRANSFER_OK);
         }
     }
 
-    function detectTransferRestrictionFrom(
-        address spender,
-        address from,
-        address to,
-        uint256 value
-    ) public view override returns (uint8) {
-       if (!_checkSpender) {
-        return detectTransferRestriction(from, to, value);
-    }
+    function detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)
+        public
+        view
+        override
+        returns (uint8)
+    {
+        if (!_checkSpender) {
+            return detectTransferRestriction(from, to, value);
+        }
 
         address[] memory targetAddress = new address[](2);
         targetAddress[0] = from;
@@ -80,13 +76,13 @@ contract RuleWhitelistWrapper is
 
         bool[] memory result = _detectTransferRestriction(targetAddress);
 
-        if (!result[0]){
+        if (!result[0]) {
             return CODE_ADDRESS_FROM_NOT_WHITELISTED;
-        } else if (!result[1]){
+        } else if (!result[1]) {
             return CODE_ADDRESS_TO_NOT_WHITELISTED;
-        } else if (!result[2]){
-            return  CODE_ADDRESS_SPENDER_NOT_WHITELISTED;
-        } else{
+        } else if (!result[2]) {
+            return CODE_ADDRESS_SPENDER_NOT_WHITELISTED;
+        } else {
             return uint8(REJECTED_CODE_BASE.TRANSFER_OK);
         }
     }
@@ -95,50 +91,41 @@ contract RuleWhitelistWrapper is
     /**
      * @dev Returns `true` if `account` has been granted `role`.
      */
-    function hasRole(
-        bytes32 role,
-        address account
-    ) public view virtual override(AccessControl) returns (bool) {
+    function hasRole(bytes32 role, address account) public view virtual override(AccessControl) returns (bool) {
         // The Default Admin has all roles
         if (AccessControl.hasRole(DEFAULT_ADMIN_ROLE, account)) {
             return true;
         } else {
             return AccessControl.hasRole(role, account);
         }
-   
     }
 
-    function _detectTransferRestriction(address[] memory targetAddress)
-    internal
-    view
-    returns (bool[] memory)
-{
-    uint256 rulesLength = rulesCount();
-    bool[] memory result = new bool[](targetAddress.length);
-    for (uint256 i = 0; i < rulesLength; ++i) {
-        // Call the whitelist rules
-        bool[] memory isListed = RuleAddressSet(rule(i)).areAddressesListed(targetAddress);
-        for (uint256 j = 0; j < targetAddress.length; ++j) {
-            if (isListed[j]){
-                result[j] = true;
-            } 
-        }
+    function _detectTransferRestriction(address[] memory targetAddress) internal view returns (bool[] memory) {
+        uint256 rulesLength = rulesCount();
+        bool[] memory result = new bool[](targetAddress.length);
+        for (uint256 i = 0; i < rulesLength; ++i) {
+            // Call the whitelist rules
+            bool[] memory isListed = RuleAddressSet(rule(i)).areAddressesListed(targetAddress);
+            for (uint256 j = 0; j < targetAddress.length; ++j) {
+                if (isListed[j]) {
+                    result[j] = true;
+                }
+            }
 
-        // Break early if all listed
-        bool allListed = true;
-        for (uint256 k = 0; k < result.length; ++k) {
-            if (!result[k]) {
-                allListed = false;
+            // Break early if all listed
+            bool allListed = true;
+            for (uint256 k = 0; k < result.length; ++k) {
+                if (!result[k]) {
+                    allListed = false;
+                    break;
+                }
+            }
+            if (allListed) {
                 break;
             }
         }
-        if (allListed){
-            break;
-        } 
+        return result;
     }
-    return result;
-}
-    
 
     /*//////////////////////////////////////////////////////////////
                            ERC-2771
@@ -147,36 +134,21 @@ contract RuleWhitelistWrapper is
     /**
      * @dev This surcharge is not necessary if you do not use the MetaTxModule
      */
-    function _msgSender()
-        internal
-        view
-        override(ERC2771Context, Context)
-        returns (address sender)
-    {
+    function _msgSender() internal view override(ERC2771Context, Context) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 
     /**
      * @dev This surcharge is not necessary if you do not use the MetaTxModule
      */
-    function _msgData()
-        internal
-        view
-        override(ERC2771Context, Context)
-        returns (bytes calldata)
-    {
+    function _msgData() internal view override(ERC2771Context, Context) returns (bytes calldata) {
         return ERC2771Context._msgData();
     }
 
     /**
      * @dev This surcharge is not necessary if you do not use the MetaTxModule
      */
-    function _contextSuffixLength()
-        internal
-        view
-        override(ERC2771Context, Context)
-        returns (uint256)
-    {
+    function _contextSuffixLength() internal view override(ERC2771Context, Context) returns (uint256) {
         return ERC2771Context._contextSuffixLength();
     }
 }

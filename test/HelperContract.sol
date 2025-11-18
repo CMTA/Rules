@@ -13,14 +13,17 @@ import {RuleEngine} from "RuleEngine/RuleEngine.sol";
 import {RuleSanctionsList} from "src/rules/validation/RuleSanctionsList.sol";
 // RUleBlackList
 import {RuleBlacklist} from "src/rules/validation/RuleBlacklist.sol";
-import {RuleBlacklistInvariantStorage} from "src/rules/validation/abstract/RuleAddressSet/invariantStorage/RuleBlacklistInvariantStorage.sol";
+import {RuleBlacklistInvariantStorage} from
+    "src/rules/validation/abstract/RuleAddressSet/invariantStorage/RuleBlacklistInvariantStorage.sol";
 // RuleWhitelist
 import {RuleWhitelist} from "src/rules/validation/RuleWhitelist.sol";
 import {RuleWhitelistWrapper} from "src/rules/validation/RuleWhitelistWrapper.sol";
-import {RuleWhitelistInvariantStorage} from "src/rules/validation/abstract/RuleAddressSet/invariantStorage/RuleWhitelistInvariantStorage.sol";
-import {RuleAddressSetInvariantStorage} from "src/rules/validation/abstract/RuleAddressSet/invariantStorage/RuleAddressSetInvariantStorage.sol";
+import {RuleWhitelistInvariantStorage} from
+    "src/rules/validation/abstract/RuleAddressSet/invariantStorage/RuleWhitelistInvariantStorage.sol";
+import {RuleAddressSetInvariantStorage} from
+    "src/rules/validation/abstract/RuleAddressSet/invariantStorage/RuleAddressSetInvariantStorage.sol";
 
-import {RuleSanctionsListInvariantStorage}from "src/rules/validation/abstract/RuleSanctionsListInvariantStorage.sol";
+import {RuleSanctionsListInvariantStorage} from "src/rules/validation/abstract/RuleSanctionsListInvariantStorage.sol";
 // Rule interface
 
 // utils
@@ -54,12 +57,9 @@ abstract contract HelperContract is
     address constant ADDRESS2 = address(6);
     address constant ADDRESS3 = address(7);
     // role string
-    string constant RULE_ENGINE_ROLE_HASH =
-        "0x774b3c5f4a8b37a7da21d72b7f2429e4a6d49c4de0ac5f2b831a1a539d0f0fd2";
-    string constant WHITELIST_ROLE_HASH =
-        "0xdc72ed553f2544c34465af23b847953efeb813428162d767f9ba5f4013be6760";
-    string constant DEFAULT_ADMIN_ROLE_HASH =
-        "0x0000000000000000000000000000000000000000000000000000000000000000";
+    string constant RULE_ENGINE_ROLE_HASH = "0x774b3c5f4a8b37a7da21d72b7f2429e4a6d49c4de0ac5f2b831a1a539d0f0fd2";
+    string constant WHITELIST_ROLE_HASH = "0xdc72ed553f2544c34465af23b847953efeb813428162d767f9ba5f4013be6760";
+    string constant DEFAULT_ADMIN_ROLE_HASH = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
     uint256 DEFAULT_TIME_LIMIT_TO_APPROVE = 7 days;
     uint256 DEFAULT_TIME_LIMIT_TO_TRANSFER = 7 days;

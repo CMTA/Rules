@@ -8,9 +8,11 @@ import {RuleSanctionsList, ISanctionsList} from "src/rules/validation/RuleSancti
 /**
  * @title General functions of the ruleSanctionList
  */
+
 contract RuleSanctionlistAddTest is Test, HelperContract {
     // Custom error openZeppelin
     error AccessControlUnauthorizedAccount(address account, bytes32 neededRole);
+
     SanctionListOracle sanctionlistOracle;
     RuleSanctionsList ruleSanctionList;
 
@@ -19,11 +21,8 @@ contract RuleSanctionlistAddTest is Test, HelperContract {
         vm.prank(SANCTIONLIST_OPERATOR_ADDRESS);
         sanctionlistOracle = new SanctionListOracle();
         sanctionlistOracle.addToSanctionsList(ATTACKER);
-        ruleSanctionList = new RuleSanctionsList(
-            SANCTIONLIST_OPERATOR_ADDRESS,
-            ZERO_ADDRESS,
-            ISanctionsList(ZERO_ADDRESS)
-        );
+        ruleSanctionList =
+            new RuleSanctionsList(SANCTIONLIST_OPERATOR_ADDRESS, ZERO_ADDRESS, ISanctionsList(ZERO_ADDRESS));
     }
 
     function testCanSetandRemoveOracle() public {
@@ -34,10 +33,7 @@ contract RuleSanctionlistAddTest is Test, HelperContract {
 
         ISanctionsList sanctionListOracleGet = ruleSanctionList.sanctionsList();
         // Assert
-        vm.assertEq(
-            address(sanctionListOracleGet),
-            address(sanctionlistOracle)
-        );
+        vm.assertEq(address(sanctionListOracleGet), address(sanctionlistOracle));
         // Remove
         vm.prank(SANCTIONLIST_OPERATOR_ADDRESS);
         emit SetSanctionListOracle(ISanctionsList(ZERO_ADDRESS));
@@ -49,13 +45,7 @@ contract RuleSanctionlistAddTest is Test, HelperContract {
 
     function testCannotAttackerSetOracle() public {
         vm.prank(ATTACKER);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                AccessControlUnauthorizedAccount.selector,
-                ATTACKER,
-                SANCTIONLIST_ROLE
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, ATTACKER, SANCTIONLIST_ROLE));
         ruleSanctionList.setSanctionListOracle(sanctionlistOracle);
     }
 }

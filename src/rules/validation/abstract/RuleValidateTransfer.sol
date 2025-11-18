@@ -8,32 +8,34 @@ import {IERC7551Compliance} from "CMTAT/interfaces/tokenization/draft-IERC7551.s
 import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
 
-abstract contract RuleValidateTransfer is IERC3643ComplianceRead, IERC7551Compliance,IRule {
+abstract contract RuleValidateTransfer is IERC3643ComplianceRead, IERC7551Compliance, IRule {
     /**
      * @notice Validate a transfer
      * @param _from the origin address
      * @param _to the destination address
      * @param _amount to transfer
      * @return isValid => true if the transfer is valid, false otherwise
-     **/
-    function canTransfer(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) public view override(IERC3643ComplianceRead) returns (bool isValid) {
+     *
+     */
+    function canTransfer(address _from, address _to, uint256 _amount)
+        public
+        view
+        override(IERC3643ComplianceRead)
+        returns (bool isValid)
+    {
         // does not work without `this` keyword => "Undeclared identifier"
         return
-            this.detectTransferRestriction(_from, _to, _amount) ==
-            uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
+            this.detectTransferRestriction(_from, _to, _amount) == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
     }
 
-    function canTransferFrom(
-        address spender,
-        address from,
-        address to,
-        uint256 value
-    ) public view virtual override(IERC7551Compliance) returns (bool) {
-        return this.detectTransferRestrictionFrom(spender, from, to, value)  ==
-            uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
+    function canTransferFrom(address spender, address from, address to, uint256 value)
+        public
+        view
+        virtual
+        override(IERC7551Compliance)
+        returns (bool)
+    {
+        return this.detectTransferRestrictionFrom(spender, from, to, value)
+            == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
     }
 }

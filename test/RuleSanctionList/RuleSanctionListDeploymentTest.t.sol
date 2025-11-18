@@ -9,9 +9,11 @@ import {RuleSanctionsList, ISanctionsList} from "src/rules/validation/RuleSancti
 /**
  * @title General functions of the ruleSanctionList
  */
+
 contract RuleSanctionListDeploymentTest is Test, HelperContract {
     RuleSanctionsList ruleSanctionList;
     SanctionListOracle sanctionlistOracle;
+
     event Testa();
 
     // Arrange
@@ -23,17 +25,11 @@ contract RuleSanctionListDeploymentTest is Test, HelperContract {
         MinimalForwarderMock forwarder = new MinimalForwarderMock();
         forwarder.initialize(ERC2771ForwarderDomain);
         vm.prank(SANCTIONLIST_OPERATOR_ADDRESS);
-        ruleSanctionList = new RuleSanctionsList(
-            SANCTIONLIST_OPERATOR_ADDRESS,
-            address(forwarder),
-            ISanctionsList(ZERO_ADDRESS)
-        );
+        ruleSanctionList =
+            new RuleSanctionsList(SANCTIONLIST_OPERATOR_ADDRESS, address(forwarder), ISanctionsList(ZERO_ADDRESS));
 
         // assert
-        resBool = ruleSanctionList.hasRole(
-            SANCTIONLIST_ROLE,
-            SANCTIONLIST_OPERATOR_ADDRESS
-        );
+        resBool = ruleSanctionList.hasRole(SANCTIONLIST_ROLE, SANCTIONLIST_OPERATOR_ADDRESS);
         assertEq(resBool, true);
         resBool = ruleSanctionList.isTrustedForwarder(address(forwarder));
         assertEq(resBool, true);
@@ -44,15 +40,9 @@ contract RuleSanctionListDeploymentTest is Test, HelperContract {
         vm.prank(SANCTIONLIST_OPERATOR_ADDRESS);
         MinimalForwarderMock forwarder = new MinimalForwarderMock();
         forwarder.initialize(ERC2771ForwarderDomain);
-        vm.expectRevert(
-            RuleSanctionList_AdminWithAddressZeroNotAllowed.selector
-        );
+        vm.expectRevert(RuleSanctionList_AdminWithAddressZeroNotAllowed.selector);
         vm.prank(SANCTIONLIST_OPERATOR_ADDRESS);
-        ruleSanctionList = new RuleSanctionsList(
-            address(0),
-            address(forwarder),
-            ISanctionsList(ZERO_ADDRESS)
-        );
+        ruleSanctionList = new RuleSanctionsList(address(0), address(forwarder), ISanctionsList(ZERO_ADDRESS));
     }
 
     function testCanSetAnOracleAtDeployment() public {
@@ -61,14 +51,7 @@ contract RuleSanctionListDeploymentTest is Test, HelperContract {
         // TODO: Event seems not checked by Foundry at deployment
         emit SetSanctionListOracle(sanctionlistOracle);
 
-        ruleSanctionList = new RuleSanctionsList(
-            SANCTIONLIST_OPERATOR_ADDRESS,
-            ZERO_ADDRESS,
-            sanctionlistOracle
-        );
-        assertEq(
-            address(ruleSanctionList.sanctionsList()),
-            address(sanctionlistOracle)
-        );
+        ruleSanctionList = new RuleSanctionsList(SANCTIONLIST_OPERATOR_ADDRESS, ZERO_ADDRESS, sanctionlistOracle);
+        assertEq(address(ruleSanctionList.sanctionsList()), address(sanctionlistOracle));
     }
 }

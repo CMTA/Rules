@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {RuleAddressSet} from "./abstract/RuleAddressSet/RuleAddressSet.sol";
 import {RuleWhitelistCommon} from "./abstract/RuleWhitelistCommon.sol";
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
-import {IIdentityRegistryVerified} from "../interfaces/IIdentityRegistry.sol"; 
+import {IIdentityRegistryVerified} from "../interfaces/IIdentityRegistry.sol";
 /**
  * @title Rule Whitelist
  * @notice Manages a whitelist of authorized addresses and enforces whitelist-based transfer restrictions.
@@ -13,19 +13,18 @@ import {IIdentityRegistryVerified} from "../interfaces/IIdentityRegistry.sol";
  * - Integrates restriction code logic from {RuleWhitelistCommon}.
  * - Implements {IERC1404} to return specific restriction codes for non-whitelisted transfers.
  */
-contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistryVerified{
-        /*//////////////////////////////////////////////////////////////
+
+contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistryVerified {
+    /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
     /**
      * @param admin Address of the contract (Access Control)
      * @param forwarderIrrevocable Address of the forwarder, required for the gasless support
      */
-    constructor(
-        address admin,
-        address forwarderIrrevocable,
-        bool checkSpender
-    ) RuleAddressSet(admin, forwarderIrrevocable) {
+    constructor(address admin, address forwarderIrrevocable, bool checkSpender)
+        RuleAddressSet(admin, forwarderIrrevocable)
+    {
         _checkSpender = checkSpender;
     }
 
@@ -35,8 +34,8 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
 
     /**
      * @notice Detects whether a transfer between two addresses is allowed under the whitelist rule.
-     * @dev 
-     * - Returns a restriction code indicating why a transfer is blocked.  
+     * @dev
+     * - Returns a restriction code indicating why a transfer is blocked.
      * - Implements the `IERC1404.detectTransferRestriction` interface.
      * @param from The address sending tokens.
      * @param to The address receiving tokens.
@@ -49,11 +48,12 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
      * | `to` not whitelisted | `CODE_ADDRESS_TO_NOT_WHITELISTED` |
      * | Both whitelisted | `TRANSFER_OK` |
      */
-    function detectTransferRestriction(
-        address from,
-        address to,
-        uint256 value
-    ) public view override returns (uint8 code) {
+    function detectTransferRestriction(address from, address to, uint256 value)
+        public
+        view
+        override
+        returns (uint8 code)
+    {
         if (!isAddressListed(from)) {
             return CODE_ADDRESS_FROM_NOT_WHITELISTED;
         } else if (!isAddressListed(to)) {
@@ -65,7 +65,7 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
 
     /**
      * @notice Detects transfer restriction for delegated transfers (`transferFrom`).
-     * @dev 
+     * @dev
      * - Checks the `spender`, `from`, and `to` addresses for whitelist compliance.
      * - Implements `IERC1404Extend.detectTransferRestrictionFrom`.
      * @param spender The address initiating the transfer on behalf of another.
@@ -80,12 +80,12 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
      * | `from` or `to` not whitelisted | respective restriction code from `detectTransferRestriction` |
      * | All whitelisted | `TRANSFER_OK` |
      */
-    function detectTransferRestrictionFrom(
-        address spender,
-        address from,
-        address to,
-        uint256 value
-    ) public view override returns (uint8 code) {
+    function detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)
+        public
+        view
+        override
+        returns (uint8 code)
+    {
         if (_checkSpender && !isAddressListed(spender)) {
             return CODE_ADDRESS_SPENDER_NOT_WHITELISTED;
         }
@@ -105,5 +105,4 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
     {
         isListed = _isAddressListed(targetAddress);
     }
-
 }

@@ -14,20 +14,12 @@ contract RuleWhitelistAccessControl is Test, HelperContract {
     // Arrange
     function setUp() public {
         vm.prank(WHITELIST_OPERATOR_ADDRESS);
-        ruleWhitelist = new RuleWhitelist(
-            WHITELIST_OPERATOR_ADDRESS,
-            ZERO_ADDRESS,
-            true
-        );
+        ruleWhitelist = new RuleWhitelist(WHITELIST_OPERATOR_ADDRESS, ZERO_ADDRESS, true);
     }
 
     function testCannotAttackeraddAddress() public {
         vm.expectRevert(
-            abi.encodeWithSelector(
-                AccessControlUnauthorizedAccount.selector,
-                ATTACKER,
-                ADDRESS_LIST_ADD_ROLE
-            )
+            abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, ATTACKER, ADDRESS_LIST_ADD_ROLE)
         );
         vm.prank(ATTACKER);
         ruleWhitelist.addAddress(ADDRESS1);
@@ -49,19 +41,10 @@ contract RuleWhitelistAccessControl is Test, HelperContract {
 
         // Act
         vm.expectRevert(
-            abi.encodeWithSelector(
-                AccessControlUnauthorizedAccount.selector,
-                ATTACKER,
-                ADDRESS_LIST_ADD_ROLE
-            )
+            abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, ATTACKER, ADDRESS_LIST_ADD_ROLE)
         );
         vm.prank(ATTACKER);
-        (resCallBool, ) = address(ruleWhitelist).call(
-            abi.encodeWithSignature(
-                "addAddresses(address[])",
-                whitelist
-            )
-        );
+        (resCallBool,) = address(ruleWhitelist).call(abi.encodeWithSignature("addAddresses(address[])", whitelist));
 
         // Assert
         assertEq(resCallBool, true);
@@ -86,11 +69,7 @@ contract RuleWhitelistAccessControl is Test, HelperContract {
 
         // Act
         vm.expectRevert(
-            abi.encodeWithSelector(
-                AccessControlUnauthorizedAccount.selector,
-                ATTACKER,
-                ADDRESS_LIST_REMOVE_ROLE
-            )
+            abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, ATTACKER, ADDRESS_LIST_REMOVE_ROLE)
         );
         vm.prank(ATTACKER);
         ruleWhitelist.removeAddress(ADDRESS1);
@@ -108,12 +87,7 @@ contract RuleWhitelistAccessControl is Test, HelperContract {
         whitelist[0] = ADDRESS1;
         whitelist[1] = ADDRESS2;
         vm.prank(WHITELIST_OPERATOR_ADDRESS);
-        (resCallBool, ) = address(ruleWhitelist).call(
-            abi.encodeWithSignature(
-                "addAddresses(address[])",
-                whitelist
-            )
-        );
+        (resCallBool,) = address(ruleWhitelist).call(abi.encodeWithSignature("addAddresses(address[])", whitelist));
         assertEq(resCallBool, true);
         // Arrange - Assert
         resBool = ruleWhitelist.isAddressListed(ADDRESS1);
@@ -123,19 +97,10 @@ contract RuleWhitelistAccessControl is Test, HelperContract {
 
         // Act
         vm.expectRevert(
-            abi.encodeWithSelector(
-                AccessControlUnauthorizedAccount.selector,
-                ATTACKER,
-                ADDRESS_LIST_REMOVE_ROLE
-            )
+            abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, ATTACKER, ADDRESS_LIST_REMOVE_ROLE)
         );
         vm.prank(ATTACKER);
-        (resCallBool, ) = address(ruleWhitelist).call(
-            abi.encodeWithSignature(
-                "removeAddresses(address[])",
-                whitelist
-            )
-        );
+        (resCallBool,) = address(ruleWhitelist).call(abi.encodeWithSignature("removeAddresses(address[])", whitelist));
         // Assert
         assertEq(resCallBool, true);
         resBool = ruleWhitelist.isAddressListed(ADDRESS1);

@@ -8,6 +8,7 @@ import {RuleSanctionsList, ISanctionsList} from "src/rules/validation/RuleSancti
 /**
  * @title General functions of the ruleSanctionList
  */
+
 contract RuleSanctionlistTest is Test, HelperContract {
     SanctionListOracle sanctionlistOracle;
     RuleSanctionsList ruleSanctionList;
@@ -17,53 +18,38 @@ contract RuleSanctionlistTest is Test, HelperContract {
         vm.prank(SANCTIONLIST_OPERATOR_ADDRESS);
         sanctionlistOracle = new SanctionListOracle();
         sanctionlistOracle.addToSanctionsList(ATTACKER);
-        ruleSanctionList = new RuleSanctionsList(
-            SANCTIONLIST_OPERATOR_ADDRESS,
-            ZERO_ADDRESS,
-            ISanctionsList(ZERO_ADDRESS)
-        );
+        ruleSanctionList =
+            new RuleSanctionsList(SANCTIONLIST_OPERATOR_ADDRESS, ZERO_ADDRESS, ISanctionsList(ZERO_ADDRESS));
         vm.prank(SANCTIONLIST_OPERATOR_ADDRESS);
         ruleSanctionList.setSanctionListOracle(sanctionlistOracle);
     }
 
     function testCanReturnTransferRestrictionCode() public {
         // Act
-        resBool = ruleSanctionList.canReturnTransferRestrictionCode(
-            CODE_ADDRESS_FROM_IS_SANCTIONED
-        );
+        resBool = ruleSanctionList.canReturnTransferRestrictionCode(CODE_ADDRESS_FROM_IS_SANCTIONED);
         // Assert
         assertEq(resBool, true);
         // Act
-        resBool = ruleSanctionList.canReturnTransferRestrictionCode(
-            CODE_ADDRESS_TO_IS_SANCTIONED
-        );
+        resBool = ruleSanctionList.canReturnTransferRestrictionCode(CODE_ADDRESS_TO_IS_SANCTIONED);
         // Assert
         assertEq(resBool, true);
         // Act
-        resBool = ruleSanctionList.canReturnTransferRestrictionCode(
-            CODE_NONEXISTENT
-        );
+        resBool = ruleSanctionList.canReturnTransferRestrictionCode(CODE_NONEXISTENT);
         // Assert
         assertFalse(resBool);
     }
 
     function testReturnTheRightMessageForAGivenCode() public {
         // Assert
-        resString = ruleSanctionList.messageForTransferRestriction(
-            CODE_ADDRESS_FROM_IS_SANCTIONED
-        );
+        resString = ruleSanctionList.messageForTransferRestriction(CODE_ADDRESS_FROM_IS_SANCTIONED);
         // Assert
         assertEq(resString, TEXT_ADDRESS_FROM_IS_SANCTIONED);
         // Act
-        resString = ruleSanctionList.messageForTransferRestriction(
-            CODE_ADDRESS_TO_IS_SANCTIONED
-        );
+        resString = ruleSanctionList.messageForTransferRestriction(CODE_ADDRESS_TO_IS_SANCTIONED);
         // Assert
         assertEq(resString, TEXT_ADDRESS_TO_IS_SANCTIONED);
         // Act
-        resString = ruleSanctionList.messageForTransferRestriction(
-            CODE_NONEXISTENT
-        );
+        resString = ruleSanctionList.messageForTransferRestriction(CODE_NONEXISTENT);
         // Assert
         assertEq(resString, TEXT_CODE_NOT_FOUND);
     }
@@ -94,33 +80,21 @@ contract RuleSanctionlistTest is Test, HelperContract {
 
     function testDetectTransferRestrictionFrom() public {
         // Act
-        resUint8 = ruleSanctionList.detectTransferRestriction(
-            ATTACKER,
-            ADDRESS2,
-            20
-        );
+        resUint8 = ruleSanctionList.detectTransferRestriction(ATTACKER, ADDRESS2, 20);
         // Assert
         assertEq(resUint8, CODE_ADDRESS_FROM_IS_SANCTIONED);
     }
 
     function testDetectTransferRestrictionTo() public {
         // Act
-        resUint8 = ruleSanctionList.detectTransferRestriction(
-            ADDRESS1,
-            ATTACKER,
-            20
-        );
+        resUint8 = ruleSanctionList.detectTransferRestriction(ADDRESS1, ATTACKER, 20);
         // Assert
         assertEq(resUint8, CODE_ADDRESS_TO_IS_SANCTIONED);
     }
 
     function testDetectTransferRestrictionOk() public {
         // Act
-        resUint8 = ruleSanctionList.detectTransferRestriction(
-            ADDRESS1,
-            ADDRESS2,
-            20
-        );
+        resUint8 = ruleSanctionList.detectTransferRestriction(ADDRESS1, ADDRESS2, 20);
         // Assert
         assertEq(resUint8, NO_ERROR);
     }

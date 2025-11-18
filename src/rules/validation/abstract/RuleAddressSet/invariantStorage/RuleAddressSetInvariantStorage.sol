@@ -19,8 +19,6 @@ abstract contract RuleAddressSetInvariantStorage {
     error RuleAddressSet_AddressNotFound();
 
     /* ============ Role ============ */
-    bytes32 public constant ADDRESS_LIST_REMOVE_ROLE =
-        keccak256("ADDRESS_LIST_REMOVE_ROLE");
-    bytes32 public constant ADDRESS_LIST_ADD_ROLE =
-        keccak256("ADDRESS_LIST_ADD_ROLE");
+    bytes32 public constant ADDRESS_LIST_REMOVE_ROLE = keccak256("ADDRESS_LIST_REMOVE_ROLE");
+    bytes32 public constant ADDRESS_LIST_ADD_ROLE = keccak256("ADDRESS_LIST_ADD_ROLE");
 }

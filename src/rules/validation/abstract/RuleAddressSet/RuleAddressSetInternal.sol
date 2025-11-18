@@ -6,14 +6,13 @@ import {EnumerableSet} from "OZ/utils/structs/EnumerableSet.sol";
 /**
  * @title Rule Address Set (Internal)
  * @notice Internal utility for managing a set of rule-related addresses.
- * @dev 
+ * @dev
  * - Uses OpenZeppelin's EnumerableSet for efficient enumeration.
  * - Designed for internal inheritance and logic composition.
  * - Batch operations do not revert when individual entries are invalid.
  */
 abstract contract RuleAddressSetInternal {
     using EnumerableSet for EnumerableSet.AddressSet;
-
 
     /*//////////////////////////////////////////////////////////////
                              STATE VARIABLES
@@ -28,7 +27,7 @@ abstract contract RuleAddressSetInternal {
 
     /**
      * @notice Adds multiple addresses to the set.
-     * @dev 
+     * @dev
      * - Does not revert if an address is already listed.
      * - Skips existing entries silently.
      * @param addressesToAdd The array of addresses to add.
@@ -41,7 +40,7 @@ abstract contract RuleAddressSetInternal {
 
     /**
      * @notice Removes multiple addresses from the set.
-     * @dev 
+     * @dev
      * - Does not revert if an address is not found.
      * - Skips non-existing entries silently.
      * @param addressesToRemove The array of addresses to remove.

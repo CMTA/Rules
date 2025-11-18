@@ -15,14 +15,9 @@ contract RuleBlacklistTest is Test, HelperContract {
         ruleBlacklist = new RuleBlacklist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
     }
 
-    function testCanRuleBlacklistReturnMessageNotFoundWithUnknownCodeId()
-        public
-        view
-    {
+    function testCanRuleBlacklistReturnMessageNotFoundWithUnknownCodeId() public view {
         // Act
-        string memory message1 = ruleBlacklist.messageForTransferRestriction(
-            255
-        );
+        string memory message1 = ruleBlacklist.messageForTransferRestriction(255);
 
         // Assert
         assertEq(message1, TEXT_CODE_NOT_FOUND);
