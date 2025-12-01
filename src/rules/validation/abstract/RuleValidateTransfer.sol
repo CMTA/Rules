@@ -7,17 +7,39 @@ import {IERC3643ComplianceRead} from "CMTAT/interfaces/tokenization/IERC3643Part
 import {IERC7551Compliance} from "CMTAT/interfaces/tokenization/draft-IERC7551.sol";
 import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
+import {IERC7943NonFungibleCompliance, IERC7943NonFungibleComplianceExtend} from "../../interfaces/IERC7943NonFungibleCompliance.sol";
 
-abstract contract RuleValidateTransfer is IERC3643ComplianceRead, IERC7551Compliance, IRule {
+abstract contract RuleValidateTransfer is IERC3643ComplianceRead, IERC7551Compliance, IERC7943NonFungibleComplianceExtend, IRule {
     /**
      * @notice Validate a transfer
-     * @param _from the origin address
-     * @param _to the destination address
-     * @param _amount to transfer
+     * @param from the origin address
+     * @param to the destination address
+     * @param tokenId ERC-721 or ERC-1155 token Id
+     * @param amount to transfer, 1 for NFT
      * @return isValid => true if the transfer is valid, false otherwise
      *
      */
-    function canTransfer(address _from, address _to, uint256 _amount)
+    function canTransfer(address from, address to, uint256 tokenId, uint256 amount)
+        public
+        view
+        override(IERC7943NonFungibleCompliance)
+        returns (bool isValid)
+    {
+        // does not work without `this` keyword => "Undeclared identifier"
+        return
+            this.detectTransferRestriction(from, to, tokenId, amount) == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
+    }
+
+
+    /**
+     * @notice Validate a transfer
+     * @param from the origin address
+     * @param to the destination address
+     * @param amount to transfer
+     * @return isValid => true if the transfer is valid, false otherwise
+     *
+     */
+    function canTransfer(address from, address to, uint256 amount)
         public
         view
         override(IERC3643ComplianceRead)
@@ -25,7 +47,7 @@ abstract contract RuleValidateTransfer is IERC3643ComplianceRead, IERC7551Compli
     {
         // does not work without `this` keyword => "Undeclared identifier"
         return
-            this.detectTransferRestriction(_from, _to, _amount) == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
+            this.detectTransferRestriction(from, to, amount) == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
     }
 
     function canTransferFrom(address spender, address from, address to, uint256 value)

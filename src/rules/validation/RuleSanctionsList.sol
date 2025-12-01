@@ -7,7 +7,8 @@ import {MetaTxModuleStandalone, ERC2771Context, Context} from "../../modules/Met
 import {RuleSanctionsListInvariantStorage} from "./abstract/RuleSanctionsListInvariantStorage.sol";
 import {RuleValidateTransfer} from "./abstract/RuleValidateTransfer.sol";
 import {ISanctionsList} from "../interfaces/ISanctionsList.sol";
-
+import {IERC7943NonFungibleComplianceExtend} from "../interfaces/IERC7943NonFungibleCompliance.sol";
+import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 contract RuleSanctionsList is
     AccessControl,
     MetaTxModuleStandalone,
@@ -51,7 +52,7 @@ contract RuleSanctionsList is
     function detectTransferRestriction(address from, address to, uint256 /*value */ )
         public
         view
-        override
+        override(IERC1404)
         returns (uint8)
     {
         if (address(sanctionsList) != address(0)) {
@@ -64,10 +65,19 @@ contract RuleSanctionsList is
         return uint8(REJECTED_CODE_BASE.TRANSFER_OK);
     }
 
+    function detectTransferRestriction(address from, address to, uint256 /* tokenId */, uint256 value )
+        public
+        view
+        override(IERC7943NonFungibleComplianceExtend)
+        returns (uint8)
+    {
+        return detectTransferRestriction(from, to, value);
+    }
+
     function detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)
         public
         view
-        override
+        override(IERC1404Extend)
         returns (uint8)
     {
         if (address(sanctionsList) != address(0)) {

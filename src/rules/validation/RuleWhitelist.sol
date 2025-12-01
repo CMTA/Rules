@@ -5,6 +5,8 @@ import {RuleAddressSet} from "./abstract/RuleAddressSet/RuleAddressSet.sol";
 import {RuleWhitelistCommon} from "./abstract/RuleWhitelistCommon.sol";
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IIdentityRegistryVerified} from "../interfaces/IIdentityRegistry.sol";
+import {IERC7943NonFungibleCompliance, IERC7943NonFungibleComplianceExtend} from "../interfaces/IERC7943NonFungibleCompliance.sol";
+
 /**
  * @title Rule Whitelist
  * @notice Manages a whitelist of authorized addresses and enforces whitelist-based transfer restrictions.
@@ -39,7 +41,6 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
      * - Implements the `IERC1404.detectTransferRestriction` interface.
      * @param from The address sending tokens.
      * @param to The address receiving tokens.
-     * @param value The amount being transferred (unused in this check).
      * @return code Restriction code (e.g., `TRANSFER_OK` or specific whitelist rejection).
      *
      * | Condition | Returned Code |
@@ -48,10 +49,10 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
      * | `to` not whitelisted | `CODE_ADDRESS_TO_NOT_WHITELISTED` |
      * | Both whitelisted | `TRANSFER_OK` |
      */
-    function detectTransferRestriction(address from, address to, uint256 value)
+    function detectTransferRestriction(address from, address to, uint256 /* value */)
         public
         view
-        override
+        override(IERC1404)
         returns (uint8 code)
     {
         if (!isAddressListed(from)) {
@@ -61,6 +62,18 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
         } else {
             return uint8(REJECTED_CODE_BASE.TRANSFER_OK);
         }
+    }
+
+    /**
+    * @inheritdoc IERC7943NonFungibleComplianceExtend
+    */
+    function detectTransferRestriction(address from, address to, uint256 /* tokenId */, uint256 value )
+        public
+        view
+        override(IERC7943NonFungibleComplianceExtend)
+        returns (uint8)
+    {
+        return detectTransferRestriction(from, to, value);
     }
 
     /**
@@ -83,7 +96,7 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
     function detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)
         public
         view
-        override
+        override(IERC1404Extend)
         returns (uint8 code)
     {
         if (_checkSpender && !isAddressListed(spender)) {

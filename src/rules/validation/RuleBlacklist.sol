@@ -5,7 +5,8 @@ pragma solidity ^0.8.20;
 import "./abstract/RuleAddressSet/invariantStorage/RuleBlacklistInvariantStorage.sol";
 import "./abstract/RuleAddressSet/RuleAddressSet.sol";
 import "./abstract/RuleValidateTransfer.sol";
-//import {IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
+import {IERC7943NonFungibleComplianceExtend} from "../interfaces/IERC7943NonFungibleCompliance.sol";
+import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 /**
  * @title a blacklist manager
  */
@@ -39,10 +40,19 @@ contract RuleBlacklist is RuleValidateTransfer, RuleAddressSet, RuleBlacklistInv
         }
     }
 
+    function detectTransferRestriction(address from, address to, uint256 /* tokenId */, uint256 value )
+        public
+        view
+        override(IERC7943NonFungibleComplianceExtend)
+        returns (uint8)
+    {
+        return detectTransferRestriction(from, to, value);
+    }
+
     function detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)
         public
         view
-        override
+        override(IERC1404Extend)
         returns (uint8)
     {
         if (isAddressListed(spender)) {

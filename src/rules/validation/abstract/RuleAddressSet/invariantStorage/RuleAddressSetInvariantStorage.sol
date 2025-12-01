@@ -3,12 +3,6 @@
 pragma solidity ^0.8.20;
 
 abstract contract RuleAddressSetInvariantStorage {
-    /* ============ Events ============ */
-    event AddAddresses(address[] listTargetAddresses);
-    event RemoveAddresses(address[] listTargetAddresses);
-    event AddAddress(address targetAddress);
-    event RemoveAddress(address targetAddress);
-
     /* ============ Custom errors ============ */
     error RuleAddressSet_AdminWithAddressZeroNotAllowed();
 

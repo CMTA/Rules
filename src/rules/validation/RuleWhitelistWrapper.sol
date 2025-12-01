@@ -59,6 +59,15 @@ contract RuleWhitelistWrapper is RulesManagementModule, MetaTxModuleStandalone, 
         }
     }
 
+    function detectTransferRestriction(address from, address to, uint256 /* tokenId */, uint256 value )
+        public
+        view
+        override
+        returns (uint8)
+    {
+        return detectTransferRestriction(from, to, value);
+    }
+
     function detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)
         public
         view

@@ -6,6 +6,7 @@ import {MetaTxModuleStandalone, ERC2771Context, Context} from "./../../../../mod
 import {RuleAddressSetInternal} from "./RuleAddressSetInternal.sol";
 import {RuleAddressSetInvariantStorage} from "./invariantStorage/RuleAddressSetInvariantStorage.sol";
 import {IIdentityRegistryContains} from "../../../interfaces/IIdentityRegistry.sol";
+import {IAddressList} from "../../../interfaces/IAddressList.sol";
 /**
  * @title Rule Address Set
  * @notice Manages a permissioned set of addresses related to rule logic.
@@ -21,7 +22,7 @@ abstract contract RuleAddressSet is
     MetaTxModuleStandalone,
     RuleAddressSetInternal,
     RuleAddressSetInvariantStorage,
-    IIdentityRegistryContains
+    IAddressList
 {
     /*//////////////////////////////////////////////////////////////
                                 STATE
