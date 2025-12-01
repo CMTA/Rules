@@ -117,8 +117,13 @@ contract RuleWhitelistTest is Test, HelperContract {
         // ADDRESS1 -> ADDRESS2
         resBool = ruleWhitelist.canTransfer(ADDRESS1, ADDRESS2, 20);
         assertEq(resBool, true);
+        resBool = ruleWhitelist.canTransfer(ADDRESS1, ADDRESS2, 0, 20);
+        assertEq(resBool, true);
         // ADDRESS2 -> ADDRESS1
         resBool = ruleWhitelist.canTransfer(ADDRESS2, ADDRESS1, 20);
+        assertEq(resBool, true);
+
+        resBool = ruleWhitelist.canTransfer(ADDRESS2, ADDRESS1, 0, 20);
         assertEq(resBool, true);
     }
 
@@ -172,6 +177,16 @@ contract RuleWhitelistTest is Test, HelperContract {
         resUint8 = ruleWhitelist.detectTransferRestriction(ADDRESS1, ADDRESS2, 20);
         // Assert
         assertEq(resUint8, CODE_ADDRESS_TO_NOT_WHITELISTED);
+
+        // With tokenId
+        resUint8 = ruleWhitelist.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_TO_NOT_WHITELISTED);
+
+        // With tokenId
+        resUint8 = ruleWhitelist.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_TO_NOT_WHITELISTED);
     }
 
     function testDetectTransferRestrictionOk() public {
@@ -182,6 +197,16 @@ contract RuleWhitelistTest is Test, HelperContract {
         ruleWhitelist.addAddress(ADDRESS2);
         // Act
         resUint8 = ruleWhitelist.detectTransferRestriction(ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertEq(resUint8, NO_ERROR);
+
+        // With tokenId
+        resUint8 = ruleWhitelist.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, NO_ERROR);
+
+        // With tokenId
+        resUint8 = ruleWhitelist.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertEq(resUint8, NO_ERROR);
     }

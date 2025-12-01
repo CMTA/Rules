@@ -59,14 +59,23 @@ contract RuleSanctionlistTest is Test, HelperContract {
         // ADDRESS1 -> ADDRESS2
         resBool = ruleSanctionList.canTransfer(ADDRESS1, ADDRESS2, 20);
         assertEq(resBool, true);
+        resBool = ruleSanctionList.canTransfer(ADDRESS1, ADDRESS2, 0, 20);
+        assertEq(resBool, true);
         // ADDRESS2 -> ADDRESS1
         resBool = ruleSanctionList.canTransfer(ADDRESS2, ADDRESS1, 20);
+        assertEq(resBool, true);
+        resBool = ruleSanctionList.canTransfer(ADDRESS2, ADDRESS1, 0, 20);
         assertEq(resBool, true);
     }
 
     function testTransferFromDetectedAsInvalid() public {
         // Act
         resBool = ruleSanctionList.canTransfer(ATTACKER, ADDRESS2, 20);
+        // Assert
+        assertFalse(resBool);
+
+        // Act
+        resBool = ruleSanctionList.canTransfer(ATTACKER, ADDRESS2, 0, 20);
         // Assert
         assertFalse(resBool);
     }
@@ -76,11 +85,20 @@ contract RuleSanctionlistTest is Test, HelperContract {
         resBool = ruleSanctionList.canTransfer(ADDRESS1, ATTACKER, 20);
         // Assert
         assertFalse(resBool);
+        // Act
+        resBool = ruleSanctionList.canTransfer(ADDRESS1, ATTACKER, 0, 20);
+        // Assert
+        assertFalse(resBool);
     }
 
     function testDetectTransferRestrictionFrom() public {
         // Act
         resUint8 = ruleSanctionList.detectTransferRestriction(ATTACKER, ADDRESS2, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_FROM_IS_SANCTIONED);
+
+        // Act
+        resUint8 = ruleSanctionList.detectTransferRestriction(ATTACKER, ADDRESS2, 0, 20);
         // Assert
         assertEq(resUint8, CODE_ADDRESS_FROM_IS_SANCTIONED);
     }
@@ -90,11 +108,21 @@ contract RuleSanctionlistTest is Test, HelperContract {
         resUint8 = ruleSanctionList.detectTransferRestriction(ADDRESS1, ATTACKER, 20);
         // Assert
         assertEq(resUint8, CODE_ADDRESS_TO_IS_SANCTIONED);
+
+        // Act
+        resUint8 = ruleSanctionList.detectTransferRestriction(ADDRESS1, ATTACKER, 0, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_TO_IS_SANCTIONED);
     }
 
     function testDetectTransferRestrictionOk() public {
         // Act
         resUint8 = ruleSanctionList.detectTransferRestriction(ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertEq(resUint8, NO_ERROR);
+
+        // Act
+        resUint8 = ruleSanctionList.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertEq(resUint8, NO_ERROR);
     }
