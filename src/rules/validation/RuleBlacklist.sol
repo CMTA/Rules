@@ -62,6 +62,15 @@ contract RuleBlacklist is RuleValidateTransfer, RuleAddressSet, RuleBlacklistInv
         }
     }
 
+    function detectTransferRestrictionFrom(address spender, address from, address to, uint256 /* tokenId */, uint256 value )
+        public
+        view
+        override(IERC7943NonFungibleComplianceExtend)
+        returns (uint8)
+    {
+        return detectTransferRestrictionFrom(spender, from, to, value);
+    }
+
     /**
      * @notice To know if the restriction code is valid for this rule or not.
      * @param _restrictionCode The target restriction code

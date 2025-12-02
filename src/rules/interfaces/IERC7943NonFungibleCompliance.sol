@@ -21,6 +21,9 @@ interface IERC7943NonFungibleCompliance {
  */
 interface IERC7943NonFungibleComplianceExtend is IERC7943NonFungibleCompliance {
     function detectTransferRestriction(address from, address to, uint256 tokenId, uint256  amount ) external view returns(uint8 code);
-    
+    function detectTransferRestrictionFrom(address spender, address from, address to, uint256 tokenId, uint256 value)
+        external
+        view
+        returns (uint8 code);
 }
  

@@ -9,6 +9,8 @@ import {RuleWhitelistCommon} from "./abstract/RuleWhitelistCommon.sol";
 import {RulesManagementModule} from "RuleEngine/modules/RulesManagementModule.sol";
 import {RuleEngineInvariantStorage} from "RuleEngine/modules/library/RuleEngineInvariantStorage.sol";
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
+import {IERC7943NonFungibleCompliance, IERC7943NonFungibleComplianceExtend} from "../interfaces/IERC7943NonFungibleCompliance.sol";
+
 /**
  * @title Wrapper to call several different whitelist rules
  */
@@ -94,6 +96,15 @@ contract RuleWhitelistWrapper is RulesManagementModule, MetaTxModuleStandalone, 
         } else {
             return uint8(REJECTED_CODE_BASE.TRANSFER_OK);
         }
+    }
+
+    function detectTransferRestrictionFrom(address spender, address from, address to, uint256 /* tokenId */, uint256 value )
+        public
+        view
+        override(IERC7943NonFungibleComplianceExtend)
+        returns (uint8)
+    {
+        return detectTransferRestrictionFrom(spender, from, to, value);
     }
 
     /* ============ ACCESS CONTROL ============ */

@@ -105,6 +105,15 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
         return detectTransferRestriction(from, to, value);
     }
 
+    function detectTransferRestrictionFrom(address spender, address from, address to, uint256 /* tokenId */, uint256 value )
+        public
+        view
+        override(IERC7943NonFungibleComplianceExtend)
+        returns (uint8)
+    {
+        return detectTransferRestrictionFrom(spender, from, to, value);
+    }
+
     /**
      * @notice Checks whether a specific address is currently listed.
      * @param targetAddress The address to check.
