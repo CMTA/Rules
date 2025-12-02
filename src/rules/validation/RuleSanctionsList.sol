@@ -9,6 +9,8 @@ import {RuleValidateTransfer} from "./abstract/RuleValidateTransfer.sol";
 import {ISanctionsList} from "../interfaces/ISanctionsList.sol";
 import {IERC7943NonFungibleComplianceExtend} from "../interfaces/IERC7943NonFungibleCompliance.sol";
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
+import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
+import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 contract RuleSanctionsList is
     AccessControl,
     MetaTxModuleStandalone,
@@ -128,14 +130,18 @@ contract RuleSanctionsList is
         }
     }
 
-    function transferred(address from, address to, uint256 value) public view {
+    function transferred(address from, address to, uint256 value) public view override(IERC3643IComplianceContract){
         uint8 code = this.detectTransferRestriction(from, to, value);
         require(code == uint8(REJECTED_CODE_BASE.TRANSFER_OK), RuleSanctionsList_InvalidTransfer(address(this), from, to, value, code));
     }
 
-    function transferred(address spender, address from, address to, uint256 value) public view {
+    function transferred(address spender, address from, address to, uint256 value) public view override(IRuleEngine){
         uint8 code = this.detectTransferRestrictionFrom(spender, from, to, value);
         require(code == uint8(REJECTED_CODE_BASE.TRANSFER_OK), RuleSanctionsList_InvalidTransfer(address(this), from, to, value, code));
+    }
+
+    function transferred(address spender, address from, address to, uint256 /* tokenId */,  uint256 value) public view override(IERC7943NonFungibleComplianceExtend){
+        transferred(spender, from, to, value);
     }
 
     /* ============ ACCESS CONTROL ============ */

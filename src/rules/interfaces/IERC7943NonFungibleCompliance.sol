@@ -25,5 +25,8 @@ interface IERC7943NonFungibleComplianceExtend is IERC7943NonFungibleCompliance {
         external
         view
         returns (uint8 code);
+    function canTransferFrom(address spender, address from, address to, uint256 tokenId, uint256 value) external returns (bool);
+
+    function transferred(address spender, address from, address to, uint256 tokenId, uint256 value) external;
 }
  

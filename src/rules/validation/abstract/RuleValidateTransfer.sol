@@ -9,7 +9,7 @@ import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
 import {IERC7943NonFungibleCompliance, IERC7943NonFungibleComplianceExtend} from "../../interfaces/IERC7943NonFungibleCompliance.sol";
 
-abstract contract RuleValidateTransfer is IERC3643ComplianceRead, IERC7551Compliance, IERC7943NonFungibleComplianceExtend, IRule {
+abstract contract RuleValidateTransfer is IERC7943NonFungibleComplianceExtend, IRule {
     /**
      * @notice Validate a transfer
      * @param from the origin address
@@ -59,5 +59,15 @@ abstract contract RuleValidateTransfer is IERC3643ComplianceRead, IERC7551Compli
     {
         return this.detectTransferRestrictionFrom(spender, from, to, value)
             == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
+    }
+
+    function canTransferFrom(address spender, address from, address to, uint256 tokenId, uint256 value)
+        public
+        view
+        virtual
+        override(IERC7943NonFungibleComplianceExtend)
+        returns (bool)
+    {
+        return canTransferFrom(spender, from, to, value);
     }
 }

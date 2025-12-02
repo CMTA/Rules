@@ -182,11 +182,24 @@ contract RuleWhitelistTest is Test, HelperContract {
         resUint8 = ruleWhitelist.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertEq(resUint8, CODE_ADDRESS_TO_NOT_WHITELISTED);
+    }
+
+    function testDetectTransferRestrictionWithSpender() public {
+        // Arrange
+        vm.prank(WHITELIST_OPERATOR_ADDRESS);
+        ruleWhitelist.addAddress(ADDRESS1);
+
+        vm.prank(WHITELIST_OPERATOR_ADDRESS);
+        ruleWhitelist.addAddress(ADDRESS2);
+        // Act
+        resUint8 = ruleWhitelist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_SPENDER_NOT_WHITELISTED);
 
         // With tokenId
-        resUint8 = ruleWhitelist.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
+        resUint8 = ruleWhitelist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
         // Assert
-        assertEq(resUint8, CODE_ADDRESS_TO_NOT_WHITELISTED);
+        assertEq(resUint8, CODE_ADDRESS_SPENDER_NOT_WHITELISTED);
     }
 
     function testDetectTransferRestrictionOk() public {
@@ -207,6 +220,25 @@ contract RuleWhitelistTest is Test, HelperContract {
 
         // With tokenId
         resUint8 = ruleWhitelist.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, NO_ERROR);
+    }
+
+    function testDetectTransferRestrictionWithSpenderOk() public {
+        // Arrange
+        vm.prank(WHITELIST_OPERATOR_ADDRESS);
+        ruleWhitelist.addAddress(ADDRESS1);
+        vm.prank(WHITELIST_OPERATOR_ADDRESS);
+        ruleWhitelist.addAddress(ADDRESS2);
+        vm.prank(WHITELIST_OPERATOR_ADDRESS);
+        ruleWhitelist.addAddress(ADDRESS3);
+        // Act
+        resUint8 = ruleWhitelist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertEq(resUint8, NO_ERROR);
+
+        // With tokenId
+        resUint8 = ruleWhitelist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertEq(resUint8, NO_ERROR);
     }
