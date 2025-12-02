@@ -102,11 +102,11 @@ contract RuleBlacklist is RuleValidateTransfer, RuleAddressSet, RuleBlacklistInv
 
     function transferred(address from, address to, uint256 value) public view {
         uint8 code = this.detectTransferRestriction(from, to, value);
-        require(code == uint8(REJECTED_CODE_BASE.TRANSFER_OK), RuleBlacklist_InvalidTransfer(from, to, value, code));
+        require(code == uint8(REJECTED_CODE_BASE.TRANSFER_OK), RuleBlacklist_InvalidTransfer(address(this), from, to, value, code));
     }
 
     function transferred(address spender, address from, address to, uint256 value) public view {
         uint8 code = this.detectTransferRestrictionFrom(spender, from, to, value);
-        require(code == uint8(REJECTED_CODE_BASE.TRANSFER_OK), RuleBlacklist_InvalidTransfer(from, to, value, code));
+        require(code == uint8(REJECTED_CODE_BASE.TRANSFER_OK), RuleBlacklist_InvalidTransfer(address(this), from, to, value, code));
     }
 }

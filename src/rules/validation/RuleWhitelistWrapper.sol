@@ -51,7 +51,6 @@ contract RuleWhitelistWrapper is RulesManagementModule, MetaTxModuleStandalone, 
         targetAddress[1] = to;
 
         bool[] memory result = _detectTransferRestriction(targetAddress);
-
         if (!result[0]) {
             return CODE_ADDRESS_FROM_NOT_WHITELISTED;
         } else if (!result[1]) {

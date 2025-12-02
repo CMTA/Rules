@@ -5,7 +5,7 @@ pragma solidity ^0.8.20;
 import "../../RuleCommonInvariantStorage.sol";
 
 abstract contract RuleWhitelistInvariantStorage is RuleCommonInvariantStorage {
-    error RuleWhitelist_InvalidTransfer(address from, address to, uint256 value, uint8 code);
+    error RuleWhitelist_InvalidTransfer(address rule, address from, address to, uint256 value, uint8 code);
     /* ============ String message ============ */
 
     string constant TEXT_ADDRESS_FROM_NOT_WHITELISTED = "The sender is not in the whitelist";
