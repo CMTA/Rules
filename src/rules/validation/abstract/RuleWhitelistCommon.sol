@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity ^0.8.20;
 
-import {RuleWhitelistInvariantStorage} from "./RuleAddressSet/invariantStorage/RuleWhitelistInvariantStorage.sol";
-import {RuleValidateTransfer} from "./RuleValidateTransfer.sol";
-import {IERC7943NonFungibleCompliance, IERC7943NonFungibleComplianceExtend} from "../../interfaces/IERC7943NonFungibleCompliance.sol";
+/* ==== CMTAT === */
 import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
 import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
+/* ==== Abstract contracts === */
+import {RuleWhitelistInvariantStorage} from "./RuleAddressSet/invariantStorage/RuleWhitelistInvariantStorage.sol";
+import {RuleValidateTransfer} from "./RuleValidateTransfer.sol";
+/* ==== Interface === */
+import {IERC7943NonFungibleCompliance, IERC7943NonFungibleComplianceExtend} from "../../interfaces/IERC7943NonFungibleCompliance.sol";
+
 /**
  * @title Rule Whitelist Common
  * @notice Provides common logic for validating whitelist-based transfer restrictions.
@@ -15,11 +19,12 @@ import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
  * - Inherits restriction code constants and messages from {RuleWhitelistInvariantStorage}.
  */
 abstract contract RuleWhitelistCommon is RuleValidateTransfer, RuleWhitelistInvariantStorage {
-    bool internal _checkSpender;
+    /**
+    * Indicate if the spender is verified or not
+    */
+    bool public checkSpender;
 
-    /*//////////////////////////////////////////////////////////////
-                          RESTRICTION CODE LOGIC
-    //////////////////////////////////////////////////////////////*/
+    /* ============  View Functions ============ */
     /**
      * @notice Checks whether a restriction code is recognized by this rule.
      * @dev
@@ -56,9 +61,7 @@ abstract contract RuleWhitelistCommon is RuleValidateTransfer, RuleWhitelistInva
         }
     }
 
-    /*//////////////////////////////////////////////////////////////
-                           ERC-3643 HOOKS
-    //////////////////////////////////////////////////////////////*/
+    /* ============  State Functions ============ */
 
     /**
      * @notice ERC-3643 hook called when a transfer occurs.
@@ -76,7 +79,7 @@ abstract contract RuleWhitelistCommon is RuleValidateTransfer, RuleWhitelistInva
     }
 
     /**
-     * @notice ERC-3643 hook called when a delegated transfer occurs (`transferFrom`).
+     * @notice hook called when a delegated transfer occurs (`transferFrom`).
      * @dev
      * - Validates that `spender`, `from`, and `to` are all whitelisted.
      * - Reverts if any restriction code other than `TRANSFER_OK` is returned.
@@ -90,6 +93,9 @@ abstract contract RuleWhitelistCommon is RuleValidateTransfer, RuleWhitelistInva
         require(code == uint8(REJECTED_CODE_BASE.TRANSFER_OK), RuleWhitelist_InvalidTransfer(address(this), from, to, value, code));
     }
 
+    /**
+    * @inheritdoc IERC7943NonFungibleComplianceExtend
+    */
     function transferred(address spender, address from, address to, uint256 /* tokenId */, uint256 value) public view override(IERC7943NonFungibleComplianceExtend){
         transferred(spender, from, to, value);
     }

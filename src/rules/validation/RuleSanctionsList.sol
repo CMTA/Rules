@@ -2,17 +2,22 @@
 
 pragma solidity ^0.8.20;
 
-import {AccessControl} from "OZ/access/AccessControl.sol";
+/* ==== Abtract contracts === */
 import {MetaTxModuleStandalone, ERC2771Context, Context} from "../../modules/MetaTxModuleStandalone.sol";
+import {AccessControlModuleStandalone} from "../../modules/AccessControlModuleStandalone.sol";
 import {RuleSanctionsListInvariantStorage} from "./abstract/RuleSanctionsListInvariantStorage.sol";
 import {RuleValidateTransfer} from "./abstract/RuleValidateTransfer.sol";
+/* ==== Interfaces === */
 import {ISanctionsList} from "../interfaces/ISanctionsList.sol";
 import {IERC7943NonFungibleComplianceExtend} from "../interfaces/IERC7943NonFungibleCompliance.sol";
+/* ==== CMTAT === */
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
 import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
+/* ==== IRuleEngine === */
+import {IRule} from "RuleEngine/interfaces/IRule.sol";
 contract RuleSanctionsList is
-    AccessControl,
+    AccessControlModuleStandalone,
     MetaTxModuleStandalone,
     RuleValidateTransfer,
     RuleSanctionsListInvariantStorage
@@ -24,25 +29,14 @@ contract RuleSanctionsList is
      * @param forwarderIrrevocable Address of the forwarder, required for the gasless support
      */
     constructor(address admin, address forwarderIrrevocable, ISanctionsList sanctionContractOracle_)
-        MetaTxModuleStandalone(forwarderIrrevocable)
+        MetaTxModuleStandalone(forwarderIrrevocable) AccessControlModuleStandalone(admin)
     {
-        if (admin == address(0)) {
-            revert RuleSanctionList_AdminWithAddressZeroNotAllowed();
-        }
         if (address(sanctionContractOracle_) != address(0)) {
             _setSanctionListOracle(sanctionContractOracle_);
         }
-        _grantRole(DEFAULT_ADMIN_ROLE, admin);
     }
 
-    /**
-     * @notice Set the oracle contract
-     * @param sanctionContractOracle_ address of your oracle contract
-     * @dev zero address is authorized to authorize all transfers
-     */
-    function setSanctionListOracle(ISanctionsList sanctionContractOracle_) public onlyRole(SANCTIONLIST_ROLE) {
-        _setSanctionListOracle(sanctionContractOracle_);
-    }
+    /* ============  View Functions ============ */
 
     /**
      * @notice Check if an addres is in the SanctionsList or not
@@ -67,18 +61,26 @@ contract RuleSanctionsList is
         return uint8(REJECTED_CODE_BASE.TRANSFER_OK);
     }
 
+    /**
+    * @inheritdoc IERC7943NonFungibleComplianceExtend
+    */
     function detectTransferRestriction(address from, address to, uint256 /* tokenId */, uint256 value )
         public
         view
+        virtual
         override(IERC7943NonFungibleComplianceExtend)
         returns (uint8)
     {
         return detectTransferRestriction(from, to, value);
     }
 
+    /**
+    * @inheritdoc IERC1404Extend
+    */
     function detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)
         public
         view
+        virtual
         override(IERC1404Extend)
         returns (uint8)
     {
@@ -95,6 +97,7 @@ contract RuleSanctionsList is
     function detectTransferRestrictionFrom(address spender, address from, address to, uint256 /* tokenId */, uint256 value )
         public
         view
+        virtual
         override(IERC7943NonFungibleComplianceExtend)
         returns (uint8)
     {
@@ -103,58 +106,66 @@ contract RuleSanctionsList is
 
     /**
      * @notice To know if the restriction code is valid for this rule or not.
-     * @param _restrictionCode The target restriction code
+     * @param restrictionCode The target restriction code
      * @return true if the restriction code is known, false otherwise
      *
      */
-    function canReturnTransferRestrictionCode(uint8 _restrictionCode) external pure override returns (bool) {
-        return _restrictionCode == CODE_ADDRESS_FROM_IS_SANCTIONED || _restrictionCode == CODE_ADDRESS_TO_IS_SANCTIONED
-            || _restrictionCode == CODE_ADDRESS_SPENDER_IS_SANCTIONED;
+    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override(IRule) 
+    returns (bool) {
+        return restrictionCode == CODE_ADDRESS_FROM_IS_SANCTIONED || restrictionCode == CODE_ADDRESS_TO_IS_SANCTIONED
+            || restrictionCode == CODE_ADDRESS_SPENDER_IS_SANCTIONED;
     }
 
     /**
      * @notice Return the corresponding message
-     * @param _restrictionCode The target restriction code
+     * @param restrictionCode The target restriction code
      * @return true if the transfer is valid, false otherwise
      *
      */
-    function messageForTransferRestriction(uint8 _restrictionCode) external pure override returns (string memory) {
-        if (_restrictionCode == CODE_ADDRESS_FROM_IS_SANCTIONED) {
+    function messageForTransferRestriction(uint8 restrictionCode) public pure virtual override(IERC1404) 
+    returns (string memory) {
+        if (restrictionCode == CODE_ADDRESS_FROM_IS_SANCTIONED) {
             return TEXT_ADDRESS_FROM_IS_SANCTIONED;
-        } else if (_restrictionCode == CODE_ADDRESS_TO_IS_SANCTIONED) {
+        } else if (restrictionCode == CODE_ADDRESS_TO_IS_SANCTIONED) {
             return TEXT_ADDRESS_TO_IS_SANCTIONED;
-        } else if (_restrictionCode == CODE_ADDRESS_SPENDER_IS_SANCTIONED) {
+        } else if (restrictionCode == CODE_ADDRESS_SPENDER_IS_SANCTIONED) {
             return TEXT_ADDRESS_SPENDER_IS_SANCTIONED;
         } else {
             return TEXT_CODE_NOT_FOUND;
         }
     }
 
-    function transferred(address from, address to, uint256 value) public view override(IERC3643IComplianceContract){
+    /* ============  State Functions ============ */
+    /**
+     * @notice Set the oracle contract
+     * @param sanctionContractOracle_ address of your oracle contract
+     * @dev zero address is authorized to authorize all transfers
+     */
+    function setSanctionListOracle(ISanctionsList sanctionContractOracle_) public onlyRole(SANCTIONLIST_ROLE) {
+        _setSanctionListOracle(sanctionContractOracle_);
+    }
+
+    /**
+    * @inheritdoc IERC3643IComplianceContract
+    */
+    function transferred(address from, address to, uint256 value) public view virtual override(IERC3643IComplianceContract){
         uint8 code = this.detectTransferRestriction(from, to, value);
         require(code == uint8(REJECTED_CODE_BASE.TRANSFER_OK), RuleSanctionsList_InvalidTransfer(address(this), from, to, value, code));
     }
 
-    function transferred(address spender, address from, address to, uint256 value) public view override(IRuleEngine){
+    /**
+    * @inheritdoc IRuleEngine
+    */
+    function transferred(address spender, address from, address to, uint256 value) public view virtual override(IRuleEngine){
         uint8 code = this.detectTransferRestrictionFrom(spender, from, to, value);
         require(code == uint8(REJECTED_CODE_BASE.TRANSFER_OK), RuleSanctionsList_InvalidTransfer(address(this), from, to, value, code));
     }
 
-    function transferred(address spender, address from, address to, uint256 /* tokenId */,  uint256 value) public view override(IERC7943NonFungibleComplianceExtend){
-        transferred(spender, from, to, value);
-    }
-
-    /* ============ ACCESS CONTROL ============ */
     /**
-     * @dev Returns `true` if `account` has been granted `role`.
-     */
-    function hasRole(bytes32 role, address account) public view virtual override(AccessControl) returns (bool) {
-        // The Default Admin has all roles
-        if (AccessControl.hasRole(DEFAULT_ADMIN_ROLE, account)) {
-            return true;
-        } else {
-            return AccessControl.hasRole(role, account);
-        }
+    * @inheritdoc IERC7943NonFungibleComplianceExtend
+    */
+    function transferred(address spender, address from, address to, uint256 /* tokenId */,  uint256 value) public view virtual override(IERC7943NonFungibleComplianceExtend){
+        transferred(spender, from, to, value);
     }
 
     /*//////////////////////////////////////////////////////////////

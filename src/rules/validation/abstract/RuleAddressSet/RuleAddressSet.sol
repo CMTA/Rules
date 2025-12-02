@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity ^0.8.20;
 
-import {AccessControl} from "OZ/access/AccessControl.sol";
-import {MetaTxModuleStandalone, ERC2771Context, Context} from "./../../../../modules/MetaTxModuleStandalone.sol";
+import {AccessControlModuleStandalone} from "../../../../modules/AccessControlModuleStandalone.sol";
+import {MetaTxModuleStandalone, ERC2771Context, Context} from "../../../../modules/MetaTxModuleStandalone.sol";
 import {RuleAddressSetInternal} from "./RuleAddressSetInternal.sol";
 import {RuleAddressSetInvariantStorage} from "./invariantStorage/RuleAddressSetInvariantStorage.sol";
+/* ==== Interfaces === */
 import {IIdentityRegistryContains} from "../../../interfaces/IIdentityRegistry.sol";
 import {IAddressList} from "../../../interfaces/IAddressList.sol";
 /**
@@ -18,7 +19,7 @@ import {IAddressList} from "../../../interfaces/IAddressList.sol";
  */
 
 abstract contract RuleAddressSet is
-    AccessControl,
+    AccessControlModuleStandalone,
     MetaTxModuleStandalone,
     RuleAddressSetInternal,
     RuleAddressSetInvariantStorage,
@@ -41,11 +42,9 @@ abstract contract RuleAddressSet is
      * @param forwarderIrrevocable Address of the ERC2771 forwarder (for meta-transactions).
      * @dev Reverts if the admin address is the zero address.
      */
-    constructor(address admin, address forwarderIrrevocable) MetaTxModuleStandalone(forwarderIrrevocable) {
-        if (admin == address(0)) {
-            revert RuleAddressSet_AdminWithAddressZeroNotAllowed();
-        }
-        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+    constructor(address admin, address forwarderIrrevocable) 
+    MetaTxModuleStandalone(forwarderIrrevocable) AccessControlModuleStandalone(admin){
+        // nothing to do
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -143,25 +142,6 @@ abstract contract RuleAddressSet is
             results[i] = _isAddressListed(targetAddresses[i]);
         }
     }
-
-    /*//////////////////////////////////////////////////////////////
-                           ACCESS CONTROL
-    //////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Returns `true` if `account` has been granted `role`.
-     * @dev
-     * The `DEFAULT_ADMIN_ROLE` implicitly grants all roles.
-     * @param role The role identifier.
-     * @param account The account address to check.
-     */
-    function hasRole(bytes32 role, address account) public view virtual override(AccessControl) returns (bool) {
-        if (AccessControl.hasRole(DEFAULT_ADMIN_ROLE, account)) {
-            return true;
-        }
-        return AccessControl.hasRole(role, account);
-    }
-
     /*//////////////////////////////////////////////////////////////
                              ERC-2771 META TX
     //////////////////////////////////////////////////////////////*/

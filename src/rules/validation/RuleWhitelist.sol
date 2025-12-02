@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity ^0.8.20;
 
+/* ==== Abtract contracts === */
 import {RuleAddressSet} from "./abstract/RuleAddressSet/RuleAddressSet.sol";
 import {RuleWhitelistCommon} from "./abstract/RuleWhitelistCommon.sol";
+/* ==== CMTAT === */
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
+/* ==== Interfaces === */
 import {IIdentityRegistryVerified} from "../interfaces/IIdentityRegistry.sol";
 import {IERC7943NonFungibleCompliance, IERC7943NonFungibleComplianceExtend} from "../interfaces/IERC7943NonFungibleCompliance.sol";
 
@@ -24,10 +27,10 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
      * @param admin Address of the contract (Access Control)
      * @param forwarderIrrevocable Address of the forwarder, required for the gasless support
      */
-    constructor(address admin, address forwarderIrrevocable, bool checkSpender)
+    constructor(address admin, address forwarderIrrevocable, bool checkSpender_)
         RuleAddressSet(admin, forwarderIrrevocable)
     {
-        _checkSpender = checkSpender;
+        checkSpender = checkSpender_;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -99,12 +102,15 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
         override(IERC1404Extend)
         returns (uint8 code)
     {
-        if (_checkSpender && !isAddressListed(spender)) {
+        if (checkSpender && !isAddressListed(spender)) {
             return CODE_ADDRESS_SPENDER_NOT_WHITELISTED;
         }
         return detectTransferRestriction(from, to, value);
     }
 
+    /**
+    * @inheritdoc IERC7943NonFungibleComplianceExtend
+    */
     function detectTransferRestrictionFrom(address spender, address from, address to, uint256 /* tokenId */, uint256 value )
         public
         view

@@ -2,16 +2,15 @@
 
 pragma solidity ^0.8.20;
 
-import "./RuleCommonInvariantStorage.sol";
+import {RuleCommonInvariantStorage} from "./RuleCommonInvariantStorage.sol";
 import {ISanctionsList} from "../../interfaces/ISanctionsList.sol";
 
 abstract contract RuleSanctionsListInvariantStorage is RuleCommonInvariantStorage {
-    error RuleSanctionsList_InvalidTransfer(address rule, address from, address to, uint256 value, uint8 code);
-    /* ============ Event ============ */
 
+    /* ============ Event ============ */
     event SetSanctionListOracle(ISanctionsList newOracle);
     /* ============ Custom errors ============ */
-
+    error RuleSanctionsList_InvalidTransfer(address rule, address from, address to, uint256 value, uint8 code);
     error RuleSanctionList_AdminWithAddressZeroNotAllowed();
     error RuleSanctionList_AddressAlreadyWhitelisted();
 

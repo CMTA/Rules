@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import "../../RuleCommonInvariantStorage.sol";
+import {RuleCommonInvariantStorage} from "../../RuleCommonInvariantStorage.sol";
 
 abstract contract RuleBlacklistInvariantStorage is RuleCommonInvariantStorage {
     error RuleBlacklist_InvalidTransfer(address rule, address from, address to, uint256 value, uint8 code);

@@ -2,20 +2,26 @@
 
 pragma solidity ^0.8.20;
 
+/* ==== OpenZeppelin === */
 import {AccessControl} from "OZ/access/AccessControl.sol";
+/* ==== Abtract contracts === */
+import {AccessControlModuleStandalone} from "../../modules/AccessControlModuleStandalone.sol";
 import {MetaTxModuleStandalone, ERC2771Context, Context} from "../../modules/MetaTxModuleStandalone.sol";
 import {RuleAddressSet} from "./abstract/RuleAddressSet/RuleAddressSet.sol";
 import {RuleWhitelistCommon} from "./abstract/RuleWhitelistCommon.sol";
+/* ==== RuleEngine === */
 import {RulesManagementModule} from "RuleEngine/modules/RulesManagementModule.sol";
 import {RuleEngineInvariantStorage} from "RuleEngine/modules/library/RuleEngineInvariantStorage.sol";
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
+/* ==== CMTAT === */
+import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
+/* ==== Interfaces === */
 import {IERC7943NonFungibleCompliance, IERC7943NonFungibleComplianceExtend} from "../interfaces/IERC7943NonFungibleCompliance.sol";
 
 /**
  * @title Wrapper to call several different whitelist rules
  */
-
-contract RuleWhitelistWrapper is RulesManagementModule, MetaTxModuleStandalone, RuleWhitelistCommon {
+contract RuleWhitelistWrapper is RulesManagementModule, AccessControlModuleStandalone, MetaTxModuleStandalone, RuleWhitelistCommon {
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
@@ -23,14 +29,10 @@ contract RuleWhitelistWrapper is RulesManagementModule, MetaTxModuleStandalone, 
      * @param admin Address of the contract (Access Control)
      * @param forwarderIrrevocable Address of the forwarder, required for the gasless support
      */
-    constructor(address admin, address forwarderIrrevocable, bool checkSpender)
-        MetaTxModuleStandalone(forwarderIrrevocable)
+    constructor(address admin, address forwarderIrrevocable, bool checkSpender_)
+        MetaTxModuleStandalone(forwarderIrrevocable) AccessControlModuleStandalone(admin)
     {
-        if (admin == address(0)) {
-            revert RuleEngineInvariantStorage.RuleEngine_AdminWithAddressZeroNotAllowed();
-        }
-        _checkSpender = checkSpender;
-        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        checkSpender = checkSpender_;
     }
 
     /**
@@ -43,7 +45,7 @@ contract RuleWhitelistWrapper is RulesManagementModule, MetaTxModuleStandalone, 
     function detectTransferRestriction(address from, address to, uint256 /*value*/ )
         public
         view
-        override
+        override(IERC1404)
         returns (uint8)
     {
         address[] memory targetAddress = new address[](2);
@@ -63,7 +65,7 @@ contract RuleWhitelistWrapper is RulesManagementModule, MetaTxModuleStandalone, 
     function detectTransferRestriction(address from, address to, uint256 /* tokenId */, uint256 value )
         public
         view
-        override
+        override(IERC7943NonFungibleComplianceExtend)
         returns (uint8)
     {
         return detectTransferRestriction(from, to, value);
@@ -72,10 +74,10 @@ contract RuleWhitelistWrapper is RulesManagementModule, MetaTxModuleStandalone, 
     function detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)
         public
         view
-        override
+        override(IERC1404Extend)
         returns (uint8)
     {
-        if (!_checkSpender) {
+        if (!checkSpender) {
             return detectTransferRestriction(from, to, value);
         }
 
@@ -97,6 +99,9 @@ contract RuleWhitelistWrapper is RulesManagementModule, MetaTxModuleStandalone, 
         }
     }
 
+    /**
+    * @inheritdoc IERC7943NonFungibleComplianceExtend
+    */
     function detectTransferRestrictionFrom(address spender, address from, address to, uint256 /* tokenId */, uint256 value )
         public
         view
@@ -106,18 +111,22 @@ contract RuleWhitelistWrapper is RulesManagementModule, MetaTxModuleStandalone, 
         return detectTransferRestrictionFrom(spender, from, to, value);
     }
 
-    /* ============ ACCESS CONTROL ============ */
-    /**
+
+    /* ============  Access control ============ */
+
+     /** 
      * @dev Returns `true` if `account` has been granted `role`.
      */
-    function hasRole(bytes32 role, address account) public view virtual override(AccessControl) returns (bool) {
-        // The Default Admin has all roles
-        if (AccessControl.hasRole(DEFAULT_ADMIN_ROLE, account)) {
-            return true;
-        } else {
-            return AccessControl.hasRole(role, account);
-        }
+    function hasRole(
+        bytes32 role,
+        address account
+    ) public view virtual override(AccessControl,AccessControlModuleStandalone ) returns (bool) {
+       return AccessControlModuleStandalone.hasRole(role, account);
     }
+
+    /*//////////////////////////////////////////////////////////////
+                            INTERNAL/PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     function _detectTransferRestriction(address[] memory targetAddress) internal view returns (bool[] memory) {
         uint256 rulesLength = rulesCount();
