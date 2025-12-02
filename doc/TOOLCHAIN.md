@@ -131,21 +131,9 @@ slither .  --checklist --filter-paths "openzeppelin-contracts|test|CMTAT|forge-s
 
 ## Code style guidelines
 
-We use the following tools to ensure consistent coding style:
+We use `Foundry` to perform code style guidelines
 
-[Prettier](https://github.com/prettier-solidity/prettier-plugin-solidity)
-
-```
-npm run-script lint:sol:prettier 
+```bash
+forge fmt
 ```
 
-[Ethlint / Solium](https://github.com/duaraghav8/Ethlint)
-
-```
-npm run-script lint:sol 
-npm run-script lint:sol:fix 
-npm run-script lint:sol:test 
-npm run-script lint:sol:test:fix
-```
-
-The related components can be installed with `npm install` (see [package.json](./package.json)). 
