@@ -35,6 +35,7 @@ contract RuleWhitelistWrapper is RulesManagementModule, AccessControlModuleStand
         checkSpender = checkSpender_;
     }
 
+    /* ============  View Functions ============ */
     /**
      * @notice Go through all the whitelist rules to know if a restriction exists on the transfer
      * @param from the origin address

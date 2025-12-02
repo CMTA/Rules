@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import "../HelperContract.sol";
 import "CMTAT/mocks/MinimalForwarderMock.sol";
-
+import {AccessControlModuleStandalone} from "../../src/modules/AccessControlModuleStandalone.sol";
 /**
  * @title General functions of the RuleWhitelist
  */
@@ -34,7 +34,7 @@ contract RuleWhitelistDeploymentTest is Test, HelperContract {
         vm.prank(WHITELIST_OPERATOR_ADDRESS);
         MinimalForwarderMock forwarder = new MinimalForwarderMock();
         forwarder.initialize(ERC2771ForwarderDomain);
-        vm.expectRevert(RuleAddressSet_AdminWithAddressZeroNotAllowed.selector);
+        vm.expectRevert(AccessControlModuleStandalone.AccessControlModuleStandalone_AddressZeroNotAllowed.selector);
         vm.prank(WHITELIST_OPERATOR_ADDRESS);
         ruleWhitelist = new RuleWhitelist(address(0), address(forwarder), true);
     }

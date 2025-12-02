@@ -6,18 +6,22 @@ pragma solidity ^0.8.20;
 import {AccessControl} from "OZ/access/AccessControl.sol";
 
 abstract contract AccessControlModuleStandalone is AccessControl {
+    error AccessControlModuleStandalone_AddressZeroNotAllowed();
     /* ============ Constructor ============ */
     /**
-     * @dev
-     *
-     * Revert if admin is the zero address
-     * Grant the admin with the admin role
-     *
-     */
+    * @notice Assigns the provided address as the default admin.
+    * @dev
+    *  - Reverts if `admin` is the zero address.  
+    *  - Grants `DEFAULT_ADMIN_ROLE` to `admin`.  
+    *    The return value of `_grantRole` is intentionally ignored, as it returns `false`
+    *    only when the role was already granted.
+    *
+    * @param admin The address that will receive the `DEFAULT_ADMIN_ROLE`.
+    */
     constructor(address admin)
     {
         if(admin == address(0)){
-            //revert CMTAT_AccessControlModule_AddressZeroNotAllowed();
+            revert AccessControlModuleStandalone_AddressZeroNotAllowed();
         }
         // we don't check the return value
         // _grantRole attempts to grant `role` to `account` and returns a boolean indicating if `role` was granted.

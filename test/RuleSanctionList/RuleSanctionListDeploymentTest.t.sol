@@ -6,6 +6,7 @@ import "../HelperContract.sol";
 import "CMTAT/mocks/MinimalForwarderMock.sol";
 import "../utils/SanctionListOracle.sol";
 import {RuleSanctionsList, ISanctionsList} from "src/rules/validation/RuleSanctionsList.sol";
+import {AccessControlModuleStandalone} from "../../src/modules/AccessControlModuleStandalone.sol";
 /**
  * @title General functions of the ruleSanctionList
  */
@@ -40,7 +41,7 @@ contract RuleSanctionListDeploymentTest is Test, HelperContract {
         vm.prank(SANCTIONLIST_OPERATOR_ADDRESS);
         MinimalForwarderMock forwarder = new MinimalForwarderMock();
         forwarder.initialize(ERC2771ForwarderDomain);
-        vm.expectRevert(RuleSanctionList_AdminWithAddressZeroNotAllowed.selector);
+        vm.expectRevert(AccessControlModuleStandalone.AccessControlModuleStandalone_AddressZeroNotAllowed.selector);
         vm.prank(SANCTIONLIST_OPERATOR_ADDRESS);
         ruleSanctionList = new RuleSanctionsList(address(0), address(forwarder), ISanctionsList(ZERO_ADDRESS));
     }

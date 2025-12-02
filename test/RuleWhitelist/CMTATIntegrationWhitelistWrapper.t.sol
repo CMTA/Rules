@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import "CMTAT/deployment/CMTATStandalone.sol";
 import "../HelperContract.sol";
-
+import {AccessControlModuleStandalone} from "../../src/modules/AccessControlModuleStandalone.sol";
 /**
  * @title Integration test with the CMTAT
  */
@@ -55,7 +55,7 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
      */
     function testCannotDeployContractIfAdminAddressIsZero() public {
         vm.prank(WHITELIST_OPERATOR_ADDRESS);
-        vm.expectRevert(RuleEngine_AdminWithAddressZeroNotAllowed.selector);
+        vm.expectRevert(AccessControlModuleStandalone.AccessControlModuleStandalone_AddressZeroNotAllowed.selector);
         ruleWhitelistWrapper = new RuleWhitelistWrapper(ZERO_ADDRESS, ZERO_ADDRESS, true);
     }
 

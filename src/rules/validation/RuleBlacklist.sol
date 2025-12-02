@@ -14,17 +14,21 @@ import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC364
 import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 /* ==== IRuleEngine === */
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
+
 /**
  * @title a blacklist manager
  */
-
 contract RuleBlacklist is RuleValidateTransfer, RuleAddressSet, RuleBlacklistInvariantStorage {
+    /*//////////////////////////////////////////////////////////////
+                              CONSTRUCTOR
+    //////////////////////////////////////////////////////////////*/
     /**
      * @param admin Address of the contract (Access Control)
      * @param forwarderIrrevocable Address of the forwarder, required for the gasless support
      */
     constructor(address admin, address forwarderIrrevocable) RuleAddressSet(admin, forwarderIrrevocable) {}
 
+    /* ============  View Functions ============ */
     /**
      * @notice Check if an addres is in the whitelist or not
      * @param from the origin address

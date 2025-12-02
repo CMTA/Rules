@@ -33,9 +33,7 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
         checkSpender = checkSpender_;
     }
 
-    /*//////////////////////////////////////////////////////////////
-                          TRANSFER RESTRICTION LOGIC
-    //////////////////////////////////////////////////////////////*/
+    /* ============  View Functions ============ */
 
     /**
      * @notice Detects whether a transfer between two addresses is allowed under the whitelist rule.

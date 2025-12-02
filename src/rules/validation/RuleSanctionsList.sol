@@ -24,6 +24,9 @@ contract RuleSanctionsList is
 {
     ISanctionsList public sanctionsList;
 
+    /*//////////////////////////////////////////////////////////////
+                              CONSTRUCTOR
+    //////////////////////////////////////////////////////////////*/
     /**
      * @param admin Address of the contract (Access Control)
      * @param forwarderIrrevocable Address of the forwarder, required for the gasless support
