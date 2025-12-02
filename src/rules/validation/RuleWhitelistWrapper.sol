@@ -16,12 +16,20 @@ import {IRule} from "RuleEngine/interfaces/IRule.sol";
 /* ==== CMTAT === */
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 /* ==== Interfaces === */
-import {IERC7943NonFungibleCompliance, IERC7943NonFungibleComplianceExtend} from "../interfaces/IERC7943NonFungibleCompliance.sol";
+import {
+    IERC7943NonFungibleCompliance,
+    IERC7943NonFungibleComplianceExtend
+} from "../interfaces/IERC7943NonFungibleCompliance.sol";
 
 /**
  * @title Wrapper to call several different whitelist rules
  */
-contract RuleWhitelistWrapper is RulesManagementModule, AccessControlModuleStandalone, MetaTxModuleStandalone, RuleWhitelistCommon {
+contract RuleWhitelistWrapper is
+    RulesManagementModule,
+    AccessControlModuleStandalone,
+    MetaTxModuleStandalone,
+    RuleWhitelistCommon
+{
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
@@ -30,7 +38,8 @@ contract RuleWhitelistWrapper is RulesManagementModule, AccessControlModuleStand
      * @param forwarderIrrevocable Address of the forwarder, required for the gasless support
      */
     constructor(address admin, address forwarderIrrevocable, bool checkSpender_)
-        MetaTxModuleStandalone(forwarderIrrevocable) AccessControlModuleStandalone(admin)
+        MetaTxModuleStandalone(forwarderIrrevocable)
+        AccessControlModuleStandalone(admin)
     {
         checkSpender = checkSpender_;
     }
@@ -63,7 +72,7 @@ contract RuleWhitelistWrapper is RulesManagementModule, AccessControlModuleStand
         }
     }
 
-    function detectTransferRestriction(address from, address to, uint256 /* tokenId */, uint256 value )
+    function detectTransferRestriction(address from, address to, uint256, /* tokenId */ uint256 value)
         public
         view
         override(IERC7943NonFungibleComplianceExtend)
@@ -101,28 +110,31 @@ contract RuleWhitelistWrapper is RulesManagementModule, AccessControlModuleStand
     }
 
     /**
-    * @inheritdoc IERC7943NonFungibleComplianceExtend
-    */
-    function detectTransferRestrictionFrom(address spender, address from, address to, uint256 /* tokenId */, uint256 value )
-        public
-        view
-        override(IERC7943NonFungibleComplianceExtend)
-        returns (uint8)
-    {
+     * @inheritdoc IERC7943NonFungibleComplianceExtend
+     */
+    function detectTransferRestrictionFrom(
+        address spender,
+        address from,
+        address to,
+        uint256, /* tokenId */
+        uint256 value
+    ) public view override(IERC7943NonFungibleComplianceExtend) returns (uint8) {
         return detectTransferRestrictionFrom(spender, from, to, value);
     }
 
-
     /* ============  Access control ============ */
 
-     /** 
+    /**
      * @dev Returns `true` if `account` has been granted `role`.
      */
-    function hasRole(
-        bytes32 role,
-        address account
-    ) public view virtual override(AccessControl,AccessControlModuleStandalone ) returns (bool) {
-       return AccessControlModuleStandalone.hasRole(role, account);
+    function hasRole(bytes32 role, address account)
+        public
+        view
+        virtual
+        override(AccessControl, AccessControlModuleStandalone)
+        returns (bool)
+    {
+        return AccessControlModuleStandalone.hasRole(role, account);
     }
 
     /*//////////////////////////////////////////////////////////////

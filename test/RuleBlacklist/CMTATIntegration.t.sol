@@ -59,7 +59,12 @@ contract CMTATIntegration is Test, HelperContract {
         vm.prank(ADDRESS1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                RuleBlacklist_InvalidTransfer.selector, address(ruleBlacklist), ADDRESS1, ADDRESS2, amount, CODE_ADDRESS_TO_IS_BLACKLISTED
+                RuleBlacklist_InvalidTransfer.selector,
+                address(ruleBlacklist),
+                ADDRESS1,
+                ADDRESS2,
+                amount,
+                CODE_ADDRESS_TO_IS_BLACKLISTED
             )
         );
         // Act
@@ -75,7 +80,12 @@ contract CMTATIntegration is Test, HelperContract {
         vm.prank(ADDRESS1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                RuleBlacklist_InvalidTransfer.selector, address(ruleBlacklist), ADDRESS1, ADDRESS2, amount, CODE_ADDRESS_FROM_IS_BLACKLISTED
+                RuleBlacklist_InvalidTransfer.selector,
+                address(ruleBlacklist),
+                ADDRESS1,
+                ADDRESS2,
+                amount,
+                CODE_ADDRESS_FROM_IS_BLACKLISTED
             )
         );
         // Act
@@ -96,7 +106,12 @@ contract CMTATIntegration is Test, HelperContract {
         vm.prank(ADDRESS1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                RuleBlacklist_InvalidTransfer.selector, address(ruleBlacklist), ADDRESS1, ADDRESS2, amount, CODE_ADDRESS_FROM_IS_BLACKLISTED
+                RuleBlacklist_InvalidTransfer.selector,
+                address(ruleBlacklist),
+                ADDRESS1,
+                ADDRESS2,
+                amount,
+                CODE_ADDRESS_FROM_IS_BLACKLISTED
             )
         );
         CMTAT_CONTRACT.transfer(ADDRESS2, amount);
@@ -190,7 +205,12 @@ contract CMTATIntegration is Test, HelperContract {
         // Act
         vm.expectRevert(
             abi.encodeWithSelector(
-                RuleBlacklist_InvalidTransfer.selector, address(ruleBlacklist), ZERO_ADDRESS, ADDRESS1, amount, CODE_ADDRESS_TO_IS_BLACKLISTED
+                RuleBlacklist_InvalidTransfer.selector,
+                address(ruleBlacklist),
+                ZERO_ADDRESS,
+                ADDRESS1,
+                amount,
+                CODE_ADDRESS_TO_IS_BLACKLISTED
             )
         );
         vm.prank(DEFAULT_ADMIN_ADDRESS);

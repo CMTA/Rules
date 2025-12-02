@@ -9,7 +9,10 @@ import {IERC7551Compliance} from "CMTAT/interfaces/tokenization/draft-IERC7551.s
 import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 /* ==== RuleEngine === */
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
-import {IERC7943NonFungibleCompliance, IERC7943NonFungibleComplianceExtend} from "../../interfaces/IERC7943NonFungibleCompliance.sol";
+import {
+    IERC7943NonFungibleCompliance,
+    IERC7943NonFungibleComplianceExtend
+} from "../../interfaces/IERC7943NonFungibleCompliance.sol";
 
 abstract contract RuleValidateTransfer is IERC7943NonFungibleComplianceExtend, IRule {
     /**
@@ -28,10 +31,9 @@ abstract contract RuleValidateTransfer is IERC7943NonFungibleComplianceExtend, I
         returns (bool isValid)
     {
         // does not work without `this` keyword => "Undeclared identifier"
-        return
-            this.detectTransferRestriction(from, to, tokenId, amount) == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
+        return this.detectTransferRestriction(from, to, tokenId, amount)
+            == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
     }
-
 
     /**
      * @notice Validate a transfer
@@ -48,13 +50,12 @@ abstract contract RuleValidateTransfer is IERC7943NonFungibleComplianceExtend, I
         returns (bool isValid)
     {
         // does not work without `this` keyword => "Undeclared identifier"
-        return
-            this.detectTransferRestriction(from, to, amount) == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
+        return this.detectTransferRestriction(from, to, amount) == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
     }
 
     /**
-    * @inheritdoc IERC7551Compliance
-    */
+     * @inheritdoc IERC7551Compliance
+     */
     function canTransferFrom(address spender, address from, address to, uint256 value)
         public
         view
@@ -67,8 +68,8 @@ abstract contract RuleValidateTransfer is IERC7943NonFungibleComplianceExtend, I
     }
 
     /**
-    * @inheritdoc IERC7943NonFungibleComplianceExtend
-    */
+     * @inheritdoc IERC7943NonFungibleComplianceExtend
+     */
     function canTransferFrom(address spender, address from, address to, uint256 tokenId, uint256 value)
         public
         view

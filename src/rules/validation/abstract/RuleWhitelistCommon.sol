@@ -8,7 +8,10 @@ import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {RuleWhitelistInvariantStorage} from "./RuleAddressSet/invariantStorage/RuleWhitelistInvariantStorage.sol";
 import {RuleValidateTransfer} from "./RuleValidateTransfer.sol";
 /* ==== Interface === */
-import {IERC7943NonFungibleCompliance, IERC7943NonFungibleComplianceExtend} from "../../interfaces/IERC7943NonFungibleCompliance.sol";
+import {
+    IERC7943NonFungibleCompliance,
+    IERC7943NonFungibleComplianceExtend
+} from "../../interfaces/IERC7943NonFungibleCompliance.sol";
 
 /**
  * @title Rule Whitelist Common
@@ -20,8 +23,8 @@ import {IERC7943NonFungibleCompliance, IERC7943NonFungibleComplianceExtend} from
  */
 abstract contract RuleWhitelistCommon is RuleValidateTransfer, RuleWhitelistInvariantStorage {
     /**
-    * Indicate if the spender is verified or not
-    */
+     * Indicate if the spender is verified or not
+     */
     bool public checkSpender;
 
     /* ============  View Functions ============ */
@@ -73,9 +76,12 @@ abstract contract RuleWhitelistCommon is RuleValidateTransfer, RuleWhitelistInva
      * @param to The address receiving tokens.
      * @param value The token amount being transferred.
      */
-    function transferred(address from, address to, uint256 value) public view override(IERC3643IComplianceContract){
+    function transferred(address from, address to, uint256 value) public view override(IERC3643IComplianceContract) {
         uint8 code = this.detectTransferRestriction(from, to, value);
-        require(code == uint8(REJECTED_CODE_BASE.TRANSFER_OK), RuleWhitelist_InvalidTransfer(address(this), from, to, value, code));
+        require(
+            code == uint8(REJECTED_CODE_BASE.TRANSFER_OK),
+            RuleWhitelist_InvalidTransfer(address(this), from, to, value, code)
+        );
     }
 
     /**
@@ -90,13 +96,20 @@ abstract contract RuleWhitelistCommon is RuleValidateTransfer, RuleWhitelistInva
      */
     function transferred(address spender, address from, address to, uint256 value) public view override(IRuleEngine) {
         uint8 code = this.detectTransferRestrictionFrom(spender, from, to, value);
-        require(code == uint8(REJECTED_CODE_BASE.TRANSFER_OK), RuleWhitelist_InvalidTransfer(address(this), from, to, value, code));
+        require(
+            code == uint8(REJECTED_CODE_BASE.TRANSFER_OK),
+            RuleWhitelist_InvalidTransfer(address(this), from, to, value, code)
+        );
     }
 
     /**
-    * @inheritdoc IERC7943NonFungibleComplianceExtend
-    */
-    function transferred(address spender, address from, address to, uint256 /* tokenId */, uint256 value) public view override(IERC7943NonFungibleComplianceExtend){
+     * @inheritdoc IERC7943NonFungibleComplianceExtend
+     */
+    function transferred(address spender, address from, address to, uint256, /* tokenId */ uint256 value)
+        public
+        view
+        override(IERC7943NonFungibleComplianceExtend)
+    {
         transferred(spender, from, to, value);
     }
 }

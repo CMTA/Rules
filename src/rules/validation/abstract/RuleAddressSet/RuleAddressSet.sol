@@ -42,8 +42,10 @@ abstract contract RuleAddressSet is
      * @param forwarderIrrevocable Address of the ERC2771 forwarder (for meta-transactions).
      * @dev Reverts if the admin address is the zero address.
      */
-    constructor(address admin, address forwarderIrrevocable) 
-    MetaTxModuleStandalone(forwarderIrrevocable) AccessControlModuleStandalone(admin){
+    constructor(address admin, address forwarderIrrevocable)
+        MetaTxModuleStandalone(forwarderIrrevocable)
+        AccessControlModuleStandalone(admin)
+    {
         // nothing to do
     }
 

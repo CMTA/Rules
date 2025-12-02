@@ -16,6 +16,7 @@ import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC364
 import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 /* ==== IRuleEngine === */
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
+
 contract RuleSanctionsList is
     AccessControlModuleStandalone,
     MetaTxModuleStandalone,
@@ -32,7 +33,8 @@ contract RuleSanctionsList is
      * @param forwarderIrrevocable Address of the forwarder, required for the gasless support
      */
     constructor(address admin, address forwarderIrrevocable, ISanctionsList sanctionContractOracle_)
-        MetaTxModuleStandalone(forwarderIrrevocable) AccessControlModuleStandalone(admin)
+        MetaTxModuleStandalone(forwarderIrrevocable)
+        AccessControlModuleStandalone(admin)
     {
         if (address(sanctionContractOracle_) != address(0)) {
             _setSanctionListOracle(sanctionContractOracle_);
@@ -65,9 +67,9 @@ contract RuleSanctionsList is
     }
 
     /**
-    * @inheritdoc IERC7943NonFungibleComplianceExtend
-    */
-    function detectTransferRestriction(address from, address to, uint256 /* tokenId */, uint256 value )
+     * @inheritdoc IERC7943NonFungibleComplianceExtend
+     */
+    function detectTransferRestriction(address from, address to, uint256, /* tokenId */ uint256 value)
         public
         view
         virtual
@@ -78,8 +80,8 @@ contract RuleSanctionsList is
     }
 
     /**
-    * @inheritdoc IERC1404Extend
-    */
+     * @inheritdoc IERC1404Extend
+     */
     function detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)
         public
         view
@@ -97,13 +99,13 @@ contract RuleSanctionsList is
         return uint8(REJECTED_CODE_BASE.TRANSFER_OK);
     }
 
-    function detectTransferRestrictionFrom(address spender, address from, address to, uint256 /* tokenId */, uint256 value )
-        public
-        view
-        virtual
-        override(IERC7943NonFungibleComplianceExtend)
-        returns (uint8)
-    {
+    function detectTransferRestrictionFrom(
+        address spender,
+        address from,
+        address to,
+        uint256, /* tokenId */
+        uint256 value
+    ) public view virtual override(IERC7943NonFungibleComplianceExtend) returns (uint8) {
         return detectTransferRestrictionFrom(spender, from, to, value);
     }
 
@@ -113,8 +115,7 @@ contract RuleSanctionsList is
      * @return true if the restriction code is known, false otherwise
      *
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override(IRule) 
-    returns (bool) {
+    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override(IRule) returns (bool) {
         return restrictionCode == CODE_ADDRESS_FROM_IS_SANCTIONED || restrictionCode == CODE_ADDRESS_TO_IS_SANCTIONED
             || restrictionCode == CODE_ADDRESS_SPENDER_IS_SANCTIONED;
     }
@@ -125,8 +126,13 @@ contract RuleSanctionsList is
      * @return true if the transfer is valid, false otherwise
      *
      */
-    function messageForTransferRestriction(uint8 restrictionCode) public pure virtual override(IERC1404) 
-    returns (string memory) {
+    function messageForTransferRestriction(uint8 restrictionCode)
+        public
+        pure
+        virtual
+        override(IERC1404)
+        returns (string memory)
+    {
         if (restrictionCode == CODE_ADDRESS_FROM_IS_SANCTIONED) {
             return TEXT_ADDRESS_FROM_IS_SANCTIONED;
         } else if (restrictionCode == CODE_ADDRESS_TO_IS_SANCTIONED) {
@@ -149,25 +155,46 @@ contract RuleSanctionsList is
     }
 
     /**
-    * @inheritdoc IERC3643IComplianceContract
-    */
-    function transferred(address from, address to, uint256 value) public view virtual override(IERC3643IComplianceContract){
+     * @inheritdoc IERC3643IComplianceContract
+     */
+    function transferred(address from, address to, uint256 value)
+        public
+        view
+        virtual
+        override(IERC3643IComplianceContract)
+    {
         uint8 code = this.detectTransferRestriction(from, to, value);
-        require(code == uint8(REJECTED_CODE_BASE.TRANSFER_OK), RuleSanctionsList_InvalidTransfer(address(this), from, to, value, code));
+        require(
+            code == uint8(REJECTED_CODE_BASE.TRANSFER_OK),
+            RuleSanctionsList_InvalidTransfer(address(this), from, to, value, code)
+        );
     }
 
     /**
-    * @inheritdoc IRuleEngine
-    */
-    function transferred(address spender, address from, address to, uint256 value) public view virtual override(IRuleEngine){
+     * @inheritdoc IRuleEngine
+     */
+    function transferred(address spender, address from, address to, uint256 value)
+        public
+        view
+        virtual
+        override(IRuleEngine)
+    {
         uint8 code = this.detectTransferRestrictionFrom(spender, from, to, value);
-        require(code == uint8(REJECTED_CODE_BASE.TRANSFER_OK), RuleSanctionsList_InvalidTransfer(address(this), from, to, value, code));
+        require(
+            code == uint8(REJECTED_CODE_BASE.TRANSFER_OK),
+            RuleSanctionsList_InvalidTransfer(address(this), from, to, value, code)
+        );
     }
 
     /**
-    * @inheritdoc IERC7943NonFungibleComplianceExtend
-    */
-    function transferred(address spender, address from, address to, uint256 /* tokenId */,  uint256 value) public view virtual override(IERC7943NonFungibleComplianceExtend){
+     * @inheritdoc IERC7943NonFungibleComplianceExtend
+     */
+    function transferred(address spender, address from, address to, uint256, /* tokenId */ uint256 value)
+        public
+        view
+        virtual
+        override(IERC7943NonFungibleComplianceExtend)
+    {
         transferred(spender, from, to, value);
     }
 

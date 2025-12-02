@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IIdentityRegistryContains} from "./IIdentityRegistry.sol";
+
 interface IAddressList is IIdentityRegistryContains {
     /* ============ Events ============ */
     /// @notice Emitted when multiple addresses are added.
@@ -19,7 +20,6 @@ interface IAddressList is IIdentityRegistryContains {
     /// @notice Emitted when a single address is removed.
     /// @param targetAddress The removed address.
     event RemoveAddress(address targetAddress);
-
 
     /* ============ Write ============ */
     /**
@@ -50,7 +50,6 @@ interface IAddressList is IIdentityRegistryContains {
      */
     function removeAddress(address targetAddress) external;
 
-
     /* ============ Read ============ */
 
     /**
@@ -71,8 +70,5 @@ interface IAddressList is IIdentityRegistryContains {
      * @param targetAddresses Array of addresses to check.
      * @return results Boolean array aligned by index with listing results.
      */
-    function areAddressesListed(address[] memory targetAddresses)
-        external
-        view
-        returns (bool[] memory results);
+    function areAddressesListed(address[] memory targetAddresses) external view returns (bool[] memory results);
 }

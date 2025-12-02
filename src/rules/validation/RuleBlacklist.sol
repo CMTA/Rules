@@ -3,7 +3,8 @@
 pragma solidity ^0.8.20;
 
 /* ==== Abtract contracts === */
-import {RuleBlacklistInvariantStorage} from "./abstract/RuleAddressSet/invariantStorage/RuleBlacklistInvariantStorage.sol";
+import {RuleBlacklistInvariantStorage} from
+    "./abstract/RuleAddressSet/invariantStorage/RuleBlacklistInvariantStorage.sol";
 import {RuleAddressSet} from "./abstract/RuleAddressSet/RuleAddressSet.sol";
 import {RuleValidateTransfer} from "./abstract/RuleValidateTransfer.sol";
 /* ==== Interfaces === */
@@ -54,7 +55,7 @@ contract RuleBlacklist is RuleValidateTransfer, RuleAddressSet, RuleBlacklistInv
     /*
     * @inheritdoc IERC7943NonFungibleComplianceExtend
     */
-    function detectTransferRestriction(address from, address to, uint256 /* tokenId */, uint256 value )
+    function detectTransferRestriction(address from, address to, uint256, /* tokenId */ uint256 value)
         public
         view
         override(IERC7943NonFungibleComplianceExtend)
@@ -80,14 +81,15 @@ contract RuleBlacklist is RuleValidateTransfer, RuleAddressSet, RuleBlacklistInv
     }
 
     /**
-    * @inheritdoc IERC7943NonFungibleComplianceExtend
-    */
-    function detectTransferRestrictionFrom(address spender, address from, address to, uint256 /* tokenId */, uint256 value )
-        public
-        view
-        override(IERC7943NonFungibleComplianceExtend)
-        returns (uint8)
-    {
+     * @inheritdoc IERC7943NonFungibleComplianceExtend
+     */
+    function detectTransferRestrictionFrom(
+        address spender,
+        address from,
+        address to,
+        uint256, /* tokenId */
+        uint256 value
+    ) public view override(IERC7943NonFungibleComplianceExtend) returns (uint8) {
         return detectTransferRestrictionFrom(spender, from, to, value);
     }
 
@@ -97,7 +99,13 @@ contract RuleBlacklist is RuleValidateTransfer, RuleAddressSet, RuleBlacklistInv
      * @return true if the restriction code is known, false otherwise
      *
      */
-    function canReturnTransferRestrictionCode(uint8 _restrictionCode) public pure virtual override(IRule) returns (bool) {
+    function canReturnTransferRestrictionCode(uint8 _restrictionCode)
+        public
+        pure
+        virtual
+        override(IRule)
+        returns (bool)
+    {
         return _restrictionCode == CODE_ADDRESS_FROM_IS_BLACKLISTED
             || _restrictionCode == CODE_ADDRESS_TO_IS_BLACKLISTED || _restrictionCode == CODE_ADDRESS_SPENDER_IS_BLACKLISTED;
     }
@@ -108,7 +116,13 @@ contract RuleBlacklist is RuleValidateTransfer, RuleAddressSet, RuleBlacklistInv
      * @return true if the transfer is valid, false otherwise
      *
      */
-    function messageForTransferRestriction(uint8 _restrictionCode) public pure virtual override(IERC1404) returns (string memory) {
+    function messageForTransferRestriction(uint8 _restrictionCode)
+        public
+        pure
+        virtual
+        override(IERC1404)
+        returns (string memory)
+    {
         if (_restrictionCode == CODE_ADDRESS_FROM_IS_BLACKLISTED) {
             return TEXT_ADDRESS_FROM_IS_BLACKLISTED;
         } else if (_restrictionCode == CODE_ADDRESS_TO_IS_BLACKLISTED) {
@@ -122,17 +136,38 @@ contract RuleBlacklist is RuleValidateTransfer, RuleAddressSet, RuleBlacklistInv
 
     /* ============  State Functions ============ */
 
-    function transferred(address from, address to, uint256 value) public view virtual override(IERC3643IComplianceContract) {
+    function transferred(address from, address to, uint256 value)
+        public
+        view
+        virtual
+        override(IERC3643IComplianceContract)
+    {
         uint8 code = this.detectTransferRestriction(from, to, value);
-        require(code == uint8(REJECTED_CODE_BASE.TRANSFER_OK), RuleBlacklist_InvalidTransfer(address(this), from, to, value, code));
+        require(
+            code == uint8(REJECTED_CODE_BASE.TRANSFER_OK),
+            RuleBlacklist_InvalidTransfer(address(this), from, to, value, code)
+        );
     }
 
-    function transferred(address spender, address from, address to, uint256 value) public view virtual override(IRuleEngine) {
+    function transferred(address spender, address from, address to, uint256 value)
+        public
+        view
+        virtual
+        override(IRuleEngine)
+    {
         uint8 code = this.detectTransferRestrictionFrom(spender, from, to, value);
-        require(code == uint8(REJECTED_CODE_BASE.TRANSFER_OK), RuleBlacklist_InvalidTransfer(address(this), from, to, value, code));
+        require(
+            code == uint8(REJECTED_CODE_BASE.TRANSFER_OK),
+            RuleBlacklist_InvalidTransfer(address(this), from, to, value, code)
+        );
     }
 
-    function transferred(address spender, address from, address to, uint256 /* tokenId */, uint256 value) public view virtual override(IERC7943NonFungibleComplianceExtend) {
+    function transferred(address spender, address from, address to, uint256, /* tokenId */ uint256 value)
+        public
+        view
+        virtual
+        override(IERC7943NonFungibleComplianceExtend)
+    {
         transferred(spender, from, to, value);
     }
 }

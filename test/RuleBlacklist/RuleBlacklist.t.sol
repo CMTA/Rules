@@ -81,7 +81,7 @@ contract RuleBlacklistTest is Test, HelperContract {
         // Act
         resUint8 = ruleBlacklist.detectTransferRestriction(ADDRESS1, ADDRESS2, 20);
 
-         // With tokenId
+        // With tokenId
         resUint8 = ruleBlacklist.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertEq(resUint8, CODE_ADDRESS_TO_IS_BLACKLISTED);

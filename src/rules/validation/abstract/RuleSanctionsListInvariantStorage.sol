@@ -6,10 +6,10 @@ import {RuleCommonInvariantStorage} from "./RuleCommonInvariantStorage.sol";
 import {ISanctionsList} from "../../interfaces/ISanctionsList.sol";
 
 abstract contract RuleSanctionsListInvariantStorage is RuleCommonInvariantStorage {
-
     /* ============ Event ============ */
     event SetSanctionListOracle(ISanctionsList newOracle);
     /* ============ Custom errors ============ */
+
     error RuleSanctionsList_InvalidTransfer(address rule, address from, address to, uint256 value, uint8 code);
     error RuleSanctionList_AdminWithAddressZeroNotAllowed();
     error RuleSanctionList_AddressAlreadyWhitelisted();

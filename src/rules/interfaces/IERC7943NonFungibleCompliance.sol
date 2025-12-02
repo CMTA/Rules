@@ -11,15 +11,15 @@ pragma solidity ^0.8.20;
  *    whether a transfer is permitted according to rule-based restrictions.
  */
 interface IERC7943NonFungibleCompliance {
-   /**
+    /**
      * @notice Verifies whether a transfer is permitted according to the token’s compliance rules.
      * @dev
      *  This function must not modify state.
      *  It may enforce checks such as:
-     *   - Allowlist / blocklist membership  
-     *   - Freezing rules  
-     *   - Transfer limitations  
-     *   - Jurisdictional, regulatory, or policy-driven restrictions  
+     *   - Allowlist / blocklist membership
+     *   - Freezing rules
+     *   - Transfer limitations
+     *   - Jurisdictional, regulatory, or policy-driven restrictions
      *  If the transfer is not allowed, this function MUST return `false`.
      *
      * @param from The address currently holding the token.
@@ -28,7 +28,10 @@ interface IERC7943NonFungibleCompliance {
      * @param amount The amount being transferred (always `1` for ERC-721).
      * @return allowed `true` if the transfer is permitted, otherwise `false`.
      */
-    function canTransfer(address from, address to, uint256 tokenId, uint256 amount) external view returns (bool allowed);
+    function canTransfer(address from, address to, uint256 tokenId, uint256 amount)
+        external
+        view
+        returns (bool allowed);
 }
 
 /**
@@ -36,17 +39,17 @@ interface IERC7943NonFungibleCompliance {
  * @notice Extended compliance interface for ERC-721/1155–style non-fungible assets.
  * @dev
  *  Adds functionality for:
- *   - Returning standardized transfer-restriction codes  
- *   - Compliance checks involving a spender (e.g., approvals and operators)  
- *   - Writing compliance-related state upon successful transfers  
+ *   - Returning standardized transfer-restriction codes
+ *   - Compliance checks involving a spender (e.g., approvals and operators)
+ *   - Writing compliance-related state upon successful transfers
  *  For ERC-721, `amount/value` MUST be set to `1`.
  */
- interface IERC7943NonFungibleComplianceExtend is IERC7943NonFungibleCompliance {
+interface IERC7943NonFungibleComplianceExtend is IERC7943NonFungibleCompliance {
     /**
      * @notice Returns a transfer-restriction code describing why a transfer is blocked.
      * @dev
-     *  - MUST NOT modify state.  
-     *  - MUST return `0` when the transfer is allowed.  
+     *  - MUST NOT modify state.
+     *  - MUST return `0` when the transfer is allowed.
      *  - Non-zero codes SHOULD follow the ERC-1404 or RuleEngine restriction-code conventions.
      *
      * @param from The address currently holding the token.
@@ -55,8 +58,11 @@ interface IERC7943NonFungibleCompliance {
      * @param amount The amount being transferred (always `1` for ERC-721).
      * @return code A restriction code: `0` for success, otherwise an implementation-defined error code.
      */
-    function detectTransferRestriction(address from, address to, uint256 tokenId, uint256  amount ) external view returns(uint8 code);
-    
+    function detectTransferRestriction(address from, address to, uint256 tokenId, uint256 amount)
+        external
+        view
+        returns (uint8 code);
+
     /**
      * @notice Returns a transfer-restriction code for transfers triggered by a spender.
      * @dev
@@ -89,7 +95,9 @@ interface IERC7943NonFungibleCompliance {
      * @param value The transfer amount (always `1` for ERC-721).
      * @return allowed `true` if the transfer is permitted, otherwise `false`.
      */
-    function canTransferFrom(address spender, address from, address to, uint256 tokenId, uint256 value) external returns (bool allowed);
+    function canTransferFrom(address spender, address from, address to, uint256 tokenId, uint256 value)
+        external
+        returns (bool allowed);
 
     /**
      * @notice Notifies the rule engine or compliance module that a transfer has been executed.
@@ -106,4 +114,3 @@ interface IERC7943NonFungibleCompliance {
      */
     function transferred(address spender, address from, address to, uint256 tokenId, uint256 value) external;
 }
- 

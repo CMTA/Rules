@@ -25,7 +25,7 @@ import {RuleAddressSetInvariantStorage} from
 
 import {RuleSanctionsListInvariantStorage} from "src/rules/validation/abstract/RuleSanctionsListInvariantStorage.sol";
 // Rule interface
-import  {IAddressList} from "src/rules/interfaces/IAddressList.sol";
+import {IAddressList} from "src/rules/interfaces/IAddressList.sol";
 
 // utils
 import "RuleEngine/../test/utils/CMTATDeployment.sol";

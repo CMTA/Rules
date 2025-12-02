@@ -8,6 +8,7 @@ import {AccessControlModuleStandalone} from "../../src/modules/AccessControlModu
 /**
  * @title General functions of the RuleWhitelist
  */
+
 contract RuleWhitelistDeploymentTest is Test, HelperContract {
     // Arrange
     function setUp() public {}
