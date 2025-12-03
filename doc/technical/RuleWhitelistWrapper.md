@@ -19,13 +19,13 @@ If this is the case, the rule return 0 (transfer valid) or an error otherwise.
 
 ### Inheritance
 
-![surya_inheritance_RuleWhitelistWrapper.sol](../surya/surya_inheritance/surya_inheritance_RuleWhitelistWrapper.sol.png)
+
 
 ## Details
 
 ### Architecture
 
-This rule inherits from `RuleEngineValidationCommon`. Thus the whitelist rules are managed with the same architecture and code than for the ruleEngine. For example, rules are added with the functions `setRulesValidation` or `addRuleValidation`.
+
 
 ### Admin
 

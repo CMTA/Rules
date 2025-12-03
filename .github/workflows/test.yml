@@ -16,21 +16,29 @@ jobs:
     name: Foundry project
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2
         with:
           submodules: recursive
 
+
+      - name: Setup NodeJS 20.5.0
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 #v4.4.0
+        with:
+          node-version: 20.5.0
+
+      - name: Install nodes modules inside CMTAT lib
+        run: npm install
+        working-directory: ./lib/CMTAT
+
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        #v1.5.0
+        uses: foundry-rs/foundry-toolchain@50d5a8956f2e319df19e6b57539d7e2acb9f8c1e
+        with:
+          version: nightly
 
       - name: Show Forge version
         run: |
           forge --version
-
-      - name: Run Forge fmt
-        run: |
-          forge fmt --check
-        id: fmt
 
       - name: Run Forge build
         run: |

@@ -4,16 +4,16 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import "CMTAT/deployment/CMTATStandalone.sol";
 import "../HelperContract.sol";
-
+import {AccessControlModuleStandalone} from "../../src/modules/AccessControlModuleStandalone.sol";
 /**
  * @title Integration test with the CMTAT
  */
+
 contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
     uint256 ADDRESS1_BALANCE_INIT = 31;
     uint256 ADDRESS2_BALANCE_INIT = 32;
     uint256 ADDRESS3_BALANCE_INIT = 33;
-
-    uint256 FLAG = 5;
+    
     RuleWhitelist ruleWhitelist2;
     RuleWhitelist ruleWhitelist3;
     RuleWhitelistWrapper ruleWhitelistWrapper;
@@ -21,31 +21,24 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
     // Arrange
     function setUp() public {
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelist = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
-        ruleWhitelist2 = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
-        ruleWhitelist3 = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
-        ruleWhitelistWrapper = new RuleWhitelistWrapper(
-            DEFAULT_ADMIN_ADDRESS,
-            ZERO_ADDRESS
-        );
+        ruleWhitelist = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, true);
+        ruleWhitelist2 = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, true);
+        ruleWhitelist3 = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, true);
+        ruleWhitelistWrapper = new RuleWhitelistWrapper(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, true);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelistWrapper.addRuleValidation(ruleWhitelist);
+        ruleWhitelistWrapper.addRule(ruleWhitelist);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelistWrapper.addRuleValidation(ruleWhitelist2);
+        ruleWhitelistWrapper.addRule(ruleWhitelist2);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelistWrapper.addRuleValidation(ruleWhitelist3);
+        ruleWhitelistWrapper.addRule(ruleWhitelist3);
         // global arrange
         cmtatDeployment = new CMTATDeployment();
         CMTAT_CONTRACT = cmtatDeployment.cmtat();
         // specific arrange
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock = new RuleEngine(
-            DEFAULT_ADMIN_ADDRESS,
-            ZERO_ADDRESS,
-            address(CMTAT_CONTRACT)
-        );
+        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, address(CMTAT_CONTRACT));
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock.addRuleValidation(ruleWhitelistWrapper);
+        ruleEngineMock.addRule(ruleWhitelistWrapper);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         CMTAT_CONTRACT.mint(ADDRESS1, ADDRESS1_BALANCE_INIT);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
@@ -57,27 +50,29 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
         CMTAT_CONTRACT.setRuleEngine(ruleEngineMock);
     }
 
-    /******* Deployment *******/
-
+    /**
+     * Deployment ******
+     */
     function testCannotDeployContractIfAdminAddressIsZero() public {
         vm.prank(WHITELIST_OPERATOR_ADDRESS);
-        vm.expectRevert(RuleEngine_AdminWithAddressZeroNotAllowed.selector);
-        ruleWhitelistWrapper = new RuleWhitelistWrapper(
-            ZERO_ADDRESS,
-            ZERO_ADDRESS
-        );
+        vm.expectRevert(AccessControlModuleStandalone.AccessControlModuleStandalone_AddressZeroNotAllowed.selector);
+        ruleWhitelistWrapper = new RuleWhitelistWrapper(ZERO_ADDRESS, ZERO_ADDRESS, true);
     }
 
-    /******* Transfer *******/
+    /**
+     * Transfer ******
+     */
     function testCannotTransferWithoutAddressWhitelisted() public {
         // Arrange
         vm.prank(ADDRESS1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                RuleEngine_InvalidTransfer.selector,
+                RuleWhitelist_InvalidTransfer.selector,
+                address(ruleWhitelistWrapper),
                 ADDRESS1,
                 ADDRESS2,
-                21
+                21,
+                CODE_ADDRESS_FROM_NOT_WHITELISTED
             )
         );
         // Act
@@ -88,15 +83,17 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
         // Arrange
         uint256 amount = 21;
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelist.addAddressToTheList(ADDRESS2);
+        ruleWhitelist.addAddress(ADDRESS2);
 
         vm.prank(ADDRESS1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                RuleEngine_InvalidTransfer.selector,
+                RuleWhitelist_InvalidTransfer.selector,
+                address(ruleWhitelistWrapper),
                 ADDRESS1,
                 ADDRESS2,
-                amount
+                amount,
+                CODE_ADDRESS_FROM_NOT_WHITELISTED
             )
         );
         // Act
@@ -107,15 +104,17 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
         // Arrange
         uint256 amount = 21;
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelist.addAddressToTheList(ADDRESS1);
+        ruleWhitelist.addAddress(ADDRESS1);
 
         vm.prank(ADDRESS1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                RuleEngine_InvalidTransfer.selector,
+                RuleWhitelist_InvalidTransfer.selector,
+                address(ruleWhitelistWrapper),
                 ADDRESS1,
                 ADDRESS2,
-                amount
+                amount,
+                CODE_ADDRESS_TO_NOT_WHITELISTED
             )
         );
         // Act
@@ -125,14 +124,14 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
     function testCanMakeATransferIfWhitelistedInSeveralDifferentList() public {
         // Arrange
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelist.addAddressToTheList(ADDRESS1);
+        ruleWhitelist.addAddress(ADDRESS1);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelist3.addAddressToTheList(ADDRESS1);
+        ruleWhitelist3.addAddress(ADDRESS1);
 
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelist2.addAddressToTheList(ADDRESS2);
+        ruleWhitelist2.addAddress(ADDRESS2);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelist3.addAddressToTheList(ADDRESS2);
+        ruleWhitelist3.addAddress(ADDRESS2);
 
         // Act
         vm.prank(ADDRESS1);
@@ -150,10 +149,10 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
     function testCanMakeATransferIfWhitelistedInDifferentList() public {
         // Arrange
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelist.addAddressToTheList(ADDRESS1);
+        ruleWhitelist.addAddress(ADDRESS1);
 
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelist2.addAddressToTheList(ADDRESS2);
+        ruleWhitelist2.addAddress(ADDRESS2);
 
         // Act
         vm.prank(ADDRESS1);
@@ -174,12 +173,7 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
         whitelist[0] = ADDRESS1;
         whitelist[1] = ADDRESS2;
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        (bool success, ) = address(ruleWhitelist).call(
-            abi.encodeWithSignature(
-                "addAddressesToTheList(address[])",
-                whitelist
-            )
-        );
+        (bool success,) = address(ruleWhitelist).call(abi.encodeWithSignature("addAddresses(address[])", whitelist));
         require(success);
 
         // Act
@@ -195,23 +189,19 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
         assertEq(resUint256, 33);
     }
 
-    /******* detectTransferRestriction & messageForTransferRestriction *******/
+    /**
+     * detectTransferRestriction & messageForTransferRestriction ******
+     */
     function testDetectAndMessageWithFromNotWhitelisted() public {
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelist.addAddressToTheList(ADDRESS2);
-        resBool = ruleWhitelist.addressIsListed(ADDRESS2);
+        ruleWhitelist.addAddress(ADDRESS2);
+        resBool = ruleWhitelist.isAddressListed(ADDRESS2);
         // Assert
         assertEq(resBool, true);
-        uint8 res1 = CMTAT_CONTRACT.detectTransferRestriction(
-            ADDRESS1,
-            ADDRESS2,
-            11
-        );
+        uint8 res1 = CMTAT_CONTRACT.detectTransferRestriction(ADDRESS1, ADDRESS2, 11);
         // Assert
         assertEq(res1, CODE_ADDRESS_FROM_NOT_WHITELISTED);
-        string memory message1 = CMTAT_CONTRACT.messageForTransferRestriction(
-            res1
-        );
+        string memory message1 = CMTAT_CONTRACT.messageForTransferRestriction(res1);
         // Assert
         assertEq(message1, TEXT_ADDRESS_FROM_NOT_WHITELISTED);
     }
@@ -220,40 +210,28 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
         // Arrange
         // We add the sender to the whitelist
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelist.addAddressToTheList(ADDRESS1);
+        ruleWhitelist.addAddress(ADDRESS1);
         // Arrange - Assert
-        resBool = ruleWhitelist.addressIsListed(ADDRESS1);
+        resBool = ruleWhitelist.isAddressListed(ADDRESS1);
         assertEq(resBool, true);
         // Act
-        uint8 res1 = CMTAT_CONTRACT.detectTransferRestriction(
-            ADDRESS1,
-            ADDRESS2,
-            11
-        );
+        uint8 res1 = CMTAT_CONTRACT.detectTransferRestriction(ADDRESS1, ADDRESS2, 11);
         // Assert
         assertEq(res1, CODE_ADDRESS_TO_NOT_WHITELISTED);
         // Act
-        string memory message1 = CMTAT_CONTRACT.messageForTransferRestriction(
-            res1
-        );
+        string memory message1 = CMTAT_CONTRACT.messageForTransferRestriction(res1);
         // Assert
         assertEq(message1, TEXT_ADDRESS_TO_NOT_WHITELISTED);
     }
 
     function testDetectAndMessageWithFromAndToNotWhitelisted() public view {
         // Act
-        uint8 res1 = CMTAT_CONTRACT.detectTransferRestriction(
-            ADDRESS1,
-            ADDRESS2,
-            11
-        );
+        uint8 res1 = CMTAT_CONTRACT.detectTransferRestriction(ADDRESS1, ADDRESS2, 11);
 
         // Assert
         assertEq(res1, CODE_ADDRESS_FROM_NOT_WHITELISTED);
         // Act
-        string memory message1 = CMTAT_CONTRACT.messageForTransferRestriction(
-            res1
-        );
+        string memory message1 = CMTAT_CONTRACT.messageForTransferRestriction(res1);
 
         // Assert
         assertEq(message1, TEXT_ADDRESS_FROM_NOT_WHITELISTED);
@@ -261,9 +239,7 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
 
     function testCanReturnUnknownTextMessage() public view {
         // Act
-        string memory message1 = CMTAT_CONTRACT.messageForTransferRestriction(
-            200
-        );
+        string memory message1 = CMTAT_CONTRACT.messageForTransferRestriction(200);
 
         // Assert
         assertEq(message1, TEXT_CODE_NOT_FOUND);
@@ -276,25 +252,14 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
         whitelist[0] = ADDRESS1;
         whitelist[1] = ADDRESS2;
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        (bool success, ) = address(ruleWhitelist).call(
-            abi.encodeWithSignature(
-                "addAddressesToTheList(address[])",
-                whitelist
-            )
-        );
+        (bool success,) = address(ruleWhitelist).call(abi.encodeWithSignature("addAddresses(address[])", whitelist));
         require(success);
         // Act
-        uint8 res1 = CMTAT_CONTRACT.detectTransferRestriction(
-            ADDRESS1,
-            ADDRESS2,
-            11
-        );
+        uint8 res1 = CMTAT_CONTRACT.detectTransferRestriction(ADDRESS1, ADDRESS2, 11);
         // Assert
         assertEq(res1, TRANSFER_OK);
         // Act
-        string memory message1 = CMTAT_CONTRACT.messageForTransferRestriction(
-            res1
-        );
+        string memory message1 = CMTAT_CONTRACT.messageForTransferRestriction(res1);
         // Assert
         assertEq(message1, TEXT_TRANSFER_OK);
     }
@@ -303,11 +268,11 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
         // Arrange
         // Add address zero to the whitelist
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelist.addAddressToTheList(ZERO_ADDRESS);
+        ruleWhitelist.addAddress(ZERO_ADDRESS);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleWhitelist.addAddressToTheList(ADDRESS1);
+        ruleWhitelist.addAddress(ADDRESS1);
         // Arrange - Assert
-        resBool = ruleWhitelist.addressIsListed(ZERO_ADDRESS);
+        resBool = ruleWhitelist.isAddressListed(ZERO_ADDRESS);
         assertEq(resBool, true);
 
         // Act

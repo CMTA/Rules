@@ -1,6 +1,10 @@
 # Contributing Guidelines
 
-There are many ways to contribute to RuleEngine Contracts.
+There are many ways to contribute to  Rules Contracts.
+
+## Development branch
+
+If you want to propose some improvement to the codebase, use the current development branch `dev` to perform the modification.
 
 ## Opening an issue
 

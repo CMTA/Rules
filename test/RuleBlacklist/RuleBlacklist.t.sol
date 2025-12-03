@@ -15,16 +15,294 @@ contract RuleBlacklistTest is Test, HelperContract {
         ruleBlacklist = new RuleBlacklist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
     }
 
-    function testCanRuleBlacklistReturnMessageNotFoundWithUnknownCodeId()
-        public
-        view
-    {
+    function testReturnTheRightMessageForAGivenCode() public {
+        // Assert
+        resString = ruleBlacklist.messageForTransferRestriction(CODE_ADDRESS_FROM_IS_BLACKLISTED);
+        // Assert
+        assertEq(resString, TEXT_ADDRESS_FROM_IS_BLACKLISTED);
+        
         // Act
-        string memory message1 = ruleBlacklist.messageForTransferRestriction(
-            255
-        );
+        resString = ruleBlacklist.messageForTransferRestriction(CODE_ADDRESS_TO_IS_BLACKLISTED);
+        // Assert
+        assertEq(resString, TEXT_ADDRESS_TO_IS_BLACKLISTED);
+
+        // Act
+        resString = ruleBlacklist.messageForTransferRestriction(CODE_ADDRESS_SPENDER_IS_BLACKLISTED);
+        // Assert
+        assertEq(resString, TEXT_ADDRESS_SPENDER_IS_BLACKLISTED);
+
+        // Act
+        resString = ruleBlacklist.messageForTransferRestriction(CODE_NONEXISTENT);
+        // Assert
+        assertEq(resString, TEXT_CODE_NOT_FOUND);
+    }
+
+    function testCanRuleBlacklistReturnMessageNotFoundWithUnknownCodeId() public view {
+        // Act
+        string memory message1 = ruleBlacklist.messageForTransferRestriction(255);
 
         // Assert
         assertEq(message1, TEXT_CODE_NOT_FOUND);
     }
+
+    function testDetectTransferRestrictionOk() public {
+        // Act
+        resUint8 = ruleBlacklist.detectTransferRestriction(ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertEq(resUint8, NO_ERROR);
+
+        // With tokenId
+        resUint8 = ruleBlacklist.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, NO_ERROR);
+
+        // With tokenId
+        resUint8 = ruleBlacklist.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, NO_ERROR);
+
+        // Act
+        resBool = ruleBlacklist.canTransfer(ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertEq(resBool, true);
+        // Act
+        resBool = ruleBlacklist.canTransfer(ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resBool, true);
+
+        // No revert
+        // Act
+        ruleBlacklist.transferred(ADDRESS1, ADDRESS2, 20);
+        ruleBlacklist.transferred(ADDRESS1, ADDRESS2, 0, 20);
+    }
+
+    function testDetectTransferRestrictionFRom() public {
+        // Arrange
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        ruleBlacklist.addAddress(ADDRESS1);
+        // Act
+        resUint8 = ruleBlacklist.detectTransferRestriction(ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_FROM_IS_BLACKLISTED);
+
+        // With tokenId
+        resUint8 = ruleBlacklist.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_FROM_IS_BLACKLISTED);
+
+        // Act
+        resBool = ruleBlacklist.canTransfer(ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertFalse(resBool);
+
+        // Act
+        resBool = ruleBlacklist.canTransfer(ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertFalse(resBool);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleBlacklist_InvalidTransfer.selector,
+                address(ruleBlacklist),
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_FROM_IS_BLACKLISTED
+            )
+        );
+        // Act
+        ruleBlacklist.transferred(ADDRESS1, ADDRESS2, 20);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleBlacklist_InvalidTransfer.selector,
+                address(ruleBlacklist),
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_FROM_IS_BLACKLISTED
+            )
+        );
+        ruleBlacklist.transferred(ADDRESS1, ADDRESS2, 0, 20);
+    }
+
+    function testDetectTransferRestrictionTO() public {
+        // Arrange
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        ruleBlacklist.addAddress(ADDRESS2);
+        // Act
+        resUint8 = ruleBlacklist.detectTransferRestriction(ADDRESS1, ADDRESS2, 20);
+        assertEq(resUint8, CODE_ADDRESS_TO_IS_BLACKLISTED);
+
+        // With tokenId
+        resUint8 = ruleBlacklist.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_TO_IS_BLACKLISTED);
+
+        // Act
+        resBool = ruleBlacklist.canTransfer(ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertFalse(resBool);
+
+        // Act
+        resBool = ruleBlacklist.canTransfer(ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertFalse(resBool);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleBlacklist_InvalidTransfer.selector,
+                address(ruleBlacklist),
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_TO_IS_BLACKLISTED
+            )
+        );
+        // Act
+        ruleBlacklist.transferred(ADDRESS1, ADDRESS2, 20);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleBlacklist_InvalidTransfer.selector,
+                address(ruleBlacklist),
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_TO_IS_BLACKLISTED
+            )
+        );
+        ruleBlacklist.transferred(ADDRESS1, ADDRESS2, 0, 20);
+    }
+
+    function testDetectTransferRestrictionSpender() public {
+        // Arrange
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        ruleBlacklist.addAddress(ADDRESS3);
+        // Act
+        resUint8 = ruleBlacklist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        assertEq(resUint8, CODE_ADDRESS_SPENDER_IS_BLACKLISTED);
+
+        // With tokenId
+        resUint8 = ruleBlacklist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_SPENDER_IS_BLACKLISTED);
+
+        // Act
+        resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertFalse(resBool);
+
+        // Act
+        resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertFalse(resBool);
+
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleBlacklist_InvalidTransferFrom.selector,
+                address(ruleBlacklist),
+                ADDRESS3,
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_SPENDER_IS_BLACKLISTED
+            )
+        );
+        // Act
+        ruleBlacklist.transferred(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleBlacklist_InvalidTransferFrom.selector,
+                address(ruleBlacklist),
+                ADDRESS3,
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_SPENDER_IS_BLACKLISTED
+            )
+        );
+        ruleBlacklist.transferred(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+    }
+
+    function testDetectTransferRestrictionSpenderTo() public {
+        // Arrange
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        ruleBlacklist.addAddress(ADDRESS2);
+        // Act
+        resUint8 = ruleBlacklist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+
+        // With tokenId
+        resUint8 = ruleBlacklist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_TO_IS_BLACKLISTED);
+
+        // Act
+        resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertFalse(resBool);
+
+        // Act
+        resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertFalse(resBool);
+    }
+
+    function testDetectTransferRestrictionSpenderFrom() public {
+        // Arrange
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        ruleBlacklist.addAddress(ADDRESS1);
+        // Act
+        resUint8 = ruleBlacklist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        assertEq(resUint8, CODE_ADDRESS_FROM_IS_BLACKLISTED);
+        // With tokenId
+        resUint8 = ruleBlacklist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_FROM_IS_BLACKLISTED);
+
+        // Act
+        resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertFalse(resBool);
+
+        // Act
+        resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertFalse(resBool);
+    }
+
+    function testDetectTransferRestrictionSpenderOk() public {
+        // Act
+        resUint8 = ruleBlacklist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        assertEq(resUint8, NO_ERROR);
+
+        // With tokenId
+        resUint8 = ruleBlacklist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, NO_ERROR);
+
+        // Act
+        resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertEq(resBool, true);
+
+        // Act
+        resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resBool, true);
+
+        // No revert
+        // Act
+        ruleBlacklist.transferred(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        ruleBlacklist.transferred(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+    }
+
 }

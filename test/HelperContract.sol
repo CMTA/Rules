@@ -6,29 +6,29 @@ import "CMTAT/deployment/CMTATStandalone.sol";
 import "CMTAT/libraries/Errors.sol";
 
 // RuleEngine
-import {RuleEngineInvariantStorage} from "RuleEngine/modules/RuleEngineInvariantStorage.sol";
+import {RuleEngineInvariantStorage} from "RuleEngine/modules/library/RuleEngineInvariantStorage.sol";
 import {RuleEngine} from "RuleEngine/RuleEngine.sol";
-// RuleConditionalTransfer
-import {RuleConditionalTransferInvariantStorage} from "src/rules/operation/abstract/RuleConditionalTransferInvariantStorage.sol";
-import {RuleConditionalTransfer} from "src/rules/operation/RuleConditionalTransfer.sol";
+
 // RuleSanctionList
-import {RuleSanctionList} from "src/rules/validation/RuleSanctionList.sol";
+import {RuleSanctionsList} from "src/rules/validation/RuleSanctionsList.sol";
 // RUleBlackList
 import {RuleBlacklist} from "src/rules/validation/RuleBlacklist.sol";
-import {RuleBlacklistInvariantStorage} from "src/rules/validation/abstract/RuleAddressList/invariantStorage/RuleBlacklistInvariantStorage.sol";
+import {RuleBlacklistInvariantStorage} from
+    "src/rules/validation/abstract/RuleAddressSet/invariantStorage/RuleBlacklistInvariantStorage.sol";
 // RuleWhitelist
 import {RuleWhitelist} from "src/rules/validation/RuleWhitelist.sol";
 import {RuleWhitelistWrapper} from "src/rules/validation/RuleWhitelistWrapper.sol";
-import {RuleWhitelistInvariantStorage} from "src/rules/validation/abstract/RuleAddressList/invariantStorage/RuleWhitelistInvariantStorage.sol";
-import {RuleAddressListInvariantStorage} from "src/rules/validation/abstract/RuleAddressList/invariantStorage/RuleAddressListInvariantStorage.sol";
+import {RuleWhitelistInvariantStorage} from
+    "src/rules/validation/abstract/RuleAddressSet/invariantStorage/RuleWhitelistInvariantStorage.sol";
+import {RuleAddressSetInvariantStorage} from
+    "src/rules/validation/abstract/RuleAddressSet/invariantStorage/RuleAddressSetInvariantStorage.sol";
 
-import {RuleSanctionlistInvariantStorage}from "src/rules/validation/abstract/RuleSanctionListInvariantStorage.sol";
+import {RuleSanctionsListInvariantStorage} from "src/rules/validation/abstract/RuleSanctionsListInvariantStorage.sol";
 // Rule interface
-import {IRuleValidation} from "RuleEngine/interfaces/IRuleValidation.sol";
-import {IRuleOperation} from "RuleEngine/interfaces/IRuleOperation.sol";
+import {IAddressList} from "src/rules/interfaces/IAddressList.sol";
 
 // utils
-import "./utils/CMTATDeployment.sol";
+import "RuleEngine/../test/utils/CMTATDeployment.sol";
 
 /**
  * @title Constants used by the tests
@@ -36,10 +36,9 @@ import "./utils/CMTATDeployment.sol";
 abstract contract HelperContract is
     RuleWhitelistInvariantStorage,
     RuleBlacklistInvariantStorage,
-    RuleAddressListInvariantStorage,
-    RuleSanctionlistInvariantStorage,
-    RuleEngineInvariantStorage,
-    RuleConditionalTransferInvariantStorage
+    RuleAddressSetInvariantStorage,
+    RuleSanctionsListInvariantStorage,
+    RuleEngineInvariantStorage
 {
     // Test result
     uint256 internal resUint256;
@@ -59,19 +58,15 @@ abstract contract HelperContract is
     address constant ADDRESS2 = address(6);
     address constant ADDRESS3 = address(7);
     // role string
-    string constant RULE_ENGINE_ROLE_HASH =
-        "0x774b3c5f4a8b37a7da21d72b7f2429e4a6d49c4de0ac5f2b831a1a539d0f0fd2";
-    string constant WHITELIST_ROLE_HASH =
-        "0xdc72ed553f2544c34465af23b847953efeb813428162d767f9ba5f4013be6760";
-    string constant DEFAULT_ADMIN_ROLE_HASH =
-        "0x0000000000000000000000000000000000000000000000000000000000000000";
+    string constant RULE_ENGINE_ROLE_HASH = "0x774b3c5f4a8b37a7da21d72b7f2429e4a6d49c4de0ac5f2b831a1a539d0f0fd2";
+    string constant WHITELIST_ROLE_HASH = "0xdc72ed553f2544c34465af23b847953efeb813428162d767f9ba5f4013be6760";
+    string constant DEFAULT_ADMIN_ROLE_HASH = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
     uint256 DEFAULT_TIME_LIMIT_TO_APPROVE = 7 days;
     uint256 DEFAULT_TIME_LIMIT_TO_TRANSFER = 7 days;
     // contract
     RuleBlacklist public ruleBlacklist;
     RuleWhitelist public ruleWhitelist;
-    RuleConditionalTransfer public ruleConditionalTransfer;
 
     // CMTAT
     CMTATDeployment cmtatDeployment;

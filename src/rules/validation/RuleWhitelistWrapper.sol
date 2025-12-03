@@ -2,68 +2,66 @@
 
 pragma solidity ^0.8.20;
 
-import "OZ/access/AccessControl.sol";
-import "RuleEngine/modules/RuleEngineValidationCommon.sol";
-import "../../modules/MetaTxModuleStandalone.sol";
-import "./abstract/RuleAddressList/RuleAddressList.sol";
-import "./abstract/RuleWhitelistCommon.sol";
+/* ==== OpenZeppelin === */
+import {AccessControl} from "OZ/access/AccessControl.sol";
+/* ==== Abtract contracts === */
+import {AccessControlModuleStandalone} from "../../modules/AccessControlModuleStandalone.sol";
+import {MetaTxModuleStandalone, ERC2771Context, Context} from "../../modules/MetaTxModuleStandalone.sol";
+import {RuleAddressSet} from "./abstract/RuleAddressSet/RuleAddressSet.sol";
+import {RuleWhitelistCommon, RuleValidateTransfer} from "./abstract/RuleWhitelistCommon.sol";
+/* ==== RuleEngine === */
+import {RulesManagementModule} from "RuleEngine/modules/RulesManagementModule.sol";
+/* ==== CMTAT === */
+import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
+/* ==== Interfaces === */
+import {
+    IERC7943NonFungibleCompliance,
+    IERC7943NonFungibleComplianceExtend
+} from "../interfaces/IERC7943NonFungibleCompliance.sol";
 
 /**
  * @title Wrapper to call several different whitelist rules
  */
 contract RuleWhitelistWrapper is
-    RuleEngineValidationCommon,
+    RulesManagementModule,
+    AccessControlModuleStandalone,
     MetaTxModuleStandalone,
     RuleWhitelistCommon
 {
+    /*//////////////////////////////////////////////////////////////
+                              CONSTRUCTOR
+    //////////////////////////////////////////////////////////////*/
     /**
      * @param admin Address of the contract (Access Control)
      * @param forwarderIrrevocable Address of the forwarder, required for the gasless support
      */
-    constructor(
-        address admin,
-        address forwarderIrrevocable
-    ) MetaTxModuleStandalone(forwarderIrrevocable) {
-        if (admin == address(0)) {
-            revert RuleEngine_AdminWithAddressZeroNotAllowed();
-        }
-        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+    constructor(address admin, address forwarderIrrevocable, bool checkSpender_)
+        MetaTxModuleStandalone(forwarderIrrevocable)
+        AccessControlModuleStandalone(admin)
+    {
+        checkSpender = checkSpender_;
     }
 
+    /* ============  View Functions ============ */
     /**
      * @notice Go through all the whitelist rules to know if a restriction exists on the transfer
      * @param from the origin address
      * @param to the destination address
      * @return The restricion code or REJECTED_CODE_BASE.TRANSFER_OK
-     **/
-    function detectTransferRestriction(
-        address from,
-        address to,
-        uint256 /*value*/
-    ) public view override returns (uint8) {
+     *
+     */
+    function detectTransferRestriction(address from, address to, uint256 /*value*/ )
+        public
+        view
+        virtual
+        override(IERC1404)
+        returns (uint8)
+    {
         address[] memory targetAddress = new address[](2);
-        bool[] memory isListed = new bool[](2);
-        bool[] memory result = new bool[](2);
         targetAddress[0] = from;
         targetAddress[1] = to;
-        uint256 rulesLength = _rulesValidation.length;
-        // For each whitelist rule, we ask if from or to are in the whitelist
-        for (uint256 i = 0; i < rulesLength; ++i) {
-            // External call
-            isListed = RuleAddressList(_rulesValidation[i])
-                .addressIsListedBatch(targetAddress);
-            if (isListed[0] && !result[0]) {
-                // Update if from is in the list
-                result[0] = true;
-            }
-            if (isListed[1] && !result[1]) {
-                // Update if to is in the list
-                result[1] = true;
-            }
-            if (result[0] && result[1]) {
-                break;
-            }
-        }
+
+        bool[] memory result = _detectTransferRestriction(targetAddress);
         if (!result[0]) {
             return CODE_ADDRESS_FROM_NOT_WHITELISTED;
         } else if (!result[1]) {
@@ -73,40 +71,34 @@ contract RuleWhitelistWrapper is
         }
     }
 
-    function detectTransferRestrictionFrom(
-        address spender,
-        address from,
-        address to,
-        uint256 /*value*/
-    ) public view override returns (uint8) {
+    function detectTransferRestriction(address from, address to, uint256, /* tokenId */ uint256 value)
+        public
+        view
+        virtual
+        override(IERC7943NonFungibleComplianceExtend)
+        returns (uint8)
+    {
+        return detectTransferRestriction(from, to, value);
+    }
+
+    function detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)
+        public
+        view
+        virtual
+        override(IERC1404Extend)
+        returns (uint8)
+    {
+        if (!checkSpender) {
+            return detectTransferRestriction(from, to, value);
+        }
+
         address[] memory targetAddress = new address[](3);
-        bool[] memory isListed = new bool[](3);
-        bool[] memory result = new bool[](3);
         targetAddress[0] = from;
         targetAddress[1] = to;
         targetAddress[2] = spender;
-        uint256 rulesLength = _rulesValidation.length;
-        // For each whitelist rule, we ask if from or to are in the whitelist
-        for (uint256 i = 0; i < rulesLength; ++i) {
-            // External call
-            isListed = RuleAddressList(_rulesValidation[i])
-                .addressIsListedBatch(targetAddress);
-            if (isListed[0] && !result[0]) {
-                // Update if from is in the list
-                result[0] = true;
-            }
-            if (isListed[1] && !result[1]) {
-                // Update if to is in the list
-                result[1] = true;
-            }
-            if (isListed[2] && !result[2]) {
-                // Update if spender is in the list
-                result[2] = true;
-            }
-            if (result[0] && result[1] && result[2]) {
-                break;
-            }
-        }
+
+        bool[] memory result = _detectTransferRestriction(targetAddress);
+
         if (!result[0]) {
             return CODE_ADDRESS_FROM_NOT_WHITELISTED;
         } else if (!result[1]) {
@@ -118,19 +110,92 @@ contract RuleWhitelistWrapper is
         }
     }
 
-    /* ============ ACCESS CONTROL ============ */
+    /**
+     * @inheritdoc IERC7943NonFungibleComplianceExtend
+     */
+    function detectTransferRestrictionFrom(
+        address spender,
+        address from,
+        address to,
+        uint256, /* tokenId */
+        uint256 value
+    ) public view virtual override(IERC7943NonFungibleComplianceExtend) returns (uint8) {
+        return detectTransferRestrictionFrom(spender, from, to, value);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControl, RuleValidateTransfer) returns (bool) {
+        return AccessControl.supportsInterface(interfaceId) || RuleValidateTransfer.supportsInterface(interfaceId);
+    }
+
+    /* ============  Access control ============ */
+
     /**
      * @dev Returns `true` if `account` has been granted `role`.
      */
-    function hasRole(
-        bytes32 role,
-        address account
-    ) public view virtual override(AccessControl) returns (bool) {
-        // The Default Admin has all roles
-        if (AccessControl.hasRole(DEFAULT_ADMIN_ROLE, account)) {
-            return true;
+    function hasRole(bytes32 role, address account)
+        public
+        view
+        virtual
+        override(AccessControl, AccessControlModuleStandalone)
+        returns (bool)
+    {
+        return AccessControlModuleStandalone.hasRole(role, account);
+    }
+
+    /** 
+    * @notice Sets whether the rule should enforce spender-based checks.
+    * @dev
+    *  - Restricted to holders of the `DEFAULT_ADMIN_ROLE`.
+    *  - Updates the internal `checkSpender` flag.
+    *  - Emits a {CheckSpenderUpdated} event.
+    * @param value The new state of the `checkSpender` flag.
+    */
+    function setCheckSpender(bool value)
+        public virtual
+        onlyRole(DEFAULT_ADMIN_ROLE) // or a dedicated role if you prefer
+    {
+        _setCheckSpender(value);
+        emit CheckSpenderUpdated(value);
+    }
+
+
+    /*//////////////////////////////////////////////////////////////
+                            INTERNAL/PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    function _detectTransferRestriction(address[] memory targetAddress) internal view returns (bool[] memory) {
+        uint256 rulesLength = rulesCount();
+        bool[] memory result = new bool[](targetAddress.length);
+        for (uint256 i = 0; i < rulesLength; ++i) {
+            // Call the whitelist rules
+            bool[] memory isListed = RuleAddressSet(rule(i)).areAddressesListed(targetAddress);
+            for (uint256 j = 0; j < targetAddress.length; ++j) {
+                if (isListed[j]) {
+                    result[j] = true;
+                }
+            }
+
+            // Break early if all listed
+            bool allListed = true;
+            for (uint256 k = 0; k < result.length; ++k) {
+                if (!result[k]) {
+                    allListed = false;
+                    break;
+                }
+            }
+            if (allListed) {
+                break;
+            }
         }
-        return AccessControl.hasRole(role, account);
+        return result;
+    }
+
+
+    /**
+    *  @dev Internal helper to update the `checkSpender` flag.
+    */
+    function _setCheckSpender(bool value) internal {
+        checkSpender = value;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -140,36 +205,21 @@ contract RuleWhitelistWrapper is
     /**
      * @dev This surcharge is not necessary if you do not use the MetaTxModule
      */
-    function _msgSender()
-        internal
-        view
-        override(ERC2771Context, Context)
-        returns (address sender)
-    {
+    function _msgSender() internal view override(ERC2771Context, Context) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 
     /**
      * @dev This surcharge is not necessary if you do not use the MetaTxModule
      */
-    function _msgData()
-        internal
-        view
-        override(ERC2771Context, Context)
-        returns (bytes calldata)
-    {
+    function _msgData() internal view override(ERC2771Context, Context) returns (bytes calldata) {
         return ERC2771Context._msgData();
     }
 
     /**
      * @dev This surcharge is not necessary if you do not use the MetaTxModule
      */
-    function _contextSuffixLength()
-        internal
-        view
-        override(ERC2771Context, Context)
-        returns (uint256)
-    {
+    function _contextSuffixLength() internal view override(ERC2771Context, Context) returns (uint256) {
         return ERC2771Context._contextSuffixLength();
     }
 }

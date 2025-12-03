@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity ^0.8.20;
 
+import {ISanctionsList} from "../../src/rules/interfaces/ISanctionsList.sol";
 /**
  * @notice Test contract from
  * https://etherscan.io/address/0x40c57923924b5c5c5455c48d93317139addac8fb#code
  */
-contract SanctionListOracle {
+
+contract SanctionListOracle is ISanctionsList {
     constructor() {}
 
     mapping(address => bool) private sanctionedAddresses;
