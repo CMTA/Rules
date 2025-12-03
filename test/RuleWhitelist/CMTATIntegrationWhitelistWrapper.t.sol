@@ -13,8 +13,7 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
     uint256 ADDRESS1_BALANCE_INIT = 31;
     uint256 ADDRESS2_BALANCE_INIT = 32;
     uint256 ADDRESS3_BALANCE_INIT = 33;
-
-    uint256 FLAG = 5;
+    
     RuleWhitelist ruleWhitelist2;
     RuleWhitelist ruleWhitelist3;
     RuleWhitelistWrapper ruleWhitelistWrapper;

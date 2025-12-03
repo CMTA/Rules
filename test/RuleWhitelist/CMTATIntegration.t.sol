@@ -13,8 +13,6 @@ contract CMTATIntegration is Test, HelperContract {
     uint256 ADDRESS2_BALANCE_INIT = 32;
     uint256 ADDRESS3_BALANCE_INIT = 33;
 
-    uint256 FLAG = 5;
-
     // Arrange
     function setUp() public {
         vm.prank(DEFAULT_ADMIN_ADDRESS);
