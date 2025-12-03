@@ -6,8 +6,6 @@ Each rule can be used **standalone**, directly plugged into a CMTAT token, **or*
 
 **Status:** *Repository under active development*
 
-[TOC]
-
 ## Overview
 
 The **RuleEngine** is an external smart contract that applies transfer restrictions to security tokens such as **CMTAT** or ERC-3643-compatible tokens through a RuleEngine.
