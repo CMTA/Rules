@@ -126,4 +126,57 @@ contract RuleSanctionlistTest is Test, HelperContract {
         // Assert
         assertEq(resUint8, NO_ERROR);
     }
+
+    function testDetectTransferRestrictionWitSpenderOk() public {
+        // Act
+        resUint8 = ruleSanctionList.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertEq(resUint8, NO_ERROR);
+
+        // Act
+        resUint8 = ruleSanctionList.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, NO_ERROR);
+
+
+        resBool = ruleSanctionList.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        assertEq(resBool, true);
+
+        resBool = ruleSanctionList.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        assertEq(resBool, true);
+    }
+
+    function testDetectTransferRestrictionWitSpender() public {
+        // Act
+        resUint8 = ruleSanctionList.detectTransferRestrictionFrom(ATTACKER, ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_SPENDER_IS_SANCTIONED);
+
+        // Act
+        resUint8 = ruleSanctionList.detectTransferRestrictionFrom(ATTACKER, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_SPENDER_IS_SANCTIONED);
+    }
+
+    function testDetectTransferRestrictionWitSpenderTo() public {
+        // Act
+        resUint8 = ruleSanctionList.detectTransferRestrictionFrom(ADDRESS2, ADDRESS1, ATTACKER, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_TO_IS_SANCTIONED);
+
+        // Act
+        resUint8 = ruleSanctionList.detectTransferRestrictionFrom(ADDRESS2, ADDRESS1, ATTACKER, 0, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_TO_IS_SANCTIONED);
+
+        // Act
+        resBool = ruleSanctionList.canTransferFrom(ADDRESS2, ADDRESS1, ATTACKER, 20);
+        // Assert
+        assertFalse(resBool);
+
+        // Act
+        resBool = ruleSanctionList.canTransferFrom(ADDRESS2, ADDRESS1, ATTACKER, 0, 20);
+        // Assert
+        assertFalse(resBool);
+    }
 }

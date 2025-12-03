@@ -80,6 +80,7 @@ contract RuleBlacklistTest is Test, HelperContract {
         ruleBlacklist.addAddress(ADDRESS2);
         // Act
         resUint8 = ruleBlacklist.detectTransferRestriction(ADDRESS1, ADDRESS2, 20);
+        assertEq(resUint8, CODE_ADDRESS_TO_IS_BLACKLISTED);
 
         // With tokenId
         resUint8 = ruleBlacklist.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
@@ -96,4 +97,96 @@ contract RuleBlacklistTest is Test, HelperContract {
         // Assert
         assertFalse(resBool);
     }
+
+    function testDetectTransferRestrictionSpender() public {
+        // Arrange
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        ruleBlacklist.addAddress(ADDRESS3);
+        // Act
+        resUint8 = ruleBlacklist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        assertEq(resUint8, CODE_ADDRESS_SPENDER_IS_BLACKLISTED);
+
+        // With tokenId
+        resUint8 = ruleBlacklist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_SPENDER_IS_BLACKLISTED);
+
+        // Act
+        resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertFalse(resBool);
+
+        // Act
+        resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertFalse(resBool);
+    }
+
+    function testDetectTransferRestrictionSpenderTo() public {
+        // Arrange
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        ruleBlacklist.addAddress(ADDRESS2);
+        // Act
+        resUint8 = ruleBlacklist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+
+        // With tokenId
+        resUint8 = ruleBlacklist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_TO_IS_BLACKLISTED);
+
+        // Act
+        resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertFalse(resBool);
+
+        // Act
+        resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertFalse(resBool);
+    }
+
+    function testDetectTransferRestrictionSpenderFrom() public {
+        // Arrange
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        ruleBlacklist.addAddress(ADDRESS1);
+        // Act
+        resUint8 = ruleBlacklist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        assertEq(resUint8, CODE_ADDRESS_FROM_IS_BLACKLISTED);
+        // With tokenId
+        resUint8 = ruleBlacklist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, CODE_ADDRESS_FROM_IS_BLACKLISTED);
+
+        // Act
+        resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertFalse(resBool);
+
+        // Act
+        resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertFalse(resBool);
+    }
+
+    function testDetectTransferRestrictionSpenderOk() public {
+        // Act
+        resUint8 = ruleBlacklist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        assertEq(resUint8, NO_ERROR);
+
+        // With tokenId
+        resUint8 = ruleBlacklist.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resUint8, NO_ERROR);
+
+        // Act
+        resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertEq(resBool, true);
+
+        // Act
+        resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resBool, true);
+    }
+
 }
