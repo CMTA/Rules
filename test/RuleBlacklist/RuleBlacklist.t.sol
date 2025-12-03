@@ -15,6 +15,28 @@ contract RuleBlacklistTest is Test, HelperContract {
         ruleBlacklist = new RuleBlacklist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
     }
 
+    function testReturnTheRightMessageForAGivenCode() public {
+        // Assert
+        resString = ruleBlacklist.messageForTransferRestriction(CODE_ADDRESS_FROM_IS_BLACKLISTED);
+        // Assert
+        assertEq(resString, TEXT_ADDRESS_FROM_IS_BLACKLISTED);
+        
+        // Act
+        resString = ruleBlacklist.messageForTransferRestriction(CODE_ADDRESS_TO_IS_BLACKLISTED);
+        // Assert
+        assertEq(resString, TEXT_ADDRESS_TO_IS_BLACKLISTED);
+
+        // Act
+        resString = ruleBlacklist.messageForTransferRestriction(CODE_ADDRESS_SPENDER_IS_BLACKLISTED);
+        // Assert
+        assertEq(resString, TEXT_ADDRESS_SPENDER_IS_BLACKLISTED);
+
+        // Act
+        resString = ruleBlacklist.messageForTransferRestriction(CODE_NONEXISTENT);
+        // Assert
+        assertEq(resString, TEXT_CODE_NOT_FOUND);
+    }
+
     function testCanRuleBlacklistReturnMessageNotFoundWithUnknownCodeId() public view {
         // Act
         string memory message1 = ruleBlacklist.messageForTransferRestriction(255);

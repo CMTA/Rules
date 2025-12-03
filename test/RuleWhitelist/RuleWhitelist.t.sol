@@ -104,6 +104,13 @@ contract RuleWhitelistTest is Test, HelperContract {
         resString = ruleWhitelist.messageForTransferRestriction(CODE_ADDRESS_TO_NOT_WHITELISTED);
         // Assert
         assertEq(resString, TEXT_ADDRESS_TO_NOT_WHITELISTED);
+
+        // Act
+        resString = ruleWhitelist.messageForTransferRestriction(CODE_ADDRESS_SPENDER_NOT_WHITELISTED);
+        // Assert
+        assertEq(resString, TEXT_ADDRESS_SPENDER_NOT_WHITELISTED);
+
+
         // Act
         resString = ruleWhitelist.messageForTransferRestriction(CODE_NONEXISTENT);
         // Assert
@@ -172,6 +179,16 @@ contract RuleWhitelistTest is Test, HelperContract {
         resUint8 = ruleWhitelist.detectTransferRestriction(ADDRESS1, ADDRESS2, 20);
         // Assert
         assertEq(resUint8, CODE_ADDRESS_FROM_NOT_WHITELISTED);
+
+        // Act
+        resBool = ruleWhitelist.canTransfer(ADDRESS1, ADDRESS2, 20);
+        // Assert
+        assertEq(resBool, false);
+
+        // Act
+        resBool = ruleWhitelist.canTransfer(ADDRESS1, ADDRESS2, 0, 20);
+        // Assert
+        assertEq(resBool, false);
     }
 
     function testDetectTransferRestrictionTo() public {

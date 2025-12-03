@@ -94,7 +94,7 @@ contract RuleWhitelistWrapper is
             return detectTransferRestriction(from, to, value);
         }
 
-        address[] memory targetAddress = new address[](2);
+        address[] memory targetAddress = new address[](3);
         targetAddress[0] = from;
         targetAddress[1] = to;
         targetAddress[2] = spender;
