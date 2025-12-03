@@ -8,7 +8,7 @@ import {AccessControl} from "OZ/access/AccessControl.sol";
 import {AccessControlModuleStandalone} from "../../modules/AccessControlModuleStandalone.sol";
 import {MetaTxModuleStandalone, ERC2771Context, Context} from "../../modules/MetaTxModuleStandalone.sol";
 import {RuleAddressSet} from "./abstract/RuleAddressSet/RuleAddressSet.sol";
-import {RuleWhitelistCommon} from "./abstract/RuleWhitelistCommon.sol";
+import {RuleWhitelistCommon, RuleValidateTransfer} from "./abstract/RuleWhitelistCommon.sol";
 /* ==== RuleEngine === */
 import {RulesManagementModule} from "RuleEngine/modules/RulesManagementModule.sol";
 import {RuleEngineInvariantStorage} from "RuleEngine/modules/library/RuleEngineInvariantStorage.sol";
@@ -169,6 +169,10 @@ contract RuleWhitelistWrapper is
             }
         }
         return result;
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControl, RuleValidateTransfer) returns (bool) {
+        return AccessControl.supportsInterface(interfaceId) || RuleValidateTransfer.supportsInterface(interfaceId);
     }
 
     /*//////////////////////////////////////////////////////////////

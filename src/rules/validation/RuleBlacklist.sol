@@ -2,11 +2,12 @@
 
 pragma solidity ^0.8.20;
 
+import {AccessControl} from "OZ/access/AccessControl.sol";
 /* ==== Abtract contracts === */
 import {RuleBlacklistInvariantStorage} from
     "./abstract/RuleAddressSet/invariantStorage/RuleBlacklistInvariantStorage.sol";
 import {RuleAddressSet} from "./abstract/RuleAddressSet/RuleAddressSet.sol";
-import {RuleValidateTransfer} from "./abstract/RuleValidateTransfer.sol";
+import {RuleValidateTransfer, RuleValidateTransfer} from "./abstract/RuleValidateTransfer.sol";
 /* ==== Interfaces === */
 import {IERC7943NonFungibleComplianceExtend} from "../interfaces/IERC7943NonFungibleCompliance.sol";
 /* ==== CMTAT === */
@@ -132,6 +133,10 @@ contract RuleBlacklist is RuleValidateTransfer, RuleAddressSet, RuleBlacklistInv
         } else {
             return TEXT_CODE_NOT_FOUND;
         }
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControl, RuleValidateTransfer) returns (bool) {
+        return AccessControl.supportsInterface(interfaceId) || RuleValidateTransfer.supportsInterface(interfaceId);
     }
 
     /* ============  State Functions ============ */

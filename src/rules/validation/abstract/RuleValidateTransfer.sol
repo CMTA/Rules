@@ -79,4 +79,9 @@ abstract contract RuleValidateTransfer is IERC7943NonFungibleComplianceExtend, I
     {
         return canTransferFrom(spender, from, to, value);
     }
+
+
+    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
+        return interfaceId == type(IRule).interfaceId;
+    }
 }

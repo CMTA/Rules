@@ -2,11 +2,12 @@
 
 pragma solidity ^0.8.20;
 
+import {AccessControl} from "OZ/access/AccessControl.sol";
 /* ==== Abtract contracts === */
 import {MetaTxModuleStandalone, ERC2771Context, Context} from "../../modules/MetaTxModuleStandalone.sol";
 import {AccessControlModuleStandalone} from "../../modules/AccessControlModuleStandalone.sol";
 import {RuleSanctionsListInvariantStorage} from "./abstract/RuleSanctionsListInvariantStorage.sol";
-import {RuleValidateTransfer} from "./abstract/RuleValidateTransfer.sol";
+import {RuleValidateTransfer, RuleValidateTransfer} from "./abstract/RuleValidateTransfer.sol";
 /* ==== Interfaces === */
 import {ISanctionsList} from "../interfaces/ISanctionsList.sol";
 import {IERC7943NonFungibleComplianceExtend} from "../interfaces/IERC7943NonFungibleCompliance.sol";
@@ -161,6 +162,10 @@ contract RuleSanctionsList is
         } else {
             return TEXT_CODE_NOT_FOUND;
         }
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControl, RuleValidateTransfer) returns (bool) {
+        return AccessControl.supportsInterface(interfaceId) || RuleValidateTransfer.supportsInterface(interfaceId);
     }
 
     /* ============  State Functions ============ */

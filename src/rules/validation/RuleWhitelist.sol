@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity ^0.8.20;
 
+import {AccessControl} from "OZ/access/AccessControl.sol";
 /* ==== Abtract contracts === */
 import {RuleAddressSet} from "./abstract/RuleAddressSet/RuleAddressSet.sol";
-import {RuleWhitelistCommon} from "./abstract/RuleWhitelistCommon.sol";
+import {RuleWhitelistCommon, RuleValidateTransfer} from "./abstract/RuleWhitelistCommon.sol";
 /* ==== CMTAT === */
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 /* ==== Interfaces === */
@@ -137,5 +138,9 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
         returns (bool isListed)
     {
         isListed = _isAddressListed(targetAddress);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControl, RuleValidateTransfer) returns (bool) {
+        return AccessControl.supportsInterface(interfaceId) || RuleValidateTransfer.supportsInterface(interfaceId);
     }
 }
