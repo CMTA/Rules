@@ -55,6 +55,7 @@ contract RuleWhitelistWrapper is
     function detectTransferRestriction(address from, address to, uint256 /*value*/ )
         public
         view
+        virtual
         override(IERC1404)
         returns (uint8)
     {
@@ -75,6 +76,7 @@ contract RuleWhitelistWrapper is
     function detectTransferRestriction(address from, address to, uint256, /* tokenId */ uint256 value)
         public
         view
+        virtual
         override(IERC7943NonFungibleComplianceExtend)
         returns (uint8)
     {
@@ -84,6 +86,7 @@ contract RuleWhitelistWrapper is
     function detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)
         public
         view
+        virtual
         override(IERC1404Extend)
         returns (uint8)
     {
@@ -118,7 +121,7 @@ contract RuleWhitelistWrapper is
         address to,
         uint256, /* tokenId */
         uint256 value
-    ) public view override(IERC7943NonFungibleComplianceExtend) returns (uint8) {
+    ) public view virtual override(IERC7943NonFungibleComplianceExtend) returns (uint8) {
         return detectTransferRestrictionFrom(spender, from, to, value);
     }
 

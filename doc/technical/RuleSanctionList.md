@@ -20,7 +20,7 @@ The documentation and the contracts addresses are available here: [Chainalysis o
 
 ### Inheritance
 
-![surya_inheritance_RuleWhitelistWrapper.sol](../surya/surya_inheritance/surya_inheritance_RuleSanctionList.sol.png)
+
 
 ## Access Control
 
@@ -31,8 +31,4 @@ The default admin is the address put in argument(`admin`) inside the constructor
 ### Schema
 
 Here a schema of the Access Control.
-
-**RuleSanctionList**
-
-![alt text](../security/accessControl/access-control-RuleSanctionList.drawio.png)
 

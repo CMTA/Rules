@@ -4,8 +4,6 @@ pragma solidity ^0.8.20;
 
 abstract contract RuleAddressSetInvariantStorage {
     /* ============ Custom errors ============ */
-    error RuleAddressSet_AdminWithAddressZeroNotAllowed();
-
     /// @notice Thrown when trying to add an address that is already listed.
     error RuleAddressSet_AddressAlreadyListed();
 

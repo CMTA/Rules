@@ -55,6 +55,7 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
     function detectTransferRestriction(address from, address to, uint256 /* value */ )
         public
         view
+        virtual
         override(IERC1404)
         returns (uint8 code)
     {
@@ -73,6 +74,7 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
     function detectTransferRestriction(address from, address to, uint256, /* tokenId */ uint256 value)
         public
         view
+        virtual
         override(IERC7943NonFungibleComplianceExtend)
         returns (uint8)
     {
@@ -99,6 +101,7 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
     function detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)
         public
         view
+        virtual
         override(IERC1404Extend)
         returns (uint8 code)
     {
@@ -129,6 +132,7 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
     function isVerified(address targetAddress)
         public
         view
+        virtual
         override(IIdentityRegistryVerified)
         returns (bool isListed)
     {

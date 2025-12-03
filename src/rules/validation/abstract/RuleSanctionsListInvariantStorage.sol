@@ -24,7 +24,7 @@ abstract contract RuleSanctionsListInvariantStorage is RuleCommonInvariantStorag
 
     /* ============ Code ============ */
     // It is very important that each rule uses an unique code
-    uint8 public constant CODE_ADDRESS_FROM_IS_SANCTIONED = 31;
-    uint8 public constant CODE_ADDRESS_TO_IS_SANCTIONED = 32;
-    uint8 public constant CODE_ADDRESS_SPENDER_IS_SANCTIONED = 33;
+    uint8 public constant CODE_ADDRESS_FROM_IS_SANCTIONED = 30;
+    uint8 public constant CODE_ADDRESS_TO_IS_SANCTIONED = 31;
+    uint8 public constant CODE_ADDRESS_SPENDER_IS_SANCTIONED = 32;
 }

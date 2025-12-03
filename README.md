@@ -12,7 +12,7 @@ Each rule can be used **standalone**, directly plugged into a CMTAT token, **or*
 ## Overview
 
 The **RuleEngine** is an external smart contract that applies transfer restrictions to security tokens such as **CMTAT** or ERC-3643-compatible tokens.
-Rules are modular validator contracts that the RuleEngine can call on every transfer to ensure regulatory and business-logic compliance.
+Rules are modular validator contracts that the `RuleEngine` or `CMTAT` compatible token can call on every transfer to ensure regulatory and business-logic compliance.
 
 ### Key Concepts
 
@@ -37,6 +37,19 @@ Each Rule implements the interface `IRuleEngine` defined in CMTAT.
 
 This interface declares the ERC-3643 functions `transferred`(read-write) and `canTransfer`(ready-only) with several other functions related to [ERC-1404](https://github.com/ethereum/eips/issues/1404), [ERC-7551](https://ethereum-magicians.org/t/erc-7551-crypto-security-token-smart-contract-interface-ewpg-reworked/25477) and [ERC-3643](https://eips.ethereum.org/EIPS/eip-3643).
 
+### ERC-3643
+
+Each rule implements the following functions from the ERC-3643 `ICompliance`interface
+
+```solidity
+function canTransfer(address _from, address _to, uint256 _amount) external view returns (bool);
+function transferred(address _from, address _to, uint256 _amount) external;
+```
+
+However, contrary to the RuleEngine, the whole interface is currently not implemented (e.g. `created`and `destroyed`) and as a result, the rule can not directly supported ERC-3643 token.
+
+The alternative to use a Rule with an ERC-3643 token is trough the RuleEngine, which implements the whole `ICompliance`interface.
+
 ## Architecture
 
 ### Rule - Code list
@@ -45,23 +58,28 @@ This interface declares the ERC-3643 functions `transferred`(read-write) and `ca
 
 Here the list of codes used by the different rules
 
-| Contract                | Constant name                      | Value |
-| ----------------------- | ---------------------------------- | ----- |
-| All                     | TRANSFER_OK (from CMTAT)           | 0     |
-| RuleWhitelist           | CODE_ADDRESS_FROM_NOT_WHITELISTED  | 21    |
-| RuleWhitelist           | CODE_ADDRESS_TO_NOT_WHITELISTED    | 22    |
-| RuleWhitelist           | Free slot                          | 23-25 |
-| RuleSanctionList        | CODE_ADDRESS_FROM_IS_SANCTIONED    | 26    |
-| RuleSanctionList        | CODE_ADDRESS_TO_IS_SANCTIONED      | 27    |
-| RuleSanctionList        | Free slot                          | 28-30 |
-| RuleBlacklist           | CODE_ADDRESS_FROM_IS_BLACKLISTED   | 31    |
-| RuleBlacklist           | CODE_ADDRESS_TO_IS_BLACKLISTED     | 32    |
-| RuleBlacklist           | Free slot                          | 33-35 |
-| RuleConditionalTransfer | CODE_TRANSFER_REQUEST_NOT_APPROVED | 36    |
+| Contract                | Constant name                        | Value |
+| ----------------------- | ------------------------------------ | ----- |
+| All                     | TRANSFER_OK (from CMTAT)             | 0     |
+| RuleWhitelist           | CODE_ADDRESS_FROM_NOT_WHITELISTED    | 21    |
+|                         | CODE_ADDRESS_TO_NOT_WHITELISTED      | 22    |
+|                         | CODE_ADDRESS_SPENDER_NOT_WHITELISTED | 23    |
+|                         | Free slot                            | 24-29 |
+| RuleSanctionList        | CODE_ADDRESS_FROM_IS_SANCTIONED      | 30    |
+|                         | CODE_ADDRESS_TO_IS_SANCTIONED        | 31    |
+|                         | CODE_ADDRESS_SPENDER_IS_SANCTIONED   | 32    |
+|                         | Free slot                            | 33-35 |
+| RuleBlacklist           | CODE_ADDRESS_FROM_IS_BLACKLISTED     | 36    |
+|                         | CODE_ADDRESS_TO_IS_BLACKLISTED       | 37    |
+|                         | CODE_ADDRESS_SPENDER_IS_BLACKLISTED  | 38    |
+|                         | Free slot                            | 39-44 |
+| RuleConditionalTransfer | CODE_TRANSFER_REQUEST_NOT_APPROVED   | 45    |
+|                         | Free slot                            | 46-50 |
 
+Note: 
 
-
-Warning: the CMTAT already uses the code 0-6 and the code 7-12 should be left free to allow further additions in the CMTAT.
+- The CMTAT already uses the code 0-6 and the code 7-12 should be left free to allow further additions in the CMTAT.
+- If you decide to create your own rules, we encourage you to use code > 100 to leave free the other restriction codes for future rules added in this project.
 
 ### Rules as Standalone Compliance Contracts
 
@@ -167,6 +185,8 @@ There are two categories of rules: validation rules (Read-only) and operation ru
 - Example:
   - Conditional Transfer (approval-based)
 
+## Rules details
+
 ### Read-only (validation) rule
 
 Currently, there are four validation rules: whitelist, whitelistWrapper, blacklist, and sanctionlist.
@@ -185,6 +205,8 @@ The rule is read-only: it only checks stored state.
 
 During a transfer, this rule, called by the RuleEngine, will check if the address concerned is in the list, applying a read operation on the blockchain.
 
+![surya_inheritance_RuleWhitelist.sol](./doc/surya/surya_inheritance/surya_inheritance_RuleWhitelist.sol.png)
+
 #### Whitelist wrapper
 
 Allows independent whitelist groups managed by different operators.
@@ -193,11 +215,25 @@ Allows independent whitelist groups managed by different operators.
 - A transfer is allowed only if both addresses belong to *at least one* operator-managed list.
 - Enables multi-party compliance
 
+
+
+##### Architecture
+
+This rule inherits from `RuleEngineValidationCommon`. Thus the whitelist rules are managed with the same architecture and code than for the ruleEngine. For example, rules are added with the functions `setRules` or `addRule`.
+
+
+
+![surya_inheritance_RuleWhitelistWrapper.sol](./doc/surya/surya_inheritance/surya_inheritance_RuleWhitelistWrapper.sol.png)
+
+
+
 #### Blacklist
 
 Opposite of whitelist:
 
 - Transfer fails if **either** address is blacklisted.
+
+![surya_inheritance_RuleWhitelistWrapper.sol](./doc/surya/surya_inheritance/surya_inheritance_RuleBlacklist.sol.png)
 
 #### Sanction list with Chainalysis
 
@@ -212,6 +248,10 @@ Documentation and the contracts addresses are available here: [Chainalysis oracl
 **Example**
 
 During a transfer, if either address (from or to) is in the sanction list of the Oracle, the rule will return false, and the transfer will be rejected by the CMTAT.
+
+
+
+![surya_inheritance_RuleWhitelistWrapper.sol](./doc/surya/surya_inheritance/surya_inheritance_RuleSanctionList.sol.png)
 
 ### Read-Write (Operation) rule
 
@@ -233,20 +273,261 @@ We have added another option, not required by Swiss law, to automatically perfor
 
 Reference: [Taurus - Token Transfer Management: How to Apply Restrictions with CMTAT and ERC-1404](https://www.taurushq.com/blog/token-transfer-management-how-to-apply-restrictions-with-cmtat-and-erc-1404/)
 
+
+
+## Access Control
+
+The modules `AccessControlModuleStandalone` allows to implement RBAC access control by  inheriting from the contract `AccessControl`from OpenZeppelin. 
+
+This module overrides the OpenZeppelin function `hasRole`to give by default all the roles to the `admin`.
+
+Each rule implements its own access control by inheriting from the module `AccessControlModuleStandalone`.
+
+For all rules, the default admin is the address put in argument(`admin`) inside the constructor and set when the contract is deployed.
+
+See also [docs.openzeppelin.com - AccessControl](https://docs.openzeppelin.com/contracts/5.x/api/access#AccessControl)
+
+### Address List
+
+Common access control between `blacklistRule`and `WhitelistRule`
+
+Here a schema of the Access Control.
+![alt text](./doc/security/accessControl/access-control-RuleWhitelist.png)
+
+
+
+### RuleSanctionList
+
+![alt text](./doc/security/accessControl/access-control-RuleSanctionList.drawio.png)
+
+
+
 ## Dependencies
 
 The toolchain includes the following components, where the versions are the latest ones that we tested:
 
-- Foundry [v1.9.4](https://github.com/foundry-rs/forge-std/releases/tag/v1.9.4)
+- Foundry [v1.5.0](https://github.com/foundry-rs/foundry)
+- Forge std [v1.12.0](https://github.com/foundry-rs/forge-std/releases/tag/v1.12.0  )  
 - Solidity 0.8.30 (via solc-js)
-- OpenZeppelin Contracts (submodule) [v5.3.0](https://github.com/OpenZeppelin/openzeppelin-contracts/releases/tag/v5.3.0)
+- OpenZeppelin Contracts (submodule) [v5.5.0](https://github.com/OpenZeppelin/openzeppelin-contracts/releases/tag/v5.5.0)
 - CMTAT [v3.0.0](https://github.com/CMTA/CMTAT)
-  - This repository includes the RuleEngine contract for the [CMTAT](https://github.com/CMTA/CMTAT) token. 
+-  RuleEngine 
 
 
 The RuleEngine is an external contract used to apply transfer restrictions to another contract, initially the CMTAT. Acting as a controller, it can call different contract rules and apply these rules on each transfer.
 
 ## API
+
+### IRuleEngine
+
+> Each rule implements the IRuleEngine interface
+
+#### transferred
+
+```
+function transferred(address spender, address from, address to, uint256 value)
+    external;
+```
+
+Called during an ERC-20 token transfer
+ Used by rules to update internal state or enforce operation-based restrictions.
+
+##### Parameters
+
+| Name      | Type      | Description                                                  |
+| --------- | --------- | ------------------------------------------------------------ |
+| `spender` | `address` | Address executing the transfer (owner, operator, or approved). |
+| `from`    | `address` | Current token holder.                                        |
+| `to`      | `address` | Recipient address.                                           |
+| `value`   | `uint256` | Amount transferred.                                          |
+
+------
+
+### IERC1404
+
+#### detectTransferRestriction
+
+```
+function detectTransferRestriction(address from, address to, uint256 value)
+    external
+    view
+    returns (uint8);
+```
+
+Returns a restriction code describing why a transfer is blocked.
+
+##### Parameters
+
+| Name    | Type      | Description               |
+| ------- | --------- | ------------------------- |
+| `from`  | `address` | Sender address.           |
+| `to`    | `address` | Recipient address.        |
+| `value` | `uint256` | Amount being transferred. |
+
+##### Returns
+
+| Name  | Type    | Description                              |
+| ----- | ------- | ---------------------------------------- |
+| `0`   | `uint8` | Transfer allowed.                        |
+| other | `uint8` | Implementation-defined restriction code. |
+
+------
+
+#### messageForTransferRestriction
+
+```
+function messageForTransferRestriction(uint8 restrictionCode)
+    external
+    view
+    returns (string memory);
+```
+
+Returns a human-readable message associated with a restriction code.
+
+##### Parameters
+
+| Name              | Type    | Description                                               |
+| ----------------- | ------- | --------------------------------------------------------- |
+| `restrictionCode` | `uint8` | Restriction code returned by `detectTransferRestriction`. |
+
+##### Returns
+
+| Name      | Type     | Description                           |
+| --------- | -------- | ------------------------------------- |
+| `message` | `string` | Explanation for the restriction code. |
+
+------
+
+### IERC1404Extend
+
+#### REJECTED_CODE_BASE
+
+```
+enum REJECTED_CODE_BASE {
+    TRANSFER_OK,
+    TRANSFER_REJECTED_DEACTIVATED,
+    TRANSFER_REJECTED_PAUSED,
+    TRANSFER_REJECTED_FROM_FROZEN,
+    TRANSFER_REJECTED_TO_FROZEN,
+    TRANSFER_REJECTED_SPENDER_FROZEN,
+    TRANSFER_REJECTED_FROM_INSUFFICIENT_ACTIVE_BALANCE
+}
+```
+
+Base transfer restriction codes used by ERC-1404 extensions.
+
+------
+
+#### detectTransferRestrictionFrom
+
+```
+function detectTransferRestrictionFrom(
+    address spender,
+    address from,
+    address to,
+    uint256 value
+)
+    external
+    view
+    returns (uint8);
+```
+
+Restriction code for transfers performed by a spender (approved operator).
+
+##### Parameters
+
+| Name      | Type      | Description                      |
+| --------- | --------- | -------------------------------- |
+| `spender` | `address` | Address performing the transfer. |
+| `from`    | `address` | Current token owner.             |
+| `to`      | `address` | Recipient address.               |
+| `value`   | `uint256` | Transfer amount.                 |
+
+##### Returns
+
+| Name   | Type    | Description                                          |
+| ------ | ------- | ---------------------------------------------------- |
+| `code` | `uint8` | 0 if transfer allowed, otherwise a restriction code. |
+
+------
+
+### IERC7551Compliance
+
+#### canTransferFrom
+
+```
+function canTransferFrom(address spender, address from, address to, uint256 value)
+    external
+    view
+    returns (bool);
+```
+
+Determines if a spender-initiated transfer is permitted.
+
+##### Parameters
+
+| Name      | Type      | Description                |
+| --------- | --------- | -------------------------- |
+| `spender` | `address` | Caller executing transfer. |
+| `from`    | `address` | Token owner.               |
+| `to`      | `address` | Recipient.                 |
+| `value`   | `uint256` | Amount.                    |
+
+##### Returns
+
+| Name      | Type   | Description                   |
+| --------- | ------ | ----------------------------- |
+| `allowed` | `bool` | `true` if transfer permitted. |
+
+------
+
+### IERC3643ComplianceRead
+
+#### canTransfer
+
+```
+function canTransfer(address from, address to, uint256 value)
+    external
+    view
+    returns (bool isValid);
+```
+
+Returns whether a transfer is compliant.
+
+##### Parameters
+
+| Name    | Type      | Description      |
+| ------- | --------- | ---------------- |
+| `from`  | `address` | Sender.          |
+| `to`    | `address` | Receiver.        |
+| `value` | `uint256` | Transfer amount. |
+
+##### Returns
+
+| Name      | Type   | Description          |
+| --------- | ------ | -------------------- |
+| `isValid` | `bool` | `true` if compliant. |
+
+------
+
+### IERC3643IComplianceContract
+
+#### transferred
+
+```
+function transferred(address from, address to, uint256 value)
+    external;
+```
+
+Hook invoked during an ERC-20 token transfer.
+
+##### Parameters
+
+| Name    | Type      | Description         |
+| ------- | --------- | ------------------- |
+| `from`  | `address` | Previous owner.     |
+| `to`    | `address` | New owner.          |
+| `value` | `uint256` | Amount transferred. |
 
 ### Address List Management
 
@@ -454,6 +735,28 @@ Checks the listing status of multiple addresses in a single call.
 | Name      | Type     | Description                                         |
 | --------- | -------- | --------------------------------------------------- |
 | `results` | `bool[]` | Array of boolean listing results, aligned by index. |
+
+#### Details
+
+##### Null address
+
+It is possible to add the null address (0x0) to the blacklist. If it is the case, it will not be possible to mint and burn tokens.
+
+##### Duplicate address
+
+**addAddress**
+If the address already exists, the transaction is reverted to save gas.
+**addAddresses**
+If one of addresses already exist, there is no change for this address. The transaction remains valid (no revert).
+
+##### NonExistent Address
+
+**removeAddress**
+If the address does not exist in the whitelist, the transaction is reverted to save gas.
+**removeAddresses**
+If the address does not exist in the whitelist, there is no change for this address. The transaction remains valid (no revert).
+
+
 
 ### IERC7943NonFungibleCompliance
 
@@ -675,6 +978,53 @@ Signals to the compliance engine that a transfer has successfully occurred.
 | `to`      | `address` | New owner.                               |
 | `tokenId` | `uint256` | Token transferred.                       |
 | `value`   | `uint256` | Transfer amount (`1` for ERC-721 token). |
+
+### RuleSanctionsList
+
+Compliance rule enforcing sanctions-screening for token transfers.
+ Integrates a sanctions-oracle (e.g., Chainalysis) to block transfers when the sender, recipient, or spender is sanctioned.
+
+------
+
+#### Constructor
+
+```solidity
+constructor(address admin, address forwarderIrrevocable, ISanctionsList sanctionContractOracle_)
+```
+
+Initializes access control, meta-transaction forwarder, and optionally the sanctions oracle.
+
+#### setSanctionListOracle
+
+```solidity
+function setSanctionListOracle(ISanctionsList sanctionContractOracle_) 
+    public 
+    virtual 
+    onlyRole(SANCTIONLIST_ROLE)
+```
+
+Set the sanctions-oracle contract used for transfer-restriction checks.
+
+##### Parameters
+
+| Name                      | Type             | Description                                                  |
+| ------------------------- | ---------------- | ------------------------------------------------------------ |
+| `sanctionContractOracle_` | `ISanctionsList` | Address of the sanctions-oracle. Passing the zero address disables sanctions checks. |
+
+##### Description
+
+Updates the sanctions-oracle contract reference.
+ This function may only be called by accounts granted the `SANCTIONLIST_ROLE`.
+
+Setting the oracle to the zero address is permitted and effectively disables all sanctions-based transfer restrictions.
+
+##### Emits
+
+| Event                            | Description                                           |
+| -------------------------------- | ----------------------------------------------------- |
+| `SetSanctionListOracle(address)` | Emitted when the sanctions-oracle address is updated. |
+
+
 
 ## Foundry
 

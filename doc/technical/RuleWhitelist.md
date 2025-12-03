@@ -12,7 +12,7 @@ This rule can be used to restrict transfers from/to only addresses inside a whit
 
 ### Inheritance
 
-![surya_inheritance_RuleWhitelistWrapper.sol](../surya/surya_inheritance/surya_inheritance_RuleWhitelist.sol.png)
+
 
 ## Access Control
 

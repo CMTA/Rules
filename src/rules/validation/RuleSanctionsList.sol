@@ -17,6 +17,25 @@ import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 /* ==== IRuleEngine === */
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
 
+
+/**
+ * @title RuleSanctionsList
+ * @notice Compliance rule enforcing sanctions-screening for token transfers.
+ * @dev
+ *  This rule integrates a sanctions-oracle (e.g., Chainalysis) and blocks
+ *  transfers when:
+ *    - the sender is sanctioned,
+ *    - the recipient is sanctioned,
+ *    - or the spender/operator is sanctioned.
+ *
+ *  Features:
+ *    - Supports ERC-1404, ERC-3643 (transferred) and ERC-7943 non-fungible compliance flows.
+ *    - Oracle address can be updated by accounts holding `SANCTIONLIST_ROLE`.
+ *    - Zero oracle address disables sanctions checks (all transfers allowed).
+ *
+ *  The rule is designed for RuleEngine or for direct integration with
+ *  CMTAT / ERC-3643 compliant tokens.
+ */
 contract RuleSanctionsList is
     AccessControlModuleStandalone,
     MetaTxModuleStandalone,
@@ -150,7 +169,7 @@ contract RuleSanctionsList is
      * @param sanctionContractOracle_ address of your oracle contract
      * @dev zero address is authorized to authorize all transfers
      */
-    function setSanctionListOracle(ISanctionsList sanctionContractOracle_) public onlyRole(SANCTIONLIST_ROLE) {
+    function setSanctionListOracle(ISanctionsList sanctionContractOracle_) public virtual onlyRole(SANCTIONLIST_ROLE) {
         _setSanctionListOracle(sanctionContractOracle_);
     }
 
