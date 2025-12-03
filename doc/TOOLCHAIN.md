@@ -53,14 +53,6 @@ Warning:
 
 ## Generate documentation
 
-### [docgen](https://github.com/OpenZeppelin/solidity-docgen)
-
->Solidity-docgen is a program that extracts documentation for a Solidity project.
-
-```
-npx hardhat docgen 
-```
-
 ### [sol2uml](https://github.com/naddison36/sol2uml)
 
 >Generate UML for smart contracts

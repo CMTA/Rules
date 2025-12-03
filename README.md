@@ -1,7 +1,6 @@
 # RuleEngine - Rules
 
-**Rules** is a collection of on-chain compliance and transfer-restriction rules designed for use with the
- [CMTA RuleEngine](https://github.com/CMTA/RuleEngine) and the [CMTAT token standard](https://github.com/CMTA/CMTAT).
+**Rules** is a collection of on-chain compliance and transfer-restriction rules designed for use with the [CMTA RuleEngine](https://github.com/CMTA/RuleEngine) and the [CMTAT token standard](https://github.com/CMTA/CMTAT).
 
 Each rule can be used **standalone**, directly plugged into a CMTAT token, **or** managed collectively via a RuleEngine.
 
@@ -11,7 +10,7 @@ Each rule can be used **standalone**, directly plugged into a CMTAT token, **or*
 
 ## Overview
 
-The **RuleEngine** is an external smart contract that applies transfer restrictions to security tokens such as **CMTAT** or ERC-3643-compatible tokens.
+The **RuleEngine** is an external smart contract that applies transfer restrictions to security tokens such as **CMTAT** or ERC-3643-compatible tokens through a RuleEngine.
 Rules are modular validator contracts that the `RuleEngine` or `CMTAT` compatible token can call on every transfer to ensure regulatory and business-logic compliance.
 
 ### Key Concepts
@@ -48,7 +47,7 @@ function transferred(address _from, address _to, uint256 _amount) external;
 
 However, contrary to the RuleEngine, the whole interface is currently not implemented (e.g. `created`and `destroyed`) and as a result, the rule can not directly supported ERC-3643 token.
 
-The alternative to use a Rule with an ERC-3643 token is trough the RuleEngine, which implements the whole `ICompliance`interface.
+The alternative to use a Rule with an ERC-3643 token is trough the RuleEngine, which implements the whole `ICompliance` interface.
 
 ## Architecture
 
@@ -302,19 +301,187 @@ Here a schema of the Access Control.
 
 
 
-## Dependencies
+## Toolchains and Usage
 
-The toolchain includes the following components, where the versions are the latest ones that we tested:
+*Explain how it works.*
 
-- Foundry [v1.5.0](https://github.com/foundry-rs/foundry)
-- Forge std [v1.12.0](https://github.com/foundry-rs/forge-std/releases/tag/v1.12.0  )  
-- Solidity 0.8.30 (via solc-js)
-- OpenZeppelin Contracts (submodule) [v5.5.0](https://github.com/OpenZeppelin/openzeppelin-contracts/releases/tag/v5.5.0)
-- CMTAT [v3.0.0](https://github.com/CMTA/CMTAT)
--  RuleEngine 
+### Configuration
+
+Here are the settings for [Hardhat](https://hardhat.org) and [Foundry](https://getfoundry.sh).
+
+- `hardhat.config.js`
+
+  - Solidity [v0.8.30](https://docs.soliditylang.org/en/v0.8.30/)
+  - EVM version: Prague (Pectra upgrade)
+  - Optimizer: true, 200 runs
+
+- `foundry.toml`
+
+  - Solidity [v0.8.30](https://docs.soliditylang.org/en/v0.8.30/)
+  - EVM version: Prague (Pectra upgrade)
+  - Optimizer: true, 200 runs
+
+- Library
+
+  - Foundry [v1.5.0](https://github.com/foundry-rs/foundry)
+
+  - Forge std [v1.12.0](https://github.com/foundry-rs/forge-std/releases/tag/v1.12.0  )  
+
+  - OpenZeppelin Contracts (submodule) [v5.5.0](https://github.com/OpenZeppelin/openzeppelin-contracts/releases/tag/v5.5.0)
+
+  - CMTAT [v3.0.0](https://github.com/CMTA/CMTAT)
+
+  - RuleEngine [v3.0.0-rc0](https://github.com/CMTA/RuleEngine/releases/tag/v3.0.0-rc0)
+
+### Toolchain installation
+
+The contracts are developed and tested with [Foundry](https://book.getfoundry.sh), a smart contract development toolchain.
+
+To install the Foundry suite, please refer to the official instructions in the [Foundry book](https://book.getfoundry.sh/getting-started/installation).
+
+### Initialization
+
+You must first initialize the submodules, with
+
+```
+forge install
+```
+
+See also the command's [documentation](https://book.getfoundry.sh/reference/forge/forge-install).
+
+Later you can update all the submodules with:
+
+```
+forge update
+```
+
+See also the command's [documentation](https://book.getfoundry.sh/reference/forge/forge-update).
+
+#### CMTAT
+
+You also have to install OpenZeppelin inside CMTAT repository (submodule)
+
+```bash
+cd CMTAT
+npm install
+```
 
 
-The RuleEngine is an external contract used to apply transfer restrictions to another contract, initially the CMTAT. Acting as a controller, it can call different contract rules and apply these rules on each transfer.
+
+### Compilation
+
+The official documentation is available in the Foundry [website](https://book.getfoundry.sh/reference/forge/build-commands) 
+
+```
+ forge build
+```
+
+### Contract size
+
+```bash
+ forge compile --sizes
+```
+
+### Testing
+
+You can run the tests with
+
+```bash
+forge test
+```
+
+To run a specific test, use
+
+```bash
+forge test --match-contract <contract name> --match-test <function name>
+```
+
+Generate gas report
+
+```bash
+forge test --gas-report
+```
+
+See also the test framework's [official documentation](https://book.getfoundry.sh/forge/tests), and that of the [test commands](https://book.getfoundry.sh/reference/forge/test-commands).
+
+### Coverage
+
+A code coverage is available in [index.html](./doc/coverage/coverage/index.html).
+
+* Perform a code coverage
+
+```
+forge coverage
+```
+
+* Generate LCOV report
+
+```
+forge coverage --report lcov
+```
+
+- Generate `index.html`
+
+```bash
+forge coverage --no-match-coverage "(script|mocks|test)" --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage
+```
+
+See [Solidity Coverage in VS Code with Foundry](https://mirror.xyz/devanon.eth/RrDvKPnlD-pmpuW7hQeR5wWdVjklrpOgPCOA-PJkWFU) & [Foundry forge coverage](
+
+### Other
+
+Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.*
+
+Foundry consists of:
+
+-   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
+-   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
+-   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
+-   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+
+#### Documentation
+
+https://book.getfoundry.sh/
+
+#### Format
+
+```shell
+$ forge fmt
+```
+
+#### Gas Snapshots
+
+```shell
+$ forge snapshot
+```
+
+#### Anvil
+
+```shell
+$ anvil
+```
+
+#### Deploy
+
+```shell
+$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+```
+
+#### Cast
+
+```shell
+$ cast <subcommand>
+```
+
+#### Help
+
+```shell
+$ forge --help
+$ anvil --help
+$ cast --help
+```
+
+
 
 ## API
 
@@ -1026,69 +1193,6 @@ Setting the oracle to the zero address is permitted and effectively disables all
 
 
 
-## Foundry
+## Intellectual property
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
-
-Foundry consists of:
-
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
-
-## Documentation
-
-https://book.getfoundry.sh/
-
-## Usage
-
-### Build
-
-```shell
-$ forge build
-```
-
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+The code is copyright (c) Capital Market and Technology Association, 2022-2025, and is released under [Mozilla Public License 2.0](https://github.com/CMTA/CMTAT/blob/master/LICENSE.md).
