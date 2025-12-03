@@ -79,6 +79,34 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
         resBool = ruleWhitelistWrapper.canTransfer(ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertEq(resBool, false);
+
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleWhitelist_InvalidTransfer.selector,
+                address(ruleWhitelistWrapper),
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_FROM_NOT_WHITELISTED
+            )
+        );
+        // Act
+        ruleWhitelistWrapper.transferred(ADDRESS1, ADDRESS2, 20);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleWhitelist_InvalidTransfer.selector,
+                address(ruleWhitelistWrapper),
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_FROM_NOT_WHITELISTED
+            )
+        );
+        ruleWhitelistWrapper.transferred(ADDRESS1, ADDRESS2, 0, 20);
     }
 
     function testDetectTransferRestrictionTo() public {
@@ -94,6 +122,35 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
         resUint8 = ruleWhitelistWrapper.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertEq(resUint8, CODE_ADDRESS_TO_NOT_WHITELISTED);
+
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleWhitelist_InvalidTransfer.selector,
+                address(ruleWhitelistWrapper),
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_TO_NOT_WHITELISTED
+            )
+        );
+        // Act
+        ruleWhitelistWrapper.transferred(ADDRESS1, ADDRESS2, 20);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleWhitelist_InvalidTransfer.selector,
+                address(ruleWhitelistWrapper),
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_TO_NOT_WHITELISTED
+            )
+        );
+        ruleWhitelistWrapper.transferred(ADDRESS1, ADDRESS2, 0, 20);
+        
     }
 
     function testDetectTransferRestrictionWithSpender() public {
@@ -122,6 +179,35 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
         resBool = ruleWhitelistWrapper.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertEq(resBool, false);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleWhitelist_InvalidTransferFrom.selector,
+                address(ruleWhitelistWrapper),
+                ADDRESS3,
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_SPENDER_NOT_WHITELISTED
+            )
+        );
+        // Act
+        ruleWhitelistWrapper.transferred(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleWhitelist_InvalidTransferFrom.selector,
+                address(ruleWhitelistWrapper),
+                ADDRESS3,
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_SPENDER_NOT_WHITELISTED
+            )
+        );
+        ruleWhitelistWrapper.transferred(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
     }
 
     function testDetectTransferRestrictionOk() public {
@@ -144,6 +230,11 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
         resUint8 = ruleWhitelistWrapper.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertEq(resUint8, NO_ERROR);
+
+        // No revert
+        // Act
+        ruleWhitelistWrapper.transferred(ADDRESS1, ADDRESS2, 20);
+        ruleWhitelistWrapper.transferred(ADDRESS1, ADDRESS2, 0, 20);
     }
 
     function testDetectTransferRestrictionWithSpenderOk() public {
@@ -173,6 +264,11 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
         resUint8 = ruleWhitelistWrapper.detectTransferRestrictionFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertEq(resUint8, NO_ERROR);
+
+        // No revert
+        // Act
+        ruleWhitelistWrapper.transferred(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        ruleWhitelistWrapper.transferred(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
     }
 
     

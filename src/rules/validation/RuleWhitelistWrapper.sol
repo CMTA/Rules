@@ -11,8 +11,6 @@ import {RuleAddressSet} from "./abstract/RuleAddressSet/RuleAddressSet.sol";
 import {RuleWhitelistCommon, RuleValidateTransfer} from "./abstract/RuleWhitelistCommon.sol";
 /* ==== RuleEngine === */
 import {RulesManagementModule} from "RuleEngine/modules/RulesManagementModule.sol";
-import {RuleEngineInvariantStorage} from "RuleEngine/modules/library/RuleEngineInvariantStorage.sol";
-import {IRule} from "RuleEngine/interfaces/IRule.sol";
 /* ==== CMTAT === */
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 /* ==== Interfaces === */
@@ -125,6 +123,10 @@ contract RuleWhitelistWrapper is
         return detectTransferRestrictionFrom(spender, from, to, value);
     }
 
+    function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControl, RuleValidateTransfer) returns (bool) {
+        return AccessControl.supportsInterface(interfaceId) || RuleValidateTransfer.supportsInterface(interfaceId);
+    }
+
     /* ============  Access control ============ */
 
     /**
@@ -139,6 +141,23 @@ contract RuleWhitelistWrapper is
     {
         return AccessControlModuleStandalone.hasRole(role, account);
     }
+
+    /** 
+    * @notice Sets whether the rule should enforce spender-based checks.
+    * @dev
+    *  - Restricted to holders of the `DEFAULT_ADMIN_ROLE`.
+    *  - Updates the internal `checkSpender` flag.
+    *  - Emits a {CheckSpenderUpdated} event.
+    * @param value The new state of the `checkSpender` flag.
+    */
+    function setCheckSpender(bool value)
+        public virtual
+        onlyRole(DEFAULT_ADMIN_ROLE) // or a dedicated role if you prefer
+    {
+        _setCheckSpender(value);
+        emit CheckSpenderUpdated(value);
+    }
+
 
     /*//////////////////////////////////////////////////////////////
                             INTERNAL/PRIVATE FUNCTIONS
@@ -171,8 +190,12 @@ contract RuleWhitelistWrapper is
         return result;
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControl, RuleValidateTransfer) returns (bool) {
-        return AccessControl.supportsInterface(interfaceId) || RuleValidateTransfer.supportsInterface(interfaceId);
+
+    /**
+    *  @dev Internal helper to update the `checkSpender` flag.
+    */
+    function _setCheckSpender(bool value) internal {
+        checkSpender = value;
     }
 
     /*//////////////////////////////////////////////////////////////

@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2025-12-03 14:12:50</td>
+            <td class="headerValue">2025-12-03 15:05:37</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">5</td>
@@ -124,19 +124,19 @@
 <a name="53"><span class="lineNum">      53 </span>                :            :      * | `to` not whitelisted | `CODE_ADDRESS_TO_NOT_WHITELISTED` |</a>
 <a name="54"><span class="lineNum">      54 </span>                :            :      * | Both whitelisted | `TRANSFER_OK` |</a>
 <a name="55"><span class="lineNum">      55 </span>                :            :      */</a>
-<a name="56"><span class="lineNum">      56 </span>                :<span class="lineCov">         16 :     function detectTransferRestriction(address from, address to, uint256 /* value */ )</span></a>
+<a name="56"><span class="lineNum">      56 </span>                :<span class="lineCov">         20 :     function detectTransferRestriction(address from, address to, uint256 /* value */ )</span></a>
 <a name="57"><span class="lineNum">      57 </span>                :            :         public</a>
 <a name="58"><span class="lineNum">      58 </span>                :            :         view</a>
 <a name="59"><span class="lineNum">      59 </span>                :            :         virtual</a>
 <a name="60"><span class="lineNum">      60 </span>                :            :         override(IERC1404)</a>
 <a name="61"><span class="lineNum">      61 </span>                :            :         returns (uint8 code)</a>
 <a name="62"><span class="lineNum">      62 </span>                :            :     {</a>
-<a name="63"><span class="lineNum">      63 </span>        [<span class="branchCov" title="Branch 0 was taken 9 times"> + </span><span class="branchCov" title="Branch 1 was taken 14 times"> + </span>]:<span class="lineCov">         27 :         if (!isAddressListed(from)) {</span></a>
-<a name="64"><span class="lineNum">      64 </span>                :<span class="lineCov">          9 :             return CODE_ADDRESS_FROM_NOT_WHITELISTED;</span></a>
-<a name="65"><span class="lineNum">      65 </span>        [<span class="branchCov" title="Branch 0 was taken 4 times"> + </span><span class="branchCov" title="Branch 1 was taken 14 times"> + </span>]:<span class="lineCov">         18 :         } else if (!isAddressListed(to)) {</span></a>
-<a name="66"><span class="lineNum">      66 </span>                :<span class="lineCov">          4 :             return CODE_ADDRESS_TO_NOT_WHITELISTED;</span></a>
+<a name="63"><span class="lineNum">      63 </span>        [<span class="branchCov" title="Branch 0 was taken 11 times"> + </span><span class="branchCov" title="Branch 1 was taken 16 times"> + </span>]:<span class="lineCov">         33 :         if (!isAddressListed(from)) {</span></a>
+<a name="64"><span class="lineNum">      64 </span>                :<span class="lineCov">         11 :             return CODE_ADDRESS_FROM_NOT_WHITELISTED;</span></a>
+<a name="65"><span class="lineNum">      65 </span>        [<span class="branchCov" title="Branch 0 was taken 6 times"> + </span><span class="branchCov" title="Branch 1 was taken 16 times"> + </span>]:<span class="lineCov">         22 :         } else if (!isAddressListed(to)) {</span></a>
+<a name="66"><span class="lineNum">      66 </span>                :<span class="lineCov">          6 :             return CODE_ADDRESS_TO_NOT_WHITELISTED;</span></a>
 <a name="67"><span class="lineNum">      67 </span>                :            :         } else {</a>
-<a name="68"><span class="lineNum">      68 </span>                :<span class="lineCov">         14 :             return uint8(REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
+<a name="68"><span class="lineNum">      68 </span>                :<span class="lineCov">         16 :             return uint8(REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
 <a name="69"><span class="lineNum">      69 </span>                :            :         }</a>
 <a name="70"><span class="lineNum">      70 </span>                :            :     }</a>
 <a name="71"><span class="lineNum">      71 </span>                :            : </a>
@@ -170,17 +170,17 @@
 <a name="99"><span class="lineNum">      99 </span>                :            :      * | `from` or `to` not whitelisted | respective restriction code from `detectTransferRestriction` |</a>
 <a name="100"><span class="lineNum">     100 </span>                :            :      * | All whitelisted | `TRANSFER_OK` |</a>
 <a name="101"><span class="lineNum">     101 </span>                :            :      */</a>
-<a name="102"><span class="lineNum">     102 </span>                :<span class="lineCov">          6 :     function detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)</span></a>
+<a name="102"><span class="lineNum">     102 </span>                :<span class="lineCov">         10 :     function detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)</span></a>
 <a name="103"><span class="lineNum">     103 </span>                :            :         public</a>
 <a name="104"><span class="lineNum">     104 </span>                :            :         view</a>
 <a name="105"><span class="lineNum">     105 </span>                :            :         virtual</a>
 <a name="106"><span class="lineNum">     106 </span>                :            :         override(IERC1404Extend)</a>
 <a name="107"><span class="lineNum">     107 </span>                :            :         returns (uint8 code)</a>
 <a name="108"><span class="lineNum">     108 </span>                :            :     {</a>
-<a name="109"><span class="lineNum">     109 </span>           [<span class="branchCov" title="Branch 0 was taken 4 times"> + </span>]:<span class="lineCov">          8 :         if (checkSpender &amp;&amp; !isAddressListed(spender)) {</span></a>
-<a name="110"><span class="lineNum">     110 </span>                :<span class="lineCov">          4 :             return CODE_ADDRESS_SPENDER_NOT_WHITELISTED;</span></a>
+<a name="109"><span class="lineNum">     109 </span>           [<span class="branchCov" title="Branch 0 was taken 6 times"> + </span>]:<span class="lineCov">         12 :         if (checkSpender &amp;&amp; !isAddressListed(spender)) {</span></a>
+<a name="110"><span class="lineNum">     110 </span>                :<span class="lineCov">          6 :             return CODE_ADDRESS_SPENDER_NOT_WHITELISTED;</span></a>
 <a name="111"><span class="lineNum">     111 </span>                :            :         }</a>
-<a name="112"><span class="lineNum">     112 </span>                :<span class="lineCov">          4 :         return detectTransferRestriction(from, to, value);</span></a>
+<a name="112"><span class="lineNum">     112 </span>                :<span class="lineCov">          6 :         return detectTransferRestriction(from, to, value);</span></a>
 <a name="113"><span class="lineNum">     113 </span>                :            :     }</a>
 <a name="114"><span class="lineNum">     114 </span>                :            : </a>
 <a name="115"><span class="lineNum">     115 </span>                :            :     /**</a>

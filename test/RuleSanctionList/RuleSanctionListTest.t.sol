@@ -109,6 +109,33 @@ contract RuleSanctionlistTest is Test, HelperContract {
         resUint8 = ruleSanctionList.detectTransferRestriction(ATTACKER, ADDRESS2, 0, 20);
         // Assert
         assertEq(resUint8, CODE_ADDRESS_FROM_IS_SANCTIONED);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleSanctionsList_InvalidTransfer.selector,
+                address(ruleSanctionList),
+                ATTACKER,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_FROM_IS_SANCTIONED
+            )
+        );
+        // Act
+        ruleSanctionList.transferred(ATTACKER, ADDRESS2, 20);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleSanctionsList_InvalidTransfer.selector,
+                address(ruleSanctionList),
+                ATTACKER,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_FROM_IS_SANCTIONED
+            )
+        );
+        ruleSanctionList.transferred(ATTACKER, ADDRESS2, 0, 20);
     }
 
     function testDetectTransferRestrictionTo() public {
@@ -121,6 +148,33 @@ contract RuleSanctionlistTest is Test, HelperContract {
         resUint8 = ruleSanctionList.detectTransferRestriction(ADDRESS1, ATTACKER, 0, 20);
         // Assert
         assertEq(resUint8, CODE_ADDRESS_TO_IS_SANCTIONED);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleSanctionsList_InvalidTransfer.selector,
+                address(ruleSanctionList),
+                ADDRESS1,
+                ATTACKER,
+                20,
+                CODE_ADDRESS_TO_IS_SANCTIONED
+            )
+        );
+        // Act
+        ruleSanctionList.transferred(ADDRESS1, ATTACKER, 20);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleSanctionsList_InvalidTransfer.selector,
+                address(ruleSanctionList),
+                ADDRESS1,
+                ATTACKER,
+                20,
+                CODE_ADDRESS_TO_IS_SANCTIONED
+            )
+        );
+        ruleSanctionList.transferred(ADDRESS1, ATTACKER, 0, 20);
     }
 
     function testDetectTransferRestrictionOk() public {
@@ -133,6 +187,11 @@ contract RuleSanctionlistTest is Test, HelperContract {
         resUint8 = ruleSanctionList.detectTransferRestriction(ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertEq(resUint8, NO_ERROR);
+
+        // No revert
+        // Act
+        ruleSanctionList.transferred(ADDRESS1, ADDRESS2, 20);
+        ruleSanctionList.transferred(ADDRESS1, ADDRESS2, 0, 20);
     }
 
     function testDetectTransferRestrictionWitSpenderOk() public {
@@ -152,6 +211,11 @@ contract RuleSanctionlistTest is Test, HelperContract {
 
         resBool = ruleSanctionList.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
         assertEq(resBool, true);
+
+        // No revert
+        // Act
+        ruleSanctionList.transferred(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        ruleSanctionList.transferred(ADDRESS3, ADDRESS2, 0, 20);
     }
 
     function testDetectTransferRestrictionWitSpender() public {
@@ -164,6 +228,35 @@ contract RuleSanctionlistTest is Test, HelperContract {
         resUint8 = ruleSanctionList.detectTransferRestrictionFrom(ATTACKER, ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertEq(resUint8, CODE_ADDRESS_SPENDER_IS_SANCTIONED);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleSanctionsList_InvalidTransferFrom.selector,
+                address(ruleSanctionList),
+                ATTACKER,
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_SPENDER_IS_SANCTIONED
+            )
+        );
+        // Act
+        ruleSanctionList.transferred(ATTACKER, ADDRESS1, ADDRESS2, 20);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleSanctionsList_InvalidTransferFrom.selector,
+                address(ruleSanctionList),
+                ATTACKER,
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_SPENDER_IS_SANCTIONED
+            )
+        );
+        ruleSanctionList.transferred(ATTACKER, ADDRESS1, ADDRESS2, 0, 20);
     }
 
     function testDetectTransferRestrictionWitSpenderTo() public {

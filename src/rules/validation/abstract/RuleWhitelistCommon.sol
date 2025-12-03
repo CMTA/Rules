@@ -98,18 +98,26 @@ abstract contract RuleWhitelistCommon is RuleValidateTransfer, RuleWhitelistInva
         uint8 code = this.detectTransferRestrictionFrom(spender, from, to, value);
         require(
             code == uint8(REJECTED_CODE_BASE.TRANSFER_OK),
-            RuleWhitelist_InvalidTransfer(address(this), from, to, value, code)
+            RuleWhitelist_InvalidTransferFrom(address(this), spender, from, to, value, code)
         );
     }
 
-    /**
-     * @inheritdoc IERC7943NonFungibleComplianceExtend
-     */
-    function transferred(address spender, address from, address to, uint256, /* tokenId */ uint256 value)
+
+    function transferred(address spender, address from, address to, uint256 /* tokenId */,uint256 value)
         public
         view
+        virtual
         override(IERC7943NonFungibleComplianceExtend)
     {
         transferred(spender, from, to, value);
+    }
+
+    function transferred(address from, address to, uint256 /* tokenId */,uint256 value)
+        public
+        view
+        virtual
+        override(IERC7943NonFungibleComplianceExtend)
+    {
+        transferred(from, to, value);
     }
 }

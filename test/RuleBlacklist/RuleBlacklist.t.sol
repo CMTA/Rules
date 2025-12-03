@@ -69,6 +69,11 @@ contract RuleBlacklistTest is Test, HelperContract {
         resBool = ruleBlacklist.canTransfer(ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertEq(resBool, true);
+
+        // No revert
+        // Act
+        ruleBlacklist.transferred(ADDRESS1, ADDRESS2, 20);
+        ruleBlacklist.transferred(ADDRESS1, ADDRESS2, 0, 20);
     }
 
     function testDetectTransferRestrictionFRom() public {
@@ -94,6 +99,33 @@ contract RuleBlacklistTest is Test, HelperContract {
         resBool = ruleBlacklist.canTransfer(ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertFalse(resBool);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleBlacklist_InvalidTransfer.selector,
+                address(ruleBlacklist),
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_FROM_IS_BLACKLISTED
+            )
+        );
+        // Act
+        ruleBlacklist.transferred(ADDRESS1, ADDRESS2, 20);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleBlacklist_InvalidTransfer.selector,
+                address(ruleBlacklist),
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_FROM_IS_BLACKLISTED
+            )
+        );
+        ruleBlacklist.transferred(ADDRESS1, ADDRESS2, 0, 20);
     }
 
     function testDetectTransferRestrictionTO() public {
@@ -118,6 +150,33 @@ contract RuleBlacklistTest is Test, HelperContract {
         resBool = ruleBlacklist.canTransfer(ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertFalse(resBool);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleBlacklist_InvalidTransfer.selector,
+                address(ruleBlacklist),
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_TO_IS_BLACKLISTED
+            )
+        );
+        // Act
+        ruleBlacklist.transferred(ADDRESS1, ADDRESS2, 20);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleBlacklist_InvalidTransfer.selector,
+                address(ruleBlacklist),
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_TO_IS_BLACKLISTED
+            )
+        );
+        ruleBlacklist.transferred(ADDRESS1, ADDRESS2, 0, 20);
     }
 
     function testDetectTransferRestrictionSpender() public {
@@ -142,6 +201,36 @@ contract RuleBlacklistTest is Test, HelperContract {
         resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertFalse(resBool);
+
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleBlacklist_InvalidTransferFrom.selector,
+                address(ruleBlacklist),
+                ADDRESS3,
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_SPENDER_IS_BLACKLISTED
+            )
+        );
+        // Act
+        ruleBlacklist.transferred(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+
+        vm.prank(ADDRESS1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RuleBlacklist_InvalidTransferFrom.selector,
+                address(ruleBlacklist),
+                ADDRESS3,
+                ADDRESS1,
+                ADDRESS2,
+                20,
+                CODE_ADDRESS_SPENDER_IS_BLACKLISTED
+            )
+        );
+        ruleBlacklist.transferred(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
     }
 
     function testDetectTransferRestrictionSpenderTo() public {
@@ -209,6 +298,11 @@ contract RuleBlacklistTest is Test, HelperContract {
         resBool = ruleBlacklist.canTransferFrom(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
         // Assert
         assertEq(resBool, true);
+
+        // No revert
+        // Act
+        ruleBlacklist.transferred(ADDRESS3, ADDRESS1, ADDRESS2, 20);
+        ruleBlacklist.transferred(ADDRESS3, ADDRESS1, ADDRESS2, 0, 20);
     }
 
 }

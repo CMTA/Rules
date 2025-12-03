@@ -6,7 +6,6 @@ pragma solidity ^0.8.20;
 import {IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643ComplianceRead} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
 import {IERC7551Compliance} from "CMTAT/interfaces/tokenization/draft-IERC7551.sol";
-import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 /* ==== RuleEngine === */
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
 import {
@@ -79,7 +78,6 @@ abstract contract RuleValidateTransfer is IERC7943NonFungibleComplianceExtend, I
     {
         return canTransferFrom(spender, from, to, value);
     }
-
 
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
         return interfaceId == type(IRule).interfaceId;

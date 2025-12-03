@@ -106,6 +106,20 @@ interface IERC7943NonFungibleComplianceExtend is IERC7943NonFungibleCompliance {
      *  - MUST be called by the token contract after a successful transfer.
      *  - MUST revert if called by unauthorized contracts.
      *
+     * @param from The previous owner of the token.
+     * @param to The new owner of the token.
+     * @param tokenId The token ID that was transferred.
+     * @param value The transfer amount (always `1` for ERC-721).
+     */
+    function transferred(address from, address to, uint256 tokenId, uint256 value) external;
+
+    /**
+     * @notice Notifies the rule engine or compliance module that a transfer has been executed.
+     * @dev
+     *  - MAY modify compliance-related state (e.g., consumption of approvals, updating limits).
+     *  - MUST be called by the token contract after a successful transfer.
+     *  - MUST revert if called by unauthorized contracts.
+     *
      * @param spender The address executing the transfer.
      * @param from The previous owner of the token.
      * @param to The new owner of the token.

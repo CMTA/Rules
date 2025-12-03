@@ -143,4 +143,27 @@ contract RuleWhitelist is RuleAddressSet, RuleWhitelistCommon, IIdentityRegistry
     function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControl, RuleValidateTransfer) returns (bool) {
         return AccessControl.supportsInterface(interfaceId) || RuleValidateTransfer.supportsInterface(interfaceId);
     }
+
+    /** 
+    * @notice Sets whether the rule should enforce spender-based checks.
+    * @dev
+    *  - Restricted to holders of the `DEFAULT_ADMIN_ROLE`.
+    *  - Updates the internal `checkSpender` flag.
+    *  - Emits a {CheckSpenderUpdated} event.
+    * @param value The new state of the `checkSpender` flag.
+    */
+    function setCheckSpender(bool value)
+        public virtual
+        onlyRole(DEFAULT_ADMIN_ROLE) // or a dedicated role if you prefer
+    {
+        _setCheckSpender(value);
+        emit CheckSpenderUpdated(value);
+    }
+
+    /**
+    * @dev Internal helper to update the `checkSpender` flag.
+    */ 
+    function _setCheckSpender(bool value) internal {
+        checkSpender = value;
+    }
 }

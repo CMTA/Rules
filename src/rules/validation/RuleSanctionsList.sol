@@ -194,6 +194,7 @@ contract RuleSanctionsList is
         );
     }
 
+    
     /**
      * @inheritdoc IRuleEngine
      */
@@ -206,14 +207,11 @@ contract RuleSanctionsList is
         uint8 code = this.detectTransferRestrictionFrom(spender, from, to, value);
         require(
             code == uint8(REJECTED_CODE_BASE.TRANSFER_OK),
-            RuleSanctionsList_InvalidTransfer(address(this), from, to, value, code)
+            RuleSanctionsList_InvalidTransferFrom(address(this), spender, from, to, value, code)
         );
     }
 
-    /**
-     * @inheritdoc IERC7943NonFungibleComplianceExtend
-     */
-    function transferred(address spender, address from, address to, uint256, /* tokenId */ uint256 value)
+    function transferred(address spender, address from, address to, uint256 /* tokenId */,uint256 value)
         public
         view
         virtual
@@ -222,6 +220,14 @@ contract RuleSanctionsList is
         transferred(spender, from, to, value);
     }
 
+    function transferred(address from, address to, uint256 /* tokenId */,uint256 value)
+        public
+        view
+        virtual
+        override(IERC7943NonFungibleComplianceExtend)
+    {
+        transferred(from, to, value);
+    }
     /*//////////////////////////////////////////////////////////////
                             INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
