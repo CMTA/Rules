@@ -8,7 +8,7 @@ Each rule can be used **standalone**, directly plugged into a CMTAT token, **or*
 
 ## Overview
 
-The **RuleEngine** is an external smart contract that applies transfer restrictions to security tokens such as **CMTAT** or ERC-3643-compatible tokens through a RuleEngine.
+The **RuleEngine** is an external smart contract that applies transfer restrictions to security tokens such as **CMTAT** or [ERC-3643](https://eips.ethereum.org/EIPS/eip-3643)-compatible tokens through a RuleEngine.
 Rules are modular validator contracts that the `RuleEngine` or `CMTAT` compatible token can call on every transfer to ensure regulatory and business-logic compliance.
 
 ### Key Concepts
@@ -46,6 +46,30 @@ function transferred(address _from, address _to, uint256 _amount) external;
 However, contrary to the RuleEngine, the whole interface is currently not implemented (e.g. `created`and `destroyed`) and as a result, the rule can not directly supported ERC-3643 token.
 
 The alternative to use a Rule with an ERC-3643 token is trough the RuleEngine, which implements the whole `ICompliance` interface.
+
+### ERC-721/ERC-1155
+
+To improve compatibility with [ERC-721](https://eips.ethereum.org/EIPS/eip-721) and [ERC-1155](https://eips.ethereum.org/EIPS/eip-1155), the rule implements the interface `IERC7943NonFungibleComplianceExtend` which includes compliance functions with the `tokenId` argument.
+
+While no rules currently apply restriction on the token id, this interface can be used to implement flexible restriction on ERC-721 or ERC-1155 tokens.
+
+```solidity
+// IERC7943NonFungibleCompliance interface
+// Read-only functions
+function canTransfer(address from, address to, uint256 tokenId, uint256 amount)external view returns (bool allowed)
+
+// IERC7943NonFungibleComplianceExtend interface
+// Read-only functions
+function detectTransferRestriction(address from, address to, uint256 tokenId, uint256 amount)external view returns (uint8 code);
+function detectTransferRestrictionFrom(address spender, address from, address to, uint256 tokenId, uint256 value)external view returns (uint8 code);
+function canTransferFrom(address spender, address from, address to, uint256 tokenId, uint256 value)external returns (bool allowed);
+
+// State modifying functions (write)
+function transferred(address from, address to, uint256 tokenId, uint256 value) external;
+function transferred(address spender, address from, address to, uint256 tokenId, uint256 value) external;
+```
+
+
 
 ## Architecture
 
