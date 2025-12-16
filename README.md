@@ -208,6 +208,16 @@ There are two categories of rules: validation rules (Read-only) and operation ru
 
 ## Rules details
 
+### Summary tab
+
+| Rule                    | Type <br />[ready-only / read-write] | Security Audit planned in the roadmap | Description                                                  |
+| ----------------------- | ------------------------------------ | ------------------------------------- | ------------------------------------------------------------ |
+| RuleWhitelist           | Ready-only                           | ☑                                     | This rule can be used to restrict transfers from/to only addresses inside a whitelist. |
+| RuleWhitelistWrapper    | Ready-only                           | ☑                                     | This rule can be used to restrict transfers from/to only addresses inside a group of whitelist rules managed by different operators. |
+| RuleBlacklist           | Ready-only                           | ☑                                     | This rule can be used to forbid transfer from/to addresses in the blacklist |
+| RuleSanctionList        | Ready-only                           | ☑                                     | The purpose of this contract is to use the oracle contract from [Chainalysis](https://go.chainalysis.com/chainalysis-oracle-docs.html) to forbid transfer from/to an address included in a sanctions designation (US, EU, or UN). |
+| RuleConditionalTransfer | Ready-Write                          | ☒<br /> (experimental rule)           | This rule requires that transfers have to be approved before being executed by the token. Implement several options such as a time limit for approving a request as well as for carrying out the transfer. |
+
 ### Read-only (validation) rule
 
 Currently, there are four validation rules: whitelist, whitelistWrapper, blacklist, and sanctionlist.
