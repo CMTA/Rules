@@ -192,6 +192,7 @@ AI-assisted review, each triaged by the project team:
 | --- | --- | --- |
 | Static analysis | [Slither](https://github.com/crytic/slither) 0.11.5 | v0.5.0 |
 | Static analysis | [Aderyn](https://github.com/Cyfrin/aderyn) 0.6.5 | v0.5.0 |
+| AI automated scan | [Nethermind AuditAgent](https://auditagent.nethermind.io/) | v0.5.0 |
 | AI-assisted review | Claude Code (Anthropic) | v0.5.0 |
 | AI-assisted review | Claude + custom security-audit skills | v0.4.0 |
 | AI-assisted review | [Wake Arena](https://getwake.io) (Ackee Blockchain Security) | v0.2.0 |
@@ -199,6 +200,21 @@ AI-assisted review, each triaged by the project team:
 Scope is the production contracts under `src/`; mocks, tests and vendored dependencies are excluded. 
 
 Every finding carries a written triage, including the ones dismissed as false positives or by-design. Nothing was outstanding as of `v0.5.0`.
+
+### Nethermind AuditAgent (v0.5.0)
+
+| Scan | High | Medium | Low | Info | Anything to fix? |
+| --- | --- | --- | --- | --- | --- |
+| 2026-08-17, commit `01632da` | 0 | 13 | 11 | 0 | **Nothing exploitable** — one documentation item (NM-11) |
+
+> Note: This scan was performed by an AI-powered automated tool, not a formal human-led audit.
+
+No false positives, but 17 of the 24 findings restate design positions already documented in the source and in
+the previous audit, and the set collapses to about 11 distinct claims. The one item recommended for action is
+NM-11: the balance and supply cap rules assume the token calls the compliance hook *before* moving value (CMTAT
+does; a real ERC-3643 / T-REX token does not), which over-restricts rather than over-issues.
+[Report (PDF)](./doc/security/audits/tools/v0.5.0/nethermind_audit_agent_report_v0.5.0.pdf) ·
+[feedback](./doc/security/audits/tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md).
 
 Reports, triage and the threat model live in [`doc/security/audits/`](./doc/security/audits/), indexed by [`AUDIT_OVERVIEW.md`](./doc/security/audits/AUDIT_OVERVIEW.md).
 

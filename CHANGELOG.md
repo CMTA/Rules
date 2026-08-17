@@ -47,11 +47,22 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 ## Unreleased
 
-_Nothing yet._
+### Documentation
 
-## v0.5.0 - 
+- Added the **Nethermind AuditAgent** (AI automated scan) run for `v0.5.0` — report and per-finding triage in
+  `doc/security/audits/tools/v0.5.0/` (Scan ID `10`, commit `01632da`, 0 High / 13 Medium / 11 Low). No false
+  positives, nothing exploitable, no contract change required for the CMTAT path; 17 of the 24 findings restate
+  positions already documented in the source and in `CLAUDE_AUDIT.md`. One documentation item is outstanding
+  (**NM-11**): the balance and supply cap rules assume the token notifies *before* moving the value, which a real
+  ERC-3643 / T-REX token does not, so the cap double-counts and over-restricts on that path.
+  Seven findings (NM-3, NM-5, NM-6, NM-10, NM-17, NM-18, NM-23/24) carry an `Improvement` section specifying what
+  could be implemented, with the code, its cost and its limit — including the two cases where a complete fix is
+  not reachable at the rule level. None applied; no contract was modified.
+  `AUDIT_OVERVIEW.md`, `README.md` and `doc/README.md` updated with the run, its counts and the AI-tool caveat.
 
-Commit: _see `doc/security/audits/tools/v0.5.0/CLAUDE_ANALYSIS.md` for the per-finding commit map._
+## v0.5.0 - 2026-08-14
+
+Commit: `01632da0ae2cf701323e42644de29cbd951e204c`
 
 ### Summary
 

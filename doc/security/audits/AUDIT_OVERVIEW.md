@@ -13,6 +13,7 @@
 
 | Date | Type | Tool / Source | Version | Reports |
 |---|---|---|---|---|
+| 2026-08-17 | AI automated scan | [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | v0.5.0 | [report (PDF)](./tools/v0.5.0/nethermind_audit_agent_report_v0.5.0.pdf) · [feedback](./tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md) |
 | 2026-08-12 | AI-assisted review | Claude Code (Anthropic) | v0.5.0 | [**CLAUDE_ANALYSIS.md**](./tools/v0.5.0/CLAUDE_ANALYSIS.md) (code quality, `src/`) · [**CLAUDE_ANALYSIS_SCRIPT.md**](./tools/v0.5.0/CLAUDE_ANALYSIS_SCRIPT.md) (deployment scripts) |
 | 2026-07 | AI-assisted review | Claude (Anthropic) + custom security-audit skills | v0.4.0 | [**CLAUDE_AUDIT.md**](./tools/v0.4.0/claude-audit/CLAUDE_AUDIT.md) |
 | 2026-08-11 | Static analysis | Slither 0.11.5 | v0.5.0 | [report](./tools/v0.5.0/slither-report.md) · [feedback](./tools/v0.5.0/slither-report-feedback.md) |
@@ -59,6 +60,52 @@ The substantive issues fixed in this release — the guarded `totalSupply()` rea
 feed-decimals read that prevents a stale-cache over-mint, and the removal of two inert public roles from
 `IdentityRegistryWhitelist` — were found by **manual review, not by either tool**. A clean static-analysis report
 means the tools' pattern sets matched nothing; it is not evidence of correctness.
+
+## AI automated scan results — Nethermind AuditAgent (v0.5.0)
+
+Scan **2026-08-17** (Scan ID `10`, commit `01632da0…951e204c`, 89 contracts / 9 764 LoC) with
+[**Nethermind AuditAgent**](https://auditagent.nethermind.io/).
+
+> ⚠️ **This is an AI-powered automated scan, not a formal human-led audit.** Nethermind's own notice states the
+> report "has been generated entirely by AI… does not constitute a full security audit… must be independently
+> verified", and that it does not authorise describing the project as "audited by Nethermind". The
+> [feedback file](./tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md) is that independent
+> verification: every finding was opened against the cited `file:line`.
+
+| Tool | High | Medium | Low | Info | Relevant to fix? |
+|---|---|---|---|---|---|
+| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **One documentation item** (NM-11); nothing exploitable — see [feedback](./tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md) |
+
+**Nothing exploitable, and no contract change required for the CMTAT path.** There are **no false positives** —
+all 24 findings describe real code — but 17 restate positions already reached, documented in-source and recorded
+in `CLAUDE_AUDIT.md` (F-4, F-5, F-7 and the accepted-risk rows for a reverting oracle/registry), and the 24 items
+collapse to roughly **11 distinct claims** (approval/quota scoping is reported six times, cap-rule token binding
+twice, spender-less hooks twice, short ABI return data twice). Every described failure is fail-closed
+(over-restriction, a blocked transfer) or inert (a rule that cannot screen an identity it is never given); none
+of the 13 Medium ratings survives verification at Medium.
+
+**One item is recommended for action — NM-11 (documentation + test scope, no contract change):**
+`RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR` assume the token calls the compliance hook **before**
+moving value (CMTAT does). The vendored ERC-3643 / T-REX token calls it **after**
+(`Token.sol:312-313`, `:532-533`, `:557-558`, and `created` at `:572`), so the cap double-counts the transferred
+amount and the top of the headroom becomes unreachable — a configuration this repo supports and tests
+(`test/ERC3643Real/`), but where no cap rule is currently covered. The assumption is already stated in
+`RuleMaxBalanceBase`'s NatSpec; the fix is to state it as a compatibility rule in the per-contract pages,
+`RULE_SEMANTICS.md` and the ERC-3643 column of `doc/README.md`, and to pin it with a regression test.
+
+**Seven findings carry a specified, unimplemented improvement** — NM-3, NM-5, NM-6, NM-10, NM-17, NM-18 and
+NM-23/24 — each with the code, its cost and its limit. The three cheapest and clearest wins: map a future-dated
+PoR `updatedAt` to the existing "answer invalid" code 77 (NM-10, one line); assert in
+`approveAndTransferIfAllowed` that the approval it created was consumed (NM-17); and ERC-165-check the wrapper's
+children in a `_checkRule` override, the pattern `RuleEngineBase` already uses (NM-18). Two carry hard limits
+worth knowing before planning work: **NM-5 cannot be fully fixed at the rule level** — the compliance hooks carry
+no token identity, so isolating two tokens behind one engine needs an upstream interface change, and only the
+"one instance, two engines" half is reachable — and NM-18's read-time containment hits the same uncatchable-decode
+problem as NM-23, so only its configuration-time layer is recommended.
+
+The scan reached a strictly different class of issue than Slither and Aderyn, which found none of these: the
+static analysers match syntactic patterns, while every AuditAgent finding is semantic — about which hook is
+called, in what order, and with which arguments.
 
 ## Static-analysis results (v0.4.0)
 

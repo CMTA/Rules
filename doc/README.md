@@ -1978,6 +1978,35 @@ aderyn -x mocks --output doc/security/audits/tools/v0.5.0/aderyn-report.md
 > The Slither filter must list **`lib`**: this is a Foundry project, so omitting it pulls the whole vendored
 > dependency tree into scope and inflates the result count roughly four-fold with OpenZeppelin-internal findings.
 
+#### Nethermind AuditAgent (v0.5.0)
+
+AI automated scan with [**Nethermind AuditAgent**](https://auditagent.nethermind.io/), run **2026-08-17**
+(Scan ID `10`, commit `01632da0…951e204c`, 89 contracts / 9 764 LoC).
+[Report (PDF)](./security/audits/tools/v0.5.0/nethermind_audit_agent_report_v0.5.0.pdf) ·
+[feedback](./security/audits/tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md).
+
+> ⚠️ **Note: this scan was performed by an AI-powered automated tool, not a formal human-led audit.** Nethermind's
+> own notice states the report "has been generated entirely by AI… does not constitute a full security audit… must
+> be independently verified", and that it does not authorise describing the project as "audited by Nethermind".
+> The feedback file is that independent verification — every finding was opened against the cited `file:line`.
+
+| Tool | High | Medium | Low | Info | Anything to fix? |
+|---|---|---|---|---|---|
+| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **One documentation item** (NM-11); nothing exploitable |
+
+**Nothing exploitable.** There are no false positives — all 24 findings describe real code — but 17 restate
+positions already documented in the source and in [`CLAUDE_AUDIT.md`](./security/audits/tools/v0.4.0/claude-audit/CLAUDE_AUDIT.md)
+(F-4, F-5, F-7, and the accepted-risk rows for a reverting oracle or identity registry), and the 24 items collapse
+to roughly **11 distinct claims**. Every failure described is fail-closed (over-restriction, a blocked transfer) or
+inert (a rule that cannot screen an identity it is never given); none of the 13 Medium ratings survives
+verification at Medium.
+
+The one item recommended for action is **NM-11**: `RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR`
+assume the token calls the compliance hook **before** moving the value — CMTAT does, a real ERC-3643 / T-REX token
+calls it **after** — so on that path the cap double-counts the transferred amount and the top of the headroom
+becomes unreachable. The direction is over-restriction, never over-issuance, and the remedy is documentation plus
+a regression test in `test/ERC3643Real/`, where no cap rule is currently covered.
+
 Commands used for `v0.4.0` (mocks excluded):
 
 ```bash
