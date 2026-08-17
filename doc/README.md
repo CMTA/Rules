@@ -1992,7 +1992,7 @@ AI automated scan with [**Nethermind AuditAgent**](https://auditagent.nethermind
 
 | Tool | High | Medium | Low | Info | Anything to fix? |
 |---|---|---|---|---|---|
-| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **One documentation item** (NM-11); nothing exploitable |
+| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **1 fixed** (NM-3, `v0.6.0`) + one documentation item (NM-11); nothing exploitable |
 
 **Nothing exploitable.** There are no false positives — all 24 findings describe real code — but 17 restate
 positions already documented in the source and in [`CLAUDE_AUDIT.md`](./security/audits/tools/v0.4.0/claude-audit/CLAUDE_AUDIT.md)
@@ -2001,7 +2001,14 @@ to roughly **11 distinct claims**. Every failure described is fail-closed (over-
 inert (a rule that cannot screen an identity it is never given); none of the 13 Medium ratings survives
 verification at Medium.
 
-The one item recommended for action is **NM-11**: `RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR`
+**Fixed in `v0.6.0` — NM-3.** `RuleIdentityRegistryBase._detectTransferRestrictionFrom` returned `TRANSFER_OK`
+outright when the identity registry was unset or the transfer was a burn, instead of delegating to
+`_detectTransferRestriction`. A subclass extending only that hook applied to `transfer` but silently not to
+`transferFrom` or `burnFrom` — the same anti-pattern `RuleSanctionsListBase` was restructured to remove. The fix
+is behaviour-preserving (both early returns duplicated guards the delegate already performs) and is pinned by
+`test/RuleIdentityRegistry/RuleIdentityRegistryDelegation.t.sol`.
+
+The one item still recommended for action is **NM-11**: `RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR`
 assume the token calls the compliance hook **before** moving the value — CMTAT does, a real ERC-3643 / T-REX token
 calls it **after** — so on that path the cap double-counts the transferred amount and the top of the headroom
 becomes unreachable. The direction is over-restriction, never over-issuance, and the remedy is documentation plus

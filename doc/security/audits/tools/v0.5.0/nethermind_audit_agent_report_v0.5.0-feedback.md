@@ -33,10 +33,10 @@ Tool: **[Nethermind AuditAgent](https://auditagent.nethermind.io/)** — an **AI
 
 | Disposition | Count | IDs |
 |---|---|---|
-| Fixed this round | 0 | — |
+| **Fixed** (in `v0.6.0`) | 1 | **NM-3** |
 | Accepted as design (real behaviour, intentional, already documented) | 17 | NM-1, 2, 4, 5, 7, 8, 9, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24 |
 | Rejected — false positive | 0 | — |
-| Informational — valid, optional hardening | 6 | NM-3, 6, 18, 19, 20, and the code change proposed in NM-10 |
+| Informational — valid, optional hardening | 5 | NM-6, 18, 19, 20, and the code change proposed in NM-10 |
 | Fix recommended | 1 | **NM-11** — documentation/compatibility, not a contract bug |
 | **Total** | **24** | |
 
@@ -58,7 +58,10 @@ out what could be implemented, the code to do it, what it buys, what it costs, a
 those limits are worth reading before planning work: **NM-5** cannot be fully fixed at the rule level at all (the
 compliance hooks carry no token identity, so it needs an upstream interface change), and **NM-18**'s read-time
 containment runs into the same uncatchable-decode problem as NM-23, which is why only its configuration-time
-layer is recommended. None of the seven has been applied.
+layer is recommended.
+
+**One of the seven has been implemented: NM-3, in `v0.6.0`** — see its `Resolution` below. The remaining six are
+specified but not applied.
 
 **The one genuinely new and useful signal** is a theme the scanner keeps circling without naming:
 **several rules' guarantees depend on the token's callback shape and ordering, and a real ERC-3643 / T-REX token
@@ -72,7 +75,7 @@ supplies neither.** That is developed under NM-11 and NM-9 below, and is the onl
 |---|---|---|---|
 | NM-1 | Medium → **Info** | Mint quotas unenforced via `created` / 3-arg `transferred` | Accepted as design — documented CMTAT ≥ v3.3 requirement |
 | NM-2 | Medium → **Low** | Mint quotas shared across tokens behind one RuleEngine | Accepted as design — `bindToken` WARNING |
-| NM-3 | Medium → **Info** | Early returns in `_detectTransferRestrictionFrom` skip delegation | Informational — behaviour-preserving hardening available |
+| NM-3 | Medium → **Info** | Early returns in `_detectTransferRestrictionFrom` skip delegation | ✅ **Fixed** in `v0.6.0` |
 | NM-4 | Medium → **Low** | Approvals + quotas not token-scoped across shared engine / rebinding | Accepted as design — duplicate of NM-2 / NM-7 |
 | NM-5 | Medium → **Low** | Cap rules read a statically configured token's supply | Accepted as design — documented "one token per instance" |
 | NM-6 | Medium → **Info** | `RuleNFTAdapter` context vs ERC-7943 spender handling differ | Informational — the context path is the correct one |
@@ -137,7 +140,7 @@ same shape as the documented "one instance protects one token, with no on-chain 
 `RuleMaxTotalSupply` / `RuleChainlinkPoR`, and the reasoning is recorded there: adding a binding guard to a
 stateless validation rule is a library-wide decision, not a per-rule patch.
 
-### NM-3 — Early returns in `_detectTransferRestrictionFrom` skip the delegation
+### NM-3 — Early returns in `_detectTransferRestrictionFrom` skip the delegation — ✅ FIXED (`v0.6.0`)
 
 **Claim (Medium).** `RuleIdentityRegistryBase._detectTransferRestrictionFrom` returns `TRANSFER_OK` directly when
 the registry is unset or `to == address(0)`, instead of delegating to `_detectTransferRestriction`. A subclass
@@ -151,9 +154,9 @@ guards** (`:197-204`): delegating would return `TRANSFER_OK` for the same inputs
 No subclass of `RuleIdentityRegistryBase` overrides `_detectTransferRestriction` — the only descendants are the
 two deployment variants.
 
-**Improvement — implementable, behaviour-preserving, ~4 lines.** Delegate instead of returning a literal, exactly
-as `RuleSanctionsListBase` was changed to do. In `RuleIdentityRegistryBase._detectTransferRestrictionFrom`
-(`:234-241`), replace the two early returns:
+**Improvement — implemented in `v0.6.0`; behaviour-preserving, ~4 lines.** Delegate instead of returning a
+literal, exactly as `RuleSanctionsListBase` was changed to do. In
+`RuleIdentityRegistryBase._detectTransferRestrictionFrom` (`:234-241`), replace the two early returns:
 
 ```solidity
 // before
@@ -188,13 +191,36 @@ check honoured on the `transferFrom`, mint and burn paths instead of silently dr
 sibling rule already closed, so closing it here also removes an inconsistency between two rules a reader will
 compare.
 
-**Also worth doing at the same time:** apply the same shape review to every other rule that overrides both hooks.
-`RuleMaxBalanceBase` (`:149-157`), `RuleMaxTotalSupplyBase` and `RuleChainlinkPoRBase` already delegate
-unconditionally and are fine; `RuleSpenderWhitelistBase._detectTransferRestrictionFrom` (`:102-115`) deliberately
-does **not** delegate, because its `_detectTransferRestriction` is a hardcoded `TRANSFER_OK` — leave it, but say
-so in a comment so the next reader does not "fix" it into a self-call.
+**Also reviewed at the same time:** every other rule that overrides both hooks. `RuleMaxBalanceBase` (`:149-157`),
+`RuleMaxTotalSupplyBase` and `RuleChainlinkPoRBase` already delegate unconditionally and needed no change;
+`RuleSpenderWhitelistBase._detectTransferRestrictionFrom` (`:102-115`) deliberately does **not** delegate, because
+its `_detectTransferRestriction` is a hardcoded `TRANSFER_OK` — left as is.
 
-Not a defect on its own; schedule it with the next change to the file.
+**Resolution — `v0.6.0`.**
+
+*Changed:* `src/rules/validation/abstract/base/RuleIdentityRegistryBase.sol` — the two early returns become one
+guard that delegates, and the `:247-249` comment (which asserted burn was handled "by the early return above")
+was rewritten so it describes the code that now exists rather than the code that was removed.
+
+*Regression tests added:*
+
+- `src/mocks/harness/IdentityRegistryDelegationHarness.sol` — `IdentityRegistryExtraCheckHarness`, a subclass
+  that overrides **only** `_detectTransferRestriction` to add a registry-independent check. This is the shape
+  that exposes the defect, and it mirrors `SanctionsListDelegationHarness` one for one.
+- `test/RuleIdentityRegistry/RuleIdentityRegistryDelegation.t.sol` — 8 tests: the subclass check must reach
+  `transferFrom` with no registry configured and on `burnFrom`; the two entrypoints must agree; burn must stay
+  exempt from the opt-in spender check; the spender check must still short-circuit ahead of the delegated hook;
+  and base ERC-3643 screening (receiver-only, unverified sender and minter allowed) must be unchanged.
+
+*Verified, not assumed.* Reverting the source change and re-running the new suite fails 3 of the 8 tests with
+exactly the predicted symptoms — `transferFrom must reach the same hook as transfer: 0 != 202`,
+`burnFrom must reach the same hook as burn: 0 != 202`, and the two-entrypoint disagreement — and they pass once
+the change is restored. The pre-existing 21 `RuleIdentityRegistry` tests pass unmodified, which is the evidence
+that the change is behaviour-preserving: had any answer moved, one of them would have.
+
+*Suites:* 828 tests pass on the default profile and 31 on `FOUNDRY_PROFILE=erc3643`. Coverage on the changed
+contract: **100% statements, 100% branches**, 98.41% lines — the single uncovered line is the abstract
+`_authorizeIdentityRegistryManager` declaration, which no test can execute because only the override runs.
 
 ### NM-5 / NM-13 — Cap rules evaluate a statically configured token
 
@@ -834,15 +860,15 @@ assume the token calls the compliance hook *before* moving value; the vendored E
 *after*, and that integration is one this repository supports and tests. The consequence is over-restriction, not
 over-issuance, and the remedy is documentation plus a regression test that pins the behaviour — set out above.
 
-**Seven optional improvements are specified and left to the maintainers**, each with its code, its cost and its
-limit, in rough order of value per unit of risk:
+**Seven improvements are specified**, each with its code, its cost and its limit. One is done; the other six are
+listed in rough order of value per unit of risk:
 
-| Improvement | Where | Size | Verdict |
+| Improvement | Where | Size | Status / verdict |
 |---|---|---|---|
+| Delegate instead of returning early | NM-3 | ~4 lines | ✅ **Done in `v0.6.0`** — behaviour-preserving, 8 regression tests, mutation-verified |
 | Future-dated PoR answer → code 77 | NM-10 | 1 line | **Do it** — cheapest change in the report, closes a fail-open branch |
 | Approval post-condition in `approveAndTransferIfAllowed` | NM-17 | ~5 lines + 1 error, ×2 variants | **Do it** — turns a silent operator-created hole into a named revert |
 | ERC-165 guard on wrapper children | NM-18 | `_checkRule` override | **Do it** — the pattern already exists in `RuleEngineBase` |
-| Delegate instead of returning early | NM-3 | ~4 lines | Do it with the next change to the file — behaviour-preserving |
 | Normalise `spender == from` on the ERC-7943 overloads | NM-6 | 1 helper + 3 branches | Worth it — corrects one rule, changes no deny-list |
 | `staticcall` + length check on the cap reads | NM-23/24 | 4 files | Worth it, as its own reviewed change — also retires the Cancun precondition |
 | Opt-in caller binding on the cap rules | NM-5 | 1 slot + setter, ×3 | **Partial only** — cannot isolate two tokens behind one engine; document and monitor instead for now |

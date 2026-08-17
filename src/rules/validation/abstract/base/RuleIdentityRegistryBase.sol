@@ -232,21 +232,20 @@ abstract contract RuleIdentityRegistryBase is RuleNFTAdapter, RuleIdentityRegist
         returns (uint8)
     {
         IIdentityRegistryVerified registry = identityRegistry;
-        if (address(registry) == address(0)) {
-            return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
-        }
-        // ERC-3643: burn bypasses all eligibility checks.
-        if (to == address(0)) {
-            return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
+        // The guard scopes ONLY the spender check; the delegation is unconditional, as in
+        // {RuleSanctionsListBase}. Returning TRANSFER_OK here instead would silently drop any check a
+        // subclass adds by overriding {_detectTransferRestriction} alone. An unset registry and a burn
+        // (to == 0) both resolve to TRANSFER_OK inside the delegate, so no answer changes.
+        if (address(registry) == address(0) || to == address(0)) {
+            return _detectTransferRestriction(from, to, value);
         }
 
         // OPT-IN, stricter than ERC-3643 ("`transferFrom` works the same way" — receiver only).
         // Mint (from == 0) is exempt: the minter acts on its own authority, not as a delegated
         // ERC-20 spender. This is what makes an unverified MINTER able to mint to a verified
         // recipient, exactly as the specification requires.
-        // Burn (to == 0) is exempt too, but by the early return above -- do NOT re-test `to` here.
-        // The condition would be dead, and re-stating it reads as though burn were handled at this
-        // point rather than six lines earlier.
+        // Burn (to == 0) never reaches this line -- the guard above delegates it -- so do NOT
+        // re-test `to` here; the condition would be dead.
         if (checkSpender && spender != address(0) && from != address(0) && !registry.isVerified(spender)) {
             return CODE_ADDRESS_SPENDER_NOT_VERIFIED;
         }

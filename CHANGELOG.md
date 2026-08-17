@@ -45,7 +45,27 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 
 
-## Unreleased
+## Unreleased — v0.6.0
+
+### Fixed
+
+- **NM-3 (Nethermind AuditAgent)** — `RuleIdentityRegistryBase._detectTransferRestrictionFrom` returned
+  `TRANSFER_OK` outright when the identity registry was unset or the transfer was a burn, instead of delegating
+  to `_detectTransferRestriction`. A subclass extending only that hook — the natural place to add a check —
+  therefore applied to `transfer` but silently **not** to `transferFrom` or `burnFrom`. The guard now delegates,
+  so the two entrypoints can no longer disagree. This is the same anti-pattern `RuleSanctionsListBase` was
+  restructured to remove (`CLAUDE_ANALYSIS.md` F-2); the two sibling rules are now consistent.
+  **Behaviour-preserving**: both early returns duplicated guards the delegate already performs, and the 21
+  pre-existing `RuleIdentityRegistry` tests pass unmodified. Burn remains exempt from the opt-in `checkSpender`
+  check.
+
+### Testing
+
+- Added `IdentityRegistryExtraCheckHarness` (`src/mocks/harness/IdentityRegistryDelegationHarness.sol`) — a
+  subclass overriding only `_detectTransferRestriction`, mirroring `SanctionsListDelegationHarness` — and
+  `test/RuleIdentityRegistry/RuleIdentityRegistryDelegation.t.sol` (8 tests) pinning NM-3. Reverting the source
+  change fails 3 of the 8 with exactly the predicted symptoms. Coverage on `RuleIdentityRegistryBase`: 100%
+  statements, 100% branches.
 
 ### Documentation
 
@@ -57,7 +77,8 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   ERC-3643 / T-REX token does not, so the cap double-counts and over-restricts on that path.
   Seven findings (NM-3, NM-5, NM-6, NM-10, NM-17, NM-18, NM-23/24) carry an `Improvement` section specifying what
   could be implemented, with the code, its cost and its limit — including the two cases where a complete fix is
-  not reachable at the rule level. None applied; no contract was modified.
+  not reachable at the rule level. **NM-3 is implemented in this release** (see *Fixed* above); the other six
+  remain specified but unapplied.
   `AUDIT_OVERVIEW.md`, `README.md` and `doc/README.md` updated with the run, its counts and the AI-tool caveat.
 
 ## v0.5.0 - 2026-08-14
