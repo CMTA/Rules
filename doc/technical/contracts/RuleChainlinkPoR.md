@@ -124,7 +124,7 @@ Setting the threshold to `0` disables the check, so the rule then accepts reserv
 | --- | --- | --- |
 | `CODE_RESERVES_EXCEEDED` | 75 | `totalSupply + value` would exceed the backed supply |
 | `CODE_RESERVES_FEED_STALE` | 76 | The feed has not been updated within `maxStalenessSeconds` |
-| `CODE_RESERVES_ANSWER_INVALID` | 77 | A round **was** returned but cannot be used: a negative reserve, or an incomplete round (`updatedAt == 0`) |
+| `CODE_RESERVES_ANSWER_INVALID` | 77 | A round **was** returned but cannot be used: a negative reserve, an incomplete round (`updatedAt == 0`), or a round stamped in the future (`updatedAt > block.timestamp`) |
 | `CODE_RESERVES_FEED_UNAVAILABLE` | 79 | **No usable response** could be obtained: `decimals()` or `latestRoundData()` reverted, or the feed reports more than `MAX_FEED_DECIMALS` |
 | `CODE_TOTAL_SUPPLY_UNAVAILABLE` | 78 | `tokenContract.totalSupply()` reverted, or the token has lost its code |
 
@@ -169,8 +169,8 @@ For a mint (`from == address(0)`):
 
 1. Read `decimals()` and then `latestRoundData()` from `reservesFeed`.
 2. Reject with `CODE_RESERVES_FEED_UNAVAILABLE` if either call reverts or the feed reports more than `MAX_FEED_DECIMALS`: there is no answer to judge.
-3. Reject with `CODE_RESERVES_ANSWER_INVALID` if a round was returned but `answer < 0` or `updatedAt == 0`.
-4. Reject with `CODE_RESERVES_FEED_STALE` if `maxStalenessSeconds != 0` and `block.timestamp - updatedAt > maxStalenessSeconds`.
+3. Reject with `CODE_RESERVES_ANSWER_INVALID` if a round was returned but `answer < 0`, `updatedAt == 0`, or `updatedAt > block.timestamp`. A future-dated round is a **malformed answer, not a stale one**, so it is rejected even when `maxStalenessSeconds == 0`.
+4. Reject with `CODE_RESERVES_FEED_STALE` if `maxStalenessSeconds != 0` and `block.timestamp - updatedAt > maxStalenessSeconds`. The subtraction cannot underflow: step 3 has already established `updatedAt <= block.timestamp`.
 5. Scale the answer from the feed's live decimals to `tokenDecimals` to obtain `backedSupply`.
 6. Read `tokenContract.totalSupply()`; reject with `CODE_TOTAL_SUPPLY_UNAVAILABLE` if it reverts or the token has lost its code.
 7. Reject with `CODE_RESERVES_EXCEEDED` if `totalSupply + value > backedSupply`.
@@ -197,7 +197,7 @@ with data, and a view cannot emit an event.
 | Code | Meaning | What an operator checks |
 | --- | --- | --- |
 | `79` | The feed could not be read at all | Feed liveness; is the configured address a compatible `AggregatorV3Interface`? |
-| `77` | A round came back and its contents are unusable | Is this really a Proof of Reserve feed (a price feed can legitimately go negative)? Or wait for the round to complete. |
+| `77` | A round came back and its contents are unusable | Is this really a Proof of Reserve feed (a price feed can legitimately go negative)? Wait for the round to complete, or — for a future-dated `updatedAt` — treat the aggregator as compromised and repoint the feed. |
 
 `80` is left reserved. Splitting `79` further into "reverted" versus "decimals out of range" was considered and
 rejected: both mean the configured feed cannot be used, so the remedy is the same.
@@ -268,7 +268,7 @@ The decisive difference is **how a rejection is signalled**. `SecureMintPolicy.r
 | Feed decimals bound | Unbounded (`uint8`) | `<= MAX_FEED_DECIMALS` (36), checked at configuration **and** at read time |
 | Feed call reverts (`decimals` or `latestRoundData`) | Propagates — mint reverts | `try/catch` → code `77` |
 | Incomplete round (`updatedAt == 0`) | Not checked | Code `77` |
-| Staleness arithmetic | `block.timestamp - updatedAt` — underflow-panics on a future timestamp | Guarded with `block.timestamp > updatedAt` |
+| Future-dated round (`updatedAt > block.timestamp`) | Not checked; `block.timestamp - updatedAt` underflow-panics the whole call | Code `77`, unconditionally — not gated on `maxStalenessSeconds` |
 | Token decimals accepted | `1` to `18` | `0` to `18` (CMTAT equity tokens report 0) |
 | Reserve margin | 5 modes (percentage / absolute, positive / negative) | None — limit equals reserves exactly |
 | Scale-up overflow | Checked arithmetic → revert | Saturates at `type(uint256).max` |
@@ -284,7 +284,7 @@ The decisive difference is **how a rejection is signalled**. `SecureMintPolicy.r
 ### Where this rule is stricter
 
 - **Feed failures degrade to a code, not a revert.** A feed with no code, a reverting `latestRoundData()`, a negative answer or an incomplete round all yield code `77`. ACE has no `updatedAt == 0` check at all, so with `maxStalenessSeconds == 0` an incomplete round is accepted at face value.
-- **No underflow on a future `updatedAt`.** ACE computes `block.timestamp - updatedAt` unguarded; a feed reporting a timestamp ahead of the block panics the whole call. Fail-closed for ACE, but a panic rather than a clean rejection.
+- **A future `updatedAt` is rejected, not merely survived.** ACE computes `block.timestamp - updatedAt` unguarded, so a feed reporting a timestamp ahead of the block panics the whole call — fail-closed, but as a panic rather than a clean rejection. This rule returns code `77`, and does so **regardless of `maxStalenessSeconds`**: a timestamp no aggregator on this chain could have written is a malformed answer, and an operator who disables freshness checking must not thereby accept forged timestamps. (Nethermind AuditAgent NM-10; before the fix the underflow guard `block.timestamp > updatedAt` silently accepted any future stamp, so a feed frozen on an old reserve answer could keep authorising mints until that timestamp elapsed.)
 - **Feed decimals are bounded at configuration time**, so the scaling exponent can never overflow. ACE accepts any `uint8`, where a feed reporting e.g. 78 decimals makes `10 ** 78` revert on every mint.
 - **`0`-decimals tokens are supported.** ACE requires `decimals > 0`, which excludes CMTAT equity tokens outright.
 

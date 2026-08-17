@@ -74,7 +74,7 @@ Scan **2026-08-17** (Scan ID `10`, commit `01632da0…951e204c`, 89 contracts / 
 
 | Tool | High | Medium | Low | Info | Relevant to fix? |
 |---|---|---|---|---|---|
-| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **1 fixed** (NM-3, `v0.6.0`) + one documentation item (NM-11); nothing exploitable — see [feedback](./tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md) |
+| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **2 fixed** (NM-3, NM-10 — `v0.6.0`) + one documentation item (NM-11); nothing exploitable — see [feedback](./tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md) |
 
 **Nothing exploitable, and no contract change required for the CMTAT path.** There are **no false positives** —
 all 24 findings describe real code — but 17 restate positions already reached, documented in-source and recorded
@@ -104,9 +104,17 @@ performs, and the 21 pre-existing tests pass unmodified. Pinned by
 (8 tests) and `IdentityRegistryExtraCheckHarness`; reverting the source change fails 3 of them with the predicted
 symptoms.
 
-**Six findings carry a specified, unimplemented improvement** — NM-5, NM-6, NM-10, NM-17, NM-18 and NM-23/24 —
-each with the code, its cost and its limit. The three cheapest and clearest wins: map a future-dated
-PoR `updatedAt` to the existing "answer invalid" code 77 (NM-10, one line); assert in
+**Fixed in `v0.6.0` — NM-10.** `ChainlinkPoRFeedManager._maxBackedSupply` flagged a feed as stale only when
+`block.timestamp > updatedAt`; that term existed to keep the subtraction from underflowing, and its side effect
+was that **any** future-dated round was treated as fresh. A feed frozen on an old reserve answer but stamped
+ahead of the block could keep authorising mints until that timestamp elapsed. A future `updatedAt` is now a
+*malformed answer* (code `77`), rejected **regardless of `maxStalenessSeconds`** — zero disables freshness
+checking, and an operator who opts out of that must not thereby accept a timestamp no aggregator on this chain
+could have written. Pinned by 5 tests in `test/RuleChainlinkPoR/RuleChainlinkPoRUnit.t.sol`; reverting the change
+fails 4 of them.
+
+**Five findings carry a specified, unimplemented improvement** — NM-5, NM-6, NM-17, NM-18 and NM-23/24 —
+each with the code, its cost and its limit. The two cheapest and clearest wins: assert in
 `approveAndTransferIfAllowed` that the approval it created was consumed (NM-17); and ERC-165-check the wrapper's
 children in a `_checkRule` override, the pattern `RuleEngineBase` already uses (NM-18). Two carry hard limits
 worth knowing before planning work: **NM-5 cannot be fully fixed at the rule level** — the compliance hooks carry

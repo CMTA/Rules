@@ -207,12 +207,17 @@ abstract contract ChainlinkPoRFeedManager is TokenSupplyReader, RuleChainlinkPoR
             return (CODE_RESERVES_FEED_UNAVAILABLE, 0);
         }
         try feed.latestRoundData() returns (uint80, int256 answer, uint256, uint256 updatedAt, uint80) {
-            // A negative reserve is meaningless and `updatedAt == 0` marks a round that never completed.
-            if (answer < 0 || updatedAt == 0) {
+            // Three malformed answers, not stale ones: a negative reserve is meaningless, `updatedAt == 0`
+            // marks a round that never completed, and a round stamped in the FUTURE cannot have been written
+            // by an aggregator on this chain. Rejecting the future stamp here rather than as a staleness case
+            // is deliberate -- `maxStalenessSeconds == 0` disables freshness checking, and a forged timestamp
+            // must not become acceptable because an operator chose not to police staleness.
+            if (answer < 0 || updatedAt == 0 || updatedAt > block.timestamp) {
                 return (CODE_RESERVES_ANSWER_INVALID, 0);
             }
             uint256 staleness = maxStalenessSeconds;
-            if (staleness != 0 && block.timestamp > updatedAt && block.timestamp - updatedAt > staleness) {
+            // `updatedAt <= block.timestamp` is guaranteed above, so the subtraction cannot underflow.
+            if (staleness != 0 && block.timestamp - updatedAt > staleness) {
                 return (CODE_RESERVES_FEED_STALE, 0);
             }
             // `answer >= 0` was just checked, so the cast to uint256 preserves the value.

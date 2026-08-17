@@ -58,6 +58,14 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   **Behaviour-preserving**: both early returns duplicated guards the delegate already performs, and the 21
   pre-existing `RuleIdentityRegistry` tests pass unmodified. Burn remains exempt from the opt-in `checkSpender`
   check.
+- **NM-10 (Nethermind AuditAgent)** — `ChainlinkPoRFeedManager._maxBackedSupply` flagged a Proof-of-Reserve feed
+  as stale only when `block.timestamp > updatedAt`. That term was an underflow guard, and its side effect was
+  that **any** future-dated round counted as fresh: a feed frozen on an old reserve answer but stamped ahead of
+  the block could keep authorising mints until that timestamp elapsed. A future `updatedAt` is now treated as a
+  **malformed answer** (`CODE_RESERVES_ANSWER_INVALID`, 77) alongside a negative reserve and an incomplete round,
+  and is rejected **regardless of `maxStalenessSeconds`** — zero disables *freshness* checking, and an operator
+  who opts out of that must not thereby accept a timestamp no aggregator on this chain could have written. The
+  now-redundant underflow guard was dropped from the staleness comparison.
 
 ### Testing
 
@@ -66,6 +74,11 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   `test/RuleIdentityRegistry/RuleIdentityRegistryDelegation.t.sol` (8 tests) pinning NM-3. Reverting the source
   change fails 3 of the 8 with exactly the predicted symptoms. Coverage on `RuleIdentityRegistryBase`: 100%
   statements, 100% branches.
+- Added 5 tests to `test/RuleChainlinkPoR/RuleChainlinkPoRUnit.t.sol` pinning NM-10: a future-dated round yields
+  code 77 from the views and reverts the mint through the write hook; it is still rejected with
+  `maxStalenessSeconds == 0` (the test that pins the design decision); and `updatedAt == block.timestamp` still
+  passes, guarding against over-correcting into `>=`. Reverting the source change fails 4 of the 5. Coverage on
+  `ChainlinkPoRFeedManager`: 100% statements, 100% branches.
 
 ### Documentation
 
@@ -77,8 +90,8 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   ERC-3643 / T-REX token does not, so the cap double-counts and over-restricts on that path.
   Seven findings (NM-3, NM-5, NM-6, NM-10, NM-17, NM-18, NM-23/24) carry an `Improvement` section specifying what
   could be implemented, with the code, its cost and its limit — including the two cases where a complete fix is
-  not reachable at the rule level. **NM-3 is implemented in this release** (see *Fixed* above); the other six
-  remain specified but unapplied.
+  not reachable at the rule level. **NM-3 and NM-10 are implemented in this release** (see *Fixed* above); the
+  other five remain specified but unapplied.
   `AUDIT_OVERVIEW.md`, `README.md` and `doc/README.md` updated with the run, its counts and the AI-tool caveat.
 
 ## v0.5.0 - 2026-08-14

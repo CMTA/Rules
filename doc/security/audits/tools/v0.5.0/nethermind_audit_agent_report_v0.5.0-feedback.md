@@ -33,10 +33,10 @@ Tool: **[Nethermind AuditAgent](https://auditagent.nethermind.io/)** — an **AI
 
 | Disposition | Count | IDs |
 |---|---|---|
-| **Fixed** (in `v0.6.0`) | 1 | **NM-3** |
+| **Fixed** (in `v0.6.0`) | 2 | **NM-3**, **NM-10** |
 | Accepted as design (real behaviour, intentional, already documented) | 17 | NM-1, 2, 4, 5, 7, 8, 9, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24 |
 | Rejected — false positive | 0 | — |
-| Informational — valid, optional hardening | 5 | NM-6, 18, 19, 20, and the code change proposed in NM-10 |
+| Informational — valid, optional hardening | 4 | NM-6, 18, 19, 20 |
 | Fix recommended | 1 | **NM-11** — documentation/compatibility, not a contract bug |
 | **Total** | **24** | |
 
@@ -60,8 +60,8 @@ compliance hooks carry no token identity, so it needs an upstream interface chan
 containment runs into the same uncatchable-decode problem as NM-23, which is why only its configuration-time
 layer is recommended.
 
-**One of the seven has been implemented: NM-3, in `v0.6.0`** — see its `Resolution` below. The remaining six are
-specified but not applied.
+**Two of the seven have been implemented, both in `v0.6.0`: NM-3 and NM-10** — see their `Resolution` blocks
+below. The remaining five are specified but not applied.
 
 **The one genuinely new and useful signal** is a theme the scanner keeps circling without naming:
 **several rules' guarantees depend on the token's callback shape and ordering, and a real ERC-3643 / T-REX token
@@ -82,7 +82,7 @@ supplies neither.** That is developed under NM-11 and NM-9 below, and is the onl
 | NM-7 | Medium → **Low** | Single-token approvals reusable across tokens behind one engine | Accepted as design — `bindRuleEngine` WARNING |
 | NM-8 | Medium → **Low** | Mint allowances shared across a multi-token engine | Accepted as design — duplicate of NM-2 |
 | NM-9 | Medium → **Info** | 3-arg ERC-3643 hooks carry no spender, so spender rules are inert | Accepted as design — topology requirement; see NM-11 |
-| NM-10 | Medium → **Info** | Future-dated PoR `updatedAt` skips the staleness check | Informational — one-line fail-closed guard proposed |
+| NM-10 | Medium → **Info** | Future-dated PoR `updatedAt` skips the staleness check | ✅ **Fixed** in `v0.6.0` |
 | NM-11 | Medium → **Low** | Caps double-count when the token notifies **after** moving value | **Fix recommended (documentation)** |
 | NM-12 | Medium → **Low** | Single-token approval consumable by another token | Accepted as design — duplicate of NM-7 |
 | NM-13 | Medium → **Low** | Cap rules never bind to the calling token; setters can repoint | Accepted as design — duplicate of NM-5 |
@@ -404,7 +404,7 @@ NM-11: **a real ERC-3643 / T-REX token calls `_tokenCompliance.transferred(_from
 rather than merely unhelpful, and the spender branches of the blacklist / sanctions / ERC-2980 rules never fire.
 Folded into the documentation action under NM-11.
 
-### NM-10 — Future-dated PoR timestamps skip the freshness check
+### NM-10 — Future-dated PoR timestamps skip the freshness check — ✅ FIXED (`v0.6.0`)
 
 **Claim (Medium).** `ChainlinkPoRFeedManager._maxBackedSupply` flags staleness only when
 `block.timestamp > updatedAt`; it does not reject `updatedAt > block.timestamp`. A feed returning an old answer
@@ -424,7 +424,7 @@ arise legitimately — it requires a faulty or compromised feed, and the report'
 "a future timestamp alone does not increase mint headroom". A feed able to forge a timestamp can also simply
 overstate `answer`, which the rule trusts by construction.
 
-**Improvement — implementable in one line, no new restriction code, no new storage.** Treat a future `updatedAt`
+**Improvement — implemented in `v0.6.0`; one line, no new restriction code, no new storage.** Treat a future `updatedAt`
 as a **malformed answer** rather than as a staleness question. `CODE_RESERVES_ANSWER_INVALID` (77) already means
 "the feed responded but the answer cannot be used: a negative reserve, or an incomplete round", and a round
 stamped in the future is the same class of defect. Fold it into that existing branch
@@ -461,14 +461,39 @@ Why this framing beats a second staleness branch:
   reason each comparison exists stays legible.
 - **It cannot break the revert-free invariant**: the change is one comparison on values already in scope.
 
-Tests to add in `test/RuleChainlinkPoR/`: a feed mock returning `updatedAt = block.timestamp + 1` must yield 77
-from `detectTransferRestriction`, `canTransfer` and `maxBackedSupply`, and must revert the mint through
-`transferred`; and a boundary case at `updatedAt == block.timestamp` must still pass. Also update the
-`CODE_RESERVES_ANSWER_INVALID` NatSpec, which currently enumerates only two causes.
+**Resolution — `v0.6.0`.**
 
-Worth doing — it is the cheapest change in the report and closes a fail-open branch — but it is hardening, not a
-fix: reaching it needs an aggregator already misbehaving badly enough to forge a timestamp, and such an
-aggregator can overstate `answer` directly.
+*Changed:*
+
+- `src/rules/validation/abstract/core/ChainlinkPoRFeedManager.sol` — `updatedAt > block.timestamp` folded into the
+  malformed-answer branch, and the now-redundant `block.timestamp > updatedAt` term dropped from the staleness
+  comparison (step 3 guarantees the subtraction cannot underflow). The comment states why a future stamp is not
+  treated as staleness.
+- `src/rules/validation/abstract/invariant/RuleChainlinkPoRInvariantStorage.sol` — the
+  `CODE_RESERVES_ANSWER_INVALID` NatSpec now lists all three causes and records the `maxStalenessSeconds == 0`
+  reasoning.
+
+*Regression tests added* — 5 in `test/RuleChainlinkPoR/RuleChainlinkPoRUnit.t.sol`: a future-dated round yields
+77 from `detectTransferRestriction` and `canTransfer`; it is still rejected with `maxStalenessSeconds == 0` (the
+test that pins the design decision); `updatedAt == block.timestamp` still passes (the boundary a just-published
+round sits on); `maxBackedSupply()` previews 77 without reverting; and the write hook reverts the mint.
+
+*Verified, not assumed.* Reverting the source change fails 4 of the 5 with the predicted symptoms —
+`assertion failed: 0 != 77` three times, and `next call did not revert as expected` for the enforcement test. The
+fifth (the `updatedAt == block.timestamp` boundary) passes either way by construction, which is what makes it a
+useful guard against over-correcting into `updatedAt >= block.timestamp`.
+
+*Suites:* 833 tests pass on the default profile, 31 on `FOUNDRY_PROFILE=erc3643`. Coverage on
+`ChainlinkPoRFeedManager`: **100% statements, 100% branches**; `RuleChainlinkPoRBase` 100% across the board.
+
+*Also updated:* `doc/technical/contracts/RuleChainlinkPoR.md` — the restriction-code table, the numbered
+evaluation order, the operator triage table, and the two rows of the Chainlink ACE comparison that described the
+old underflow guard. The ACE comparison now records that this rule rejects a future-dated round where ACE
+underflow-panics on it, and that the rejection is not gated on `maxStalenessSeconds`.
+
+Still hardening rather than a fix in impact terms: reaching the branch needs an aggregator already misbehaving
+badly enough to forge a timestamp, and such an aggregator can overstate `answer` directly. What it buys is that
+the rule no longer has a state in which it treats an impossible timestamp as evidence of freshness.
 
 ### NM-11 — Caps double-count when the token notifies **after** moving the value — *fix recommended*
 
@@ -860,13 +885,13 @@ assume the token calls the compliance hook *before* moving value; the vendored E
 *after*, and that integration is one this repository supports and tests. The consequence is over-restriction, not
 over-issuance, and the remedy is documentation plus a regression test that pins the behaviour — set out above.
 
-**Seven improvements are specified**, each with its code, its cost and its limit. One is done; the other six are
-listed in rough order of value per unit of risk:
+**Seven improvements are specified**, each with its code, its cost and its limit. Two are done; the other five
+are listed in rough order of value per unit of risk:
 
 | Improvement | Where | Size | Status / verdict |
 |---|---|---|---|
 | Delegate instead of returning early | NM-3 | ~4 lines | ✅ **Done in `v0.6.0`** — behaviour-preserving, 8 regression tests, mutation-verified |
-| Future-dated PoR answer → code 77 | NM-10 | 1 line | **Do it** — cheapest change in the report, closes a fail-open branch |
+| Future-dated PoR answer → code 77 | NM-10 | 1 line | ✅ **Done in `v0.6.0`** — 5 regression tests, mutation-verified |
 | Approval post-condition in `approveAndTransferIfAllowed` | NM-17 | ~5 lines + 1 error, ×2 variants | **Do it** — turns a silent operator-created hole into a named revert |
 | ERC-165 guard on wrapper children | NM-18 | `_checkRule` override | **Do it** — the pattern already exists in `RuleEngineBase` |
 | Normalise `spender == from` on the ERC-7943 overloads | NM-6 | 1 helper + 3 branches | Worth it — corrects one rule, changes no deny-list |
