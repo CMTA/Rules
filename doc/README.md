@@ -1992,7 +1992,7 @@ AI automated scan with [**Nethermind AuditAgent**](https://auditagent.nethermind
 
 | Tool | High | Medium | Low | Info | Anything to fix? |
 |---|---|---|---|---|---|
-| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **2 fixed** (NM-3, NM-10 — `v0.6.0`) + one documentation item (NM-11); nothing exploitable |
+| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **3 fixed** (NM-3, NM-6, NM-10 — `v0.6.0`) + one documentation item (NM-11); nothing exploitable |
 
 **Nothing exploitable.** There are no false positives — all 24 findings describe real code — but 17 restate
 positions already documented in the source and in [`CLAUDE_AUDIT.md`](./security/audits/tools/v0.4.0/claude-audit/CLAUDE_AUDIT.md)
@@ -2012,6 +2012,12 @@ is behaviour-preserving (both early returns duplicated guards the delegate alrea
 `block.timestamp > updatedAt` — a guard against underflow whose side effect was that any future-dated round
 counted as fresh, so a feed frozen on an old reserve answer could keep authorising mints. A future `updatedAt` is
 now a malformed answer (code `77`), rejected regardless of `maxStalenessSeconds`.
+
+**Fixed in `v0.6.0` — NM-6.** `RuleNFTAdapter`'s ERC-7943 spender-aware overloads screened an owner-initiated
+transfer as delegated, while the `ITransferContext` entrypoints did not. The interfaces signal a direct transfer
+differently — `spender == from` on ERC-7943 and `ctx`, `spender == address(0)` on the CMTAT path — so the adapter
+now normalises on a shared `_isDelegated` predicate and the CMTAT path is deliberately untouched. See
+[`RULE_SEMANTICS.md` §3](./technical/guides/RULE_SEMANTICS.md) for the convention table.
 
 The one item still recommended for action is **NM-11**: `RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR`
 assume the token calls the compliance hook **before** moving the value — CMTAT does, a real ERC-3643 / T-REX token

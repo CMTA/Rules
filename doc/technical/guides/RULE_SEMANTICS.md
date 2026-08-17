@@ -70,7 +70,17 @@ Not every rule exposes the same entrypoints. The ERC-7943 `tokenId` overloads an
 | `RuleConditionalTransferLightMultiToken` | ❌ | ✅ | ❌ |
 | `RuleMintAllowance` | ❌ | ❌ | ❌ |
 
-The `tokenId` parameter is **always ignored** by the rules that accept it — `RuleNFTAdapter` exists purely to re-expose the same restriction logic under the ERC-7943 signatures. The `tokenId` overload of any function therefore returns exactly what its fungible counterpart returns, and the `ctx` entrypoints dispatch to the same internal hooks (`ctx.sender == 0` or `ctx.sender == ctx.from` ⇒ the direct hook; otherwise the spender-aware hook). This parity is asserted for every rule above in `test/TransferContext/OverloadParity.t.sol`.
+The `tokenId` parameter is **always ignored** by the rules that accept it — `RuleNFTAdapter` exists purely to re-expose the same restriction logic under the ERC-7943 signatures. Entrypoints describing the same transfer therefore return the same answer, asserted for every rule above in `test/TransferContext/OverloadParity.t.sol`.
+
+**How each interface signals a direct transfer differs, and that decides the routing.** An owner moving their own tokens reaches the adapter as `spender == from` on the ERC-7943 overloads (the spec calls that parameter "the address performing the transfer (owner/operator)") and as `sender == from` on the `ctx` entrypoints, whereas the CMTAT path signals it with the 3-arg overload or `spender == address(0)`:
+
+| Interface | Direct transfer arrives as | Delegated transfer arrives as |
+|---|---|---|
+| CMTAT 3-arg / 4-arg | the 3-arg overload, or `spender == address(0)` | `spender != address(0)` |
+| ERC-7943 `tokenId` overloads | `spender == from` | `spender != from` |
+| `ITransferContext` | `sender == from`, or `sender == address(0)` | `sender != from` |
+
+Every adapter entrypoint normalises `spender == from` to the **direct** hook. The 4-arg CMTAT path deliberately does not, because its own convention already distinguishes the two — so `4-arg(spender == from)` and the ERC-7943 5-arg call with the same arguments describe *different* transfers and are expected to differ. Do not "align" them: an owner-initiated ERC-721 `transferFrom` would then be screened as delegated, which `RuleSpenderWhitelist` documents as always allowed. Both halves are pinned by `test_NM6_SelfSpenderIsNotScreenedByTheSpenderWhitelist` and `test_NM6_CmtatFourArgPathKeepsScreeningASelfSpender`.
 
 **Access control on the `ctx` entrypoints (threat `AC-5`).** `transferred(FungibleTransferContext)` / `transferred(MultiTokenTransferContext)` are `external` with **no caller restriction** on the validation rules. That is safe because those rules' hooks are `view`: an arbitrary caller can run the check and be reverted by it, but cannot mutate any state. The stateful multi-token rule guards its own `ctx` entrypoint with `onlyTransferExecutor`.
 

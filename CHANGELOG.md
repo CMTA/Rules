@@ -67,6 +67,20 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   who opts out of that must not thereby accept a timestamp no aggregator on this chain could have written. The
   now-redundant underflow guard was dropped from the staleness comparison.
 
+- **NM-6 (Nethermind AuditAgent)** — `RuleNFTAdapter`'s ERC-7943 spender-aware overloads
+  (`transferred`, `detectTransferRestrictionFrom`, `canTransferFrom`) called the delegated hook
+  unconditionally, while the two `ITransferContext` entrypoints normalised `sender == from` to the direct hook.
+  The two surfaces therefore gave different compliance answers for the same owner-initiated transfer. The three
+  interfaces signal a direct transfer differently — ERC-7943 documents its `spender` as "the address performing
+  the transfer (**owner**/operator)" and `ctx.sender` is the token's `msg.sender`, so on both an owner arrives as
+  `spender == from`, whereas the CMTAT path uses the 3-arg overload or `spender == address(0)`. The adapter now
+  routes every entrypoint through a shared `_isDelegated(spender, from)` predicate. **The 4-arg CMTAT path is
+  deliberately left unchanged**, since its own convention already distinguishes the two cases — so the primary
+  integration path, and every restriction code an existing integrator sees, are untouched.
+  The one behavioural correction is `RuleSpenderWhitelist`: an owner-initiated ERC-721 `transferFrom` was
+  rejected with code `66` despite the rule documenting that direct transfers are always allowed. The deny-list
+  rules blocked such a transfer before and after; only which leg reported it changed.
+
 ### Testing
 
 - Added `IdentityRegistryExtraCheckHarness` (`src/mocks/harness/IdentityRegistryDelegationHarness.sol`) — a
@@ -80,6 +94,15 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   passes, guarding against over-correcting into `>=`. Reverting the source change fails 4 of the 5. Coverage on
   `ChainlinkPoRFeedManager`: 100% statements, 100% branches.
 
+- Extended `test/TransferContext/OverloadParity.t.sol` for NM-6. The suite already existed to assert overload
+  parity but only ever exercised two of the three input shapes (`sender == 0`, `sender != from`), which is why
+  the gap survived. Added `_assertSelfSpenderIsDirect` — run for every rule on an allowed and a blocked pair —
+  plus `test_NM6_SelfSpenderIsNotScreenedByTheSpenderWhitelist` and
+  `test_NM6_CmtatFourArgPathKeepsScreeningASelfSpender`, the latter pinning the deliberate asymmetry so it is not
+  "aligned" away later. Reverting the fix fails 6 of the suite's 10 tests across 5 rules. The suite's header
+  comment, which described the parity as flat, now states the per-interface conventions. Coverage on
+  `RuleNFTAdapter`: 100% statements, 100% branches.
+
 ### Documentation
 
 - Added the **Nethermind AuditAgent** (AI automated scan) run for `v0.5.0` — report and per-finding triage in
@@ -90,8 +113,8 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   ERC-3643 / T-REX token does not, so the cap double-counts and over-restricts on that path.
   Seven findings (NM-3, NM-5, NM-6, NM-10, NM-17, NM-18, NM-23/24) carry an `Improvement` section specifying what
   could be implemented, with the code, its cost and its limit — including the two cases where a complete fix is
-  not reachable at the rule level. **NM-3 and NM-10 are implemented in this release** (see *Fixed* above); the
-  other five remain specified but unapplied.
+  not reachable at the rule level. **NM-3, NM-6 and NM-10 are implemented in this release** (see *Fixed* above);
+  the other four remain specified but unapplied.
   `AUDIT_OVERVIEW.md`, `README.md` and `doc/README.md` updated with the run, its counts and the AI-tool caveat.
 
 ## v0.5.0 - 2026-08-14

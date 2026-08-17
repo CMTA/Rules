@@ -15,6 +15,16 @@ import {ITransferContext} from "../../../interfaces/ITransferContext.sol";
  * @title Rule NFT Adapter
  * @notice Provides ERC-7943 overloads for rules that already implement core transfer checks.
  * @dev Delegates tokenId overloads to RuleTransferValidation's internal hooks.
+ *
+ * @dev **The interfaces here signal "direct transfer" differently, and {_isDelegated} is where that is
+ * reconciled.** ERC-7943 documents its `spender` as "the address performing the transfer
+ * (owner/operator)" and {ITransferContext} documents `sender` as the token's `msg.sender`, so on BOTH
+ * an owner moving their own tokens arrives as `spender == from`. The CMTAT 3-arg/4-arg pair instead
+ * signals it with `spender == address(0)` and the 3-arg overload. Every entrypoint on this adapter
+ * therefore normalises `spender == from` to the direct hook; the 4-arg CMTAT path deliberately does
+ * NOT, because its own convention already distinguishes the two. Do not "align" them: an owner-
+ * initiated ERC-721 `transferFrom` would then be screened as a delegated transfer, which
+ * {RuleSpenderWhitelistBase} documents as always allowed.
  */
 abstract contract RuleNFTAdapter is RuleTransferValidation, IERC7943NonFungibleComplianceExtend, ITransferContext {
     /**
@@ -44,7 +54,7 @@ abstract contract RuleNFTAdapter is RuleTransferValidation, IERC7943NonFungibleC
      * @inheritdoc ITransferContext
      */
     function transferred(MultiTokenTransferContext calldata ctx) external virtual override {
-        if (ctx.sender != address(0) && ctx.sender != ctx.from) {
+        if (_isDelegated(ctx.sender, ctx.from)) {
             _transferredFrom(ctx.sender, ctx.from, ctx.to, ctx.value);
         } else {
             _transferred(ctx.from, ctx.to, ctx.value);
@@ -55,7 +65,7 @@ abstract contract RuleNFTAdapter is RuleTransferValidation, IERC7943NonFungibleC
      * @inheritdoc ITransferContext
      */
     function transferred(FungibleTransferContext calldata ctx) external virtual override {
-        if (ctx.sender != address(0) && ctx.sender != ctx.from) {
+        if (_isDelegated(ctx.sender, ctx.from)) {
             _transferredFrom(ctx.sender, ctx.from, ctx.to, ctx.value);
         } else {
             _transferred(ctx.from, ctx.to, ctx.value);
@@ -98,7 +108,11 @@ abstract contract RuleNFTAdapter is RuleTransferValidation, IERC7943NonFungibleC
         virtual
         override(IERC7943NonFungibleComplianceExtend)
     {
-        _transferredFrom(spender, from, to, value);
+        if (_isDelegated(spender, from)) {
+            _transferredFrom(spender, from, to, value);
+        } else {
+            _transferred(from, to, value);
+        }
     }
 
     /**
@@ -137,7 +151,9 @@ abstract contract RuleNFTAdapter is RuleTransferValidation, IERC7943NonFungibleC
         override(IERC7943NonFungibleComplianceExtend)
         returns (uint8)
     {
-        return _detectTransferRestrictionFrom(spender, from, to, value);
+        return _isDelegated(spender, from)
+            ? _detectTransferRestrictionFrom(spender, from, to, value)
+            : _detectTransferRestriction(from, to, value);
     }
 
     /**
@@ -176,13 +192,28 @@ abstract contract RuleNFTAdapter is RuleTransferValidation, IERC7943NonFungibleC
         override(IERC7943NonFungibleComplianceExtend)
         returns (bool)
     {
-        return _detectTransferRestrictionFrom(spender, from, to, value)
+        return detectTransferRestrictionFrom(spender, from, to, 0, value)
             == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
     }
 
     /*//////////////////////////////////////////////////////////////
                         INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Returns whether `spender` acts on behalf of `from`, rather than being `from` itself.
+     * @dev The whole adapter routes on this. `spender == from` is an owner-initiated transfer and takes
+     * the direct hook, matching what a plain `transfer` produces on the CMTAT path (`spender == 0`,
+     * 3-arg overload). Nethermind AuditAgent NM-6: the ERC-7943 overloads used to call the
+     * spender-aware hook unconditionally, so an owner-initiated ERC-721 `transferFrom` was screened as
+     * delegated while the identical {ITransferContext} call was not.
+     * @param spender Address performing the transfer, as reported by the calling interface.
+     * @param from Address the tokens leave.
+     * @return True when the transfer is delegated and the spender must be screened.
+     */
+    function _isDelegated(address spender, address from) internal pure virtual returns (bool) {
+        return spender != address(0) && spender != from;
+    }
 
     /**
      * @notice Internal hook for post-transfer validation or state updates.

@@ -74,7 +74,7 @@ Scan **2026-08-17** (Scan ID `10`, commit `01632da0…951e204c`, 89 contracts / 
 
 | Tool | High | Medium | Low | Info | Relevant to fix? |
 |---|---|---|---|---|---|
-| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **2 fixed** (NM-3, NM-10 — `v0.6.0`) + one documentation item (NM-11); nothing exploitable — see [feedback](./tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md) |
+| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **3 fixed** (NM-3, NM-6, NM-10 — `v0.6.0`) + one documentation item (NM-11); nothing exploitable — see [feedback](./tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md) |
 
 **Nothing exploitable, and no contract change required for the CMTAT path.** There are **no false positives** —
 all 24 findings describe real code — but 17 restate positions already reached, documented in-source and recorded
@@ -113,7 +113,21 @@ checking, and an operator who opts out of that must not thereby accept a timesta
 could have written. Pinned by 5 tests in `test/RuleChainlinkPoR/RuleChainlinkPoRUnit.t.sol`; reverting the change
 fails 4 of them.
 
-**Five findings carry a specified, unimplemented improvement** — NM-5, NM-6, NM-17, NM-18 and NM-23/24 —
+**Fixed in `v0.6.0` — NM-6.** `RuleNFTAdapter`'s ERC-7943 spender-aware overloads called the delegated hook
+unconditionally, while the `ITransferContext` entrypoints normalised `sender == from` to the direct hook. The
+three interfaces signal a direct transfer differently — ERC-7943 documents its `spender` as "the address
+performing the transfer (**owner**/operator)" and `ctx.sender` is the token's `msg.sender`, so on both an owner
+arrives as `spender == from`, whereas CMTAT uses `spender == address(0)` and the 3-arg overload. The adapter now
+normalises on a shared `_isDelegated` predicate; the 4-arg CMTAT path is deliberately left alone, so the primary
+integration path and every existing restriction code are unchanged. The one behavioural correction is
+`RuleSpenderWhitelist`, which had been rejecting owner-initiated ERC-721 `transferFrom` with code 66 despite
+documenting that direct transfers are always allowed; the deny-lists blocked such a transfer before and after and
+only relabelled the code. Pinned by
+[`test/TransferContext/OverloadParity.t.sol`](../../../test/TransferContext/OverloadParity.t.sol) — the suite
+already existed for this property but tested only two of the three input shapes, which is why the gap survived;
+reverting the fix now fails 6 of its 10 tests across 5 rules.
+
+**Four findings carry a specified, unimplemented improvement** — NM-5, NM-17, NM-18 and NM-23/24 —
 each with the code, its cost and its limit. The two cheapest and clearest wins: assert in
 `approveAndTransferIfAllowed` that the approval it created was consumed (NM-17); and ERC-165-check the wrapper's
 children in a `_checkRule` override, the pattern `RuleEngineBase` already uses (NM-18). Two carry hard limits

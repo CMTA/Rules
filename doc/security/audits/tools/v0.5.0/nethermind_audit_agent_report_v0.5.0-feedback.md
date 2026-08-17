@@ -33,10 +33,10 @@ Tool: **[Nethermind AuditAgent](https://auditagent.nethermind.io/)** — an **AI
 
 | Disposition | Count | IDs |
 |---|---|---|
-| **Fixed** (in `v0.6.0`) | 2 | **NM-3**, **NM-10** |
+| **Fixed** (in `v0.6.0`) | 3 | **NM-3**, **NM-6**, **NM-10** |
 | Accepted as design (real behaviour, intentional, already documented) | 17 | NM-1, 2, 4, 5, 7, 8, 9, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24 |
 | Rejected — false positive | 0 | — |
-| Informational — valid, optional hardening | 4 | NM-6, 18, 19, 20 |
+| Informational — valid, optional hardening | 3 | NM-18, 19, 20 |
 | Fix recommended | 1 | **NM-11** — documentation/compatibility, not a contract bug |
 | **Total** | **24** | |
 
@@ -60,8 +60,8 @@ compliance hooks carry no token identity, so it needs an upstream interface chan
 containment runs into the same uncatchable-decode problem as NM-23, which is why only its configuration-time
 layer is recommended.
 
-**Two of the seven have been implemented, both in `v0.6.0`: NM-3 and NM-10** — see their `Resolution` blocks
-below. The remaining five are specified but not applied.
+**Three of the seven have been implemented, all in `v0.6.0`: NM-3, NM-6 and NM-10** — see their `Resolution`
+blocks below. The remaining four are specified but not applied.
 
 **The one genuinely new and useful signal** is a theme the scanner keeps circling without naming:
 **several rules' guarantees depend on the token's callback shape and ordering, and a real ERC-3643 / T-REX token
@@ -78,7 +78,7 @@ supplies neither.** That is developed under NM-11 and NM-9 below, and is the onl
 | NM-3 | Medium → **Info** | Early returns in `_detectTransferRestrictionFrom` skip delegation | ✅ **Fixed** in `v0.6.0` |
 | NM-4 | Medium → **Low** | Approvals + quotas not token-scoped across shared engine / rebinding | Accepted as design — duplicate of NM-2 / NM-7 |
 | NM-5 | Medium → **Low** | Cap rules read a statically configured token's supply | Accepted as design — documented "one token per instance" |
-| NM-6 | Medium → **Info** | `RuleNFTAdapter` context vs ERC-7943 spender handling differ | Informational — the context path is the correct one |
+| NM-6 | Medium → **Info** | `RuleNFTAdapter` context vs ERC-7943 spender handling differ | ✅ **Fixed** in `v0.6.0` |
 | NM-7 | Medium → **Low** | Single-token approvals reusable across tokens behind one engine | Accepted as design — `bindRuleEngine` WARNING |
 | NM-8 | Medium → **Low** | Mint allowances shared across a multi-token engine | Accepted as design — duplicate of NM-2 |
 | NM-9 | Medium → **Info** | 3-arg ERC-3643 hooks carry no spender, so spender rules are inert | Accepted as design — topology requirement; see NM-11 |
@@ -296,7 +296,7 @@ emits an event, so a deployment checklist plus an off-chain assertion that
 `rule.tokenContract() == the token whose engine holds this rule` catches both halves — including the one no
 on-chain guard can reach. That is the currently recommended control and should be stated in the deployment guide.
 
-### NM-6 — `RuleNFTAdapter` handles owner-initiated transfers differently across entrypoints
+### NM-6 — `RuleNFTAdapter` handles owner-initiated transfers differently across entrypoints — ✅ FIXED (`v0.6.0`)
 
 **Claim (Medium).** `transferred(FungibleTransferContext)` / `(MultiTokenTransferContext)` normalise
 `ctx.sender == ctx.from` to the direct `_transferred` hook, while the ERC-7943 5-arg
@@ -312,8 +312,8 @@ taking the 3-arg path). The deviant branch is the ERC-7943 5-arg one, which is *
 caller elects to pass `spender == from`. Nothing is admitted that a plain transfer would not admit, so there is
 no compliance gap — only an inconsistency for an integrator who reaches for both surfaces.
 
-**Improvement — implementable, contained to one file.** Lift the normalisation the context entrypoints already
-perform into a shared helper, and apply it to the ERC-7943 overloads so all six adapter entrypoints agree.
+**Improvement — implemented in `v0.6.0`; contained to one file.** Lift the normalisation the context entrypoints
+already perform into a shared helper, and apply it to the ERC-7943 overloads so all six adapter entrypoints agree.
 
 ```solidity
 // RuleNFTAdapter -- one predicate, used by every entrypoint that receives a spender
@@ -365,6 +365,59 @@ produces for the same transfer. Consistency achieved at the price of the wrong a
 *Do not* apply the normalisation inside `_detectTransferRestrictionFrom` / `_transferredFrom` themselves: those
 are the generic 4-arg hooks CMTAT and the RuleEngine call, and rewriting `spender == from` there would silently
 change every rule on the main integration path, not just the ERC-7943 surface.
+
+**Resolution — `v0.6.0`.**
+
+*The principle that fixed the scope.* The three interfaces signal a direct transfer **differently**, and that,
+not the entrypoint count, is what decides the routing:
+
+| Interface | Direct transfer arrives as | Delegated as |
+|---|---|---|
+| CMTAT 3-arg / 4-arg | the 3-arg overload, or `spender == address(0)` | `spender != address(0)` |
+| ERC-7943 `tokenId` overloads | `spender == from` — the interface calls that parameter "the address performing the transfer (**owner**/operator)" | `spender != from` |
+| `ITransferContext` | `sender == from` (the token's `msg.sender`), or `0` | `sender != from` |
+
+The ERC-7943 and `ctx` interfaces share a convention; the CMTAT pair uses a different one that already
+distinguishes the two cases. So the fix normalises the **adapter** entrypoints only, and deliberately leaves the
+4-arg CMTAT path alone — which also means no change to the primary integration path, no restriction-code
+relabelling for existing integrators, and one file touched instead of twelve.
+
+*Changed:* `src/rules/validation/abstract/core/RuleNFTAdapter.sol` — added
+`_isDelegated(spender, from) => spender != address(0) && spender != from`, replaced the duplicated predicate in
+both `ctx` entrypoints with it, and routed the three ERC-7943 spender-aware overloads
+(`transferred`, `detectTransferRestrictionFrom`, `canTransferFrom`) through it. Contract-level NatSpec records
+the table above and warns against "aligning" the 4-arg path.
+
+*Regression tests* in `test/TransferContext/OverloadParity.t.sol` — the suite already existed for exactly this
+property but only ever tested two of the three input shapes (`sender == 0` and `sender != from`), which is why
+the gap survived. Added `_assertSelfSpenderIsDirect`, run for every rule in the suite on both an allowed and a
+blocked pair, plus two targeted tests: `test_NM6_SelfSpenderIsNotScreenedByTheSpenderWhitelist` (the outcome
+that was wrong) and `test_NM6_CmtatFourArgPathKeepsScreeningASelfSpender` (pinning the deliberate asymmetry so
+nobody removes it later). The suite's header comment, which asserted flat parity, now states the per-interface
+conventions — the loose wording is what made the missing case invisible.
+
+*Verified, not assumed.* Reverting the three routings fails **6 of 10** tests across **5 rules**, and the failure
+messages are the impact analysis:
+
+```
+RuleBlacklist      [self-spender, blocked]: 38 != 36     ← blocked either way, code relabelled
+RuleERC2980        [self-spender, blocked]: 62 != 60     ← blocked either way, code relabelled
+RuleSanctionsList  [self-spender, blocked]: 32 != 30     ← blocked either way, code relabelled
+RuleWhitelist      [self-spender, blocked]: 23 != 21     ← blocked either way, code relabelled
+RuleSpenderWhitelist [self-spender]:        66 != 0      ← THE ONLY OUTCOME CHANGE
+```
+
+For the deny-lists the transfer was rejected before and after — only which leg reported it changed, because the
+owner is screened as `from` instead of as `spender`. `RuleSpenderWhitelist` is the one rule where the answer was
+actually wrong: an owner-initiated ERC-721 `transferFrom` was rejected with code 66 despite the rule documenting
+that direct transfers are always allowed. A genuine delegated transfer by the same unlisted address is still
+rejected — the screen was narrowed to what it always claimed to cover, not removed.
+
+*Suites:* 835 tests pass on the default profile, 31 on `FOUNDRY_PROFILE=erc3643`. Coverage on `RuleNFTAdapter`:
+**100% statements, 100% branches**.
+
+*Also updated:* `RULE_SEMANTICS.md` §3, which previously described the parity as flat and is now the reference
+for the per-interface conventions.
 
 ### NM-7 / NM-12 / NM-15 — Conditional-transfer approvals are not token-scoped
 
@@ -885,7 +938,7 @@ assume the token calls the compliance hook *before* moving value; the vendored E
 *after*, and that integration is one this repository supports and tests. The consequence is over-restriction, not
 over-issuance, and the remedy is documentation plus a regression test that pins the behaviour — set out above.
 
-**Seven improvements are specified**, each with its code, its cost and its limit. Two are done; the other five
+**Seven improvements are specified**, each with its code, its cost and its limit. Three are done; the other four
 are listed in rough order of value per unit of risk:
 
 | Improvement | Where | Size | Status / verdict |
@@ -894,7 +947,7 @@ are listed in rough order of value per unit of risk:
 | Future-dated PoR answer → code 77 | NM-10 | 1 line | ✅ **Done in `v0.6.0`** — 5 regression tests, mutation-verified |
 | Approval post-condition in `approveAndTransferIfAllowed` | NM-17 | ~5 lines + 1 error, ×2 variants | **Do it** — turns a silent operator-created hole into a named revert |
 | ERC-165 guard on wrapper children | NM-18 | `_checkRule` override | **Do it** — the pattern already exists in `RuleEngineBase` |
-| Normalise `spender == from` on the ERC-7943 overloads | NM-6 | 1 helper + 3 branches | Worth it — corrects one rule, changes no deny-list |
+| Normalise `spender == from` on the ERC-7943 overloads | NM-6 | 1 helper + 3 branches | ✅ **Done in `v0.6.0`** — 1 file, corrects one rule, changes no deny-list outcome |
 | `staticcall` + length check on the cap reads | NM-23/24 | 4 files | Worth it, as its own reviewed change — also retires the Cancun precondition |
 | Opt-in caller binding on the cap rules | NM-5 | 1 slot + setter, ×3 | **Partial only** — cannot isolate two tokens behind one engine; document and monitor instead for now |
 

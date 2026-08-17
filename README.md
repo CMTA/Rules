@@ -205,16 +205,19 @@ Every finding carries a written triage, including the ones dismissed as false po
 
 | Scan | High | Medium | Low | Info | Anything to fix? |
 | --- | --- | --- | --- | --- | --- |
-| 2026-08-17, commit `01632da` | 0 | 13 | 11 | 0 | **Nothing exploitable** — 2 fixed (NM-3, NM-10 — `v0.6.0`), one documentation item (NM-11) |
+| 2026-08-17, commit `01632da` | 0 | 13 | 11 | 0 | **Nothing exploitable** — 3 fixed (NM-3, NM-6, NM-10 — `v0.6.0`), one documentation item (NM-11) |
 
 > Note: This scan was performed by an AI-powered automated tool, not a formal human-led audit.
 
 No false positives, but 17 of the 24 findings restate design positions already documented in the source and in
-the previous audit, and the set collapses to about 11 distinct claims. **Two were fixed in `v0.6.0`**: NM-3 — the
+the previous audit, and the set collapses to about 11 distinct claims. **Three were fixed in `v0.6.0`**: NM-3 — the
 identity-registry rule's `transferFrom` path now always delegates to the direct restriction check, so a subclass
 extending only that hook can no longer have its check applied to `transfer` but silently skipped on
-`transferFrom` and `burnFrom`; and NM-10 — a Proof-of-Reserve round stamped in the future is now rejected as a
-malformed answer instead of being accepted as fresh. The one item still recommended for action is NM-11: the balance and supply cap
+`transferFrom` and `burnFrom`; NM-10 — a Proof-of-Reserve round stamped in the future is now rejected as a
+malformed answer instead of being accepted as fresh; and NM-6 — the ERC-7943 overloads now treat an
+owner-initiated transfer (`spender == from`) as direct, matching the `ITransferContext` entrypoints, so
+`RuleSpenderWhitelist` no longer blocks an owner moving their own tokens. The one item still recommended for
+action is NM-11: the balance and supply cap
 rules assume the token calls the compliance hook *before* moving value (CMTAT does; a real ERC-3643 / T-REX token
 does not), which over-restricts rather than over-issues.
 [Report (PDF)](./doc/security/audits/tools/v0.5.0/nethermind_audit_agent_report_v0.5.0.pdf) ·
