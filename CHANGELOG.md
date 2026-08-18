@@ -83,6 +83,16 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 ### Added
 
+- **`RuleMaxTotalSupplyERC3643` / `RuleMaxTotalSupplyERC3643Ownable2Step`** — static supply caps for
+  **ERC-3643 tokens**, the same re-phasing as the Proof-of-Reserve variants below and for the same reason: the
+  token mints first and reports through `created` afterwards, which `RuleEngine` forwards as the three-argument
+  `transferred(address(0), to, value)`, so `totalSupply()` already includes the new tokens. Cap logic,
+  restriction codes (50, 51), configuration, roles and events are inherited unchanged, and the read views are
+  deliberately not re-phased. **Not interchangeable with the stock rule, and neither mistake reverts at
+  deployment.** Designed to compose with `RuleChainlinkPoRERC3643`, which has no margin parameter: add both to
+  one engine for a static ceiling alongside the reserve-backed one, remembering the engine reports the first
+  non-zero code.
+
 - **`RuleChainlinkPoRERC3643` / `RuleChainlinkPoRERC3643Ownable2Step`** — Proof-of-Reserve minting caps for
   **ERC-3643 tokens**, the first consumers of the seam above. ERC-3643 / T-REX calls compliance *after* it has
   moved the value: `mint` runs `_mint(_to, _amount)` and only then `_tokenCompliance.created(_to, _amount)`, which
@@ -132,6 +142,12 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   "aligned" away later. Reverting the fix fails 6 of the suite's 10 tests across 5 rules. The suite's header
   comment, which described the parity as flat, now states the per-interface conventions. Coverage on
   `RuleNFTAdapter`: 100% statements, 100% branches.
+
+- Added `test/ERC3643Real/ERC3643RealTokenMaxTotalSupply.t.sol` (10 tests, `FOUNDRY_PROFILE=erc3643`) and
+  `test/RuleMaxTotalSupply/RuleMaxTotalSupplyERC3643.t.sol` (10 tests, default profile). The real-token suite
+  covers mints to the ceiling, rejection past it, incremental issuance, burns freeing headroom, a raised cap, and
+  **both compositions with `RuleChainlinkPoRERC3643`** — static cap binding and reserves binding — plus two tests
+  pinning the stock rule's failure on the same token. `test/Version.t.sol` extended to both new deployables.
 
 - Added `test/ERC3643Real/ERC3643RealTokenChainlinkPoR.t.sol` (10 tests, `FOUNDRY_PROFILE=erc3643`) — drives the
   **genuine** vendored `lib/ERC-3643/` token (4.2.0-beta1), not a mock, through `RuleChainlinkPoRERC3643`: mints up

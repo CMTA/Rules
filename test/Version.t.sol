@@ -8,6 +8,10 @@ import {RuleBlacklist} from "src/rules/validation/deployment/RuleBlacklist.sol";
 import {RuleSanctionsList} from "src/rules/validation/deployment/RuleSanctionsList.sol";
 import {ISanctionsList} from "src/rules/interfaces/ISanctionsList.sol";
 import {RuleMaxTotalSupply} from "src/rules/validation/deployment/RuleMaxTotalSupply.sol";
+import {RuleMaxTotalSupplyERC3643} from "src/rules/validation/deployment/RuleMaxTotalSupplyERC3643.sol";
+import {
+    RuleMaxTotalSupplyERC3643Ownable2Step
+} from "src/rules/validation/deployment/RuleMaxTotalSupplyERC3643Ownable2Step.sol";
 import {TotalSupplyMock} from "src/mocks/TotalSupplyMock.sol";
 import {RuleMaxBalance} from "src/rules/validation/deployment/RuleMaxBalance.sol";
 import {RuleMaxBalanceOwnable2Step} from "src/rules/validation/deployment/RuleMaxBalanceOwnable2Step.sol";
@@ -101,6 +105,19 @@ contract VersionTest is Test, HelperContract {
         RuleChainlinkPoR rule = new RuleChainlinkPoR(
             DEFAULT_ADMIN_ADDRESS, address(token), 18, AggregatorV3Interface(address(feed)), 1 days
         );
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleMaxTotalSupplyERC3643() public {
+        TotalSupplyDecimalsMock token = new TotalSupplyDecimalsMock(18);
+        RuleMaxTotalSupplyERC3643 rule = new RuleMaxTotalSupplyERC3643(DEFAULT_ADMIN_ADDRESS, address(token), 1000);
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleMaxTotalSupplyERC3643Ownable2Step() public {
+        TotalSupplyDecimalsMock token = new TotalSupplyDecimalsMock(18);
+        RuleMaxTotalSupplyERC3643Ownable2Step rule =
+            new RuleMaxTotalSupplyERC3643Ownable2Step(DEFAULT_ADMIN_ADDRESS, address(token), 1000);
         assertEq(rule.version(), EXPECTED_VERSION);
     }
 
