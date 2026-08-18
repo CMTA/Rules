@@ -84,7 +84,14 @@ twice, spender-less hooks twice, short ABI return data twice). Every described f
 (over-restriction, a blocked transfer) or inert (a rule that cannot screen an identity it is never given); none
 of the 13 Medium ratings survives verification at Medium.
 
-**One item is recommended for action — NM-11 (documentation + test scope, no contract change):**
+**NM-11 — enabling structure landed in `v0.6.0`; the remaining work is documentation.** The three cap rules now
+share a stateless `CapAccounting` primitive and expose `_detectTransferRestrictionOnNotify`, the hook the write
+path enforces through. It defaults to today's CMTAT behaviour, so nothing changed by default, and an ERC-3643
+variant is a one-line override (`_detectTransferRestriction(from, to, 0)`). Only the write path is re-phased:
+a pre-flight view always runs before the movement on either kind of token, so re-phasing it too would make the
+pre-flight answer disagree with enforcement. Worked variants and regression tests are in
+`src/mocks/harness/ERC3643CapHarnesses.sol` and `test/CapAccounting/ERC3643CapSeams.t.sol`; the write-up is
+`RULE_SEMANTICS.md` §5. The finding itself:
 `RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR` assume the token calls the compliance hook **before**
 moving value (CMTAT does). The vendored ERC-3643 / T-REX token calls it **after**
 (`Token.sol:312-313`, `:532-533`, `:557-558`, and `created` at `:572`), so the cap double-counts the transferred

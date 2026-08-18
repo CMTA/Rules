@@ -7,6 +7,7 @@ import {AggregatorV3Interface} from "../../../interfaces/AggregatorV3Interface.s
 import {IDecimals} from "../../../interfaces/IDecimals.sol";
 import {ITotalSupply} from "../../../interfaces/ITotalSupply.sol";
 import {TokenSupplyReader} from "./TokenSupplyReader.sol";
+import {CapAccounting} from "./CapAccounting.sol";
 
 /**
  * @title ChainlinkPoRFeedManager
@@ -26,7 +27,7 @@ import {TokenSupplyReader} from "./TokenSupplyReader.sol";
  * both the feed and the token to have code and EIP-6780 makes it permanent: a `try` to a codeless
  * address reverts *uncatchably*. Assumes a Cancun-or-later chain.
  */
-abstract contract ChainlinkPoRFeedManager is TokenSupplyReader, RuleChainlinkPoRInvariantStorage {
+abstract contract ChainlinkPoRFeedManager is CapAccounting, TokenSupplyReader, RuleChainlinkPoRInvariantStorage {
     /**
      * @notice The Proof of Reserve data feed consulted before every mint.
      */

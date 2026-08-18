@@ -81,6 +81,24 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   rejected with code `66` despite the rule documenting that direct transfers are always allowed. The deny-list
   rules blocked such a transfer before and after; only which leg reported it changed.
 
+### Added
+
+- **`CapAccounting`** (`src/rules/validation/abstract/core/CapAccounting.sol`) — the cap comparison that
+  `RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR` each wrote out separately, now in one place.
+  Stateless and constructor-free, so storage layouts are unchanged (verified byte-identical for all six
+  deployables) and an upgradeable variant may adopt it. It deliberately carries no notion of pre- or post-update
+  accounting: whether the observation already includes the moved value depends on which *path* is running, not on
+  the rule.
+- **`_detectTransferRestrictionOnNotify`** on all three cap rules — the seam an ERC-3643 variant overrides. The
+  write hooks now route through it; it defaults to the pre-flight check, which is the CMTAT behaviour, so nothing
+  changes by default. A token that notifies *after* moving the value (ERC-3643 / T-REX) needs one override:
+  `return _detectTransferRestriction(from, to, 0)`. The read path is deliberately not routed through it — a
+  pre-flight view always runs before the movement, so it must always project the value.
+- Documented the second seam, **observation source** (`_currentSupply` / `_balanceOf`, both already
+  `internal view virtual`), which lets a rule serve the figure from its own storage instead of calling the token.
+  A rule that keeps its own running total controls when it updates it and so is immune to the accounting-phase
+  question entirely.
+
 ### Testing
 
 - Added `IdentityRegistryExtraCheckHarness` (`src/mocks/harness/IdentityRegistryDelegationHarness.sol`) — a
@@ -102,6 +120,13 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   "aligned" away later. Reverting the fix fails 6 of the suite's 10 tests across 5 rules. The suite's header
   comment, which described the parity as flat, now states the per-interface conventions. Coverage on
   `RuleNFTAdapter`: 100% statements, 100% branches.
+
+- Added `test/CapAccounting/ERC3643CapSeams.t.sol` (7 tests) and
+  `src/mocks/harness/ERC3643CapHarnesses.sol` — a worked ERC-3643 variant of each cap rule plus a tracked-supply
+  rule. The tests reproduce NM-11 on the stock rules under post-update accounting, show the one-line override
+  fixes it, assert the pre-flight view still projects the value, and confirm neither variant ever admits anything
+  above the cap. Coverage after: **100% statements, branches and functions** on `CapAccounting`,
+  `RuleMaxBalanceBase`, `RuleMaxTotalSupplyBase` and `RuleChainlinkPoRBase`.
 
 ### Documentation
 

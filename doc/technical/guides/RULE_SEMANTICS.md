@@ -117,6 +117,46 @@ Every adapter entrypoint normalises `spender == from` to the **direct** hook. Th
 
 12. **The ERC-7943 `tokenId` overloads** are `detectTransferRestriction(from,to,tokenId,value)`, `detectTransferRestrictionFrom(spender,from,to,tokenId,value)`, `canTransfer(from,to,tokenId,amount)`, `canTransferFrom(spender,from,to,tokenId,value)`, `transferred(from,to,tokenId,value)` and `transferred(spender,from,to,tokenId,value)` — all supplied by `RuleNFTAdapter`. Per ERC-7943, `amount`/`value` MUST be `1` for ERC-721. The rules ignore `tokenId` entirely; it exists so an ERC-721/ERC-1155 token can call the same compliance rule without a shim.
 
+## 5. Cap rules: the two seams for an ERC-3643 variant
+
+`RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR` all end in the same question — *would this movement leave an observed figure above its cap?* — and that question has two free variables. Each is a documented `internal virtual` hook, so a variant overrides one line rather than reimplementing a rule.
+
+The shared arithmetic lives in [`CapAccounting`](../../../src/rules/validation/abstract/core/CapAccounting.sol), which holds **no storage** and is deliberately ignorant of both variables.
+
+### Seam 1 — accounting phase: `_detectTransferRestrictionOnNotify`
+
+**The stock rules assume the token calls them BEFORE it moves the value**, so the observation still excludes it and `value` must be counted. CMTAT does this. **ERC-3643 / T-REX calls afterwards** — `Token.transfer` runs `_transfer` then `_tokenCompliance.transferred`, and `mint` runs `_mint` then `created` — so the observation already includes the value and counting it again **halves the effective cap**, rejecting movements that are within it (Nethermind AuditAgent NM-11).
+
+Adapting is one override, because "the observation already includes it" is the same as "there is nothing left to add":
+
+```solidity
+function _detectTransferRestrictionOnNotify(address from, address to, uint256)
+    internal view override returns (uint8)
+{
+    return _detectTransferRestriction(from, to, 0);
+}
+```
+
+**Only the write path is routed through this hook, never the read path.** A pre-flight view (`detectTransferRestriction`, `canTransfer`, `remainingCapacity`) always runs *before* the movement on either kind of token, so it must always project `value`. Re-phasing it too would make the pre-flight answer disagree with enforcement — the mirror image of the bug being fixed.
+
+### Seam 2 — observation source: `_currentSupply` / `_balanceOf`
+
+Both are `internal view virtual`, so a rule may serve the figure from **its own storage** instead of calling the token — the shape needed for a rule that tracks the supply itself from an opening figure set at the start of the token's life.
+
+A rule that keeps its own running total also controls *when* it updates it, so it checks before it records and **seam 1 stops applying to it**: it never depends on the host token's call order.
+
+Two constraints before building one:
+
+- **It must observe every change or it drifts, permanently and silently.** Being installed after issuance has begun, removed and re-added, or served by a second engine all desynchronise it. A rule that reads the token self-heals; an accumulator does not.
+- **Supply can be tracked; per-address balances cannot** — not against real ERC-3643. `Token.recoveryAddress` moves an entire balance with `_transfer` and **never calls `_tokenCompliance.transferred`**, so an agent-callable path breaks a shadow ledger with no on-chain signal. Total supply is unaffected by recovery, so a tracked-supply rule is safe from it.
+- A tracked rule's write hook mutates state, so it belongs under `src/rules/operation/`, not `src/rules/validation/`.
+
+### Worked examples
+
+`src/mocks/harness/ERC3643CapHarnesses.sol` implements all four (one per cap rule for seam 1, plus a tracked-supply rule for seam 2), and `test/CapAccounting/ERC3643CapSeams.t.sol` asserts that the stock rules double-count under post-update accounting while the variants do not, and that neither ever admits anything above the cap.
+
+---
+
 ---
 
 See [`CLAUDE_AUDIT.md`](../../security/audits/tools/v0.4.0/claude-audit/CLAUDE_AUDIT.md) for the findings referenced above.

@@ -579,7 +579,36 @@ Direction of failure is **conservative** — over-restriction, never over-issuan
 received above the cap; what breaks is that transfers and mints *within* the cap are rejected, and the pre-flight
 view disagrees with enforcement. There is no exploit, and the CMTAT path is unaffected.
 
-**Recommended fix (documentation and test scope, no contract change):**
+**Enabling structure landed in `v0.6.0` (the fix itself is still a deployment choice).** The three rules now
+share [`CapAccounting`](../../../../../src/rules/validation/abstract/core/CapAccounting.sol) and each exposes
+`_detectTransferRestrictionOnNotify`, the hook the **write** path enforces through. It defaults to the pre-flight
+check — today's CMTAT behaviour, unchanged — and an ERC-3643 variant overrides one line:
+
+```solidity
+function _detectTransferRestrictionOnNotify(address from, address to, uint256)
+    internal view override returns (uint8)
+{
+    return _detectTransferRestriction(from, to, 0);   // the observation already includes the value
+}
+```
+
+Two design points that came out of building it, both now pinned by tests:
+
+- **Only the write path may be re-phased.** A single "observation includes the value" flag applied to both paths
+  was the first shape tried and is wrong: a pre-flight view always runs *before* the movement on either kind of
+  token, so re-phasing it makes the pre-flight answer disagree with enforcement — the mirror image of this very
+  finding. `testMaxTotalSupply_PreFlightViewStillCountsTheValue` pins that.
+- **`_currentSupply` / `_balanceOf` are the second seam**, letting a rule serve the figure from its own storage
+  instead of the token. Such a rule controls when it records, so it never has to answer the phase question at
+  all. Verified feasible for *supply*; **not** for per-address balances, because `Token.recoveryAddress` moves a
+  whole balance with `_transfer` and never calls `_tokenCompliance.transferred`, so an agent-callable path
+  desynchronises a shadow ledger with no on-chain signal.
+
+Worked variants of all three rules live in `src/mocks/harness/ERC3643CapHarnesses.sol`, and
+`test/CapAccounting/ERC3643CapSeams.t.sol` reproduces this finding on the stock rules while showing the variants
+are correct. `RULE_SEMANTICS.md` §5 is the write-up.
+
+**Remaining fix (documentation and test scope, no further contract change):**
 
 1. State the constraint as a compatibility rule, not an incidental `@dev` note: `RuleMaxBalance`,
    `RuleMaxTotalSupply` and `RuleChainlinkPoR` **require a token that notifies before moving value (CMTAT), and
