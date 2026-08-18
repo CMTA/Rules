@@ -21,6 +21,10 @@ import {RuleSpenderWhitelist} from "src/rules/validation/deployment/RuleSpenderW
 import {RuleReceiverWhitelist} from "src/rules/validation/deployment/RuleReceiverWhitelist.sol";
 import {RuleIdentityRegistry} from "src/rules/validation/deployment/RuleIdentityRegistry.sol";
 import {RuleChainlinkPoR} from "src/rules/validation/deployment/RuleChainlinkPoR.sol";
+import {RuleChainlinkPoRERC3643} from "src/rules/validation/deployment/RuleChainlinkPoRERC3643.sol";
+import {
+    RuleChainlinkPoRERC3643Ownable2Step
+} from "src/rules/validation/deployment/RuleChainlinkPoRERC3643Ownable2Step.sol";
 import {IdentityRegistryWhitelist} from "src/registry/IdentityRegistryWhitelist.sol";
 import {AggregatorV3Interface} from "src/rules/interfaces/AggregatorV3Interface.sol";
 import {AggregatorV3Mock} from "src/mocks/AggregatorV3Mock.sol";
@@ -95,6 +99,24 @@ contract VersionTest is Test, HelperContract {
         TotalSupplyDecimalsMock token = new TotalSupplyDecimalsMock(18);
         AggregatorV3Mock feed = new AggregatorV3Mock(8, 1000 * 1e8);
         RuleChainlinkPoR rule = new RuleChainlinkPoR(
+            DEFAULT_ADMIN_ADDRESS, address(token), 18, AggregatorV3Interface(address(feed)), 1 days
+        );
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleChainlinkPoRERC3643() public {
+        TotalSupplyDecimalsMock token = new TotalSupplyDecimalsMock(18);
+        AggregatorV3Mock feed = new AggregatorV3Mock(8, 1000 * 1e8);
+        RuleChainlinkPoRERC3643 rule = new RuleChainlinkPoRERC3643(
+            DEFAULT_ADMIN_ADDRESS, address(token), 18, AggregatorV3Interface(address(feed)), 1 days
+        );
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleChainlinkPoRERC3643Ownable2Step() public {
+        TotalSupplyDecimalsMock token = new TotalSupplyDecimalsMock(18);
+        AggregatorV3Mock feed = new AggregatorV3Mock(8, 1000 * 1e8);
+        RuleChainlinkPoRERC3643Ownable2Step rule = new RuleChainlinkPoRERC3643Ownable2Step(
             DEFAULT_ADMIN_ADDRESS, address(token), 18, AggregatorV3Interface(address(feed)), 1 days
         );
         assertEq(rule.version(), EXPECTED_VERSION);

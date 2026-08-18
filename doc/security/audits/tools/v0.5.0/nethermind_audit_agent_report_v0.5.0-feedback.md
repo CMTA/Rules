@@ -600,9 +600,10 @@ Two design points that came out of building it, both now pinned by tests:
   finding. `testMaxTotalSupply_PreFlightViewStillCountsTheValue` pins that.
 - **`_currentSupply` / `_balanceOf` are the second seam**, letting a rule serve the figure from its own storage
   instead of the token. Such a rule controls when it records, so it never has to answer the phase question at
-  all. Verified feasible for *supply*; **not** for per-address balances, because `Token.recoveryAddress` moves a
-  whole balance with `_transfer` and never calls `_tokenCompliance.transferred`, so an agent-callable path
-  desynchronises a shadow ledger with no on-chain signal.
+  all. Verified feasible for *supply*; **not** for per-address balances, because how `Token.recoveryAddress`
+  moves a balance changed across T-REX versions — up to 4.1 it routed through the public `forcedTransfer`, which
+  notifies compliance, while the vendored 4.2.0-beta1 calls `_transfer` directly and notifies nobody. A shadow
+  ledger would be correct on one minor version and permanently skewed on the next.
 
 Worked variants of all three rules live in `src/mocks/harness/ERC3643CapHarnesses.sol`, and
 `test/CapAccounting/ERC3643CapSeams.t.sol` reproduces this finding on the stock rules while showing the variants

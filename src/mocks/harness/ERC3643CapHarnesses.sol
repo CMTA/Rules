@@ -97,9 +97,10 @@ contract ERC3643ChainlinkPoRHarness is RuleChainlinkPoR {
 /**
  * @notice `RuleMaxTotalSupply` serving the supply from its OWN storage instead of the token.
  * @dev Demonstrates seam 2. A real version would maintain {trackedSupply} from the write hook and is
- * a larger design: it must observe every supply change or it drifts, and an ERC-3643 token can move a
- * whole balance without notifying compliance (`Token.recoveryAddress` calls `_transfer` with no
- * `transferred` call), which rules out the same approach for per-address balances.
+ * a larger design: it must observe every supply change or it drifts. The same approach is NOT safe for
+ * per-address balances: `Token.recoveryAddress` notifies compliance on T-REX <= 4.1 (it calls the public
+ * `forcedTransfer`) but not on 4.2.0-beta1 (it calls `_transfer` directly), so a shadow ledger's
+ * correctness would depend on the token's minor version. Total supply is unaffected by recovery.
  */
 contract TrackedSupplyHarness is RuleMaxTotalSupply {
     /// @notice Supply as this rule believes it to be; never read from the token.

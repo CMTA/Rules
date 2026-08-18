@@ -148,7 +148,7 @@ A rule that keeps its own running total also controls *when* it updates it, so i
 Two constraints before building one:
 
 - **It must observe every change or it drifts, permanently and silently.** Being installed after issuance has begun, removed and re-added, or served by a second engine all desynchronise it. A rule that reads the token self-heals; an accumulator does not.
-- **Supply can be tracked; per-address balances cannot** — not against real ERC-3643. `Token.recoveryAddress` moves an entire balance with `_transfer` and **never calls `_tokenCompliance.transferred`**, so an agent-callable path breaks a shadow ledger with no on-chain signal. Total supply is unaffected by recovery, so a tracked-supply rule is safe from it.
+- **Supply can be tracked; per-address balances are version-dependent and therefore unsafe.** How `Token.recoveryAddress` moves a balance **changed across T-REX versions**: up to 4.1 it routed through the public `forcedTransfer`, which *does* call `_tokenCompliance.transferred`; the vendored **4.2.0-beta1 calls `_transfer` directly and notifies nobody** (verified: zero `_tokenCompliance` references in that function body). A tracked per-address ledger is therefore in sync on one minor version and permanently skewed on the next, by an agent-callable path with no on-chain signal — a dependency no rule should carry. Total supply is unaffected by recovery either way, so a tracked-supply rule is safe from this.
 - A tracked rule's write hook mutates state, so it belongs under `src/rules/operation/`, not `src/rules/validation/`.
 
 ### Worked examples

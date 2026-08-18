@@ -76,6 +76,7 @@ access-control policy, in either an `AccessControl` or an `Ownable2Step` flavour
 | `RuleMaxTotalSupply` | Caps total supply on mint | 50, 51 |
 | `RuleMaxBalance` | Caps how many tokens one address may hold | 82, 83 |
 | `RuleChainlinkPoR` | Caps minting at Chainlink Proof of Reserve reserves | 75–79 |
+| `RuleChainlinkPoRERC3643` | Same, for **ERC-3643 tokens** — compliance called *after* the mint | 75–79 |
 | `RuleConditionalTransferLight` | Requires operator approval per transfer | 46 |
 | `RuleMintAllowance` | Per-minter mint quota | 70 |
 

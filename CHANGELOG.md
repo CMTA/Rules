@@ -83,6 +83,18 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 ### Added
 
+- **`RuleChainlinkPoRERC3643` / `RuleChainlinkPoRERC3643Ownable2Step`** — Proof-of-Reserve minting caps for
+  **ERC-3643 tokens**, the first consumers of the seam above. ERC-3643 / T-REX calls compliance *after* it has
+  moved the value: `mint` runs `_mint(_to, _amount)` and only then `_tokenCompliance.created(_to, _amount)`, which
+  `RuleEngine` forwards to each rule as the three-argument `transferred(address(0), to, value)`. `totalSupply()`
+  therefore already includes the new tokens, so the variant overrides `_detectTransferRestrictionOnNotify` to
+  re-ask with nothing left to add. Reserve logic, restriction codes (75–79), configuration, roles and events are
+  inherited unchanged. **The read views are deliberately not re-phased** — ERC-3643 calls
+  `canTransfer(address(0), to, amount)` *before* `_mint`, so a pre-flight query must still project the amount;
+  the two consultations then reduce to the same condition. **The variants are not interchangeable with the stock
+  rule and neither mistake reverts at deployment**: the stock rule on ERC-3643 counts the amount twice and
+  reverts fully backed mints, and the variant on CMTAT weakens enforcement.
+
 - **`CapAccounting`** (`src/rules/validation/abstract/core/CapAccounting.sol`) — the cap comparison that
   `RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR` each wrote out separately, now in one place.
   Stateless and constructor-free, so storage layouts are unchanged (verified byte-identical for all six
@@ -120,6 +132,14 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   "aligned" away later. Reverting the fix fails 6 of the suite's 10 tests across 5 rules. The suite's header
   comment, which described the parity as flat, now states the per-interface conventions. Coverage on
   `RuleNFTAdapter`: 100% statements, 100% branches.
+
+- Added `test/ERC3643Real/ERC3643RealTokenChainlinkPoR.t.sol` (10 tests, `FOUNDRY_PROFILE=erc3643`) — drives the
+  **genuine** vendored `lib/ERC-3643/` token (4.2.0-beta1), not a mock, through `RuleChainlinkPoRERC3643`: mints up
+  to the reserves, rejection past them, incremental issuance against a shared ceiling, a raised feed answer
+  raising the ceiling, transfers and burns staying open while reserves are zero, and a stale feed halting
+  issuance without trapping holders. Two tests pin the **stock** rule's failure on the same real token — a fully
+  backed mint reverting, and the largest single mint halving to `reserves / 2` — so the reason the variant exists
+  stays executable. `test/Version.t.sol` extended to both new deployables, keeping it exhaustive.
 
 - Added `test/CapAccounting/ERC3643CapSeams.t.sol` (7 tests) and
   `src/mocks/harness/ERC3643CapHarnesses.sol` — a worked ERC-3643 variant of each cap rule plus a tracked-supply
