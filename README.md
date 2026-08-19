@@ -212,7 +212,7 @@ Every finding carries a written triage, including the ones dismissed as false po
 
 | Scan | High | Medium | Low | Info | Anything to fix? |
 | --- | --- | --- | --- | --- | --- |
-| 2026-08-17, commit `01632da` | 0 | 13 | 11 | 0 | **Nothing exploitable** — 4 fixed (NM-3, NM-6, NM-10, NM-11 — `v0.6.0`), nothing outstanding |
+| 2026-08-17, commit `01632da` | 0 | 13 | 11 | 0 | **Nothing exploitable** — 7 fixed in `v0.6.0`, 16 accepted as design, 1 declined; nothing left open |
 
 > Note: This scan was performed by an AI-powered automated tool, not a formal human-led audit.
 

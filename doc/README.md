@@ -2013,7 +2013,7 @@ AI automated scan with [**Nethermind AuditAgent**](https://auditagent.nethermind
 
 | Tool | High | Medium | Low | Info | Anything to fix? |
 |---|---|---|---|---|---|
-| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **4 fixed** (NM-3, NM-6, NM-10, NM-11 — `v0.6.0`); nothing exploitable, nothing outstanding |
+| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **7 fixed** (NM-3, 6, 10, 11, 17, 18, 20 — `v0.6.0`), 16 accepted as design, 1 declined; nothing left open |
 
 **Nothing exploitable.** There are no false positives — all 24 findings describe real code — but 17 restate
 positions already documented in the source and in [`CLAUDE_AUDIT.md`](./security/audits/tools/v0.4.0/claude-audit/CLAUDE_AUDIT.md)

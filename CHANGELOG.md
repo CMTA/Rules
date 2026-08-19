@@ -226,6 +226,17 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 ### Documentation
 
+- **NM-19 closed as *won't do*** — wrapper nesting is deliberately not enabled, and the reason is recorded in
+  `RuleWhitelistWrapper.md`, `RULE_SEMANTICS.md` and the `CLAUDE.md` / `AGENTS.md` gotcha so it is not
+  re-proposed. The finding's DoS half was already fixed by NM-18 (a nested wrapper is refused at `addRule` with
+  a named error instead of bricking every transfer); what remained was a feature request that does not earn its
+  cost. The wrapper is an OR, and `OR(OR(a,b),OR(c,d))` ≡ `OR(a,b,c,d)` — nesting an OR in an OR is
+  algebraically flat, so it adds **no expressive power**; AND-of-ORs is already available by putting several
+  wrappers in the `RuleEngine`, which returns the first non-zero code. It would cost multiplicatively (~8.8k gas
+  per child, and the *rejected* path never early-exits, so a 10 × 10 nest is ~880k gas per transfer against ~90k
+  flat) and open an `A → B → A` cycle class that recurses to out-of-gas, bricking transfers and `isVerified`,
+  with no cheap on-chain defence.
+
 - **Per-rule ERC-3643 compatibility matrix** (`RULE_SEMANTICS.md` §6). The scan's most useful signal was that a
   rule's guarantees depend on what the token tells it and when, and there was no single place saying so per rule.
   ERC-3643 / T-REX **never forwards a spender** (both `transfer` and `transferFrom` call the 3-argument

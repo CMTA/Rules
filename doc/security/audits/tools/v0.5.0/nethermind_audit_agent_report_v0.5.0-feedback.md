@@ -39,7 +39,7 @@ would have.
 | **Fixed** (in `v0.6.0`) | 7 | **NM-3**, **NM-6**, **NM-10**, **NM-11**, **NM-17**, **NM-18**, **NM-20** |
 | Accepted as design (real behaviour, intentional, already documented) | 16 | NM-1, 2, 4, 5, 7, 8, 9, 12, 13, 14, 15, 16, 21, 22, 23, 24 |
 | Rejected — false positive | 0 | — |
-| Informational — valid, optional hardening | 1 | NM-19 (open) |
+| Won't do (confirmed, deliberately declined) | 1 | NM-19 — nesting adds no expressive power at multiplicative gas |
 | Fix recommended | 0 | — |
 | **Total** | **24** | |
 
@@ -97,7 +97,7 @@ running against the genuine vendored token.
 | NM-16 | Low → **Info** | `RuleSpenderWhitelist` inert on spender-less hooks | Accepted as design — duplicate of NM-9 |
 | NM-17 | Low → **Low** | `approveAndTransferIfAllowed` leaves a residual approval if no callback | ✅ **Fixed** in `v0.6.0` — approval-consumed post-condition |
 | NM-18 | Low → **Low** | Wrapper bricked by a non-`IAddressList` child | ✅ **Fixed** in `v0.6.0` — ERC-165 guard on a purpose-built sub-interface |
-| NM-19 | Low → **Info** | Wrapper does not implement `IAddressList`, so it cannot nest | Informational — enhancement, never advertised |
+| NM-19 | Low → **Info** | Wrapper does not implement `IAddressList`, so it cannot nest | 🚫 **Won't do** — DoS half fixed by NM-18; nesting declined |
 | NM-20 | Low → **Info** | Wrapper reads a `RuleBlacklist` child's membership as eligibility | ✅ **Fixed** in `v0.6.0` — polarity marker interface + ERC-165 |
 | NM-21 | Low → **Info** | `RuleMintAllowance` 3-arg pre-flight views fail open | Accepted as design — audit F-7 |
 | NM-22 | Low → **Low** | A misbehaving sanctions oracle reverts the read path | Accepted as design — trusted dependency (v0.4.0 audit) |
@@ -850,7 +850,7 @@ What layer 1 buys and what it misses:
   transfers later.
 - ✅ Closes **NM-19**'s failure mode — a nested wrapper is refused up front with a named error rather than
   bricking every transfer through the parent. It does not *enable* nesting: that needs the wrapper to implement
-  and advertise `IAddressList`, which is NM-19's separate enhancement.
+  and advertise `IAddressList` — declined under NM-19, because an OR nested in an OR is algebraically flat.
 - ❌ Does **not** close **NM-20** — `RuleBlacklist` advertises the same interface ID, because `IAddressList`
   expresses *membership*, not *polarity*. Detecting that needs a separate marker interface (e.g. an `IAllowList`
   advertised only by the whitelist rules) or documentation; see NM-20.
@@ -945,20 +945,56 @@ does test only non-zero and duplicate, but `RuleEngineBase` **overrides** it to 
 (`RuleEngineBase.sol:228-233`), so the engine was already guarded and the wrapper was the outlier. The
 dependency supplied the template rather than an argument against it.
 
-### NM-19 — The wrapper does not implement `IAddressList`, so wrappers cannot nest
+### NM-19 — The wrapper does not implement `IAddressList`, so wrappers cannot nest — 🚫 WON'T DO
 
 **Claim (Low).** `RuleWhitelistWrapperBase` implements `IIdentityRegistryVerified` but omits `areAddressesListed`
 / `isAddressListed`. A wrapper therefore cannot be a child of another wrapper: the parent's blind
 `areAddressesListed` STATICCALL hits a missing selector with no fallback and reverts every transfer.
 
-**Verdict — informational; confirmed, an enhancement rather than a defect.** Verified: neither
-`RuleWhitelistWrapperBase` nor `RuleWhitelistShared` declares `areAddressesListed` or `isAddressListed`, and
-neither advertises `IADDRESS_LIST_INTERFACE_ID`. Nesting has never been documented as supported, so nothing
-regresses; the failure mode is the same one as NM-18 and would be surfaced by the same ERC-165 guard rather than
-silently bricking. The scanner is right that the internals already exist —
-`_isListedInAnyChild` / `_detectTransferRestrictionForTargets` — so exposing `IAddressList` on the wrapper would
-be a handful of lines and would make hierarchical OR-composition work. Recorded as a feature request for a
-future release; not required for `v0.5.0`.
+**Verdict — confirmed as described; the harm is fixed, the feature is declined.** Two halves, decided
+differently:
+
+- **The DoS half is closed.** A nested wrapper used to be accepted and then bricked every transfer through the
+  parent. Since NM-18 it is **refused at `addRule`** with `RuleWhitelistWrapper_ChildIsNotAnAddressList`, pinned
+  by `test_WW2_NestedWrapperIsRejectedAtAddRule`. Nothing silently breaks any more.
+- **The feature half — actually enabling nesting — is declined.** What remains is a feature request, and it does
+  not earn its cost.
+
+**Why nesting is not worth enabling.**
+
+*It buys zero expressive power.* The wrapper is an OR, and `OR(OR(a,b), OR(c,d))` ≡ `OR(a,b,c,d)`. Nesting an OR
+inside an OR flattens algebraically: there is no policy a nested wrapper can express that a flat child list
+cannot express identically. The composition an integrator might actually want from nesting is already available
+one level up — `RuleEngineBase._detectTransferRestriction` returns the **first non-zero** code, so rules in an
+engine compose with **AND**:
+
+| Composition wanted | How to get it today |
+|---|---|
+| OR of lists | one wrapper, flat children |
+| AND of ORs | several wrappers in the `RuleEngine` |
+| OR of ORs | identical to a flat wrapper — nesting adds nothing |
+
+*The gas is multiplicative on exactly the path that matters.* The measured scan is **~8.8k gas per child**, and
+this page's own analysis notes that the worst case is the common case: a **rejected** transfer never early-exits,
+because the exit only fires once every target address is resolved. A 10 × 10 nest therefore costs **~880k gas per
+transfer** where the equivalent flat wrapper costs **~90k** — the same policy at roughly ten times the price,
+paid by the transferring user on every transfer, forever. The operator guidance is to stay at or below ten
+children; nesting is a way to blow past that budget without it looking like a cap change.
+
+*It introduces a cycle class nothing can prevent cheaply.* A wrapper added to itself, or A → B → A, recurses
+until out-of-gas. That bricks transfers **and** `isVerified`, which sits on the ERC-3643 identity path. Detecting
+cycles on-chain means traversing the whole child graph on every `addRule`, itself unbounded. This matters
+particularly now: NM-18 and NM-20 moved this wrapper *away* from documentation-only discipline, and a feature
+whose only defence is "do not do that" would reverse that direction.
+
+**Disposition: won't do.** The current behaviour is best read as *nesting depth limited to 1, enforced by
+construction* — which, given the algebra above, is the same expressive power without the cost or the cycle
+hazard. Reopen it only if the wrapper's semantics ever stop being a plain OR, since that is the assumption the
+whole argument rests on.
+
+Delegated administration, the one real motivation, already works **flat**: this page's usage scenario is exactly
+three operators each managing their own `RuleWhitelist`, all held by one wrapper. Nesting would only add
+groups-of-groups with delegated *group* management, which nobody has asked for.
 
 ### NM-20 — The wrapper reads a `RuleBlacklist` child's membership as eligibility — ✅ FIXED (`v0.6.0`)
 
@@ -1164,6 +1200,6 @@ are listed in rough order of value per unit of risk:
 
 **Status.** The triage itself modified no contract; the seven fixes recorded above were made afterwards through
 the normal fix workflow and are described in each finding's `Resolution` block. Two improvements remain
-specified but unapplied (**NM-23/24**, **NM-5**), one finding remains open as an enhancement (**NM-19**), and one
-decision is outstanding rather than blocked on effort: whether an ERC-3643 agent's `forcedTransfer` should be
-exempt from `RuleMaxBalance`, which is what a variant of that rule waits on.
+specified but unapplied (**NM-23/24**, **NM-5**), and one decision is outstanding rather than blocked on effort:
+whether an ERC-3643 agent's `forcedTransfer` should be exempt from `RuleMaxBalance`, which is what a variant of
+that rule waits on. **No finding is left open**: 7 fixed, 16 accepted as design, 1 declined.

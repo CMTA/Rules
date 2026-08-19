@@ -144,6 +144,30 @@ an allow-list, so `true` would be honest about polarity and still wrong: the lis
 is only half the question; the other half is what the addresses are. Withholding the declaration is what makes
 the fail-closed check refuse it — pinned by `test_WW2_ChildDecliningToDeclarePolarityIsRejected`.
 
+##### Wrappers cannot nest, deliberately
+
+A `RuleWhitelistWrapper` does not implement `areAddressesListed`, so it fails the first check and cannot be a
+child of another wrapper. That is a decision, not an omission (Nethermind AuditAgent `NM-19`, declined).
+
+**Nesting would buy no expressive power.** The wrapper is an OR, and `OR(OR(a,b), OR(c,d))` ≡ `OR(a,b,c,d)` — an
+OR nested in an OR flattens. Every policy a nested wrapper could express is expressible with a flat child list,
+and the composition integrators actually reach for is already available one level up:
+
+| Composition | How |
+| --- | --- |
+| **OR** of lists | one wrapper, flat children |
+| **AND** of ORs | several wrappers in the `RuleEngine`, which returns the first non-zero code |
+| OR of ORs | identical to a flat wrapper |
+
+It would also cost. The scan is [~8.8k gas per child](#gas-cost-of-the-child-rule-scan) and the *rejected* path
+never early-exits, so a 10 × 10 nest costs **~880k gas per transfer** where the equivalent flat wrapper costs
+**~90k** — the same policy at ten times the price, paid by every transferring holder. And it would open a cycle
+class (`A → B → A`) that recurses to out-of-gas, bricking transfers *and* `isVerified`, with no cheap on-chain
+defence.
+
+Delegated administration — the real motivation — already works flat: see the [usage scenario](#usage-scenario),
+where three operators each manage their own `RuleWhitelist` under one wrapper.
+
 ##### Why the check asks for a sub-interface, not all of `IAddressList`
 
 The wrapper calls **one** function on its children:

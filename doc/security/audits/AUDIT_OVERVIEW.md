@@ -74,7 +74,7 @@ Scan **2026-08-17** (Scan ID `10`, commit `01632da0…951e204c`, 89 contracts / 
 
 | Tool | High | Medium | Low | Info | Relevant to fix? |
 |---|---|---|---|---|---|
-| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **4 fixed** (NM-3, NM-6, NM-10, NM-11 — `v0.6.0`); nothing exploitable, nothing outstanding — see [feedback](./tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md) |
+| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **7 fixed** (NM-3, 6, 10, 11, 17, 18, 20 — `v0.6.0`), 16 accepted as design, 1 declined; **nothing left open** — see [feedback](./tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md) |
 
 **Nothing exploitable, and no contract change required for the CMTAT path.** There are **no false positives** —
 all 24 findings describe real code — but 17 restate positions already reached, documented in-source and recorded
