@@ -16,6 +16,7 @@ See [https://semver.org](https://semver.org)
 
 ## Type of changes
 
+- `Summary`: main new features/change with a description (keep it short) (not a changelog tag)
 - `Added` for new features.
 - `Changed` for changes in existing functionality.
 - `Deprecated` for soon-to-be removed features.
@@ -55,287 +56,75 @@ Commit: _pending — 15 commits since the `v0.5.0` tag, plus the documentation c
 
 ### Summary
 
-Response to the first Nethermind AuditAgent scan: seven findings fixed, sixteen accepted as design, one declined.
-Adds ERC-3643 variants of the two supply-cap rules (ERC-3643 calls compliance *after* moving the value, so the
-stock rules counted the amount twice), two marker interfaces that let `RuleWhitelistWrapper` reject children it
-previously accepted, and a shared `CapAccounting` primitive. **No storage-layout or ABI change** — `v0.5.0`
-deployments are unaffected unless they adopt the new contracts.
+- Response to the first Nethermind AuditAgent scan: seven findings fixed, sixteen accepted as design, one declined.
+- Adds ERC-3643 variants of the two supply-cap rules (ERC-3643 calls compliance *after* moving the value, so the stock rules counted the amount twice), two marker interfaces that let `RuleWhitelistWrapper` reject children it previously accepted, and a shared `CapAccounting` primitive. **No storage-layout or ABI change** — `v0.5.0` deployments are unaffected unless they adopt the new contracts.
 
 ### Fixed
 
-- **NM-3 (Nethermind AuditAgent)** — `RuleIdentityRegistryBase._detectTransferRestrictionFrom` returned
-  `TRANSFER_OK` outright when the identity registry was unset or the transfer was a burn, instead of delegating
-  to `_detectTransferRestriction`. A subclass extending only that hook — the natural place to add a check —
-  therefore applied to `transfer` but silently **not** to `transferFrom` or `burnFrom`. The guard now delegates,
-  so the two entrypoints can no longer disagree. This is the same anti-pattern `RuleSanctionsListBase` was
-  restructured to remove (`CLAUDE_ANALYSIS.md` F-2); the two sibling rules are now consistent.
-  **Behaviour-preserving**: both early returns duplicated guards the delegate already performs, and the 21
-  pre-existing `RuleIdentityRegistry` tests pass unmodified. Burn remains exempt from the opt-in `checkSpender`
-  check.
-- **NM-10 (Nethermind AuditAgent)** — `ChainlinkPoRFeedManager._maxBackedSupply` flagged a Proof-of-Reserve feed
-  as stale only when `block.timestamp > updatedAt`. That term was an underflow guard, and its side effect was
-  that **any** future-dated round counted as fresh: a feed frozen on an old reserve answer but stamped ahead of
-  the block could keep authorising mints until that timestamp elapsed. A future `updatedAt` is now treated as a
-  **malformed answer** (`CODE_RESERVES_ANSWER_INVALID`, 77) alongside a negative reserve and an incomplete round,
-  and is rejected **regardless of `maxStalenessSeconds`** — zero disables *freshness* checking, and an operator
-  who opts out of that must not thereby accept a timestamp no aggregator on this chain could have written. The
-  now-redundant underflow guard was dropped from the staleness comparison.
+- **NM-3 (Nethermind AuditAgent)** — `RuleIdentityRegistryBase._detectTransferRestrictionFrom` returned `TRANSFER_OK` outright when the identity registry was unset or the transfer was a burn, instead of delegating to `_detectTransferRestriction`. A subclass extending only that hook — the natural place to add a check — therefore applied to `transfer` but silently **not** to `transferFrom` or `burnFrom`. The guard now delegates, so the two entrypoints can no longer disagree. This is the same anti-pattern `RuleSanctionsListBase` was restructured to remove (`CLAUDE_ANALYSIS.md` F-2); the two sibling rules are now consistent. **Behaviour-preserving**: both early returns duplicated guards the delegate already performs, and the 21 pre-existing `RuleIdentityRegistry` tests pass unmodified. Burn remains exempt from the opt-in `checkSpender` check.
+- **NM-10 (Nethermind AuditAgent)** — `ChainlinkPoRFeedManager._maxBackedSupply` flagged a Proof-of-Reserve feed as stale only when `block.timestamp > updatedAt`. That term was an underflow guard, and its side effect was that **any** future-dated round counted as fresh: a feed frozen on an old reserve answer but stamped ahead of the block could keep authorising mints until that timestamp elapsed. A future `updatedAt` is now treated as a **malformed answer** (`CODE_RESERVES_ANSWER_INVALID`, 77) alongside a negative reserve and an incomplete round, and is rejected **regardless of `maxStalenessSeconds`** — zero disables *freshness* checking, and an operator who opts out of that must not thereby accept a timestamp no aggregator on this chain could have written. The now-redundant underflow guard was dropped from the staleness comparison.
 
-- **NM-6 (Nethermind AuditAgent)** — `RuleNFTAdapter`'s ERC-7943 spender-aware overloads
-  (`transferred`, `detectTransferRestrictionFrom`, `canTransferFrom`) called the delegated hook
-  unconditionally, while the two `ITransferContext` entrypoints normalised `sender == from` to the direct hook.
-  The two surfaces therefore gave different compliance answers for the same owner-initiated transfer. The three
-  interfaces signal a direct transfer differently — ERC-7943 documents its `spender` as "the address performing
-  the transfer (**owner**/operator)" and `ctx.sender` is the token's `msg.sender`, so on both an owner arrives as
-  `spender == from`, whereas the CMTAT path uses the 3-arg overload or `spender == address(0)`. The adapter now
-  routes every entrypoint through a shared `_isDelegated(spender, from)` predicate. **The 4-arg CMTAT path is
-  deliberately left unchanged**, since its own convention already distinguishes the two cases — so the primary
-  integration path, and every restriction code an existing integrator sees, are untouched.
-  The one behavioural correction is `RuleSpenderWhitelist`: an owner-initiated ERC-721 `transferFrom` was
-  rejected with code `66` despite the rule documenting that direct transfers are always allowed. The deny-list
-  rules blocked such a transfer before and after; only which leg reported it changed.
+- **NM-6 (Nethermind AuditAgent)** — `RuleNFTAdapter`'s ERC-7943 spender-aware overloads (`transferred`, `detectTransferRestrictionFrom`, `canTransferFrom`) called the delegated hook unconditionally, while the two `ITransferContext` entrypoints normalised `sender == from` to the direct hook. The two surfaces therefore gave different compliance answers for the same owner-initiated transfer. The three interfaces signal a direct transfer differently — ERC-7943 documents its `spender` as "the address performing the transfer (**owner**/operator)" and `ctx.sender` is the token's `msg.sender`, so on both an owner arrives as `spender == from`, whereas the CMTAT path uses the 3-arg overload or `spender == address(0)`. The adapter now routes every entrypoint through a shared `_isDelegated(spender, from)` predicate. **The 4-arg CMTAT path is deliberately left unchanged**, since its own convention already distinguishes the two cases — so the primary integration path, and every restriction code an existing integrator sees, are untouched. The one behavioural correction is `RuleSpenderWhitelist`: an owner-initiated ERC-721 `transferFrom` was rejected with code `66` despite the rule documenting that direct transfers are always allowed. The deny-list rules blocked such a transfer before and after; only which leg reported it changed.
 
 ### Added
 
-- **`RuleMaxTotalSupplyERC3643` / `RuleMaxTotalSupplyERC3643Ownable2Step`** — static supply caps for
-  **ERC-3643 tokens**, the same re-phasing as the Proof-of-Reserve variants below and for the same reason: the
-  token mints first and reports through `created` afterwards, which `RuleEngine` forwards as the three-argument
-  `transferred(address(0), to, value)`, so `totalSupply()` already includes the new tokens. Cap logic,
-  restriction codes (50, 51), configuration, roles and events are inherited unchanged, and the read views are
-  deliberately not re-phased. **Not interchangeable with the stock rule, and neither mistake reverts at
-  deployment.** Designed to compose with `RuleChainlinkPoRERC3643`, which has no margin parameter: add both to
-  one engine for a static ceiling alongside the reserve-backed one, remembering the engine reports the first
-  non-zero code.
+- **`RuleMaxTotalSupplyERC3643` / `RuleMaxTotalSupplyERC3643Ownable2Step`** — static supply caps for **ERC-3643 tokens**, the same re-phasing as the Proof-of-Reserve variants below and for the same reason: the token mints first and reports through `created` afterwards, which `RuleEngine` forwards as the three-argument `transferred(address(0), to, value)`, so `totalSupply()` already includes the new tokens. Cap logic, restriction codes (50, 51), configuration, roles and events are inherited unchanged, and the read views are deliberately not re-phased. **Not interchangeable with the stock rule, and neither mistake reverts at deployment.** Designed to compose with `RuleChainlinkPoRERC3643`, which has no margin parameter: add both to one engine for a static ceiling alongside the reserve-backed one, remembering the engine reports the first non-zero code.
 
-- **`RuleChainlinkPoRERC3643` / `RuleChainlinkPoRERC3643Ownable2Step`** — Proof-of-Reserve minting caps for
-  **ERC-3643 tokens**, the first consumers of the seam above. ERC-3643 / T-REX calls compliance *after* it has
-  moved the value: `mint` runs `_mint(_to, _amount)` and only then `_tokenCompliance.created(_to, _amount)`, which
-  `RuleEngine` forwards to each rule as the three-argument `transferred(address(0), to, value)`. `totalSupply()`
-  therefore already includes the new tokens, so the variant overrides `_detectTransferRestrictionOnNotify` to
-  re-ask with nothing left to add. Reserve logic, restriction codes (75–79), configuration, roles and events are
-  inherited unchanged. **The read views are deliberately not re-phased** — ERC-3643 calls
-  `canTransfer(address(0), to, amount)` *before* `_mint`, so a pre-flight query must still project the amount;
-  the two consultations then reduce to the same condition. **The variants are not interchangeable with the stock
-  rule and neither mistake reverts at deployment**: the stock rule on ERC-3643 counts the amount twice and
-  reverts fully backed mints, and the variant on CMTAT weakens enforcement.
+- **`RuleChainlinkPoRERC3643` / `RuleChainlinkPoRERC3643Ownable2Step`** — Proof-of-Reserve minting caps for **ERC-3643 tokens**, the first consumers of the seam above. ERC-3643 / T-REX calls compliance *after* it has moved the value: `mint` runs `_mint(_to, _amount)` and only then `_tokenCompliance.created(_to, _amount)`, which `RuleEngine` forwards to each rule as the three-argument `transferred(address(0), to, value)`. `totalSupply()` therefore already includes the new tokens, so the variant overrides `_detectTransferRestrictionOnNotify` to re-ask with nothing left to add. Reserve logic, restriction codes (75–79), configuration, roles and events are inherited unchanged. **The read views are deliberately not re-phased** — ERC-3643 calls `canTransfer(address(0), to, amount)` *before* `_mint`, so a pre-flight query must still project the amount; the two consultations then reduce to the same condition. **The variants are not interchangeable with the stock rule and neither mistake reverts at deployment**: the stock rule on ERC-3643 counts the amount twice and reverts fully backed mints, and the variant on CMTAT weakens enforcement.
 
-- **`CapAccounting`** (`src/rules/validation/abstract/core/CapAccounting.sol`) — the cap comparison that
-  `RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR` each wrote out separately, now in one place.
-  Stateless and constructor-free, so storage layouts are unchanged (verified byte-identical for all six
-  deployables) and an upgradeable variant may adopt it. It deliberately carries no notion of pre- or post-update
-  accounting: whether the observation already includes the moved value depends on which *path* is running, not on
-  the rule.
-- **`_detectTransferRestrictionOnNotify`** on all three cap rules — the seam an ERC-3643 variant overrides. The
-  write hooks now route through it; it defaults to the pre-flight check, which is the CMTAT behaviour, so nothing
-  changes by default. A token that notifies *after* moving the value (ERC-3643 / T-REX) needs one override:
-  `return _detectTransferRestriction(from, to, 0)`. The read path is deliberately not routed through it — a
-  pre-flight view always runs before the movement, so it must always project the value.
-- Documented the second seam, **observation source** (`_currentSupply` / `_balanceOf`, both already
-  `internal view virtual`), which lets a rule serve the figure from its own storage instead of calling the token.
-  A rule that keeps its own running total controls when it updates it and so is immune to the accounting-phase
-  question entirely.
+- **`CapAccounting`** (`src/rules/validation/abstract/core/CapAccounting.sol`) — the cap comparison that `RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR` each wrote out separately, now in one place. Stateless and constructor-free, so storage layouts are unchanged (verified byte-identical for all six deployables) and an upgradeable variant may adopt it. It deliberately carries no notion of pre- or post-update accounting: whether the observation already includes the moved value depends on which *path* is running, not on the rule.
+- **`_detectTransferRestrictionOnNotify`** on all three cap rules — the seam an ERC-3643 variant overrides. The write hooks now route through it; it defaults to the pre-flight check, which is the CMTAT behaviour, so nothing changes by default. A token that notifies *after* moving the value (ERC-3643 / T-REX) needs one override: `return _detectTransferRestriction(from, to, 0)`. The read path is deliberately not routed through it — a pre-flight view always runs before the movement, so it must always project the value.
+- Documented the second seam, **observation source** (`_currentSupply` / `_balanceOf`, both already `internal view virtual`), which lets a rule serve the figure from its own storage instead of calling the token. A rule that keeps its own running total controls when it updates it and so is immune to the accounting-phase question entirely.
 
-- **NM-18 (Nethermind AuditAgent) / audit F-5** — `RuleWhitelistWrapper` now ERC-165-checks its child rules.
-  `_checkRule` is overridden exactly as `RuleEngineBase` does it, so one override covers both `addRule` and
-  `setRules`; a candidate that does not advertise the required interface is rejected with
-  `RuleWhitelistWrapper_ChildIsNotAnAddressList(rule)`. Previously a valid `IRule` that was not an address list
-  was accepted and then reverted the blind `areAddressesListed` call during a transfer — and the early exit in
-  the child scan made that *input-dependent*, so the wrapper looked healthy until a pair needed the full scan.
-  A nested wrapper is now refused for the same reason.
-- **A purpose-built sub-interface, `IAddressListBatchQuery`**, split out of `IAddressList`. The wrapper calls
-  exactly one of `IAddressList`'s eight functions, so the guard requires
-  `IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID` (`0x20e8e17a`, the single `areAddressesListed(address[])` selector)
-  rather than the full `IADDRESS_LIST_INTERFACE_ID` — demanding the other seven, four of them **writes**, would
-  reject a read-only child that works perfectly. Factoring the selector into a parent left the flattened selector
-  set unchanged, so `0x5d10e182` keeps its value; the four address-list rules advertise both ids. Unlike the full
-  id, the sub-interface id is safe as a literal, because it inherits nothing and so has no omitted-parent trap.
-  **The guard still cannot check polarity** — a `RuleBlacklist` advertises the same ids and passes it (NM-20).
+- **NM-18 (Nethermind AuditAgent) / audit F-5** — `RuleWhitelistWrapper` now ERC-165-checks its child rules. `_checkRule` is overridden exactly as `RuleEngineBase` does it, so one override covers both `addRule` and `setRules`; a candidate that does not advertise the required interface is rejected with `RuleWhitelistWrapper_ChildIsNotAnAddressList(rule)`. Previously a valid `IRule` that was not an address list was accepted and then reverted the blind `areAddressesListed` call during a transfer — and the early exit in the child scan made that *input-dependent*, so the wrapper looked healthy until a pair needed the full scan. A nested wrapper is now refused for the same reason.
+- **A purpose-built sub-interface, `IAddressListBatchQuery`**, split out of `IAddressList`. The wrapper calls exactly one of `IAddressList`'s eight functions, so the guard requires `IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID` (`0x20e8e17a`, the single `areAddressesListed(address[])` selector) rather than the full `IADDRESS_LIST_INTERFACE_ID` — demanding the other seven, four of them **writes**, would reject a read-only child that works perfectly. Factoring the selector into a parent left the flattened selector set unchanged, so `0x5d10e182` keeps its value; the four address-list rules advertise both ids. Unlike the full id, the sub-interface id is safe as a literal, because it inherits nothing and so has no omitted-parent trap. **The guard still cannot check polarity** — a `RuleBlacklist` advertises the same ids and passes it (NM-20).
 
-- **NM-17 (Nethermind AuditAgent)** — `approveAndTransferIfAllowed` now asserts that the approval it created was
-  consumed. Both variants invert checks-effects-interactions deliberately, recording the approval *before*
-  `safeTransferFrom` so the token's compliance callback can consume it; nothing verified the callback arrived. A
-  plain ERC-20 bound with `bindToken`, or a RuleEngine never bound or since unbound, therefore completed the
-  transfer and left the approval standing — indistinguishable from an operator-created one, and enough to
-  authorise a later never-approved transfer of exactly `(from, to, value)`. The helper now reverts with
-  `RuleConditionalTransferLight_ApprovalNotConsumed` /
-  `RuleConditionalTransferLightMultiToken_ApprovalNotConsumed`.
-  **Behaviour change**: a deployment running the helper against a non-callback token now reverts instead of
-  completing — that is the fix, not a side effect. The comparison is against the count *before* the helper ran,
-  so an operator's own outstanding approvals for the same tuple survive; and the count is read *after* the
-  external call on purpose, so a hostile token can only make the check fail, never pass. Cost: two warm `SLOAD`s
-  on an operator-only path.
+- **NM-17 (Nethermind AuditAgent)** — `approveAndTransferIfAllowed` now asserts that the approval it created was consumed. Both variants invert checks-effects-interactions deliberately, recording the approval *before* `safeTransferFrom` so the token's compliance callback can consume it; nothing verified the callback arrived. A plain ERC-20 bound with `bindToken`, or a RuleEngine never bound or since unbound, therefore completed the transfer and left the approval standing — indistinguishable from an operator-created one, and enough to authorise a later never-approved transfer of exactly `(from, to, value)`. The helper now reverts with `RuleConditionalTransferLight_ApprovalNotConsumed` / `RuleConditionalTransferLightMultiToken_ApprovalNotConsumed`. **Behaviour change**: a deployment running the helper against a non-callback token now reverts instead of completing — that is the fix, not a side effect. The comparison is against the count *before* the helper ran, so an operator's own outstanding approvals for the same tuple survive; and the count is read *after* the external call on purpose, so a hostile token can only make the check fail, never pass. Cost: two warm `SLOAD`s on an operator-only path.
 
-- **NM-20 (Nethermind AuditAgent)** — `RuleWhitelistWrapper` now **rejects** a child whose list has the wrong
-  polarity, rather than only documenting the hazard. `IAddressList` describes *membership*, so a `RuleBlacklist`
-  implements it identically to a whitelist and advertises the same ids; ERC-165 alone could not separate them,
-  and adding one made its blacklisted addresses whitelisted with `isVerified` returning `true` for them.
-  A new one-function marker interface **`IAddressListPolarity`** (`isAllowList()`, id `0xdc4efe10`) makes the
-  distinction expressible, and `_checkRule` now requires it *and* a `true` answer on top of the
-  `IAddressListBatchQuery` check. New errors: `RuleWhitelistWrapper_ChildDoesNotDeclarePolarity` and
-  `RuleWhitelistWrapper_ChildIsNotAnAllowList`.
-  **Absence of the declaration is a refusal, never an assumed allow-list** — the only fail-closed reading.
-  `RuleWhitelist` / `RuleReceiverWhitelist` declare `true`, `RuleBlacklist` declares `false`, and
-  **`RuleSpenderWhitelist` deliberately declines the interface** (documented in its NatSpec as a
-  must-not-change): its set is permitted *spenders*, not *holders*, so an honest `true` would still let the
-  wrapper read spenders as eligible participants. That closes a second wrong-child class with the same
-  mechanism, one that had previously been prose only.
+- **NM-20 (Nethermind AuditAgent)** — `RuleWhitelistWrapper` now **rejects** a child whose list has the wrong polarity, rather than only documenting the hazard. `IAddressList` describes *membership*, so a `RuleBlacklist` implements it identically to a whitelist and advertises the same ids; ERC-165 alone could not separate them, and adding one made its blacklisted addresses whitelisted with `isVerified` returning `true` for them. A new one-function marker interface **`IAddressListPolarity`** (`isAllowList()`, id `0xdc4efe10`) makes the distinction expressible, and `_checkRule` now requires it *and* a `true` answer on top of the `IAddressListBatchQuery` check. New errors: `RuleWhitelistWrapper_ChildDoesNotDeclarePolarity` and `RuleWhitelistWrapper_ChildIsNotAnAllowList`. **Absence of the declaration is a refusal, never an assumed allow-list** — the only fail-closed reading. `RuleWhitelist` / `RuleReceiverWhitelist` declare `true`, `RuleBlacklist` declares `false`, and **`RuleSpenderWhitelist` deliberately declines the interface** (documented in its NatSpec as a must-not-change): its set is permitted *spenders*, not *holders*, so an honest `true` would still let the wrapper read spenders as eligible participants. That closes a second wrong-child class with the same mechanism, one that had previously been prose only.
 
-- **Two `internal` functions were missing `virtual`** (`RuleAddressSetInternal._requireNotZeroAddress`,
-  `RuleERC2980Internal._requireNotZeroAddress`), against the project's own convention. Both are the batch
-  zero-address guard passed to `AddressSetBatchLib` as an **internal function pointer** — which is also why
-  Slither reports them as dead code. Verified before changing: `virtual` is legal there, dispatch genuinely
-  reaches an override *through the pointer* (not obvious, since Solidity resolves such pointers at assignment),
-  and the gas is **identical** (`addAddress` 92 220, `addAddresses` 140 637 either way).
-- **Seven NatSpec blocks exceeded the project's stated 20-line ceiling**, all added earlier in this release: the
-  four ERC-3643 variant headers and the three notification-seam blocks, the latter byte-identical across
-  `RuleChainlinkPoRBase`, `RuleMaxTotalSupplyBase` and `RuleMaxBalanceBase`. Each keeps its conclusion and its
-  warning; the derivations move to the contract pages and `RULE_SEMANTICS.md`, which already carried them. Max
-  block is now 19 against a median of 4 (824 blocks measured).
+- **Two `internal` functions were missing `virtual`** (`RuleAddressSetInternal._requireNotZeroAddress`, `RuleERC2980Internal._requireNotZeroAddress`), against the project's own convention. Both are the batch zero-address guard passed to `AddressSetBatchLib` as an **internal function pointer** — which is also why Slither reports them as dead code. Verified before changing: `virtual` is legal there, dispatch genuinely reaches an override *through the pointer* (not obvious, since Solidity resolves such pointers at assignment), and the gas is **identical** (`addAddress` 92 220, `addAddresses` 140 637 either way).
+- **Seven NatSpec blocks exceeded the project's stated 20-line ceiling**, all added earlier in this release: the four ERC-3643 variant headers and the three notification-seam blocks, the latter byte-identical across `RuleChainlinkPoRBase`, `RuleMaxTotalSupplyBase` and `RuleMaxBalanceBase`. Each keeps its conclusion and its warning; the derivations move to the contract pages and `RULE_SEMANTICS.md`, which already carried them. Max block is now 19 against a median of 4 (824 blocks measured).
 
 ### Testing
 
-- Added `IdentityRegistryExtraCheckHarness` (`src/mocks/harness/IdentityRegistryDelegationHarness.sol`) — a
-  subclass overriding only `_detectTransferRestriction`, mirroring `SanctionsListDelegationHarness` — and
-  `test/RuleIdentityRegistry/RuleIdentityRegistryDelegation.t.sol` (8 tests) pinning NM-3. Reverting the source
-  change fails 3 of the 8 with exactly the predicted symptoms. Coverage on `RuleIdentityRegistryBase`: 100%
-  statements, 100% branches.
-- Added 5 tests to `test/RuleChainlinkPoR/RuleChainlinkPoRUnit.t.sol` pinning NM-10: a future-dated round yields
-  code 77 from the views and reverts the mint through the write hook; it is still rejected with
-  `maxStalenessSeconds == 0` (the test that pins the design decision); and `updatedAt == block.timestamp` still
-  passes, guarding against over-correcting into `>=`. Reverting the source change fails 4 of the 5. Coverage on
-  `ChainlinkPoRFeedManager`: 100% statements, 100% branches.
+- Added `IdentityRegistryExtraCheckHarness` (`src/mocks/harness/IdentityRegistryDelegationHarness.sol`) — a subclass overriding only `_detectTransferRestriction`, mirroring `SanctionsListDelegationHarness` — and `test/RuleIdentityRegistry/RuleIdentityRegistryDelegation.t.sol` (8 tests) pinning NM-3. Reverting the source change fails 3 of the 8 with exactly the predicted symptoms. Coverage on `RuleIdentityRegistryBase`: 100% statements, 100% branches.
+- Added 5 tests to `test/RuleChainlinkPoR/RuleChainlinkPoRUnit.t.sol` pinning NM-10: a future-dated round yields code 77 from the views and reverts the mint through the write hook; it is still rejected with `maxStalenessSeconds == 0` (the test that pins the design decision); and `updatedAt == block.timestamp` still passes, guarding against over-correcting into `>=`. Reverting the source change fails 4 of the 5. Coverage on `ChainlinkPoRFeedManager`: 100% statements, 100% branches.
 
-- Extended `test/TransferContext/OverloadParity.t.sol` for NM-6. The suite already existed to assert overload
-  parity but only ever exercised two of the three input shapes (`sender == 0`, `sender != from`), which is why
-  the gap survived. Added `_assertSelfSpenderIsDirect` — run for every rule on an allowed and a blocked pair —
-  plus `test_NM6_SelfSpenderIsNotScreenedByTheSpenderWhitelist` and
-  `test_NM6_CmtatFourArgPathKeepsScreeningASelfSpender`, the latter pinning the deliberate asymmetry so it is not
-  "aligned" away later. Reverting the fix fails 6 of the suite's 10 tests across 5 rules. The suite's header
-  comment, which described the parity as flat, now states the per-interface conventions. Coverage on
-  `RuleNFTAdapter`: 100% statements, 100% branches.
+- Extended `test/TransferContext/OverloadParity.t.sol` for NM-6. The suite already existed to assert overload parity but only ever exercised two of the three input shapes (`sender == 0`, `sender != from`), which is why the gap survived. Added `_assertSelfSpenderIsDirect` — run for every rule on an allowed and a blocked pair — plus `test_NM6_SelfSpenderIsNotScreenedByTheSpenderWhitelist` and `test_NM6_CmtatFourArgPathKeepsScreeningASelfSpender`, the latter pinning the deliberate asymmetry so it is not "aligned" away later. Reverting the fix fails 6 of the suite's 10 tests across 5 rules. The suite's header comment, which described the parity as flat, now states the per-interface conventions. Coverage on `RuleNFTAdapter`: 100% statements, 100% branches.
 
-- Added `test/VirtualHooks/BatchGuardPointerVirtual.t.sol` pinning both halves of the `virtual` fix: the keyword
-  is required (removing it fails the build with *"Trying to override non-virtual function"*, confirmed by
-  mutation) and the override is actually reached through the function pointer — a compile-only check would pass
-  either way while leaving the guard only *looking* extensible.
+- Added `test/VirtualHooks/BatchGuardPointerVirtual.t.sol` pinning both halves of the `virtual` fix: the keyword is required (removing it fails the build with *"Trying to override non-virtual function"*, confirmed by mutation) and the override is actually reached through the function pointer — a compile-only check would pass either way while leaving the guard only *looking* extensible.
 
-- Added 5 tests for NM-17 across `RuleConditionalTransferLightApproveAndTransfer.t.sol` and
-  `RuleConditionalTransferLightMultiToken.t.sol`. `MockERC20WithTransferContext` is a no-op notifier when no rule
-  is set, so leaving `setRule` uncalled gives a token that moves value and tells nobody — the finding's exact
-  shape, with no new mock. Removing the two post-conditions makes both silent-token tests fail and nothing else.
-  Worth recording: the pre-existing 871 tests all passed unchanged when the post-condition landed, because every
-  one of them uses a token that *does* call back — which is how the non-callback path came to have no coverage.
+- Added 5 tests for NM-17 across `RuleConditionalTransferLightApproveAndTransfer.t.sol` and `RuleConditionalTransferLightMultiToken.t.sol`. `MockERC20WithTransferContext` is a no-op notifier when no rule is set, so leaving `setRule` uncalled gives a token that moves value and tells nobody — the finding's exact shape, with no new mock. Removing the two post-conditions makes both silent-token tests fail and nothing else. Worth recording: the pre-existing 871 tests all passed unchanged when the post-condition landed, because every one of them uses a token that *does* call back — which is how the non-callback path came to have no coverage.
 
-- The WW-2 threat-model PoC did what its convention promises: named `..._CurrentBehaviour` because it asserted
-  the broken behaviour, it **failed** when NM-18 was fixed. Renamed
-  `test_WW2_NonAddressListChildRuleIsRejectedAtAddRule` and rewritten to assert the rejection, plus two new tests
-  beside it — a nested wrapper is refused, and `test_WW2_GuardCannotRejectAnInvertedPolarityChild_CurrentBehaviour`
-  pins the guard's limit against NM-20. Four assertions added to `test/InterfaceId/AddressListInterfaceId.t.sol`
-  for the sub-interface id and its advertisement. `RuleWhitelistWrapperBase`: 100% statements, branches,
-  functions.
+- The WW-2 threat-model PoC did what its convention promises: named `..._CurrentBehaviour` because it asserted the broken behaviour, it **failed** when NM-18 was fixed. Renamed `test_WW2_NonAddressListChildRuleIsRejectedAtAddRule` and rewritten to assert the rejection, plus two new tests beside it — a nested wrapper is refused, and `test_WW2_GuardCannotRejectAnInvertedPolarityChild_CurrentBehaviour` pins the guard's limit against NM-20. Four assertions added to `test/InterfaceId/AddressListInterfaceId.t.sol` for the sub-interface id and its advertisement. `RuleWhitelistWrapperBase`: 100% statements, branches, functions.
 
-- Added `test/ERC3643Real/ERC3643RealTokenMaxTotalSupply.t.sol` (10 tests, `FOUNDRY_PROFILE=erc3643`) and
-  `test/RuleMaxTotalSupply/RuleMaxTotalSupplyERC3643.t.sol` (10 tests, default profile). The real-token suite
-  covers mints to the ceiling, rejection past it, incremental issuance, burns freeing headroom, a raised cap, and
-  **both compositions with `RuleChainlinkPoRERC3643`** — static cap binding and reserves binding — plus two tests
-  pinning the stock rule's failure on the same token. `test/Version.t.sol` extended to both new deployables.
+- Added `test/ERC3643Real/ERC3643RealTokenMaxTotalSupply.t.sol` (10 tests, `FOUNDRY_PROFILE=erc3643`) and `test/RuleMaxTotalSupply/RuleMaxTotalSupplyERC3643.t.sol` (10 tests, default profile). The real-token suite covers mints to the ceiling, rejection past it, incremental issuance, burns freeing headroom, a raised cap, and **both compositions with `RuleChainlinkPoRERC3643`** — static cap binding and reserves binding — plus two tests pinning the stock rule's failure on the same token. `test/Version.t.sol` extended to both new deployables.
 
-- Added `test/ERC3643Real/ERC3643RealTokenChainlinkPoR.t.sol` (10 tests, `FOUNDRY_PROFILE=erc3643`) — drives the
-  **genuine** vendored `lib/ERC-3643/` token (4.2.0-beta1), not a mock, through `RuleChainlinkPoRERC3643`: mints up
-  to the reserves, rejection past them, incremental issuance against a shared ceiling, a raised feed answer
-  raising the ceiling, transfers and burns staying open while reserves are zero, and a stale feed halting
-  issuance without trapping holders. Two tests pin the **stock** rule's failure on the same real token — a fully
-  backed mint reverting, and the largest single mint halving to `reserves / 2` — so the reason the variant exists
-  stays executable. `test/Version.t.sol` extended to both new deployables, keeping it exhaustive.
+- Added `test/ERC3643Real/ERC3643RealTokenChainlinkPoR.t.sol` (10 tests, `FOUNDRY_PROFILE=erc3643`) — drives the **genuine** vendored `lib/ERC-3643/` token (4.2.0-beta1), not a mock, through `RuleChainlinkPoRERC3643`: mints up to the reserves, rejection past them, incremental issuance against a shared ceiling, a raised feed answer raising the ceiling, transfers and burns staying open while reserves are zero, and a stale feed halting issuance without trapping holders. Two tests pin the **stock** rule's failure on the same real token — a fully backed mint reverting, and the largest single mint halving to `reserves / 2` — so the reason the variant exists stays executable. `test/Version.t.sol` extended to both new deployables, keeping it exhaustive.
 
-- Added `test/CapAccounting/ERC3643CapSeams.t.sol` (7 tests) and
-  `src/mocks/harness/ERC3643CapHarnesses.sol` — a worked ERC-3643 variant of each cap rule plus a tracked-supply
-  rule. The tests reproduce NM-11 on the stock rules under post-update accounting, show the one-line override
-  fixes it, assert the pre-flight view still projects the value, and confirm neither variant ever admits anything
-  above the cap. Coverage after: **100% statements, branches and functions** on `CapAccounting`,
-  `RuleMaxBalanceBase`, `RuleMaxTotalSupplyBase` and `RuleChainlinkPoRBase`.
+- Added `test/CapAccounting/ERC3643CapSeams.t.sol` (7 tests) and `src/mocks/harness/ERC3643CapHarnesses.sol` — a worked ERC-3643 variant of each cap rule plus a tracked-supply rule. The tests reproduce NM-11 on the stock rules under post-update accounting, show the one-line override fixes it, assert the pre-flight view still projects the value, and confirm neither variant ever admits anything above the cap. Coverage after: **100% statements, branches and functions** on `CapAccounting`, `RuleMaxBalanceBase`, `RuleMaxTotalSupplyBase` and `RuleChainlinkPoRBase`.
 
-- Added `test/RuleConditionalTransferLightMultiToken/MultiTokenGuardReverts.t.sol` (4 tests) closing the last
-  uncovered branches in `src/`: `approveAndTransferIfAllowed` against an unbound token and against a short
-  allowance, `cancelTransferApproval` against an unbound token, and the execution hook against a caller that is
-  not a bound token. Each guard's accept path was already exercised and its `require` never taken — a rule whose
-  purpose is to refuse transfers needs its refusals asserted. Two assert the rejection is total (no approval
-  recorded, no value moved; the approval survives a rejected execution). **Branch coverage across `src/` is now
-  100% (322/322).**
-- Regenerated the coverage report in [`doc/coverage`](./doc/coverage). The committed report was **stale** — it
-  predated the v0.6.0 contracts entirely (no `CapAccounting`, `RuleChainlinkPoRERC3643` or
-  `RuleMaxTotalSupplyERC3643` page) and still carried pages for test files, one of which no longer exists.
-  Measured on `src/` only: **98.34% lines (1421/1445), 100% statements (1396/1396), 100% branches (322/322),
-  95.15% functions (471/495)**. The 24 uncovered lines and 24 uncovered functions are the same items — bodyless
-  `internal virtual` declarations (18 `_authorize*` hooks plus `_transferred`, `_transferredFrom`,
-  `_detectTransferRestriction`, `_detectTransferRestrictionFrom` and `_supplyToken`). They have no body to
-  execute, so no test can reach them; they are counted, not missing.
+- Added `test/RuleConditionalTransferLightMultiToken/MultiTokenGuardReverts.t.sol` (4 tests) closing the last uncovered branches in `src/`: `approveAndTransferIfAllowed` against an unbound token and against a short allowance, `cancelTransferApproval` against an unbound token, and the execution hook against a caller that is not a bound token. Each guard's accept path was already exercised and its `require` never taken — a rule whose purpose is to refuse transfers needs its refusals asserted. Two assert the rejection is total (no approval recorded, no value moved; the approval survives a rejected execution). **Branch coverage across `src/` is now 100% (322/322).**
+- Regenerated the coverage report in [`doc/coverage`](./doc/coverage). The committed report was **stale** — it predated the v0.6.0 contracts entirely (no `CapAccounting`, `RuleChainlinkPoRERC3643` or `RuleMaxTotalSupplyERC3643` page) and still carried pages for test files, one of which no longer exists. Measured on `src/` only: **98.34% lines (1421/1445), 100% statements (1396/1396), 100% branches (322/322), 95.15% functions (471/495)**. The 24 uncovered lines and 24 uncovered functions are the same items — bodyless `internal virtual` declarations (18 `_authorize*` hooks plus `_transferred`, `_transferredFrom`, `_detectTransferRestriction`, `_detectTransferRestrictionFrom` and `_supplyToken`). They have no body to execute, so no test can reach them; they are counted, not missing.
 
 ### Documentation
 
-- **NM-23/24 declined**, with the reasoning recorded in the feedback file and the `CLAUDE.md` / `AGENTS.md`
-  gotcha rather than left as an open TODO. Replacing the typed `try/catch` reads with low-level `staticcall` +
-  `returndata.length` checks would close a real hole — a callee that succeeds while returning short data fails
-  ABI decoding in the *caller's* frame, outside `catch` — but the only behaviour that changes is a diagnostic
-  restriction code instead of a revert, on a token that has already stopped honouring its own interface, and
-  the path is fail-closed either way. Against that: eight `try` blocks across three files, `abi.decode` as an
-  assertion rather than a compiler check, and eight bespoke length constants in the code whose purpose is
-  robustness. The claimed "retires the Cancun precondition" benefit was overstated — `foundry.toml` targets
-  `prague`, so it is already satisfied. Revisit only for a pre-Cancun chain or a concrete proxy-upgrade
-  expectation, and then as one shared helper rather than eight hand-rolled sites.
+- **NM-23/24 declined**, with the reasoning recorded in the feedback file and the `CLAUDE.md` / `AGENTS.md` gotcha rather than left as an open TODO. Replacing the typed `try/catch` reads with low-level `staticcall` + `returndata.length` checks would close a real hole — a callee that succeeds while returning short data fails ABI decoding in the *caller's* frame, outside `catch` — but the only behaviour that changes is a diagnostic restriction code instead of a revert, on a token that has already stopped honouring its own interface, and the path is fail-closed either way. Against that: eight `try` blocks across three files, `abi.decode` as an assertion rather than a compiler check, and eight bespoke length constants in the code whose purpose is robustness. The claimed "retires the Cancun precondition" benefit was overstated — `foundry.toml` targets `prague`, so it is already satisfied. Revisit only for a pre-Cancun chain or a concrete proxy-upgrade expectation, and then as one shared helper rather than eight hand-rolled sites.
 
-- **NM-19 closed as *won't do*** — wrapper nesting is deliberately not enabled, and the reason is recorded in
-  `RuleWhitelistWrapper.md`, `RULE_SEMANTICS.md` and the `CLAUDE.md` / `AGENTS.md` gotcha so it is not
-  re-proposed. The finding's DoS half was already fixed by NM-18 (a nested wrapper is refused at `addRule` with
-  a named error instead of bricking every transfer); what remained was a feature request that does not earn its
-  cost. The wrapper is an OR, and `OR(OR(a,b),OR(c,d))` ≡ `OR(a,b,c,d)` — nesting an OR in an OR is
-  algebraically flat, so it adds **no expressive power**; AND-of-ORs is already available by putting several
-  wrappers in the `RuleEngine`, which returns the first non-zero code. It would cost multiplicatively (~8.8k gas
-  per child, and the *rejected* path never early-exits, so a 10 × 10 nest is ~880k gas per transfer against ~90k
-  flat) and open an `A → B → A` cycle class that recurses to out-of-gas, bricking transfers and `isVerified`,
-  with no cheap on-chain defence.
+- **NM-19 closed as *won't do*** — wrapper nesting is deliberately not enabled, and the reason is recorded in `RuleWhitelistWrapper.md`, `RULE_SEMANTICS.md` and the `CLAUDE.md` / `AGENTS.md` gotcha so it is not re-proposed. The finding's DoS half was already fixed by NM-18 (a nested wrapper is refused at `addRule` with a named error instead of bricking every transfer); what remained was a feature request that does not earn its cost. The wrapper is an OR, and `OR(OR(a,b),OR(c,d))` ≡ `OR(a,b,c,d)` — nesting an OR in an OR is algebraically flat, so it adds **no expressive power**; AND-of-ORs is already available by putting several wrappers in the `RuleEngine`, which returns the first non-zero code. It would cost multiplicatively (~8.8k gas per child, and the *rejected* path never early-exits, so a 10 × 10 nest is ~880k gas per transfer against ~90k flat) and open an `A → B → A` cycle class that recurses to out-of-gas, bricking transfers and `isVerified`, with no cheap on-chain defence.
 
-- **Code-quality review for `v0.6.0`** (`doc/security/audits/tools/v0.6.0/CLAUDE_ANALYSIS.md`) — 11 checks, no
-  vulnerability. Seven checked-and-correct, three fixed, one left deliberately, one open for decision.
+- **Code-quality review for `v0.6.0`** (`doc/security/audits/tools/v0.6.0/CLAUDE_ANALYSIS.md`) — 11 checks, no vulnerability. Seven checked-and-correct, three fixed, one left deliberately, one open for decision.
 
-- **Static-analysis reports re-run for `v0.6.0`** — Slither 0.11.5 and Aderyn 0.6.5, same versions as `v0.5.0`
-  so the delta is comparable, with reports and per-finding triage in `doc/security/audits/tools/v0.6.0/`.
-  **Nothing to fix.** Slither 44 → 46: one `calls-loop` on the NM-20 polarity guard (bounded, configuration-time
-  only) and one `dead-code` false positive naming the notification seam that `RuleChainlinkPoRERC3643` exists to
-  override — acting on it would break the ERC-3643 variant, so the triage records the three proofs it is live.
-  Aderyn 336 → 346 on +204 nSLOC, which is exactly the five new production files appearing once each in
-  `Unspecific Solidity Pragma` and `PUSH0 Opcode`; no new category, and neither `Centralization Risk` nor
-  `Empty Block` moved, since the new variants add no privileged external function.
+- **Static-analysis reports re-run for `v0.6.0`** — Slither 0.11.5 and Aderyn 0.6.5, same versions as `v0.5.0` so the delta is comparable, with reports and per-finding triage in `doc/security/audits/tools/v0.6.0/`. **Nothing to fix.** Slither 44 → 46: one `calls-loop` on the NM-20 polarity guard (bounded, configuration-time only) and one `dead-code` false positive naming the notification seam that `RuleChainlinkPoRERC3643` exists to override — acting on it would break the ERC-3643 variant, so the triage records the three proofs it is live. Aderyn 336 → 346 on +204 nSLOC, which is exactly the five new production files appearing once each in `Unspecific Solidity Pragma` and `PUSH0 Opcode`; no new category, and neither `Centralization Risk` nor `Empty Block` moved, since the new variants add no privileged external function.
 
-- **Per-rule ERC-3643 compatibility matrix** (`RULE_SEMANTICS.md` §6). The scan's most useful signal was that a
-  rule's guarantees depend on what the token tells it and when, and there was no single place saying so per rule.
-  ERC-3643 / T-REX **never forwards a spender** (both `transfer` and `transferFrom` call the 3-argument
-  `transferred`) and calls compliance **after** it moves the value, which produces three distinct and unequally
-  dangerous failure modes: a rule with an inert *leg* (fail-open for that leg, main screening intact), a cap rule
-  that needs its `…ERC3643` variant (fail-closed, rejects valid mints), and a rule that is wholly inert
-  (`RuleMintAllowance` — silently permissive, and its pre-flight view agrees, so neither the token nor an
-  integrator sees a problem). The section also records why `RuleMaxBalance` has no variant.
-- **Corrected the ERC-3643 column of `doc/README.md`'s rule table**, which showed a green checkmark for **all 13
-  rules** — including the two that mis-enforce on that path and the three that enforce nothing. Now ✔ / ⚠ / ✘
-  with per-rule footnotes. This was an outstanding item recorded in the NM-11 remedy and not previously carried
-  out.
+- **Per-rule ERC-3643 compatibility matrix** (`RULE_SEMANTICS.md` §6). The scan's most useful signal was that a rule's guarantees depend on what the token tells it and when, and there was no single place saying so per rule. ERC-3643 / T-REX **never forwards a spender** (both `transfer` and `transferFrom` call the 3-argument `transferred`) and calls compliance **after** it moves the value, which produces three distinct and unequally dangerous failure modes: a rule with an inert *leg* (fail-open for that leg, main screening intact), a cap rule that needs its `…ERC3643` variant (fail-closed, rejects valid mints), and a rule that is wholly inert (`RuleMintAllowance` — silently permissive, and its pre-flight view agrees, so neither the token nor an integrator sees a problem). The section also records why `RuleMaxBalance` has no variant.
+- **Corrected the ERC-3643 column of `doc/README.md`'s rule table**, which showed a green checkmark for **all 13 rules** — including the two that mis-enforce on that path and the three that enforce nothing. Now ✔ / ⚠ / ✘ with per-rule footnotes. This was an outstanding item recorded in the NM-11 remedy and not previously carried out.
 - Pointers to the matrix from both READMEs' ERC-3643 sections and from the `CLAUDE.md` / `AGENTS.md` gotcha.
-- Brought the AuditAgent feedback file back into agreement with itself: it still stated "no contract was modified
-  by this triage", "three of the seven improvements have been implemented" and "one item is recommended for
-  action" after seven findings had been fixed.
+- Brought the AuditAgent feedback file back into agreement with itself: it still stated "no contract was modified by this triage", "three of the seven improvements have been implemented" and "one item is recommended for action" after seven findings had been fixed.
 
 
-- Added the **Nethermind AuditAgent** (AI automated scan) run for `v0.5.0` — report and per-finding triage in
-  `doc/security/audits/tools/v0.5.0/` (Scan ID `10`, commit `01632da`, 0 High / 13 Medium / 11 Low). No false
-  positives, nothing exploitable, no contract change required for the CMTAT path; 17 of the 24 findings restate
-  positions already documented in the source and in `CLAUDE_AUDIT.md`. One documentation item is outstanding
-  (**NM-11**): the balance and supply cap rules assume the token notifies *before* moving the value, which a real
-  ERC-3643 / T-REX token does not, so the cap double-counts and over-restricts on that path.
-  Seven findings (NM-3, NM-5, NM-6, NM-10, NM-17, NM-18, NM-23/24) carry an `Improvement` section specifying what
-  could be implemented, with the code, its cost and its limit — including the two cases where a complete fix is
-  not reachable at the rule level. **NM-3, NM-6 and NM-10 are implemented in this release** (see *Fixed* above);
-  the other four remain specified but unapplied.
-  `AUDIT_OVERVIEW.md`, `README.md` and `doc/README.md` updated with the run, its counts and the AI-tool caveat.
+- Added the **Nethermind AuditAgent** (AI automated scan) run for `v0.5.0` — report and per-finding triage in `doc/security/audits/tools/v0.5.0/` (Scan ID `10`, commit `01632da`, 0 High / 13 Medium / 11 Low). No false positives, nothing exploitable, no contract change required for the CMTAT path; 17 of the 24 findings restate positions already documented in the source and in `CLAUDE_AUDIT.md`. One documentation item is outstanding (**NM-11**): the balance and supply cap rules assume the token notifies *before* moving the value, which a real ERC-3643 / T-REX token does not, so the cap double-counts and over-restricts on that path. Seven findings (NM-3, NM-5, NM-6, NM-10, NM-17, NM-18, NM-23/24) carry an `Improvement` section specifying what could be implemented, with the code, its cost and its limit — including the two cases where a complete fix is not reachable at the rule level. **NM-3, NM-6 and NM-10 are implemented in this release** (see *Fixed* above); the other four remain specified but unapplied. `AUDIT_OVERVIEW.md`, `README.md` and `doc/README.md` updated with the run, its counts and the AI-tool caveat.
 
 ## v0.5.0 - 2026-08-14
 
@@ -343,9 +132,7 @@ Commit: `01632da0ae2cf701323e42644de29cbd951e204c`
 
 ### Summary
 
-Four new contracts, one behavioural hardening with a migration note, a reviewed and repaired set of
-deployment scripts, the first tests that run against a real ERC-3643 token, and updated dependencies
-(CMTAT `v3.3.0-rc3`, RuleEngine `v3.0.0-rc5`, OpenZeppelin `v5.7.0`, solc `0.8.36`).
+Four new contracts, one behavioural hardening with a migration note, a reviewed and repaired set of deployment scripts, the first tests that run against a real ERC-3643 token, and updated dependencies (CMTAT `v3.3.0-rc3`, RuleEngine `v3.0.0-rc5`, OpenZeppelin `v5.7.0`, solc `0.8.36`).
 
 Every deployable contract reports `version()` → `"0.5.0"`, asserted exhaustively by `test/Version.t.sol`.
 
@@ -355,42 +142,13 @@ Every deployable contract reports `version()` → `"0.5.0"`, asserted exhaustive
 - **`IdentityRegistryWhitelist`** — a whitelist that fills an ERC-3643 token's *identity registry* slot, so a token can enforce investor eligibility with no ONCHAINID deployment. Not a rule: it implements no `IRule` and must never be added to a `RuleEngine`.
 - **`RuleMaxBalance`** — caps how many tokens a **single address** may hold, with an operator-managed exemption list. Restriction codes `82`, `83`. **Bypassable by splitting a position across wallets**, so it must be paired with a rule admitting one address per investor.
 
-**Deployment scripts.** All four scripts in `script/` were reviewed and fixed; see [`doc/security/audits/tools/v0.5.0/CLAUDE_ANALYSIS_SCRIPT.md`](doc/security/audits/tools/v0.5.0/CLAUDE_ANALYSIS_SCRIPT.md)
-for the twelve findings. Three of them (`DeployCMTATWithBlacklist`, `DeployCMTATWithWhitelist`,
-`DeployCMTATWithBlacklistAndSanctionsList`) reverted under `forge script` because they read
-`address(this)` inside a broadcast, so they could not deploy anything; they now take the deployer as an
-explicit parameter. `DeployCMTATWithWhitelist` also deployed with `allowMintBurn = false`, producing a
-token that could not be issued at all (mint rejected with code `24` even to a whitelisted investor); it
-now allows mint and burn. Shared token metadata moved to the new
-`script/base/CMTATDeploymentBase.sol`, which also adds environment-variable configuration (`CMTAT_NAME`,
-`CMTAT_SYMBOL`, `SANCTIONS_ORACLE`, `CMTAT_MAX_SUPPLY` and others, all with the previous constants as
-defaults) and labelled address logging. The scripts are documented in the new
-`doc/technical/guides/DEPLOYMENT_SCRIPTS.md`. CI now runs every script as a local dry run, which is the only
-faithful harness: Foundry refuses to combine a prank with a broadcast, so no unit test can exercise
-`run()`.
+**Deployment scripts.** All four scripts in `script/` were reviewed and fixed; see [`doc/security/audits/tools/v0.5.0/CLAUDE_ANALYSIS_SCRIPT.md`](doc/security/audits/tools/v0.5.0/CLAUDE_ANALYSIS_SCRIPT.md) for the twelve findings. Three of them (`DeployCMTATWithBlacklist`, `DeployCMTATWithWhitelist`, `DeployCMTATWithBlacklistAndSanctionsList`) reverted under `forge script` because they read `address(this)` inside a broadcast, so they could not deploy anything; they now take the deployer as an explicit parameter. `DeployCMTATWithWhitelist` also deployed with `allowMintBurn = false`, producing a token that could not be issued at all (mint rejected with code `24` even to a whitelisted investor); it now allows mint and burn. Shared token metadata moved to the new `script/base/CMTATDeploymentBase.sol`, which also adds environment-variable configuration (`CMTAT_NAME`, `CMTAT_SYMBOL`, `SANCTIONS_ORACLE`, `CMTAT_MAX_SUPPLY` and others, all with the previous constants as defaults) and labelled address logging. The scripts are documented in the new `doc/technical/guides/DEPLOYMENT_SCRIPTS.md`. CI now runs every script as a local dry run, which is the only faithful harness: Foundry refuses to combine a prank with a broadcast, so no unit test can exercise `run()`.
 
-**Breaking behaviour: `RuleMaxTotalSupply`.** The constructor and `setTokenContract` now reject a
-non-contract token and probe that `totalSupply()` is callable, and a token that later reverts yields
-the new restriction code `51` instead of breaking the MUST-NOT-revert views. Deployments that passed
-a placeholder address now fail at construction — see *Changed* for the migration note. This only
-rejects configurations that could never have worked, which is why it is a MINOR rather than MAJOR
-bump pre-1.0.
+**Breaking behaviour: `RuleMaxTotalSupply`.** The constructor and `setTokenContract` now reject a non-contract token and probe that `totalSupply()` is callable, and a token that later reverts yields the new restriction code `51` instead of breaking the MUST-NOT-revert views. Deployments that passed a placeholder address now fail at construction — see *Changed* for the migration note. This only rejects configurations that could never have worked, which is why it is a MINOR rather than MAJOR bump pre-1.0.
 
-**ERC-3643 interoperability.** Both integration directions are now covered end to end: a `RuleEngine`
-in the token's *compliance* slot enforcing `RuleWhitelist`, and `IdentityRegistryWhitelist` in the
-*identity* slot. One suite runs against the genuine vendored `Token.sol` rather than a mock, which
-requires a second Foundry profile — **`forge test` alone no longer runs everything**, see *Testing*.
+**ERC-3643 interoperability.** Both integration directions are now covered end to end: a `RuleEngine` in the token's *compliance* slot enforcing `RuleWhitelist`, and `IdentityRegistryWhitelist` in the *identity* slot. One suite runs against the genuine vendored `Token.sol` rather than a mock, which requires a second Foundry profile — **`forge test` alone no longer runs everything**, see *Testing*.
 
-**Code-quality pass.** A full review of `src/` for duplication, missing events, gas on the storage-read and
-loop paths, `virtual` convention drift, and behaviour that is correct but at odds with the library's purpose.
-Of twenty-eight findings, **twenty-four were implemented**, two were deliberately declined with the reasoning
-recorded (`D-3`, `F-7c`), one is left open (`A-3`), and one needed no change (`A-1`). Three carry
-corrections to the review itself: `B-1` and `B-4` overstated their gas saving — `B-1` was wrong for four of its
-six sites — and `F-2`'s proposed remedy did not work and was replaced. Every gas figure quoted below was
-**measured**, not estimated. Findings, dispositions and the commit for each are in
-[`doc/security/audits/tools/v0.5.0/CLAUDE_ANALYSIS.md`](./doc/security/audits/tools/v0.5.0/CLAUDE_ANALYSIS.md).
-No behavioural change reaches a token holder except where explicitly noted (`RuleSanctionsList` mint/burn
-screening, F-1; `transferFrom` delegation, F-2).
+**Code-quality pass.** A full review of `src/` for duplication, missing events, gas on the storage-read and loop paths, `virtual` convention drift, and behaviour that is correct but at odds with the library's purpose. Of twenty-eight findings, **twenty-four were implemented**, two were deliberately declined with the reasoning recorded (`D-3`, `F-7c`), one is left open (`A-3`), and one needed no change (`A-1`). Three carry corrections to the review itself: `B-1` and `B-4` overstated their gas saving — `B-1` was wrong for four of its six sites — and `F-2`'s proposed remedy did not work and was replaced. Every gas figure quoted below was **measured**, not estimated. Findings, dispositions and the commit for each are in [`doc/security/audits/tools/v0.5.0/CLAUDE_ANALYSIS.md`](./doc/security/audits/tools/v0.5.0/CLAUDE_ANALYSIS.md). No behavioural change reaches a token holder except where explicitly noted (`RuleSanctionsList` mint/burn screening, F-1; `transferFrom` delegation, F-2).
 
 ### Added
 
