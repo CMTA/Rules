@@ -33,11 +33,11 @@ Tool: **[Nethermind AuditAgent](https://auditagent.nethermind.io/)** — an **AI
 
 | Disposition | Count | IDs |
 |---|---|---|
-| **Fixed** (in `v0.6.0`) | 3 | **NM-3**, **NM-6**, **NM-10** |
+| **Fixed** (in `v0.6.0`) | 4 | **NM-3**, **NM-6**, **NM-10**, **NM-11** |
 | Accepted as design (real behaviour, intentional, already documented) | 17 | NM-1, 2, 4, 5, 7, 8, 9, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24 |
 | Rejected — false positive | 0 | — |
 | Informational — valid, optional hardening | 3 | NM-18, 19, 20 |
-| Fix recommended | 1 | **NM-11** — documentation/compatibility, not a contract bug |
+| Fix recommended | 0 | — |
 | **Total** | **24** | |
 
 Two observations about the report as a whole:
@@ -65,7 +65,9 @@ blocks below. The remaining four are specified but not applied.
 
 **The one genuinely new and useful signal** is a theme the scanner keeps circling without naming:
 **several rules' guarantees depend on the token's callback shape and ordering, and a real ERC-3643 / T-REX token
-supplies neither.** That is developed under NM-11 and NM-9 below, and is the only item recommended for action.
+supplies neither.** That is developed under NM-11 and NM-9, and it was the only item that warranted new contracts.
+It has since been acted on: `v0.6.0` ships ERC-3643 variants of the reserve and supply cap rules, with suites
+running against the genuine vendored token.
 
 ---
 
@@ -83,7 +85,7 @@ supplies neither.** That is developed under NM-11 and NM-9 below, and is the onl
 | NM-8 | Medium → **Low** | Mint allowances shared across a multi-token engine | Accepted as design — duplicate of NM-2 |
 | NM-9 | Medium → **Info** | 3-arg ERC-3643 hooks carry no spender, so spender rules are inert | Accepted as design — topology requirement; see NM-11 |
 | NM-10 | Medium → **Info** | Future-dated PoR `updatedAt` skips the staleness check | ✅ **Fixed** in `v0.6.0` |
-| NM-11 | Medium → **Low** | Caps double-count when the token notifies **after** moving value | **Fix recommended (documentation)** |
+| NM-11 | Medium → **Low** | Caps double-count when the token notifies **after** moving value | ✅ **Fixed** in `v0.6.0` — ERC-3643 variants for 2 of 3 rules; `RuleMaxBalance` documented as CMTAT-only |
 | NM-12 | Medium → **Low** | Single-token approval consumable by another token | Accepted as design — duplicate of NM-7 |
 | NM-13 | Medium → **Low** | Cap rules never bind to the calling token; setters can repoint | Accepted as design — duplicate of NM-5 |
 | NM-14 | Low → **Low** | Identity-registry failures revert the read path | Accepted as design — trusted dependency (v0.4.0 audit) |
@@ -455,7 +457,9 @@ The scanner is nonetheless pointing at something worth stating more loudly, and 
 NM-11: **a real ERC-3643 / T-REX token calls `_tokenCompliance.transferred(_from, _to, _amount)` from
 `transferFrom` — three arguments, no spender.** On that integration `RuleSpenderWhitelist` is *silently inert*
 rather than merely unhelpful, and the spender branches of the blacklist / sanctions / ERC-2980 rules never fire.
-Folded into the documentation action under NM-11.
+Both supply-based cap rules now ship ERC-3643 variants (NM-11), and the per-interface conventions are written up
+in `RULE_SEMANTICS.md` §5; the spender-inertness above remains a documentation matter, since no rule can screen
+an identity it is never given.
 
 ### NM-10 — Future-dated PoR timestamps skip the freshness check — ✅ FIXED (`v0.6.0`)
 
@@ -548,7 +552,7 @@ Still hardening rather than a fix in impact terms: reaching the branch needs an 
 badly enough to forge a timestamp, and such an aggregator can overstate `answer` directly. What it buys is that
 the rule no longer has a state in which it treats an impossible timestamp as evidence of freshness.
 
-### NM-11 — Caps double-count when the token notifies **after** moving the value — *fix recommended*
+### NM-11 — Caps double-count when the token notifies **after** moving the value — ✅ FIXED (`v0.6.0`, 2 of 3 rules)
 
 **Claim (Medium).** `BalanceCapManager._capExceeded` and `TotalSupplyCapManager._capExceeded` compare the live
 balance/supply against `value`. That is correct only if the token calls `transferred(...)` *before* mutating
@@ -557,7 +561,7 @@ becomes `balance_before + 2 × value <= maxBalance`. The read path (`canTransfer
 write path then reverts on the same parameters — legitimate transfers are blocked and the last chunk of headroom
 is unreachable.
 
-**Verdict — CONFIRMED, and the one item recommended for action.** Every step checks out:
+**Verdict — CONFIRMED.** Every step checks out:
 
 - The assumption is real and already stated in-source (`RuleMaxBalanceBase.sol:21-23`): *"**Assumes the token
   calls this BEFORE moving the value**, so `balanceOf(to)` still excludes `value`. CMTAT does; a token notifying
@@ -609,22 +613,72 @@ Worked variants of all three rules live in `src/mocks/harness/ERC3643CapHarnesse
 `test/CapAccounting/ERC3643CapSeams.t.sol` reproduces this finding on the stock rules while showing the variants
 are correct. `RULE_SEMANTICS.md` §5 is the write-up.
 
-**Remaining fix (documentation and test scope, no further contract change):**
+**Resolution — `v0.6.0`. Shipped for two of the three rules; the third is deliberately left.**
 
-1. State the constraint as a compatibility rule, not an incidental `@dev` note: `RuleMaxBalance`,
-   `RuleMaxTotalSupply` and `RuleChainlinkPoR` **require a token that notifies before moving value (CMTAT), and
-   mis-enforce on post-update tokens (ERC-3643 / T-REX)**. Put it in each rule's page under
-   `doc/technical/contracts/`, in `RULE_SEMANTICS.md` §2, and in the ERC-3643 integration notes.
-2. Add the fact to the ERC-3643 column of `doc/README.md`'s rule table, which currently reads as though every
-   rule works on both paths.
-3. Add one regression test in `test/ERC3643Real/` that pins the observed behaviour for a cap rule, so the
-   constraint is executable rather than prose.
+*The arithmetic, concretely.* Reserves 1000, supply 0, an agent mints 1000 on a real T-REX token:
 
-A contract-level fix (a `postUpdateAccounting` flag, or subtracting `value` in the write hook) is possible but is
-a design decision with real cost — it would make the rule's arithmetic depend on a flag no on-chain party can
-verify, and a wrong setting silently doubles the cap in the *permissive* direction. Documenting the supported
-token contract is the safer answer, and it is what the library already does for `RuleMintAllowance`'s CMTAT ≥
-v3.3 requirement.
+| Step | `_currentSupply()` | Comparison | Result |
+|---|---|---|---|
+| 1. `canTransfer(0, to, 1000)` — **before** `_mint` | `0` | `_capExceededBy(0, 1000, 1000)` → `1000 > 1000-0`? no | allowed |
+| 2. `_mint(to, 1000)` | — | supply becomes 1000 | — |
+| 3a. `created` → **stock rule** | `1000` | `_capExceededBy(1000, 1000, 1000)` → `1000 > 0`? **yes** | **reverts** |
+| 3b. `created` → **ERC-3643 variant** | `1000` | `_capExceededBy(1000, 1000, 0)` → `0 > 0`? no | allowed |
+
+At step 3 the minted amount is already inside `currentSupply`; the stock rule adds the same amount again as
+`value` and asks whether 2000 fits under 1000. Row 1 is why the read path must keep projecting `value`: the token
+consults compliance on **both** sides of the state change inside one transaction.
+
+*Contracts added.*
+
+| Contract | For |
+|---|---|
+| `RuleChainlinkPoRERC3643` / `…Ownable2Step` | Reserve-backed mint cap on ERC-3643 |
+| `RuleMaxTotalSupplyERC3643` / `…Ownable2Step` | Static supply cap on ERC-3643 |
+
+Each is a subclass overriding `_detectTransferRestrictionOnNotify` and nothing else; reserve/cap logic,
+restriction codes, configuration, roles and events are inherited unchanged, and the stock rules are untouched.
+
+*Tests.* 49 added in total:
+
+- `test/ERC3643Real/ERC3643RealTokenChainlinkPoR.t.sol` (12) and
+  `test/ERC3643Real/ERC3643RealTokenMaxTotalSupply.t.sol` (10) drive the **genuine** vendored
+  `lib/ERC-3643/` token, not a mock. Four of them pin the stock rules failing on that same token, so this
+  finding stays executable rather than becoming prose.
+- The supply-cap suite covers **both compositions with the PoR variant** — static cap binding and reserves
+  binding — which is the pairing the documentation prescribes, since PoR has no margin parameter.
+- Unit suites in the default profile for each variant (10 + 10), because `forge coverage` skips
+  `test/ERC3643Real/**` and the deployables would otherwise report 0%.
+- `test/CapAccounting/ERC3643CapSeams.t.sol` (7) covers the seams generically, including `RuleMaxBalance`.
+
+*A second ERC-3643 hazard found while testing this one, and now pinned.* T-REX deploys the token and
+initialises it in two steps, and an uninitialised `Token` reports `decimals() == 0`. `RuleChainlinkPoR`'s
+constructor probes `decimals()` and accepts a matching `0`, so a rule built before `init` is configured for a
+0-decimals token — and `init(..., 18, ...)` then makes it an 18-decimals token while the rule still believes 0.
+Nothing reverts and no event marks it; reserves are scaled by `10 ** 18` too little and every mint is refused.
+The same mistake reversed would authorise unbacked minting. The constructor probe cannot catch it — it genuinely
+succeeded. The remedy is deployment order (build the rule after `init`, or re-sync with `setTokenMetadata`),
+documented on the contract page and pinned by `testRuleBuiltBeforeInitCachesTheWrongDecimals`.
+
+*Documentation.* New pages `doc/technical/contracts/RuleChainlinkPoRERC3643.md` and
+`RuleMaxTotalSupplyERC3643.md`, each leading with the ERC-3643-only warning and a table of what breaks with the
+wrong variant **in either direction** — neither mistake reverts at deployment. `RULE_SEMANTICS.md` §5 carries the
+seam write-up; `CLAUDE.md` / `AGENTS.md` carry the gotcha; both READMEs list the variants.
+
+**`RuleMaxBalance` deliberately has no ERC-3643 variant.** It is not the same one-line change, for three reasons
+that need a policy decision rather than a hook override:
+
+- `balanceOf(to)` is **per-address**, so the rule engages on every transfer rather than only on mints — a far
+  larger interaction surface with T-REX's agent powers than the two supply rules have.
+- **`forcedTransfer` does notify compliance**, so a post-update variant would *revert* an agent's forced transfer
+  that pushes the recipient over the cap. On T-REX ≤ 4.1, where `recoveryAddress` routes through
+  `forcedTransfer`, that **bricks wallet recovery** whenever the destination wallet already holds tokens.
+- On the vendored 4.2.0-beta1 `recoveryAddress` notifies **nobody**, so a recovered wallet can silently sit above
+  the cap. A token-reading rule self-heals — further receipts are blocked — but the invariant is violated in
+  state with no event from the rule.
+
+T-REX's own module library also already ships a `MaxBalanceModule`, so the marginal value is lowest of the three.
+`RuleMaxBalance` is therefore documented as CMTAT-path-only until the forced-transfer exemption question is
+settled.
 
 ### NM-14 / NM-22 — A reverting identity registry or sanctions oracle reverts the read path
 
@@ -966,13 +1020,17 @@ project had already reached and written down, and the 24 items collapse to about
 **One item is recommended for action: NM-11.** `RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR`
 assume the token calls the compliance hook *before* moving value; the vendored ERC-3643 / T-REX token calls it
 *after*, and that integration is one this repository supports and tests. The consequence is over-restriction, not
-over-issuance, and the remedy is documentation plus a regression test that pins the behaviour — set out above.
+over-issuance. **It has since been fixed** for the two supply-based cap rules, which now ship ERC-3643 variants
+(`RuleChainlinkPoRERC3643`, `RuleMaxTotalSupplyERC3643`) verified against the genuine vendored T-REX token;
+`RuleMaxBalance` is deliberately left as CMTAT-path-only, because a post-update variant would revert an agent's
+forced transfer and, on T-REX <= 4.1, brick wallet recovery — a policy decision rather than a hook override.
 
-**Seven improvements are specified**, each with its code, its cost and its limit. Three are done; the other four
+**Eight improvements are specified**, each with its code, its cost and its limit. Four are done; the other four
 are listed in rough order of value per unit of risk:
 
 | Improvement | Where | Size | Status / verdict |
 |---|---|---|---|
+| ERC-3643 cap-rule variants (`CapAccounting` + the notify seam) | NM-11 | 2 rules × 2 variants | ✅ **Done in `v0.6.0`** — 49 tests, incl. suites against the genuine T-REX token; `RuleMaxBalance` deliberately excluded |
 | Delegate instead of returning early | NM-3 | ~4 lines | ✅ **Done in `v0.6.0`** — behaviour-preserving, 8 regression tests, mutation-verified |
 | Future-dated PoR answer → code 77 | NM-10 | 1 line | ✅ **Done in `v0.6.0`** — 5 regression tests, mutation-verified |
 | Approval post-condition in `approveAndTransferIfAllowed` | NM-17 | ~5 lines + 1 error, ×2 variants | **Do it** — turns a silent operator-created hole into a named revert |

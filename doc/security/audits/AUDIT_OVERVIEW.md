@@ -74,7 +74,7 @@ Scan **2026-08-17** (Scan ID `10`, commit `01632da0…951e204c`, 89 contracts / 
 
 | Tool | High | Medium | Low | Info | Relevant to fix? |
 |---|---|---|---|---|---|
-| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **3 fixed** (NM-3, NM-6, NM-10 — `v0.6.0`) + one documentation item (NM-11); nothing exploitable — see [feedback](./tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md) |
+| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **4 fixed** (NM-3, NM-6, NM-10, NM-11 — `v0.6.0`); nothing exploitable, nothing outstanding — see [feedback](./tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md) |
 
 **Nothing exploitable, and no contract change required for the CMTAT path.** There are **no false positives** —
 all 24 findings describe real code — but 17 restate positions already reached, documented in-source and recorded
@@ -84,41 +84,22 @@ twice, spender-less hooks twice, short ABI return data twice). Every described f
 (over-restriction, a blocked transfer) or inert (a rule that cannot screen an identity it is never given); none
 of the 13 Medium ratings survives verification at Medium.
 
-**NM-11 — enabling structure landed in `v0.6.0`; the remaining work is documentation.** The three cap rules now
-share a stateless `CapAccounting` primitive and expose `_detectTransferRestrictionOnNotify`, the hook the write
-path enforces through. It defaults to today's CMTAT behaviour, so nothing changed by default, and an ERC-3643
-variant is a one-line override (`_detectTransferRestriction(from, to, 0)`). Only the write path is re-phased:
-a pre-flight view always runs before the movement on either kind of token, so re-phasing it too would make the
-pre-flight answer disagree with enforcement. Worked variants and regression tests are in
-`src/mocks/harness/ERC3643CapHarnesses.sol` and `test/CapAccounting/ERC3643CapSeams.t.sol`; the write-up is
-`RULE_SEMANTICS.md` §5. The finding itself:
-`RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR` assume the token calls the compliance hook **before**
-moving value (CMTAT does). The vendored ERC-3643 / T-REX token calls it **after**
-(`Token.sol:312-313`, `:532-533`, `:557-558`, and `created` at `:572`), so the cap double-counts the transferred
-amount and the top of the headroom becomes unreachable — a configuration this repo supports and tests
-(`test/ERC3643Real/`), but where no cap rule is currently covered. The assumption is already stated in
-`RuleMaxBalanceBase`'s NatSpec; the fix is to state it as a compatibility rule in the per-contract pages,
-`RULE_SEMANTICS.md` and the ERC-3643 column of `doc/README.md`, and to pin it with a regression test.
+**NM-11 — fixed in `v0.6.0` for two of the three cap rules.** The three rules assume the token notifies *before*
+moving the value; ERC-3643 / T-REX notifies *after*, so the observation already includes the amount and the stock
+rule counts it twice, reverting mints that are fully within the cap. `v0.6.0` adds a stateless `CapAccounting`
+primitive and a `_detectTransferRestrictionOnNotify` hook on each cap rule — defaulting to today's CMTAT
+behaviour — then ships **`RuleChainlinkPoRERC3643`** and **`RuleMaxTotalSupplyERC3643`** (each with an
+`Ownable2Step` variant) as one-line overrides of it. Only the write path is re-phased: ERC-3643 calls
+`canTransfer` *before* `_mint` and `created` *after*, both in one transaction, so the read views must keep
+projecting the pending amount. 49 tests, including two suites driving the **genuine** vendored T-REX token and
+four that pin the stock rules failing on it. **`RuleMaxBalance` is deliberately excluded** — a post-update
+variant would revert an agent's `forcedTransfer` and, on T-REX ≤ 4.1 where `recoveryAddress` routes through it,
+brick wallet recovery; that is a policy decision, not a hook override. Write-ups:
+`doc/technical/contracts/RuleChainlinkPoRERC3643.md`, `RuleMaxTotalSupplyERC3643.md`, `RULE_SEMANTICS.md` §5.
 
-**Fixed in `v0.6.0` — NM-3.** `RuleIdentityRegistryBase._detectTransferRestrictionFrom` returned `TRANSFER_OK`
-outright when the registry was unset or the transfer was a burn, instead of delegating to
-`_detectTransferRestriction`. A subclass extending only that hook — the natural place to add a check — therefore
-applied to `transfer` but silently not to `transferFrom` or `burnFrom`. This is the same anti-pattern
-`RuleSanctionsListBase` had already been restructured to remove (`CLAUDE_ANALYSIS.md` F-2), so the fix makes the
-two sibling rules consistent. Behaviour-preserving — both early returns duplicated guards the delegate already
-performs, and the 21 pre-existing tests pass unmodified. Pinned by
-[`test/RuleIdentityRegistry/RuleIdentityRegistryDelegation.t.sol`](../../../test/RuleIdentityRegistry/RuleIdentityRegistryDelegation.t.sol)
-(8 tests) and `IdentityRegistryExtraCheckHarness`; reverting the source change fails 3 of them with the predicted
-symptoms.
-
-**Fixed in `v0.6.0` — NM-10.** `ChainlinkPoRFeedManager._maxBackedSupply` flagged a feed as stale only when
-`block.timestamp > updatedAt`; that term existed to keep the subtraction from underflowing, and its side effect
-was that **any** future-dated round was treated as fresh. A feed frozen on an old reserve answer but stamped
-ahead of the block could keep authorising mints until that timestamp elapsed. A future `updatedAt` is now a
-*malformed answer* (code `77`), rejected **regardless of `maxStalenessSeconds`** — zero disables freshness
-checking, and an operator who opts out of that must not thereby accept a timestamp no aggregator on this chain
-could have written. Pinned by 5 tests in `test/RuleChainlinkPoR/RuleChainlinkPoRUnit.t.sol`; reverting the change
-fails 4 of them.
+A second ERC-3643 hazard surfaced while testing it and is now pinned: T-REX deploys then initialises, and an
+uninitialised `Token` reports `decimals() == 0`, so a PoR rule built before `init` silently caches the wrong
+decimals and mis-scales the reserves. Remedy is deployment order, documented on the contract page.
 
 **Fixed in `v0.6.0` — NM-6.** `RuleNFTAdapter`'s ERC-7943 spender-aware overloads called the delegated hook
 unconditionally, while the `ITransferContext` entrypoints normalised `sender == from` to the direct hook. The

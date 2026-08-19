@@ -1994,7 +1994,7 @@ AI automated scan with [**Nethermind AuditAgent**](https://auditagent.nethermind
 
 | Tool | High | Medium | Low | Info | Anything to fix? |
 |---|---|---|---|---|---|
-| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **3 fixed** (NM-3, NM-6, NM-10 — `v0.6.0`) + one documentation item (NM-11); nothing exploitable |
+| [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **4 fixed** (NM-3, NM-6, NM-10, NM-11 — `v0.6.0`); nothing exploitable, nothing outstanding |
 
 **Nothing exploitable.** There are no false positives — all 24 findings describe real code — but 17 restate
 positions already documented in the source and in [`CLAUDE_AUDIT.md`](./security/audits/tools/v0.4.0/claude-audit/CLAUDE_AUDIT.md)
@@ -2021,11 +2021,18 @@ differently — `spender == from` on ERC-7943 and `ctx`, `spender == address(0)`
 now normalises on a shared `_isDelegated` predicate and the CMTAT path is deliberately untouched. See
 [`RULE_SEMANTICS.md` §3](./technical/guides/RULE_SEMANTICS.md) for the convention table.
 
-The one item still recommended for action is **NM-11**: `RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR`
-assume the token calls the compliance hook **before** moving the value — CMTAT does, a real ERC-3643 / T-REX token
-calls it **after** — so on that path the cap double-counts the transferred amount and the top of the headroom
-becomes unreachable. The direction is over-restriction, never over-issuance, and the remedy is documentation plus
-a regression test in `test/ERC3643Real/`, where no cap rule is currently covered.
+**Fixed in `v0.6.0` — NM-11.** `RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR` assume the token
+calls the compliance hook **before** moving the value — CMTAT does, a real ERC-3643 / T-REX token calls it
+**after** — so on that path the stock rule counts the amount twice and reverts mints that are within the cap.
+The direction is over-restriction, never over-issuance. `v0.6.0` adds a stateless `CapAccounting` primitive and a
+`_detectTransferRestrictionOnNotify` hook on each cap rule (defaulting to today's CMTAT behaviour), then ships
+[`RuleChainlinkPoRERC3643`](./technical/contracts/RuleChainlinkPoRERC3643.md) and
+[`RuleMaxTotalSupplyERC3643`](./technical/contracts/RuleMaxTotalSupplyERC3643.md) as one-line overrides of it.
+Only the write path is re-phased: ERC-3643 calls `canTransfer` *before* `_mint` and `created` *after*, in the same
+transaction, so the read views must keep projecting the pending amount. Verified by suites driving the genuine
+vendored T-REX token, including four tests pinning the stock rules failing on it. **`RuleMaxBalance` is
+deliberately excluded** — a post-update variant would revert an agent's `forcedTransfer` and, on T-REX ≤ 4.1
+where `recoveryAddress` routes through it, brick wallet recovery.
 
 Commands used for `v0.4.0` (mocks excluded):
 
