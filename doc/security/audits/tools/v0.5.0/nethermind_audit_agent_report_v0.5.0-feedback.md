@@ -36,7 +36,7 @@ Tool: **[Nethermind AuditAgent](https://auditagent.nethermind.io/)** — an **AI
 | **Fixed** (in `v0.6.0`) | 4 | **NM-3**, **NM-6**, **NM-10**, **NM-11** |
 | Accepted as design (real behaviour, intentional, already documented) | 17 | NM-1, 2, 4, 5, 7, 8, 9, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24 |
 | Rejected — false positive | 0 | — |
-| Informational — valid, optional hardening | 3 | NM-18, 19, 20 |
+| Informational — valid, optional hardening | 3 | NM-18, 19 (open) · **NM-20 documented in `v0.6.0`** |
 | Fix recommended | 0 | — |
 | **Total** | **24** | |
 
@@ -94,7 +94,7 @@ running against the genuine vendored token.
 | NM-17 | Low → **Low** | `approveAndTransferIfAllowed` leaves a residual approval if no callback | Accepted as design — documented CEI inversion |
 | NM-18 | Low → **Low** | Wrapper bricked by a non-`IAddressList` child | Informational — known open item (audit F-5) |
 | NM-19 | Low → **Info** | Wrapper does not implement `IAddressList`, so it cannot nest | Informational — enhancement, never advertised |
-| NM-20 | Low → **Info** | Wrapper reads a `RuleBlacklist` child's membership as eligibility | Informational — trusted-role misconfiguration |
+| NM-20 | Low → **Info** | Wrapper reads a `RuleBlacklist` child's membership as eligibility | ✅ **Documented** in `v0.6.0` — no code fix possible |
 | NM-21 | Low → **Info** | `RuleMintAllowance` 3-arg pre-flight views fail open | Accepted as design — audit F-7 |
 | NM-22 | Low → **Low** | A misbehaving sanctions oracle reverts the read path | Accepted as design — trusted dependency (v0.4.0 audit) |
 | NM-23 | Low → **Info** | Short successful return data escapes `try/catch` | Accepted as design — already documented in-source |
@@ -886,7 +886,7 @@ silently bricking. The scanner is right that the internals already exist —
 be a handful of lines and would make hierarchical OR-composition work. Recorded as a feature request for a
 future release; not required for `v0.5.0`.
 
-### NM-20 — The wrapper reads a `RuleBlacklist` child's membership as eligibility
+### NM-20 — The wrapper reads a `RuleBlacklist` child's membership as eligibility — ✅ DOCUMENTED (`v0.6.0`)
 
 **Claim (Low).** The wrapper ORs raw `areAddressesListed` answers and treats `true` as eligible. `RuleBlacklist`
 is a valid `IRule` exposing the same interface with the *opposite* polarity, so adding one as a child makes
@@ -897,9 +897,27 @@ wrapper cannot distinguish an allow-list from a deny-list through `IAddressList`
 constrains child semantics. It requires the rules manager to add a blacklist to a *whitelist* wrapper, which is a
 category error rather than an attack: the same role can already remove every whitelist child outright. Related to
 the accepted v0.4.0 row "wrapper cross-rule OR (`from` in child A, `to` in child B) — documented design; the
-wrapper's stated semantics are 'listed in **any** child'". Worth one explicit sentence in
-`doc/technical/contracts/RuleWhitelistWrapper.md`: *children must be allow-lists; adding a deny-list rule inverts
-its meaning.* Folded into the documentation pass alongside NM-11.
+wrapper's stated semantics are 'listed in **any** child'". **Resolution — documented in `v0.6.0`.** The remedy is documentation, because the wrapper cannot detect this and
+an ERC-165 guard would not either: `RuleBlacklist` advertises `IADDRESS_LIST_INTERFACE_ID` exactly as the
+whitelist rules do, since the interface genuinely is the same. Distinguishing polarity would need a separate
+marker interface — worth considering if the wrapper ever accepts third-party children, out of proportion today.
+
+The point is now stated in four places, each aimed at a different reader:
+
+- **`RuleWhitelistWrapperBase` NatSpec** — the warning a reader of the source gets, self-contained per the
+  no-cross-reference convention: `IAddressList` carries membership, not polarity; a deny-list satisfies the
+  interface and passes `addRule`; an ERC-165 guard would not catch it.
+- **`doc/technical/contracts/RuleWhitelistWrapper.md`** — a *Child rules must be allow-lists* subsection with a
+  safe/not-a-child table (`RuleSpenderWhitelist` is on the wrong side too: its set is spenders, not holders),
+  plus the F-5 unchecked-child limit next to it so the whole shape is in one place. The `isVerified` entry and
+  the Architecture paragraph both point at it, since those are where a reader forms the wrong assumption.
+- **`RULE_SEMANTICS.md`** — footnote `[12b]` on the wrapper's operational row, contrasting it with the empty
+  wrapper directly above: an empty wrapper fails **closed**, a wrong-polarity child fails **open**, silently.
+- **`CLAUDE.md` / `AGENTS.md`** — appended to the existing wrapper gotcha, so it is in front of anyone changing
+  the contract.
+
+No code change and no test: there is nothing to assert that would not simply restate `RuleBlacklist`'s own
+semantics, and the failure is a configuration choice by a trusted role rather than a contract behaviour.
 
 ### NM-21 — `RuleMintAllowance` pre-flight views fail open
 

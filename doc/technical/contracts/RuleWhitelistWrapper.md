@@ -6,7 +6,9 @@ This rule aggregates multiple child whitelist rules using OR logic. An address i
 
 ## Architecture
 
-Each child rule must implement `IAddressList`. The wrapper iterates through all registered rules and returns `true` for an address as soon as one rule lists it. Iteration stops early once all required addresses are resolved.
+Each child rule must implement `IAddressList` **and must be an allow-list**. The wrapper iterates through all registered rules and returns `true` for an address as soon as one rule lists it. Iteration stops early once all required addresses are resolved.
+
+> ⚠️ **`IAddressList` carries membership, not polarity.** The wrapper reads a child's `areAddressesListed` answer and treats `true` as *eligible*. It has no way to ask whether the child meant "allowed" or "denied", and nothing in `addRule` constrains that — see [Child rules must be allow-lists](#child-rules-must-be-allow-lists).
 
 ![ruleWhitelistWrapper.drawio](../../schema/rule/ruleWhitelistWrapper.drawio.png)
 
@@ -71,13 +73,48 @@ The wrapper reuses restriction codes from the whitelist rule:
 | `removeRule(address rule_)` | `RULES_MANAGEMENT_ROLE` | Removes a single child rule |
 | `clearRules()` | `RULES_MANAGEMENT_ROLE` | Removes all child rules |
 
+#### Child rules must be allow-lists
+
+**The wrapper cannot tell an allow-list from a deny-list, and adding the wrong one inverts its meaning.**
+
+`IAddressList` expresses only *membership* — "is this address in my set?" — never what membership means. The
+wrapper ORs those answers and reads `true` as **eligible**. A `RuleBlacklist` is a perfectly valid `IRule`,
+exposes the same `IAddressList` surface, and passes every check `addRule` performs, but its set means the
+opposite: listed addresses are the ones that must be **denied**.
+
+Add a `RuleBlacklist` as a child and the wrapper reports its blacklisted addresses as whitelisted. Because the
+wrapper is also the token's `isVerified` answer under ERC-3643, `isVerified(blacklistedAddress)` returns `true`
+as well.
+
+| Safe as a child | Not a child |
+| --- | --- |
+| `RuleWhitelist`, `RuleWhitelistOwnable2Step` | `RuleBlacklist` — inverted polarity |
+| `RuleReceiverWhitelist`, `RuleReceiverWhitelistOwnable2Step` | `RuleSpenderWhitelist` — its set is spenders, not holders |
+| Any custom rule whose listed addresses are the **permitted** ones | Any rule whose `IAddressList` set means something other than "eligible holder" |
+
+Two related limits, so the whole shape is in one place:
+
+- **No ERC-165 guard on children.** `addRule` checks only that the address is non-zero and not already present.
+  A child that is not an `IAddressList` at all is accepted and then reverts the blind `areAddressesListed` call
+  during a transfer, bricking the wrapper (audit finding `F-5`, still open).
+- **An ERC-165 guard would not catch this one anyway.** `RuleBlacklist` advertises
+  `IADDRESS_LIST_INTERFACE_ID` exactly as the whitelist rules do, because the interface is genuinely the same.
+  Distinguishing polarity would need a separate marker interface; until one exists this is a configuration
+  discipline, enforced by the `RULES_MANAGEMENT_ROLE` holder rather than by the contract.
+
+This is a category error by a trusted role rather than an attack — the same role can already remove every child
+outright, which fails closed — but it fails **open**, silently, so it is worth checking at configuration time and
+in any deployment review. Reported as Nethermind AuditAgent `NM-20`.
+
 ### `setCheckSpender(bool value)`
 
 Enables or disables spender checks. Restricted to `DEFAULT_ADMIN_ROLE`.
 
 ### `isVerified(address targetAddress) → bool`
 
-Returns `true` if the address is listed in at least one child rule.
+Returns `true` if the address is listed in at least one child rule. This is the ERC-3643 eligibility answer, and
+it resolves through the same child scan as the transfer check, so the two can never disagree about an address —
+including when a child's polarity is wrong (see [Child rules must be allow-lists](#child-rules-must-be-allow-lists)).
 
 ### `rule(uint256 index) → address`
 

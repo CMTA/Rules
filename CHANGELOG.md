@@ -166,6 +166,19 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 ### Documentation
 
+- **NM-20 (Nethermind AuditAgent)** — documented that `RuleWhitelistWrapper`'s child rules **must be
+  allow-lists**. `IAddressList` carries membership, not polarity: the wrapper ORs its children's
+  `areAddressesListed` answers and reads `true` as *eligible*, so a `RuleBlacklist` — which implements the same
+  interface, advertises the same interface id and passes every check `addRule` performs — makes its blacklisted
+  addresses whitelisted, and `isVerified` returns `true` for them. No code fix is possible: an ERC-165 guard
+  cannot distinguish polarity when the interface really is the same, and distinguishing it would need a separate
+  marker interface. Unlike an empty wrapper, which fails closed, this fails **open** and silently. Stated in
+  `RuleWhitelistWrapperBase`'s NatSpec, in a *Child rules must be allow-lists* section of
+  `doc/technical/contracts/RuleWhitelistWrapper.md` (with a safe/not-a-child table and the still-open F-5
+  unchecked-child limit alongside it), as footnote `[12b]` in `RULE_SEMANTICS.md`, and in the `CLAUDE.md` /
+  `AGENTS.md` wrapper gotcha.
+
+
 - Added the **Nethermind AuditAgent** (AI automated scan) run for `v0.5.0` — report and per-finding triage in
   `doc/security/audits/tools/v0.5.0/` (Scan ID `10`, commit `01632da`, 0 High / 13 Medium / 11 Low). No false
   positives, nothing exploitable, no contract change required for the CMTAT path; 17 of the 24 findings restate

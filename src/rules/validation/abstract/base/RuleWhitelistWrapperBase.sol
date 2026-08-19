@@ -14,7 +14,15 @@ import {IIdentityRegistryVerified} from "../../../interfaces/IIdentityRegistry.s
 
 /**
  * @title Wrapper to call several different whitelist rules (base)
- * @dev Child rules must implement {IAddressList}.
+ * @dev Child rules must implement {IAddressList} and must be ALLOW-lists.
+ *
+ * WARNING: {IAddressList} carries membership, not polarity. This wrapper ORs its children's
+ * `areAddressesListed` answers and reads `true` as ELIGIBLE. A deny-list such as `RuleBlacklist`
+ * satisfies the same interface and passes every check {addRule} performs, yet its set means the
+ * opposite: add one as a child and its blacklisted addresses become whitelisted, and {isVerified}
+ * reports them as verified investors. An ERC-165 guard would not catch this -- a blacklist advertises
+ * the same interface id, because the interface really is the same. Polarity is configuration
+ * discipline enforced by the rules manager, not by this contract. Nethermind AuditAgent NM-20.
  */
 abstract contract RuleWhitelistWrapperBase is
     RulesManagementModule,
