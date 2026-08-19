@@ -8,7 +8,7 @@ import {RuleInterfaceId} from "RuleEngine/modules/library/RuleInterfaceId.sol";
 
 import {AddressListInterfaceId} from "src/rules/interfaces/library/AddressListInterfaceId.sol";
 import {IAddressListInterfaceIdHelper, IAddressListAllFunctions} from "src/mocks/IAddressListInterfaceIdHelper.sol";
-import {IAddressListBatchQuery} from "src/rules/interfaces/IAddressList.sol";
+import {IAddressListBatchQuery, IAddressListPolarity} from "src/rules/interfaces/IAddressList.sol";
 import {IIdentityRegistryContains} from "src/rules/interfaces/IIdentityRegistry.sol";
 
 import {RuleWhitelist} from "src/rules/validation/deployment/RuleWhitelist.sol";
@@ -17,6 +17,7 @@ import {RuleBlacklist} from "src/rules/validation/deployment/RuleBlacklist.sol";
 import {RuleBlacklistOwnable2Step} from "src/rules/validation/deployment/RuleBlacklistOwnable2Step.sol";
 import {RuleSpenderWhitelist} from "src/rules/validation/deployment/RuleSpenderWhitelist.sol";
 import {RuleSpenderWhitelistOwnable2Step} from "src/rules/validation/deployment/RuleSpenderWhitelistOwnable2Step.sol";
+import {RuleReceiverWhitelist} from "src/rules/validation/deployment/RuleReceiverWhitelist.sol";
 import {RuleWhitelistWrapper} from "src/rules/validation/deployment/RuleWhitelistWrapper.sol";
 import {RuleMaxTotalSupply} from "src/rules/validation/deployment/RuleMaxTotalSupply.sol";
 import {TotalSupplyMock} from "src/mocks/TotalSupplyMock.sol";
@@ -91,6 +92,61 @@ contract AddressListInterfaceIdTest is Test, HelperContract {
         );
         assertEq(
             AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID, type(IAddressListBatchQuery).interfaceId
+        );
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                    THE POLARITY INTERFACE (NM-20)
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice The polarity id is the selector of its single function.
+    function test_PolarityInterfaceIdIsTheSingleSelector() public pure {
+        assertEq(AddressListInterfaceId.IADDRESS_LIST_POLARITY_INTERFACE_ID, bytes4(0xdc4efe10));
+        assertEq(AddressListInterfaceId.IADDRESS_LIST_POLARITY_INTERFACE_ID, IAddressListPolarity.isAllowList.selector);
+        assertEq(AddressListInterfaceId.IADDRESS_LIST_POLARITY_INTERFACE_ID, type(IAddressListPolarity).interfaceId);
+    }
+
+    /**
+     * @notice Polarity is a SEPARATE id from membership, which is the whole point.
+     * @dev If the two were the same interface, an allow-list and a deny-list would be
+     *      indistinguishable again — a consumer needs to require both and then read the answer.
+     */
+    function test_PolarityIsIndependentOfMembership() public pure {
+        assertTrue(
+            AddressListInterfaceId.IADDRESS_LIST_POLARITY_INTERFACE_ID
+                != AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID
+        );
+        assertTrue(
+            AddressListInterfaceId.IADDRESS_LIST_POLARITY_INTERFACE_ID
+                != AddressListInterfaceId.IADDRESS_LIST_INTERFACE_ID
+        );
+    }
+
+    /// @notice Each rule declares the polarity it actually has, and advertises the interface.
+    function test_RulesDeclareTheirPolarityHonestly() public {
+        bytes4 polarity = AddressListInterfaceId.IADDRESS_LIST_POLARITY_INTERFACE_ID;
+
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        RuleWhitelist whitelist = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, FORWARDER, false, false);
+        RuleBlacklist blacklist = new RuleBlacklist(DEFAULT_ADMIN_ADDRESS, FORWARDER);
+        RuleSpenderWhitelist spender = new RuleSpenderWhitelist(DEFAULT_ADMIN_ADDRESS, FORWARDER);
+        vm.stopPrank();
+
+        assertTrue(IERC165(address(whitelist)).supportsInterface(polarity), "whitelist advertises polarity");
+        assertTrue(whitelist.isAllowList(), "whitelist is an allow-list");
+
+        assertTrue(IERC165(address(blacklist)).supportsInterface(polarity), "blacklist advertises polarity");
+        assertFalse(blacklist.isAllowList(), "blacklist is a deny-list");
+
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        RuleReceiverWhitelist receiver = new RuleReceiverWhitelist(DEFAULT_ADMIN_ADDRESS, FORWARDER);
+        assertTrue(IERC165(address(receiver)).supportsInterface(polarity), "receiver whitelist advertises polarity");
+        assertTrue(receiver.isAllowList(), "receiver whitelist is an allow-list");
+
+        // Deliberate abstention: its set is spenders, not holders, so polarity alone would mislead.
+        assertFalse(
+            IERC165(address(spender)).supportsInterface(polarity),
+            "RuleSpenderWhitelist must NOT declare holder polarity"
         );
     }
 

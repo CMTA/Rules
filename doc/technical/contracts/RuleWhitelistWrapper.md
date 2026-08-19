@@ -92,11 +92,11 @@ as well.
 | `RuleReceiverWhitelist`, `RuleReceiverWhitelistOwnable2Step` | `RuleSpenderWhitelist` — its set is spenders, not holders |
 | Any custom rule whose listed addresses are the **permitted** ones | Any rule whose `IAddressList` set means something other than "eligible holder" |
 
-**The ERC-165 guard does not catch this**, and cannot. `RuleBlacklist` advertises the same interface id as the
-whitelist rules because the interface is genuinely the same — `IAddressList` describes *membership*, and both
-kinds of list have members. Distinguishing polarity would need a separate marker interface; until one exists this
-is configuration discipline, enforced by the `RULES_MANAGEMENT_ROLE` holder rather than by the contract. Pinned
-by `test_WW2_GuardCannotRejectAnInvertedPolarityChild_CurrentBehaviour`.
+**This is now enforced, not merely documented.** It could not be caught by ERC-165 alone — `RuleBlacklist`
+advertises the same `IAddressList` ids as the whitelist rules, because `IAddressList` describes *membership* and
+both kinds of list have members. The fix is the separate marker interface that observation implies:
+[`IAddressListPolarity`](#child-rules-are-erc-165-checked) adds a single `isAllowList()` function, the wrapper
+requires it and refuses any child answering `false`. Pinned by `test_WW2_DenyListChildIsRejectedAtAddRule`.
 
 #### Children are ERC-165-checked
 
@@ -114,6 +114,35 @@ parent the same way.
 `ERC165Checker.supportsInterface` is itself non-reverting — a bounded staticcall returning `false` for a codeless
 address, a missing selector or malformed return data — so a hostile candidate cannot brick the setter that is
 screening it.
+
+##### Two questions, two interfaces
+
+Membership and meaning are different questions, so the guard asks both:
+
+| Requirement | Interface | Failure |
+| --- | --- | --- |
+| Can you answer "is this address listed?" | `IAddressListBatchQuery` (`0x20e8e17a`) | `RuleWhitelistWrapper_ChildIsNotAnAddressList` |
+| Do you declare what membership *means*? | `IAddressListPolarity` (`0xdc4efe10`) | `RuleWhitelistWrapper_ChildDoesNotDeclarePolarity` |
+| Does it mean **allowed**? | `isAllowList() == true` | `RuleWhitelistWrapper_ChildIsNotAnAllowList` |
+
+**Absence of the polarity declaration is a refusal, never an assumed allow-list.** That is the only reading that
+fails closed for a contract predating the interface or deliberately declining it.
+
+What each rule declares:
+
+| Rule | `isAllowList()` | As a wrapper child |
+| --- | --- | --- |
+| `RuleWhitelist` | `true` | ✅ accepted |
+| `RuleReceiverWhitelist` | `true` | ✅ accepted |
+| `RuleBlacklist` | `false` | ❌ rejected — deny-list |
+| `RuleSpenderWhitelist` | *does not implement the interface* | ❌ rejected — see below |
+| `RuleWhitelistWrapper` (nested) | *does not implement `areAddressesListed`* | ❌ rejected at the first check |
+
+`RuleSpenderWhitelist` **deliberately abstains, and must not be "fixed" to declare `true`.** Its set genuinely is
+an allow-list, so `true` would be honest about polarity and still wrong: the listed addresses are permitted
+*spenders*, not permitted *holders*, and the wrapper would read them as eligible transfer participants. Polarity
+is only half the question; the other half is what the addresses are. Withholding the declaration is what makes
+the fail-closed check refuse it — pinned by `test_WW2_ChildDecliningToDeclarePolarityIsRejected`.
 
 ##### Why the check asks for a sub-interface, not all of `IAddressList`
 

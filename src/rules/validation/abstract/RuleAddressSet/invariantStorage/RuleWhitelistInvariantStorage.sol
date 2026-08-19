@@ -80,6 +80,24 @@ abstract contract RuleWhitelistInvariantStorage is RuleSharedInvariantStorage {
      */
     error RuleWhitelistWrapper_ChildIsNotAnAddressList(address rule);
 
+    /**
+     * @notice A candidate child rule does not declare whether its list means "allowed" or "denied".
+     * @dev Absence is treated as a refusal, never as an assumed allow-list: that is the only reading
+     * that fails closed for a contract predating {IAddressListPolarity} or deliberately declining it
+     * (`RuleSpenderWhitelist` declines, because its set is spenders rather than holders).
+     * @param rule The rejected candidate.
+     */
+    error RuleWhitelistWrapper_ChildDoesNotDeclarePolarity(address rule);
+
+    /**
+     * @notice A candidate child rule declares itself a DENY-list; this wrapper aggregates allow-lists.
+     * @dev The wrapper ORs its children's membership answers and reads `true` as eligible, so a
+     * deny-list child would make its blocked addresses permitted and `isVerified` report them as
+     * verified investors. Nethermind AuditAgent NM-20.
+     * @param rule The rejected candidate.
+     */
+    error RuleWhitelistWrapper_ChildIsNotAnAllowList(address rule);
+
     error RuleWhitelist_InvalidTransfer(address rule, address from, address to, uint256 value, uint8 code);
     error RuleWhitelist_InvalidTransferFrom(
         address rule, address spender, address from, address to, uint256 value, uint8 code

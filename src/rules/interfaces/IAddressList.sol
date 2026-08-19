@@ -26,6 +26,32 @@ interface IAddressListBatchQuery {
 }
 
 /**
+ * @title IAddressListPolarity — what membership of the set MEANS.
+ * @notice The half of an address list that {IAddressListBatchQuery} cannot express.
+ * @dev `areAddressesListed` reports *membership*; it says nothing about whether being a member is a
+ * permission or a prohibition. An allow-list and a deny-list implement that interface identically and
+ * advertise the same ERC-165 id, so a consumer reading `true` as "eligible" cannot tell them apart —
+ * add a deny-list to an allow-list aggregator and its blocked addresses silently become permitted.
+ *
+ * Declaring polarity explicitly is what makes it checkable. A consumer requires this interface via
+ * ERC-165 and then reads {isAllowList}, so a wrong-polarity list is refused at configuration time
+ * instead of inverting the consumer's meaning at run time.
+ *
+ * WARNING: polarity is not the only way a list can be the wrong list. It says nothing about WHO the
+ * listed addresses are — a rule listing permitted *spenders* is an allow-list and still meaningless
+ * to a consumer screening *holders*. A contract whose set is not about the subject its consumers
+ * screen should decline to implement this interface at all, so a fail-closed consumer refuses it.
+ */
+interface IAddressListPolarity {
+    /**
+     * @notice Whether membership of this contract's address set means ALLOWED.
+     * @return allowed True when listed addresses are the permitted ones (an allow-list); false when
+     * listed addresses are the prohibited ones (a deny-list).
+     */
+    function isAllowList() external view returns (bool allowed);
+}
+
+/**
  * @title IAddressList — interface for managing and querying a set of addresses.
  * @dev Inherits {IAddressListBatchQuery}; the flattened selector set is unchanged, so
  * {AddressListInterfaceId.IADDRESS_LIST_INTERFACE_ID} keeps its value.

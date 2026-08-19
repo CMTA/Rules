@@ -33,4 +33,15 @@ library AddressListInterfaceId {
      * test/InterfaceId/AddressListInterfaceId.t.sol.
      */
     bytes4 public constant IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID = 0x20e8e17a;
+
+    /**
+     * @notice ERC-165 interface ID of {IAddressListPolarity}, the single function `isAllowList()`.
+     * @dev Paired with {IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID} by consumers that read membership as
+     * eligibility: the first says the contract can answer, this one says what the answer means. A
+     * consumer must treat its ABSENCE as a refusal, not as an allow-list — that is the only reading
+     * that fails closed for a contract predating the interface or deliberately declining it.
+     *
+     * Safe as a literal for the same reason as the batch-query id: one function, no inheritance.
+     */
+    bytes4 public constant IADDRESS_LIST_POLARITY_INTERFACE_ID = 0xdc4efe10;
 }

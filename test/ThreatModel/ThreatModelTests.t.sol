@@ -12,6 +12,7 @@ import {IdentityRegistryMock} from "src/mocks/IdentityRegistryMock.sol";
 import {TotalSupplyMock} from "src/mocks/TotalSupplyMock.sol";
 import {MockERC20WithTransferContext} from "src/mocks/MockERC20WithTransferContext.sol";
 
+import {RuleSpenderWhitelist} from "src/rules/validation/deployment/RuleSpenderWhitelist.sol";
 import {RuleBlacklist} from "src/rules/validation/deployment/RuleBlacklist.sol";
 import {RuleWhitelist} from "src/rules/validation/deployment/RuleWhitelist.sol";
 import {RuleWhitelistWrapper} from "src/rules/validation/deployment/RuleWhitelistWrapper.sol";
@@ -674,24 +675,66 @@ contract ThreatModelTests is Test, HelperContract {
     }
 
     /**
-     * @notice WW-2: the guard cannot check POLARITY — a blacklist child is still accepted (NM-20).
-     * @dev `RuleBlacklist` answers `areAddressesListed` just as faithfully as a whitelist and
-     *      advertises the same interface id, because the interface genuinely is the same. ERC-165
-     *      therefore cannot distinguish an allow-list from a deny-list, and this configuration
-     *      remains the rules manager's responsibility. Pinned so the limit of the NM-18 guard is
-     *      explicit rather than assumed.
+     * @notice WW-2 / NM-20: **FIXED.** A deny-list child is now refused at `addRule`.
+     * @dev This test formerly asserted the opposite and was named `..._CurrentBehaviour`: `RuleBlacklist`
+     *      answers `areAddressesListed` just as faithfully as a whitelist and advertises the same
+     *      interface ids, so the ERC-165 guard added for NM-18 could not tell them apart — the wrapper
+     *      accepted it and then reported blacklisted addresses as eligible investors, `isVerified`
+     *      included.
+     *
+     *      Polarity is now declared rather than inferred: {IAddressListPolarity} adds `isAllowList()`,
+     *      the wrapper requires it via ERC-165 and refuses any child answering `false`. Membership and
+     *      meaning are separate questions, so they need separate interfaces.
      */
-    function test_WW2_GuardCannotRejectAnInvertedPolarityChild_CurrentBehaviour() public {
+    function test_WW2_DenyListChildIsRejectedAtAddRule() public {
         vm.startPrank(DEFAULT_ADMIN_ADDRESS);
         RuleBlacklist denyList = new RuleBlacklist(DEFAULT_ADMIN_ADDRESS, FORWARDER);
         denyList.addAddress(ATTACKER);
+        assertFalse(denyList.isAllowList(), "a blacklist declares itself a deny-list");
 
         RuleWhitelistWrapper wrapper = new RuleWhitelistWrapper(DEFAULT_ADMIN_ADDRESS, FORWARDER, false, true);
-        wrapper.addRule(IRule(address(denyList))); // accepted: the interface is satisfied
+        vm.expectRevert(abi.encodeWithSelector(RuleWhitelistWrapper_ChildIsNotAnAllowList.selector, address(denyList)));
+        wrapper.addRule(IRule(address(denyList)));
         vm.stopPrank();
 
-        // ...and the blacklisted address is now reported as an eligible investor.
-        assertTrue(wrapper.isVerified(ATTACKER), "NM-20: polarity is not expressible in IAddressList");
+        assertEq(wrapper.rulesCount(), 0, "the deny-list was never added");
+        // The inversion this finding described can no longer be configured.
+        assertFalse(wrapper.isVerified(ATTACKER));
+    }
+
+    /**
+     * @notice WW-2 / NM-20: a rule that declines to declare polarity is refused too.
+     * @dev `RuleSpenderWhitelist` deliberately does not implement {IAddressListPolarity}. Its set IS an
+     *      allow-list, so declaring `true` would be honest about polarity and still wrong — the listed
+     *      addresses are permitted *spenders*, not permitted *holders*, and the wrapper would read them
+     *      as eligible transfer participants. Withholding the declaration is what makes the wrapper's
+     *      fail-closed check refuse it: absence is a refusal, never an assumed allow-list.
+     */
+    function test_WW2_ChildDecliningToDeclarePolarityIsRejected() public {
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        RuleSpenderWhitelist spenderList = new RuleSpenderWhitelist(DEFAULT_ADMIN_ADDRESS, FORWARDER);
+        RuleWhitelistWrapper wrapper = new RuleWhitelistWrapper(DEFAULT_ADMIN_ADDRESS, FORWARDER, false, true);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(RuleWhitelistWrapper_ChildDoesNotDeclarePolarity.selector, address(spenderList))
+        );
+        wrapper.addRule(IRule(address(spenderList)));
+        vm.stopPrank();
+    }
+
+    /// @notice WW-2 / NM-20: genuine allow-lists are still accepted, so the guard is not simply refusing all.
+    function test_WW2_AllowListChildrenAreStillAccepted() public {
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        RuleWhitelist allowList = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, FORWARDER, false, false);
+        allowList.addAddress(ADDRESS1);
+        assertTrue(allowList.isAllowList(), "a whitelist declares itself an allow-list");
+
+        RuleWhitelistWrapper wrapper = new RuleWhitelistWrapper(DEFAULT_ADMIN_ADDRESS, FORWARDER, false, true);
+        wrapper.addRule(IRule(address(allowList)));
+        vm.stopPrank();
+
+        assertEq(wrapper.rulesCount(), 1);
+        assertTrue(wrapper.isVerified(ADDRESS1));
     }
 
     /**

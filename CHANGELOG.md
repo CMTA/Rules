@@ -151,6 +151,21 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   external call on purpose, so a hostile token can only make the check fail, never pass. Cost: two warm `SLOAD`s
   on an operator-only path.
 
+- **NM-20 (Nethermind AuditAgent)** — `RuleWhitelistWrapper` now **rejects** a child whose list has the wrong
+  polarity, rather than only documenting the hazard. `IAddressList` describes *membership*, so a `RuleBlacklist`
+  implements it identically to a whitelist and advertises the same ids; ERC-165 alone could not separate them,
+  and adding one made its blacklisted addresses whitelisted with `isVerified` returning `true` for them.
+  A new one-function marker interface **`IAddressListPolarity`** (`isAllowList()`, id `0xdc4efe10`) makes the
+  distinction expressible, and `_checkRule` now requires it *and* a `true` answer on top of the
+  `IAddressListBatchQuery` check. New errors: `RuleWhitelistWrapper_ChildDoesNotDeclarePolarity` and
+  `RuleWhitelistWrapper_ChildIsNotAnAllowList`.
+  **Absence of the declaration is a refusal, never an assumed allow-list** — the only fail-closed reading.
+  `RuleWhitelist` / `RuleReceiverWhitelist` declare `true`, `RuleBlacklist` declares `false`, and
+  **`RuleSpenderWhitelist` deliberately declines the interface** (documented in its NatSpec as a
+  must-not-change): its set is permitted *spenders*, not *holders*, so an honest `true` would still let the
+  wrapper read spenders as eligible participants. That closes a second wrong-child class with the same
+  mechanism, one that had previously been prose only.
+
 ### Testing
 
 - Added `IdentityRegistryExtraCheckHarness` (`src/mocks/harness/IdentityRegistryDelegationHarness.sol`) — a
@@ -210,19 +225,6 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   `RuleMaxBalanceBase`, `RuleMaxTotalSupplyBase` and `RuleChainlinkPoRBase`.
 
 ### Documentation
-
-- **NM-20 (Nethermind AuditAgent)** — documented that `RuleWhitelistWrapper`'s child rules **must be
-  allow-lists**. `IAddressList` carries membership, not polarity: the wrapper ORs its children's
-  `areAddressesListed` answers and reads `true` as *eligible*, so a `RuleBlacklist` — which implements the same
-  interface, advertises the same interface id and passes every check `addRule` performs — makes its blacklisted
-  addresses whitelisted, and `isVerified` returns `true` for them. No code fix is possible: an ERC-165 guard
-  cannot distinguish polarity when the interface really is the same, and distinguishing it would need a separate
-  marker interface. Unlike an empty wrapper, which fails closed, this fails **open** and silently. Stated in
-  `RuleWhitelistWrapperBase`'s NatSpec, in a *Child rules must be allow-lists* section of
-  `doc/technical/contracts/RuleWhitelistWrapper.md` (with a safe/not-a-child table and the still-open F-5
-  unchecked-child limit alongside it), as footnote `[12b]` in `RULE_SEMANTICS.md`, and in the `CLAUDE.md` /
-  `AGENTS.md` wrapper gotcha.
-
 
 - Added the **Nethermind AuditAgent** (AI automated scan) run for `v0.5.0` — report and per-finding triage in
   `doc/security/audits/tools/v0.5.0/` (Scan ID `10`, commit `01632da`, 0 High / 13 Medium / 11 Low). No false

@@ -14,6 +14,13 @@ import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
  * @title RuleSpenderWhitelistBase
  * @notice Restricts `transferFrom`-style flows to whitelisted spenders only.
  * @dev Direct transfers (`transferred(from,to,value)`) are intentionally no-op.
+ *
+ * @dev **Deliberately does NOT implement {IAddressListPolarity}, and must not be made to.** Its set is
+ * an allow-list, so declaring `isAllowList() == true` would be honest about polarity and still wrong:
+ * the listed addresses are permitted **spenders**, not permitted **holders**. Declaring polarity would
+ * let `RuleWhitelistWrapper` accept this rule and then read whitelisted spenders as eligible transfer
+ * participants. Withholding the declaration is what makes the wrapper's fail-closed check refuse it.
+ * Polarity is only half the question; the other half is what the addresses are.
  */
 abstract contract RuleSpenderWhitelistBase is RuleAddressSet, RuleNFTAdapter, RuleSpenderWhitelistInvariantStorage {
     /*//////////////////////////////////////////////////////////////

@@ -33,10 +33,10 @@ Tool: **[Nethermind AuditAgent](https://auditagent.nethermind.io/)** — an **AI
 
 | Disposition | Count | IDs |
 |---|---|---|
-| **Fixed** (in `v0.6.0`) | 6 | **NM-3**, **NM-6**, **NM-10**, **NM-11**, **NM-17**, **NM-18** |
+| **Fixed** (in `v0.6.0`) | 7 | **NM-3**, **NM-6**, **NM-10**, **NM-11**, **NM-17**, **NM-18**, **NM-20** |
 | Accepted as design (real behaviour, intentional, already documented) | 16 | NM-1, 2, 4, 5, 7, 8, 9, 12, 13, 14, 15, 16, 21, 22, 23, 24 |
 | Rejected — false positive | 0 | — |
-| Informational — valid, optional hardening | 2 | NM-19 (open) · **NM-20 documented in `v0.6.0`** |
+| Informational — valid, optional hardening | 1 | NM-19 (open) |
 | Fix recommended | 0 | — |
 | **Total** | **24** | |
 
@@ -94,7 +94,7 @@ running against the genuine vendored token.
 | NM-17 | Low → **Low** | `approveAndTransferIfAllowed` leaves a residual approval if no callback | ✅ **Fixed** in `v0.6.0` — approval-consumed post-condition |
 | NM-18 | Low → **Low** | Wrapper bricked by a non-`IAddressList` child | ✅ **Fixed** in `v0.6.0` — ERC-165 guard on a purpose-built sub-interface |
 | NM-19 | Low → **Info** | Wrapper does not implement `IAddressList`, so it cannot nest | Informational — enhancement, never advertised |
-| NM-20 | Low → **Info** | Wrapper reads a `RuleBlacklist` child's membership as eligibility | ✅ **Documented** in `v0.6.0` — no code fix possible |
+| NM-20 | Low → **Info** | Wrapper reads a `RuleBlacklist` child's membership as eligibility | ✅ **Fixed** in `v0.6.0` — polarity marker interface + ERC-165 |
 | NM-21 | Low → **Info** | `RuleMintAllowance` 3-arg pre-flight views fail open | Accepted as design — audit F-7 |
 | NM-22 | Low → **Low** | A misbehaving sanctions oracle reverts the read path | Accepted as design — trusted dependency (v0.4.0 audit) |
 | NM-23 | Low → **Info** | Short successful return data escapes `try/catch` | Accepted as design — already documented in-source |
@@ -956,7 +956,7 @@ silently bricking. The scanner is right that the internals already exist —
 be a handful of lines and would make hierarchical OR-composition work. Recorded as a feature request for a
 future release; not required for `v0.5.0`.
 
-### NM-20 — The wrapper reads a `RuleBlacklist` child's membership as eligibility — ✅ DOCUMENTED (`v0.6.0`)
+### NM-20 — The wrapper reads a `RuleBlacklist` child's membership as eligibility — ✅ FIXED (`v0.6.0`)
 
 **Claim (Low).** The wrapper ORs raw `areAddressesListed` answers and treats `true` as eligible. `RuleBlacklist`
 is a valid `IRule` exposing the same interface with the *opposite* polarity, so adding one as a child makes
@@ -967,27 +967,57 @@ wrapper cannot distinguish an allow-list from a deny-list through `IAddressList`
 constrains child semantics. It requires the rules manager to add a blacklist to a *whitelist* wrapper, which is a
 category error rather than an attack: the same role can already remove every whitelist child outright. Related to
 the accepted v0.4.0 row "wrapper cross-rule OR (`from` in child A, `to` in child B) — documented design; the
-wrapper's stated semantics are 'listed in **any** child'". **Resolution — documented in `v0.6.0`.** The remedy is documentation, because the wrapper cannot detect this and
-an ERC-165 guard would not either: `RuleBlacklist` advertises `IADDRESS_LIST_INTERFACE_ID` exactly as the
-whitelist rules do, since the interface genuinely is the same. Distinguishing polarity would need a separate
-marker interface — worth considering if the wrapper ever accepts third-party children, out of proportion today.
+wrapper's stated semantics are 'listed in **any** child'". **Resolution — `v0.6.0`. Enforced, not merely documented.**
 
-The point is now stated in four places, each aimed at a different reader:
+The earlier disposition said no code fix was possible, because an ERC-165 guard cannot distinguish an allow-list
+from a deny-list when the interface genuinely is the same. That was correct about `IAddressList` and wrong as a
+conclusion: it named the remedy — *"distinguishing polarity would need a separate marker interface"* — and then
+treated it as out of proportion. It is one function.
 
-- **`RuleWhitelistWrapperBase` NatSpec** — the warning a reader of the source gets, self-contained per the
-  no-cross-reference convention: `IAddressList` carries membership, not polarity; a deny-list satisfies the
-  interface and passes `addRule`; an ERC-165 guard would not catch it.
-- **`doc/technical/contracts/RuleWhitelistWrapper.md`** — a *Child rules must be allow-lists* subsection with a
-  safe/not-a-child table (`RuleSpenderWhitelist` is on the wrong side too: its set is spenders, not holders),
-  plus the F-5 unchecked-child limit next to it so the whole shape is in one place. The `isVerified` entry and
-  the Architecture paragraph both point at it, since those are where a reader forms the wrong assumption.
-- **`RULE_SEMANTICS.md`** — footnote `[12b]` on the wrapper's operational row, contrasting it with the empty
-  wrapper directly above: an empty wrapper fails **closed**, a wrong-polarity child fails **open**, silently.
-- **`CLAUDE.md` / `AGENTS.md`** — appended to the existing wrapper gotcha, so it is in front of anyone changing
-  the contract.
+```solidity
+interface IAddressListPolarity {
+    /// @return allowed True when listed addresses are the permitted ones; false for a deny-list.
+    function isAllowList() external view returns (bool allowed);
+}
+```
 
-No code change and no test: there is nothing to assert that would not simply restate `RuleBlacklist`'s own
-semantics, and the failure is a configuration choice by a trusted role rather than a contract behaviour.
+`RuleWhitelistWrapperBase._checkRule` now asks **two** questions, because membership and meaning are two
+questions:
+
+| Requirement | Interface | Failure |
+|---|---|---|
+| Can you answer "is this address listed?" | `IAddressListBatchQuery` (`0x20e8e17a`) | `..._ChildIsNotAnAddressList` |
+| Do you declare what membership *means*? | `IAddressListPolarity` (`0xdc4efe10`) | `..._ChildDoesNotDeclarePolarity` |
+| Does it mean **allowed**? | `isAllowList() == true` | `..._ChildIsNotAnAllowList` |
+
+**Absence of the polarity declaration is a refusal, never an assumed allow-list.** That is the only reading that
+fails closed for a contract predating the interface — and it is what makes the abstention below work.
+
+| Rule | `isAllowList()` | As a child |
+|---|---|---|
+| `RuleWhitelist`, `RuleReceiverWhitelist` | `true` | accepted |
+| `RuleBlacklist` | `false` | **rejected** — the finding |
+| `RuleSpenderWhitelist` | *declines the interface* | **rejected** — see below |
+| nested `RuleWhitelistWrapper` | *no `areAddressesListed`* | rejected at the first check |
+
+*A second wrong-child class, closed by the same mechanism.* `RuleSpenderWhitelist` deliberately does **not**
+implement the interface, and the contract's NatSpec says it must not be changed to. Its set genuinely is an
+allow-list, so declaring `true` would be honest about polarity and still wrong: the listed addresses are
+permitted **spenders**, not permitted **holders**, and the wrapper would read them as eligible transfer
+participants. Polarity is only half the question; the other half is what the addresses *are*. Withholding the
+declaration is what makes the fail-closed check refuse it — a cheap way to enforce a caveat that was previously
+prose only, noted when the NM-20 documentation pass first tabulated it as "not a child".
+
+*Tests.* `test_WW2_GuardCannotRejectAnInvertedPolarityChild_CurrentBehaviour` — added one round earlier to pin
+the guard's *limit* — duly failed the moment the limit was removed, which is the `_CurrentBehaviour` convention
+working. It is renamed `test_WW2_DenyListChildIsRejectedAtAddRule` and now asserts the rejection, that the child
+was never added, and that `isVerified(blacklistedAddress)` is false. Two more beside it: the abstaining spender
+rule is refused, and genuine allow-lists are still accepted so the guard is not simply refusing everything.
+Three assertions added to the interface-id suite, including that each rule declares the polarity it actually has
+and that `RuleSpenderWhitelist` does not advertise the interface.
+
+*Coverage.* `RuleWhitelistWrapperBase`, `RuleWhitelistBase`, `RuleReceiverWhitelistBase` and `RuleBlacklistBase`
+all at 100% statements, branches and functions.
 
 ### NM-21 — `RuleMintAllowance` pre-flight views fail open
 

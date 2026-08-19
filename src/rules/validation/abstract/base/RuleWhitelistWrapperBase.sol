@@ -10,7 +10,7 @@ import {RuleTransferValidation} from "../core/RuleTransferValidation.sol";
 import {RulesManagementModule} from "RuleEngine/modules/RulesManagementModule.sol";
 /* ==== Interfaces === */
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
-import {IAddressListBatchQuery} from "../../../interfaces/IAddressList.sol";
+import {IAddressListBatchQuery, IAddressListPolarity} from "../../../interfaces/IAddressList.sol";
 import {AddressListInterfaceId} from "../../../interfaces/library/AddressListInterfaceId.sol";
 import {IIdentityRegistryVerified} from "../../../interfaces/IIdentityRegistry.sol";
 
@@ -246,6 +246,13 @@ abstract contract RuleWhitelistWrapperBase is
             ERC165Checker.supportsInterface(rule_, AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID),
             RuleWhitelistWrapper_ChildIsNotAnAddressList(rule_)
         );
+        // Membership alone is not enough: the child must also say what membership MEANS. Absence of the
+        // declaration is a refusal, never an assumed allow-list -- the only reading that fails closed.
+        require(
+            ERC165Checker.supportsInterface(rule_, AddressListInterfaceId.IADDRESS_LIST_POLARITY_INTERFACE_ID),
+            RuleWhitelistWrapper_ChildDoesNotDeclarePolarity(rule_)
+        );
+        require(IAddressListPolarity(rule_).isAllowList(), RuleWhitelistWrapper_ChildIsNotAnAllowList(rule_));
     }
 
     /**
