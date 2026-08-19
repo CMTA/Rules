@@ -49,21 +49,17 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 _Nothing yet._
 
-## v0.6.0 - 2026/08/18
+## v0.6.0 - 2026-08-18
 
-Branch: `dev`
-Commit: _pending — the release commit does not exist yet; 15 commits since the `v0.5.0` tag plus the
-documentation changes in this working tree._
+Commit: _pending — 15 commits since the `v0.5.0` tag, plus the documentation changes still in the working tree._
 
 ### Summary
 
-An **audit-response release**, driven entirely by the first Nethermind AuditAgent scan (24 findings, 0 High).
-Seven findings were fixed, sixteen accepted as design, one declined; nothing is left open. The substantive work
-is **ERC-3643 support for the supply-cap rules** — ERC-3643 / T-REX calls compliance *after* it moves the value,
-which made the stock cap rules count the amount twice — plus two new marker interfaces that let
-`RuleWhitelistWrapper` reject a child it previously accepted and silently misread. No storage layout changed and
-no existing rule's restriction codes moved, so `v0.5.0` deployments are unaffected unless they adopt the new
-contracts.
+Response to the first Nethermind AuditAgent scan: seven findings fixed, sixteen accepted as design, one declined.
+Adds ERC-3643 variants of the two supply-cap rules (ERC-3643 calls compliance *after* moving the value, so the
+stock rules counted the amount twice), two marker interfaces that let `RuleWhitelistWrapper` reject children it
+previously accepted, and a shared `CapAccounting` primitive. **No storage-layout or ABI change** — `v0.5.0`
+deployments are unaffected unless they adopt the new contracts.
 
 ### Fixed
 
