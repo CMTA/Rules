@@ -33,8 +33,8 @@ Tool: **[Nethermind AuditAgent](https://auditagent.nethermind.io/)** — an **AI
 
 | Disposition | Count | IDs |
 |---|---|---|
-| **Fixed** (in `v0.6.0`) | 5 | **NM-3**, **NM-6**, **NM-10**, **NM-11**, **NM-18** |
-| Accepted as design (real behaviour, intentional, already documented) | 17 | NM-1, 2, 4, 5, 7, 8, 9, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24 |
+| **Fixed** (in `v0.6.0`) | 6 | **NM-3**, **NM-6**, **NM-10**, **NM-11**, **NM-17**, **NM-18** |
+| Accepted as design (real behaviour, intentional, already documented) | 16 | NM-1, 2, 4, 5, 7, 8, 9, 12, 13, 14, 15, 16, 21, 22, 23, 24 |
 | Rejected — false positive | 0 | — |
 | Informational — valid, optional hardening | 2 | NM-19 (open) · **NM-20 documented in `v0.6.0`** |
 | Fix recommended | 0 | — |
@@ -91,7 +91,7 @@ running against the genuine vendored token.
 | NM-14 | Low → **Low** | Identity-registry failures revert the read path | Accepted as design — trusted dependency (v0.4.0 audit) |
 | NM-15 | Low → **Low** | Conditional approvals not token-scoped | Accepted as design — duplicate of NM-7 |
 | NM-16 | Low → **Info** | `RuleSpenderWhitelist` inert on spender-less hooks | Accepted as design — duplicate of NM-9 |
-| NM-17 | Low → **Low** | `approveAndTransferIfAllowed` leaves a residual approval if no callback | Accepted as design — documented CEI inversion |
+| NM-17 | Low → **Low** | `approveAndTransferIfAllowed` leaves a residual approval if no callback | ✅ **Fixed** in `v0.6.0` — approval-consumed post-condition |
 | NM-18 | Low → **Low** | Wrapper bricked by a non-`IAddressList` child | ✅ **Fixed** in `v0.6.0` — ERC-165 guard on a purpose-built sub-interface |
 | NM-19 | Low → **Info** | Wrapper does not implement `IAddressList`, so it cannot nest | Informational — enhancement, never advertised |
 | NM-20 | Low → **Info** | Wrapper reads a `RuleBlacklist` child's membership as eligibility | ✅ **Documented** in `v0.6.0` — no code fix possible |
@@ -701,7 +701,7 @@ two. Closing the gap means choosing a fail direction for an unreadable list and 
 "registry unavailable" / "oracle unavailable" — a deliberate, breaking addition to the code ranges. Recorded as an
 open, intentional asymmetry rather than a silent one.
 
-### NM-17 — `approveAndTransferIfAllowed` can leave a residual approval
+### NM-17 — `approveAndTransferIfAllowed` can leave a residual approval — ✅ FIXED (`v0.6.0`)
 
 **Claim (Low).** The helper records the approval *before* `safeTransferFrom` so the callback can consume it, and
 never verifies afterwards that it was consumed. If the token does not call back — a plain ERC-20 bound for the
@@ -773,12 +773,30 @@ Correctness of the post-condition:
   desired direction.
 - **Cost:** two warm `SLOAD`s (~200 gas) on an operator-only path.
 
-Tests: extend the existing conditional-transfer suites with (a) a plain ERC-20 mock that does not call back —
-assert the revert and that `approvedCount` is unchanged from before the call, and (b) a regression that the
-normal direct-binding and engine-binding flows still succeed with the count back at its starting value.
+**Resolution — `v0.6.0`. Implemented in both variants**, with the error declared in each rule's own invariant
+storage (`RuleConditionalTransferLight_ApprovalNotConsumed` /
+`RuleConditionalTransferLightMultiToken_ApprovalNotConsumed`).
 
-Recommended: it converts a silent, operator-created compliance hole into an immediate, named failure at the exact
-moment the misconfiguration is exercised.
+*Tests — 5 added, and the existing mock made the awkward case easy.* `MockERC20WithTransferContext` is a no-op
+notifier when no rule is set, so leaving `setRule` uncalled produces a token that moves value and tells nobody —
+exactly the shape of the finding, with no new mock needed. Single-token: the silent token reverts with
+`..._ApprovalNotConsumed`, leaving no residual approval and no moved value; an operator's pre-existing approvals
+for the same tuple survive the helper; the ordinary direct-binding flow still consumes exactly one per call.
+Multi-token: the same silent-token case, plus a check that the count stays per-token.
+
+*Verified, not assumed.* Removing the two `require`s makes both silent-token tests fail with *"next call did not
+revert as expected"*, and nothing else moves.
+
+*Note on the pre-existing suite.* All 871 tests passed unchanged the moment the post-condition was added, because
+every existing test uses a token that does call back. That is simultaneously the reassurance that this is not a
+regression and the evidence that the non-callback path had **no coverage at all** before these tests — which is
+how the hole survived.
+
+*Coverage:* `RuleConditionalTransferLightBase` at 100% statements, branches and functions.
+
+*Documented* in both contract pages and in the `CLAUDE.md` / `AGENTS.md` gotchas, including the behaviour change:
+a deployment running the helper against a non-callback token now reverts instead of completing. That is the fix
+rather than a side effect — the transfer was leaving a compliance hole behind.
 
 ### NM-18 — The wrapper can be bricked by a non-`IAddressList` child — ✅ FIXED (`v0.6.0`)
 
@@ -1095,7 +1113,7 @@ over-issuance. **It has since been fixed** for the two supply-based cap rules, w
 `RuleMaxBalance` is deliberately left as CMTAT-path-only, because a post-update variant would revert an agent's
 forced transfer and, on T-REX <= 4.1, brick wallet recovery — a policy decision rather than a hook override.
 
-**Eight improvements are specified**, each with its code, its cost and its limit. Five are done; the other three
+**Eight improvements are specified**, each with its code, its cost and its limit. Six are done; the other two
 are listed in rough order of value per unit of risk:
 
 | Improvement | Where | Size | Status / verdict |
@@ -1103,7 +1121,7 @@ are listed in rough order of value per unit of risk:
 | ERC-3643 cap-rule variants (`CapAccounting` + the notify seam) | NM-11 | 2 rules × 2 variants | ✅ **Done in `v0.6.0`** — 49 tests, incl. suites against the genuine T-REX token; `RuleMaxBalance` deliberately excluded |
 | Delegate instead of returning early | NM-3 | ~4 lines | ✅ **Done in `v0.6.0`** — behaviour-preserving, 8 regression tests, mutation-verified |
 | Future-dated PoR answer → code 77 | NM-10 | 1 line | ✅ **Done in `v0.6.0`** — 5 regression tests, mutation-verified |
-| Approval post-condition in `approveAndTransferIfAllowed` | NM-17 | ~5 lines + 1 error, ×2 variants | **Do it** — turns a silent operator-created hole into a named revert |
+| Approval post-condition in `approveAndTransferIfAllowed` | NM-17 | ~5 lines + 1 error, ×2 variants | ✅ **Done in `v0.6.0`** — 5 regression tests, mutation-verified |
 | ERC-165 guard on wrapper children | NM-18 | `_checkRule` override + sub-interface | ✅ **Done in `v0.6.0`** — requires only the one selector the wrapper calls |
 | Normalise `spender == from` on the ERC-7943 overloads | NM-6 | 1 helper + 3 branches | ✅ **Done in `v0.6.0`** — 1 file, corrects one rule, changes no deny-list outcome |
 | `staticcall` + length check on the cap reads | NM-23/24 | 4 files | Worth it, as its own reviewed change — also retires the Cancun precondition |

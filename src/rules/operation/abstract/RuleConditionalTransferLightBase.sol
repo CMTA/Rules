@@ -119,12 +119,22 @@ abstract contract RuleConditionalTransferLightBase is
         address token = getTokenBound();
         require(token != address(0), RuleConditionalTransferLight_TokenNotBound());
 
+        uint256 approvalsBefore = approvedCount(from, to, value);
         approveTransfer(from, to, value);
 
         uint256 allowed = IERC20(token).allowance(from, address(this));
         require(allowed >= value, RuleConditionalTransferLight_InsufficientAllowance(token, from, allowed, value));
 
         IERC20(token).safeTransferFrom(from, to, value);
+
+        // The approval above exists ONLY for the token's compliance callback to consume. If the count
+        // did not come back down, no callback reached this rule -- the binding is wrong -- and leaving
+        // the surplus would authorise a later, never-approved transfer of the same tuple. Read after
+        // the external call deliberately: a hostile token can make this fail, never pass spuriously.
+        require(
+            approvedCount(from, to, value) == approvalsBefore,
+            RuleConditionalTransferLight_ApprovalNotConsumed(token, from, to, value)
+        );
         return true;
     }
 

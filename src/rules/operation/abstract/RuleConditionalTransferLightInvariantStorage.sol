@@ -77,6 +77,21 @@ abstract contract RuleConditionalTransferLightInvariantStorage is RuleSharedInva
     );
     error TransferNotApproved();
     error TransferApprovalNotFound();
+    /**
+     * @notice The approval created by {approveAndTransferIfAllowed} was not consumed by the transfer.
+     * @dev The helper inverts CEI deliberately so the approval exists while the token runs its
+     * compliance callback. That is only correct if the callback actually reaches this rule; when it
+     * does not -- a plain ERC-20 bound for the helper, or a RuleEngine never bound or since unbound --
+     * the transfer used to succeed and leave a spendable approval behind, authorising a later
+     * never-approved transfer of the same tuple. The post-condition turns that silent hole into this
+     * revert. Nethermind AuditAgent NM-17.
+     * @param token The bound ERC-20 the transfer was executed on.
+     * @param from The sender of the transfer.
+     * @param to The recipient of the transfer.
+     * @param value The amount transferred.
+     */
+    error RuleConditionalTransferLight_ApprovalNotConsumed(address token, address from, address to, uint256 value);
+
     error RuleConditionalTransferLight_RuleEngineAddressZeroNotAllowed();
     error RuleConditionalTransferLight_RuleEngineNotBound();
     error RuleConditionalTransferLight_RuleEngineAlreadyBound();

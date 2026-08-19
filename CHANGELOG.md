@@ -137,6 +137,20 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   id, the sub-interface id is safe as a literal, because it inherits nothing and so has no omitted-parent trap.
   **The guard still cannot check polarity** — a `RuleBlacklist` advertises the same ids and passes it (NM-20).
 
+- **NM-17 (Nethermind AuditAgent)** — `approveAndTransferIfAllowed` now asserts that the approval it created was
+  consumed. Both variants invert checks-effects-interactions deliberately, recording the approval *before*
+  `safeTransferFrom` so the token's compliance callback can consume it; nothing verified the callback arrived. A
+  plain ERC-20 bound with `bindToken`, or a RuleEngine never bound or since unbound, therefore completed the
+  transfer and left the approval standing — indistinguishable from an operator-created one, and enough to
+  authorise a later never-approved transfer of exactly `(from, to, value)`. The helper now reverts with
+  `RuleConditionalTransferLight_ApprovalNotConsumed` /
+  `RuleConditionalTransferLightMultiToken_ApprovalNotConsumed`.
+  **Behaviour change**: a deployment running the helper against a non-callback token now reverts instead of
+  completing — that is the fix, not a side effect. The comparison is against the count *before* the helper ran,
+  so an operator's own outstanding approvals for the same tuple survive; and the count is read *after* the
+  external call on purpose, so a hostile token can only make the check fail, never pass. Cost: two warm `SLOAD`s
+  on an operator-only path.
+
 ### Testing
 
 - Added `IdentityRegistryExtraCheckHarness` (`src/mocks/harness/IdentityRegistryDelegationHarness.sol`) — a
@@ -158,6 +172,13 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   "aligned" away later. Reverting the fix fails 6 of the suite's 10 tests across 5 rules. The suite's header
   comment, which described the parity as flat, now states the per-interface conventions. Coverage on
   `RuleNFTAdapter`: 100% statements, 100% branches.
+
+- Added 5 tests for NM-17 across `RuleConditionalTransferLightApproveAndTransfer.t.sol` and
+  `RuleConditionalTransferLightMultiToken.t.sol`. `MockERC20WithTransferContext` is a no-op notifier when no rule
+  is set, so leaving `setRule` uncalled gives a token that moves value and tells nobody — the finding's exact
+  shape, with no new mock. Removing the two post-conditions makes both silent-token tests fail and nothing else.
+  Worth recording: the pre-existing 871 tests all passed unchanged when the post-condition landed, because every
+  one of them uses a token that *does* call back — which is how the non-callback path came to have no coverage.
 
 - The WW-2 threat-model PoC did what its convention promises: named `..._CurrentBehaviour` because it asserted
   the broken behaviour, it **failed** when NM-18 was fixed. Renamed

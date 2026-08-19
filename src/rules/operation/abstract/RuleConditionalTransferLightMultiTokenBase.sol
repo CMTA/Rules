@@ -136,6 +136,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
     {
         require(isTokenBound(token), RuleConditionalTransferLightMultiToken_InvalidToken());
 
+        uint256 approvalsBefore = approvedCount(token, from, to, value);
         _approveTransfer(token, from, to, value);
 
         uint256 allowed = IERC20(token).allowance(from, address(this));
@@ -144,6 +145,14 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
         );
 
         IERC20(token).safeTransferFrom(from, to, value);
+
+        // See the single-token twin: the approval exists only for the token's compliance callback, so
+        // a count that did not come back down means no callback reached this rule and the surplus
+        // would otherwise stay spendable.
+        require(
+            approvedCount(token, from, to, value) == approvalsBefore,
+            RuleConditionalTransferLightMultiToken_ApprovalNotConsumed(token, from, to, value)
+        );
         return true;
     }
 

@@ -109,6 +109,24 @@ Returns the remaining count for a specific token key.
 
 Approves and executes `safeTransferFrom` on the specified token, requiring allowance for this rule as spender.
 
+Like its single-token twin, the helper **inverts checks-effects-interactions on purpose** — the approval is
+recorded *before* `safeTransferFrom` so the token's compliance callback can consume it — and it now ends with a
+post-condition asserting the approval was in fact consumed:
+
+```solidity
+require(
+    approvedCount(token, from, to, value) == approvalsBefore,
+    RuleConditionalTransferLightMultiToken_ApprovalNotConsumed(token, from, to, value)
+);
+```
+
+A count that did not come back down means no callback reached the rule — the token is not bound directly, or is
+a plain ERC-20 that notifies nobody. Before this check the transfer completed and left a spendable approval for
+`(token, from, to, value)` behind, enough to authorise a later never-approved transfer of that exact tuple
+(Nethermind AuditAgent `NM-17`). The comparison is against the count **before** the helper ran, so an operator's
+own outstanding approvals are untouched. Pinned by
+`testApproveAndTransferRevertsWhenTheTokenDoesNotCallBack`.
+
 ### `transferred(...)`
 
 Only bound tokens can call transfer execution hooks. Approval consumption uses the **caller** (`msg.sender`) as the token key, which is why the rule must be bound directly to each token. See [Deployment topology](#deployment-topology--why-a-ruleengine-does-not-work).
