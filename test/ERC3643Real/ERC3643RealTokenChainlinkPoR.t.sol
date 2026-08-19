@@ -50,6 +50,7 @@ contract ERC3643RealTokenChainlinkPoR is Test, RuleChainlinkPoRInvariantStorage 
 
     /// @dev Feed and token both report 0 decimals, so a reserve answer is a token amount as-is.
     uint256 private constant RESERVES = 1000;
+    uint8 private constant TRANSFER_OK_CODE = 0;
 
     IdentityRegistryWhitelist private registry;
     AggregatorV3Mock private feed;
@@ -268,6 +269,70 @@ contract ERC3643RealTokenChainlinkPoR is Test, RuleChainlinkPoRInvariantStorage 
 
         // And it agrees with the token's own pre-flight consultation.
         assertFalse(engine.canTransfer(address(0), INVESTOR, 1));
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                    THE SUPPLY READ ITSELF
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Code 78 (`CODE_TOTAL_SUPPLY_UNAVAILABLE`) is unreachable against a directly deployed
+     *         ERC-3643 token, so the guarded read costs nothing but is not dead weight either.
+     * @dev `Token.totalSupply()` is `external view { return _totalSupply; }` — no modifier, no
+     *      external call, so it cannot revert and `_currentSupply()` always reports available. The
+     *      branch still earns its place: the standard T-REX deployment puts the token behind a
+     *      `TokenProxy` whose implementation is resolved through an `ImplementationAuthority`, and a
+     *      proxy repointed at a bad implementation *can* make `totalSupply()` revert. The rule then
+     *      returns 78 and blocks minting rather than breaking the MUST-NOT-revert views.
+     */
+    function testSupplyIsAlwaysReadableOnADirectlyDeployedToken() public {
+        RuleChainlinkPoRERC3643 rule = _useErc3643Rule();
+
+        assertEq(rule.detectTransferRestriction(address(0), INVESTOR, 1), TRANSFER_OK_CODE);
+
+        vm.prank(AGENT);
+        token.mint(INVESTOR, RESERVES);
+
+        // Still readable with a non-zero supply; the ceiling, not the read, is what now binds.
+        assertEq(rule.detectTransferRestriction(address(0), INVESTOR, 1), CODE_RESERVES_EXCEEDED);
+    }
+
+    /**
+     * @notice DEPLOYMENT ORDER: build the rule AFTER `Token.init`, or its cached decimals are wrong.
+     * @dev ERC-3643 deploys then initialises, and an uninitialised `Token` reports `decimals() == 0`.
+     *      The rule's constructor probes `decimals()` and accepts a matching `0`, so a rule built
+     *      first is happily configured for a 0-decimals token — and then `init(..., 18, ...)` makes it
+     *      an 18-decimals token while the rule still believes 0. Nothing reverts and no event marks
+     *      it; the reserve answer is simply scaled by `10 ** 18` too little, and every mint is
+     *      refused. The same mistake with the decimals reversed would over-mint instead.
+     *
+     *      There is no on-chain fix: the constructor probe genuinely succeeded. The remedy is
+     *      ordering (construct after `init`) or calling `setTokenMetadata` afterwards to re-sync.
+     */
+    function testRuleBuiltBeforeInitCachesTheWrongDecimals() public {
+        Token fresh = new Token();
+        assertEq(fresh.decimals(), 0, "an uninitialised token reports 0 decimals");
+
+        AggregatorV3Mock scaledFeed = new AggregatorV3Mock(8, int256(RESERVES * 1e8));
+        RuleChainlinkPoRERC3643 early =
+            new RuleChainlinkPoRERC3643(ADMIN, address(fresh), 0, AggregatorV3Interface(address(scaledFeed)), 0);
+
+        RuleEngine freshEngine = new RuleEngine(ADMIN, address(0), address(0));
+        vm.prank(ADMIN);
+        freshEngine.setTokenSelfBindingApproval(address(fresh), true);
+        fresh.init(address(registry), address(freshEngine), "Late init", "LATE", 18, address(0));
+
+        assertEq(fresh.decimals(), 18, "the token is now an 18-decimals token");
+        assertEq(early.tokenDecimals(), 0, "but the rule still believes 0");
+
+        (, uint256 backed) = early.maxBackedSupply();
+        assertEq(backed, RESERVES, "reserves scaled into 0 decimals");
+
+        // Re-syncing after init is the operator-side remedy.
+        vm.prank(ADMIN);
+        early.setTokenMetadata(address(fresh), 18);
+        (, uint256 corrected) = early.maxBackedSupply();
+        assertEq(corrected, RESERVES * 1e18, "and now the ceiling is in the token's own units");
     }
 
     /// @notice The variant reports the same reserve ceiling as the stock rule; only enforcement differs.

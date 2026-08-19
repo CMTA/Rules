@@ -91,6 +91,36 @@ and forwards them.
 `RuleChainlinkPoRERC3643Ownable2Step` is the same contract under `Ownable2Step` instead of
 `AccessControl`.
 
+### ⚠️ Deployment order: build the rule AFTER `Token.init`
+
+ERC-3643 deploys the token and initialises it in two steps, and **an uninitialised `Token` reports
+`decimals() == 0`**. The rule's constructor probes `decimals()` and accepts a matching value, so a
+rule constructed before `init` is configured for a 0-decimals token — and `init(..., 18, ...)` then
+makes it an 18-decimals token while the rule still believes 0.
+
+Nothing reverts and no event marks it. The reserve answer is simply scaled by `10 ** 18` too little
+and every mint is refused; the same mistake with the decimals reversed would authorise **unbacked
+minting** instead. The constructor probe cannot catch this — it genuinely succeeded at the time.
+
+- **Construct the rule after `token.init(...)`**, or
+- call `setTokenMetadata(token, decimals)` once the token is initialised to re-sync.
+
+In a `TREXFactory.deployTREXSuite` flow the token address only exists after the factory call anyway,
+so the natural order is: deploy the `RuleEngine`, deploy the suite with it as compliance, then deploy
+the rule against the finished token and `engine.addRule(...)`.
+
+Pinned by `testRuleBuiltBeforeInitCachesTheWrongDecimals`.
+
+### On `CODE_TOTAL_SUPPLY_UNAVAILABLE` (78)
+
+`Token.totalSupply()` is `external view { return _totalSupply; }` — no modifier, no external call —
+so it cannot revert, and code 78 is unreachable against a **directly deployed** ERC-3643 token. The
+guarded read is still not dead weight: the standard T-REX deployment puts the token behind a
+`TokenProxy` resolving its implementation through an `ImplementationAuthority`, and a proxy repointed
+at a broken implementation *can* make the call revert. The rule then returns 78 and blocks minting
+instead of breaking the MUST-NOT-revert views. Pinned by
+`testSupplyIsAlwaysReadableOnADirectlyDeployedToken`.
+
 ## Behaviour inherited unchanged
 
 - **Mints only.** Transfers and burns always pass, including while the feed is stale, broken or
