@@ -180,6 +180,18 @@ deployments are unaffected unless they adopt the new contracts.
   wrapper read spenders as eligible participants. That closes a second wrong-child class with the same
   mechanism, one that had previously been prose only.
 
+- **Two `internal` functions were missing `virtual`** (`RuleAddressSetInternal._requireNotZeroAddress`,
+  `RuleERC2980Internal._requireNotZeroAddress`), against the project's own convention. Both are the batch
+  zero-address guard passed to `AddressSetBatchLib` as an **internal function pointer** — which is also why
+  Slither reports them as dead code. Verified before changing: `virtual` is legal there, dispatch genuinely
+  reaches an override *through the pointer* (not obvious, since Solidity resolves such pointers at assignment),
+  and the gas is **identical** (`addAddress` 92 220, `addAddresses` 140 637 either way).
+- **Seven NatSpec blocks exceeded the project's stated 20-line ceiling**, all added earlier in this release: the
+  four ERC-3643 variant headers and the three notification-seam blocks, the latter byte-identical across
+  `RuleChainlinkPoRBase`, `RuleMaxTotalSupplyBase` and `RuleMaxBalanceBase`. Each keeps its conclusion and its
+  warning; the derivations move to the contract pages and `RULE_SEMANTICS.md`, which already carried them. Max
+  block is now 19 against a median of 4 (824 blocks measured).
+
 ### Testing
 
 - Added `IdentityRegistryExtraCheckHarness` (`src/mocks/harness/IdentityRegistryDelegationHarness.sol`) — a
@@ -201,6 +213,11 @@ deployments are unaffected unless they adopt the new contracts.
   "aligned" away later. Reverting the fix fails 6 of the suite's 10 tests across 5 rules. The suite's header
   comment, which described the parity as flat, now states the per-interface conventions. Coverage on
   `RuleNFTAdapter`: 100% statements, 100% branches.
+
+- Added `test/VirtualHooks/BatchGuardPointerVirtual.t.sol` pinning both halves of the `virtual` fix: the keyword
+  is required (removing it fails the build with *"Trying to override non-virtual function"*, confirmed by
+  mutation) and the override is actually reached through the function pointer — a compile-only check would pass
+  either way while leaving the guard only *looking* extensible.
 
 - Added 5 tests for NM-17 across `RuleConditionalTransferLightApproveAndTransfer.t.sol` and
   `RuleConditionalTransferLightMultiToken.t.sol`. `MockERC20WithTransferContext` is a no-op notifier when no rule
@@ -261,6 +278,9 @@ deployments are unaffected unless they adopt the new contracts.
   per child, and the *rejected* path never early-exits, so a 10 × 10 nest is ~880k gas per transfer against ~90k
   flat) and open an `A → B → A` cycle class that recurses to out-of-gas, bricking transfers and `isVerified`,
   with no cheap on-chain defence.
+
+- **Code-quality review for `v0.6.0`** (`doc/security/audits/tools/v0.6.0/CLAUDE_ANALYSIS.md`) — 11 checks, no
+  vulnerability. Seven checked-and-correct, three fixed, one left deliberately, one open for decision.
 
 - **Static-analysis reports re-run for `v0.6.0`** — Slither 0.11.5 and Aderyn 0.6.5, same versions as `v0.5.0`
   so the delta is comparable, with reports and per-finding triage in `doc/security/audits/tools/v0.6.0/`.
@@ -491,7 +511,7 @@ screening, F-1; `transferFrom` delegation, F-2).
 
 ### Documentation
 
-- **NatSpec length ceiling, and a pass to meet it.** `CLAUDE.md` / `AGENTS.md` gain a convention capping a NatSpec block at 20 lines, with the rationale that a comment past that has stopped being a comment and become a document, and that the more claims a block makes the more of them go stale unnoticed. The ceiling was set from the measured distribution over `src/` rather than picked: median 4 lines, 90th percentile 8. Fifteen blocks exceeded it and were rewritten to keep the safety preconditions, footguns and non-obvious design constraints while cutting code restatement, refactor narration and benefit lists — the distribution now runs median 4 / p90 8 / **max 19** across 1003 blocks, with none at or over the ceiling. Comment-only: filtering the whole diff for non-comment lines yields nothing, so no behaviour, ABI or storage change is possible; 820 + 31 tests pass unchanged. The `analyse-code-quality` skill gained the corresponding check.
+- **NatSpec length ceiling, and a pass to meet it.** `CLAUDE.md` / `AGENTS.md` gain a convention capping a NatSpec block at 20 lines, with the rationale that a comment past that has stopped being a comment and become a document, and that the more claims a block makes the more of them go stale unnoticed. The ceiling was set from the measured distribution over `src/` rather than picked: median 4 lines, 90th percentile 8. Fifteen blocks exceeded it and were rewritten to keep the safety preconditions, footguns and non-obvious design constraints while cutting code restatement, refactor narration and benefit lists — the distribution now runs median 4 / p90 8 / **max 19** across 1003 blocks, with none at or over the ceiling. Comment-only: filtering the whole diff for non-comment lines yields nothing, so no behaviour, ABI or storage change is possible; 820 + 31 tests pass unchanged.
   - One block was damaged by the trimming and repaired in a follow-up: `BalanceCapManager`'s header lost the middle of its first `@dev`, leaving `Declares **no constructor**` with no verb or period glued to an unrelated sentence. Found by inspecting the compiled `devdoc` rather than the source. **The line-count check cannot catch this** — it measures length, not whether a trimmed sentence still parses as English — so the other fourteen rewrites were re-read by hand and are clean.
   - Worth knowing for anyone editing these blocks: **solc merges repeated `@dev` tags into one `details` string with no separator**, so `…the cap.` followed by a new `@dev` renders as `…the cap.{_balanceOf} must never revert`. Within a single tag, lines join with a space and blank lines collapse. Multiple `@dev` is valid and loses no content — 15 blocks in `src/` use it — but paragraph structure survives only in the source, not in `forge doc` or Etherscan output.
 - New [`doc/technical/contracts/RuleReceiverWhitelist.md`](./doc/technical/contracts/RuleReceiverWhitelist.md), including why receiver-only screening is the conformant choice and how the parity suite tests it.

@@ -139,7 +139,7 @@ abstract contract RuleERC2980Internal is RuleERC2980InvariantStorage {
      * with THIS rule's error rather than a generic one.
      * @param targetAddress The candidate address.
      */
-    function _requireNotZeroAddress(address targetAddress) internal pure {
+    function _requireNotZeroAddress(address targetAddress) internal pure virtual {
         require(targetAddress != address(0), RuleERC2980_ZeroAddressNotAllowed());
     }
 

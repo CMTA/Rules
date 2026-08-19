@@ -6,29 +6,19 @@ import {RuleChainlinkPoR} from "./RuleChainlinkPoR.sol";
 
 /**
  * @title RuleChainlinkPoRERC3643
- * @notice {RuleChainlinkPoR} for **ERC-3643 tokens only**. Identical reserve logic; the sole
- * difference is WHEN the token reports the mint.
+ * @notice {RuleChainlinkPoR} for **ERC-3643 tokens only**. Identical reserve logic; the sole difference is WHEN the
+ * token reports the mint.
  *
- * @dev **Use this variant if and only if the token calls compliance AFTER it has moved the value.**
- * ERC-3643 / T-REX does: `mint` runs `_mint(_to, _amount)` and only then
- * `_tokenCompliance.created(_to, _amount)`, so by the time this rule is consulted `totalSupply()`
- * already includes the new tokens. CMTAT does the opposite -- it calls the rule first -- and must use
- * plain {RuleChainlinkPoR}.
+ * @dev **Use this variant if and only if the token calls compliance AFTER it has moved the value.** ERC-3643 /
+ * T-REX does: `mint` runs `_mint` and only then `_tokenCompliance.created`, so `totalSupply()` already includes
+ * the new tokens. CMTAT calls the rule first and must use plain {RuleChainlinkPoR}.
  *
- * @dev **Picking the wrong variant breaks the cap in one direction or the other, silently.** On an
- * ERC-3643 token the stock rule counts the minted amount twice and rejects mints that are fully
- * backed; on a CMTAT token this variant ignores the pending amount and would authorise a mint that
- * overshoots the reserves. Neither shows up as a revert at configuration time.
+ * @dev **Picking the wrong variant breaks the cap silently, and nothing reverts at configuration time.** The
+ * stock rule on ERC-3643 counts the minted amount twice and rejects mints that are within the reserves reported by the feed; this variant
+ * on CMTAT ignores the pending amount and weakens enforcement.
  *
- * @dev Only the WRITE path is re-phased. The ERC-1404 / ERC-3643 read views
- * (`detectTransferRestriction`, `canTransfer`, `maxBackedSupply`) still project the pending amount,
- * because a pre-flight query always runs before the movement on either kind of token -- ERC-3643
- * itself calls `canTransfer` before `_transfer`. Re-phasing them too would make the pre-flight answer
- * disagree with enforcement.
- *
- * @dev Mint is the only gated operation, so the ERC-3643 paths that matter are `mint` (which reports
- * through `created`) and `forcedMint` where present. Transfers and burns are never blocked by this
- * rule, on either variant.
+ * @dev Only the WRITE path is re-phased — the read views still project the pending amount, because ERC-3643
+ * calls `canTransfer` before `_mint`.
  */
 contract RuleChainlinkPoRERC3643 is RuleChainlinkPoR {
     /*//////////////////////////////////////////////////////////////

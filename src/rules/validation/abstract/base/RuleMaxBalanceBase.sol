@@ -158,24 +158,13 @@ abstract contract RuleMaxBalanceBase is RuleTransferValidation, BalanceCapManage
 
     /**
      * @notice Restriction code for the NOTIFICATION phase, i.e. what the write hook enforces.
-     * @dev **This is the seam an ERC-3643 variant overrides.** It defaults to the pre-flight check,
-     * which is correct for a token that notifies the rule BEFORE moving the value (CMTAT): the
-     * observation still excludes `value`, so `value` must be counted.
+     * @dev **The seam an ERC-3643 variant overrides.** Defaults to the pre-flight check, correct for a token
+     * that notifies BEFORE moving the value (CMTAT). A token that notifies AFTERWARDS reports an observation
+     * that already includes `value`, and counting it again halves the effective cap; such a variant overrides
+     * this with `_detectTransferRestriction(from, to, 0)`.
      *
-     * A token that notifies AFTERWARDS (ERC-3643 / T-REX) reports an observation that already
-     * includes `value`; counting it again halves the effective cap. Such a variant overrides this
-     * hook to re-ask the same question with nothing left to add:
-     *
-     * ```solidity
-     * function _detectTransferRestrictionOnNotify(address from, address to, uint256)
-     *     internal view override returns (uint8)
-     * {
-     *     return _detectTransferRestriction(from, to, 0);
-     * }
-     * ```
-     *
-     * The read path is deliberately NOT routed through here: a pre-flight view always runs before the
-     * movement, on either kind of token, so it must always count `value`.
+     * The read path is deliberately NOT routed through here: a pre-flight view always runs before the movement
+     * on either kind of token, so it must always count `value`.
      * @param from Sender address.
      * @param to Recipient address.
      * @param value Amount moved.
