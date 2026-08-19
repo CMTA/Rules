@@ -197,8 +197,8 @@ AI-assisted review, each triaged by the project team:
 
 | Type | Tool | Latest run |
 | --- | --- | --- |
-| Static analysis | [Slither](https://github.com/crytic/slither) 0.11.5 | v0.5.0 |
-| Static analysis | [Aderyn](https://github.com/Cyfrin/aderyn) 0.6.5 | v0.5.0 |
+| Static analysis | [Slither](https://github.com/crytic/slither) 0.11.5 | v0.6.0 |
+| Static analysis | [Aderyn](https://github.com/Cyfrin/aderyn) 0.6.5 | v0.6.0 |
 | AI automated scan | [Nethermind AuditAgent](https://auditagent.nethermind.io/) | v0.5.0 |
 | AI-assisted review | Claude Code (Anthropic) | v0.5.0 |
 | AI-assisted review | Claude + custom security-audit skills | v0.4.0 |
@@ -206,7 +206,7 @@ AI-assisted review, each triaged by the project team:
 
 Scope is the production contracts under `src/`; mocks, tests and vendored dependencies are excluded. 
 
-Every finding carries a written triage, including the ones dismissed as false positives or by-design. Nothing was outstanding as of `v0.5.0`.
+Every finding carries a written triage, including the ones dismissed as false positives or by-design. Nothing is outstanding as of `v0.6.0`: the static analysers report nothing to fix (Slither 46 results, Aderyn 346 Low instances — all false-positive, by-design, environmental or cosmetic), and the AuditAgent scan is fully dispositioned.
 
 ### Nethermind AuditAgent (v0.5.0)
 

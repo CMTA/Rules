@@ -262,6 +262,15 @@ deployments are unaffected unless they adopt the new contracts.
   flat) and open an `A → B → A` cycle class that recurses to out-of-gas, bricking transfers and `isVerified`,
   with no cheap on-chain defence.
 
+- **Static-analysis reports re-run for `v0.6.0`** — Slither 0.11.5 and Aderyn 0.6.5, same versions as `v0.5.0`
+  so the delta is comparable, with reports and per-finding triage in `doc/security/audits/tools/v0.6.0/`.
+  **Nothing to fix.** Slither 44 → 46: one `calls-loop` on the NM-20 polarity guard (bounded, configuration-time
+  only) and one `dead-code` false positive naming the notification seam that `RuleChainlinkPoRERC3643` exists to
+  override — acting on it would break the ERC-3643 variant, so the triage records the three proofs it is live.
+  Aderyn 336 → 346 on +204 nSLOC, which is exactly the five new production files appearing once each in
+  `Unspecific Solidity Pragma` and `PUSH0 Opcode`; no new category, and neither `Centralization Risk` nor
+  `Empty Block` moved, since the new variants add no privileged external function.
+
 - **Per-rule ERC-3643 compatibility matrix** (`RULE_SEMANTICS.md` §6). The scan's most useful signal was that a
   rule's guarantees depend on what the token tells it and when, and there was no single place saying so per rule.
   ERC-3643 / T-REX **never forwards a spender** (both `transfer` and `transferFrom` call the 3-argument

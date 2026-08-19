@@ -1971,6 +1971,32 @@ Proofs live in [`test/ThreatModel/ThreatModelTests.t.sol`](../test/ThreatModel/T
 
 See the consolidated [Audit & Security-Analysis Overview](./security/audits/AUDIT_OVERVIEW.md) for the full index and triage. Latest tool outputs (including feedback documents) are in [`doc/security/audits/tools/v0.4.0/`](./security/audits/tools/v0.4.0/).
 
+#### Static analysis (v0.6.0)
+
+Re-run **2026-08-18** for the v0.6.0 release, at solc `0.8.36`, with the same tool versions as v0.5.0 so the
+delta is directly comparable. Full reports and per-finding triage in
+[`doc/security/audits/tools/v0.6.0/`](./security/audits/tools/v0.6.0/).
+
+| Tool | High | Medium | Low | Info | Anything to fix? |
+|---|---|---|---|---|---|
+| [Slither](https://github.com/crytic/slither) 0.11.5 | 2 | 11 | 18 | 15 | **No** — [feedback](./security/audits/tools/v0.6.0/slither-report-feedback.md) |
+| [Aderyn](https://github.com/Cyfrin/aderyn) 0.6.5 | 0 | 0 | 9 categories (346 instances) | 0 | **No** — [feedback](./security/audits/tools/v0.6.0/aderyn-report-feedback.md) |
+
+**Nothing to fix.** Slither moved 44 → 46 and Aderyn 336 → 346, both fully attributed to code added this
+release. Aderyn's +10 is *exactly* the five new production files appearing once each in the two per-file
+categories (`Unspecific Solidity Pragma`, `PUSH0 Opcode`); no new category appeared, and neither
+`Centralization Risk` nor `Empty Block` moved, because the new ERC-3643 variants add no privileged external
+function. Slither's one new `dead-code` hit is a false positive that would be damaging to act on — it names the
+notification seam `RuleChainlinkPoRERC3643` exists to override.
+
+Commands used for `v0.6.0` (mocks excluded):
+
+```bash
+slither . --checklist --filter-paths "node_modules,lib,test,forge-std,mocks" \
+  > doc/security/audits/tools/v0.6.0/slither-report.md
+aderyn -x mocks --output doc/security/audits/tools/v0.6.0/aderyn-report.md
+```
+
 #### Static analysis (v0.5.0)
 
 Re-run **2026-08-13** for the v0.5.0 release, at solc `0.8.36`. Full reports and per-finding triage in

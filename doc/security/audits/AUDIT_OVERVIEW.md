@@ -13,6 +13,8 @@
 
 | Date | Type | Tool / Source | Version | Reports |
 |---|---|---|---|---|
+| 2026-08-18 | Static analysis | Slither 0.11.5 | v0.6.0 | [report](./tools/v0.6.0/slither-report.md) · [feedback](./tools/v0.6.0/slither-report-feedback.md) |
+| 2026-08-18 | Static analysis | Aderyn 0.6.5 | v0.6.0 | [report](./tools/v0.6.0/aderyn-report.md) · [feedback](./tools/v0.6.0/aderyn-report-feedback.md) |
 | 2026-08-17 | AI automated scan | [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | v0.5.0 | [report (PDF)](./tools/v0.5.0/nethermind_audit_agent_report_v0.5.0.pdf) · [feedback](./tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md) |
 | 2026-08-12 | AI-assisted review | Claude Code (Anthropic) | v0.5.0 | [**CLAUDE_ANALYSIS.md**](./tools/v0.5.0/CLAUDE_ANALYSIS.md) (code quality, `src/`) · [**CLAUDE_ANALYSIS_SCRIPT.md**](./tools/v0.5.0/CLAUDE_ANALYSIS_SCRIPT.md) (deployment scripts) |
 | 2026-07 | AI-assisted review | Claude (Anthropic) + custom security-audit skills | v0.4.0 | [**CLAUDE_AUDIT.md**](./tools/v0.4.0/claude-audit/CLAUDE_AUDIT.md) |
@@ -22,6 +24,47 @@
 | 2026-07-14 | Static analysis | Aderyn 0.6.5 | v0.4.0 | [report](./tools/v0.4.0/aderyn-report.md) · [feedback](./tools/v0.4.0/aderyn-report-feedback.md) |
 | 2026-04-16 | Static analysis | Slither / Aderyn | v0.3.0 | [slither](./tools/v0.3.0/slither-report.md) · [aderyn](./tools/v0.3.0/aderyn-report.md) |
 | 2026-03-16 | AI-assisted review | Wake Arena (Ackee) | v0.2.0 | [tools/v0.2.0](./tools/v0.2.0/) |
+
+## Static-analysis results (v0.6.0)
+
+Re-run **2026-08-18** for the `v0.6.0` release, at solc `0.8.36`, with the same tool versions as `v0.5.0` so the
+delta is directly comparable. Scope: production contracts only — mocks excluded, vendored dependencies excluded
+via the `lib` filter.
+
+| Tool | High | Medium | Low | Info | Relevant to fix? |
+|---|---|---|---|---|---|
+| Slither 0.11.5 | 2 | 11 | 18 | 15 | **No** — both High-impact results are the long-standing false positive on a permissioned path; see [feedback](./tools/v0.6.0/slither-report-feedback.md) |
+| Aderyn 0.6.5 | 0 | 0 | 9 categories (346 instances) | 0 | **No** — every Low is by design, environmental or cosmetic; see [feedback](./tools/v0.6.0/aderyn-report-feedback.md) |
+
+**Nothing to fix in `v0.6.0`.** Both deltas are small and fully attributed:
+
+- **Slither 44 → 46 (+2).** One `calls-loop` on `RuleWhitelistWrapperBase._checkRule` — the NM-20 polarity guard,
+  bounded by `maxRules` and reachable only from a `RULES_MANAGEMENT_ROLE` configuration call, never a transfer.
+  One `dead-code` on `RuleChainlinkPoRBase._detectTransferRestrictionOnNotify`, which is a **false positive worth
+  reading**: acting on it would delete the seam `RuleChainlinkPoRERC3643` exists to override. It is called twice
+  in the same file, the contract is at 100% function coverage, and the byte-identical seam in
+  `RuleMaxTotalSupplyBase` is not flagged — the detector is unreliable for `internal virtual` functions reached
+  through inheritance.
+- **Aderyn 336 → 346 (+10)** on +204 nSLOC, and the +10 is *exactly* the five new production files appearing once
+  each in `Unspecific Solidity Pragma` and `PUSH0 Opcode`. No new category.
+
+Two non-results are more informative than the totals. **`Centralization Risk` did not move (80 → 80)** despite
+four new deployable contracts: the ERC-3643 variants subclass existing deployables and override one `internal`
+hook, adding no privileged external function. **`Empty Block` did not move (70 → 70)** either, so no new
+access-control hook was introduced.
+
+As in `v0.5.0`: a clean static-analysis report means the tools' pattern sets matched nothing. **None of the seven
+findings fixed in this release was reachable by either analyser** — they came from the Nethermind AuditAgent scan
+and manual review, and are semantic (accounting phase, callback ordering, interface polarity) where these tools
+are syntactic.
+
+Commands used for `v0.6.0` (mocks excluded):
+
+```bash
+slither . --checklist --filter-paths "node_modules,lib,test,forge-std,mocks" \
+  > doc/security/audits/tools/v0.6.0/slither-report.md
+aderyn -x mocks --output doc/security/audits/tools/v0.6.0/aderyn-report.md
+```
 
 ## Static-analysis results (v0.5.0)
 
