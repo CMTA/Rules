@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - lcov.info - src/rules/operation/abstract/RuleConditionalTransferLightBase.sol</title>
+  <title>LCOV - lcov2.info - src/rules/operation/abstract/RuleConditionalTransferLightBase.sol</title>
   <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
 </head>
 
@@ -28,16 +28,16 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">lcov.info</td>
+            <td class="headerValue">lcov2.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntry">52</td>
-            <td class="headerCovTableEntry">52</td>
+            <td class="headerCovTableEntry">54</td>
+            <td class="headerCovTableEntry">54</td>
             <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-07-14 13:44:06</td>
+            <td class="headerValue">2026-08-19 15:38:25</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">16</td>
@@ -49,8 +49,8 @@
             <td></td>
             <td></td>
             <td class="headerItem">Branches:</td>
-            <td class="headerCovTableEntry">17</td>
-            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntry">19</td>
             <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
@@ -181,205 +181,208 @@
 <a name="110"><span class="lineNum">     110 </span>                :            :      * @param value The amount to transfer.</a>
 <a name="111"><span class="lineNum">     111 </span>                :            :      * @return True when the transfer succeeds.</a>
 <a name="112"><span class="lineNum">     112 </span>                :            :      */</a>
-<a name="113"><span class="lineNum">     113 </span>                :<span class="lineCov">          6 :     function approveAndTransferIfAllowed(address from, address to, uint256 value)</span></a>
+<a name="113"><span class="lineNum">     113 </span>                :<span class="lineCov">         10 :     function approveAndTransferIfAllowed(address from, address to, uint256 value)</span></a>
 <a name="114"><span class="lineNum">     114 </span>                :            :         public</a>
-<a name="115"><span class="lineNum">     115 </span>                :            :         onlyTransferApprover</a>
-<a name="116"><span class="lineNum">     116 </span>                :            :         returns (bool)</a>
-<a name="117"><span class="lineNum">     117 </span>                :            :     {</a>
-<a name="118"><span class="lineNum">     118 </span>                :<span class="lineCov">          6 :         address token = getTokenBound();</span></a>
-<a name="119"><span class="lineNum">     119 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 5 times"> + </span>]:<span class="lineCov">          6 :         require(token != address(0), RuleConditionalTransferLight_TokenNotBound());</span></a>
-<a name="120"><span class="lineNum">     120 </span>                :            : </a>
-<a name="121"><span class="lineNum">     121 </span>                :<span class="lineCov">          5 :         approveTransfer(from, to, value);</span></a>
-<a name="122"><span class="lineNum">     122 </span>                :            : </a>
-<a name="123"><span class="lineNum">     123 </span>                :<span class="lineCov">          5 :         uint256 allowed = IERC20(token).allowance(from, address(this));</span></a>
-<a name="124"><span class="lineNum">     124 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 3 times"> + </span>]:<span class="lineCov">          4 :         require(allowed &gt;= value, RuleConditionalTransferLight_InsufficientAllowance(token, from, allowed, value));</span></a>
-<a name="125"><span class="lineNum">     125 </span>                :            : </a>
-<a name="126"><span class="lineNum">     126 </span>                :<span class="lineCov">          3 :         IERC20(token).safeTransferFrom(from, to, value);</span></a>
-<a name="127"><span class="lineNum">     127 </span>                :<span class="lineCov">          2 :         return true;</span></a>
-<a name="128"><span class="lineNum">     128 </span>                :            :     }</a>
+<a name="115"><span class="lineNum">     115 </span>                :            :         virtual</a>
+<a name="116"><span class="lineNum">     116 </span>                :            :         onlyTransferApprover</a>
+<a name="117"><span class="lineNum">     117 </span>                :            :         returns (bool)</a>
+<a name="118"><span class="lineNum">     118 </span>                :            :     {</a>
+<a name="119"><span class="lineNum">     119 </span>                :<span class="lineCov">         10 :         address token = getTokenBound();</span></a>
+<a name="120"><span class="lineNum">     120 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 9 times"> + </span>]:<span class="lineCov">         10 :         require(token != address(0), RuleConditionalTransferLight_TokenNotBound());</span></a>
+<a name="121"><span class="lineNum">     121 </span>                :            : </a>
+<a name="122"><span class="lineNum">     122 </span>                :<span class="lineCov">          9 :         uint256 approvalsBefore = approvedCount(from, to, value);</span></a>
+<a name="123"><span class="lineNum">     123 </span>                :<span class="lineCov">          9 :         approveTransfer(from, to, value);</span></a>
+<a name="124"><span class="lineNum">     124 </span>                :            : </a>
+<a name="125"><span class="lineNum">     125 </span>                :<span class="lineCov">          9 :         uint256 allowed = IERC20(token).allowance(from, address(this));</span></a>
+<a name="126"><span class="lineNum">     126 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 7 times"> + </span>]:<span class="lineCov">          8 :         require(allowed &gt;= value, RuleConditionalTransferLight_InsufficientAllowance(token, from, allowed, value));</span></a>
+<a name="127"><span class="lineNum">     127 </span>                :            : </a>
+<a name="128"><span class="lineNum">     128 </span>                :<span class="lineCov">          7 :         IERC20(token).safeTransferFrom(from, to, value);</span></a>
 <a name="129"><span class="lineNum">     129 </span>                :            : </a>
-<a name="130"><span class="lineNum">     130 </span>                :            :     /**</a>
-<a name="131"><span class="lineNum">     131 </span>                :            :      * @inheritdoc IERC3643IComplianceContract</a>
-<a name="132"><span class="lineNum">     132 </span>                :            :      */</a>
-<a name="133"><span class="lineNum">     133 </span>                :<span class="lineCov">       6347 :     function transferred(address from, address to, uint256 value)</span></a>
-<a name="134"><span class="lineNum">     134 </span>                :            :         public</a>
-<a name="135"><span class="lineNum">     135 </span>                :            :         override(IERC3643IComplianceContract)</a>
-<a name="136"><span class="lineNum">     136 </span>                :            :         onlyTransferExecutor</a>
-<a name="137"><span class="lineNum">     137 </span>                :            :     {</a>
-<a name="138"><span class="lineNum">     138 </span>                :<span class="lineCov">       6342 :         _transferred(from, to, value);</span></a>
+<a name="130"><span class="lineNum">     130 </span>                :            :         // The approval above exists ONLY for the token's compliance callback to consume. If the count</a>
+<a name="131"><span class="lineNum">     131 </span>                :            :         // did not come back down, no callback reached this rule -- the binding is wrong -- and leaving</a>
+<a name="132"><span class="lineNum">     132 </span>                :            :         // the surplus would authorise a later, never-approved transfer of the same tuple. Read after</a>
+<a name="133"><span class="lineNum">     133 </span>                :            :         // the external call deliberately: a hostile token can make this fail, never pass spuriously.</a>
+<a name="134"><span class="lineNum">     134 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 5 times"> + </span>]:<span class="lineCov">          6 :         require(</span></a>
+<a name="135"><span class="lineNum">     135 </span>                :            :             approvedCount(from, to, value) == approvalsBefore,</a>
+<a name="136"><span class="lineNum">     136 </span>                :            :             RuleConditionalTransferLight_ApprovalNotConsumed(token, from, to, value)</a>
+<a name="137"><span class="lineNum">     137 </span>                :            :         );</a>
+<a name="138"><span class="lineNum">     138 </span>                :<span class="lineCov">          5 :         return true;</span></a>
 <a name="139"><span class="lineNum">     139 </span>                :            :     }</a>
 <a name="140"><span class="lineNum">     140 </span>                :            : </a>
 <a name="141"><span class="lineNum">     141 </span>                :            :     /**</a>
-<a name="142"><span class="lineNum">     142 </span>                :            :      * @inheritdoc IRuleEngine</a>
+<a name="142"><span class="lineNum">     142 </span>                :            :      * @inheritdoc IERC3643IComplianceContract</a>
 <a name="143"><span class="lineNum">     143 </span>                :            :      */</a>
-<a name="144"><span class="lineNum">     144 </span>                :<span class="lineCov">          7 :     function transferred(</span></a>
-<a name="145"><span class="lineNum">     145 </span>                :            :         address,</a>
-<a name="146"><span class="lineNum">     146 </span>                :            :         /* spender */</a>
-<a name="147"><span class="lineNum">     147 </span>                :            :         address from,</a>
-<a name="148"><span class="lineNum">     148 </span>                :            :         address to,</a>
-<a name="149"><span class="lineNum">     149 </span>                :            :         uint256 value</a>
-<a name="150"><span class="lineNum">     150 </span>                :            :     )</a>
-<a name="151"><span class="lineNum">     151 </span>                :            :         public</a>
-<a name="152"><span class="lineNum">     152 </span>                :            :         override(IRuleEngine)</a>
-<a name="153"><span class="lineNum">     153 </span>                :            :         onlyTransferExecutor</a>
-<a name="154"><span class="lineNum">     154 </span>                :            :     {</a>
-<a name="155"><span class="lineNum">     155 </span>                :<span class="lineCov">          6 :         _transferred(from, to, value);</span></a>
-<a name="156"><span class="lineNum">     156 </span>                :            :     }</a>
-<a name="157"><span class="lineNum">     157 </span>                :            : </a>
-<a name="158"><span class="lineNum">     158 </span>                :            :     /**</a>
-<a name="159"><span class="lineNum">     159 </span>                :            :      * @notice Binds the ERC-20 token this rule acts on. Reverts if a token is already bound.</a>
-<a name="160"><span class="lineNum">     160 </span>                :            :      * @dev Only ONE token may be bound at a time. To migrate to a new token, call `unbindToken` first.</a>
-<a name="161"><span class="lineNum">     161 </span>                :            :      * @dev The bound token is BOTH the ERC-20 that {approveAndTransferIfAllowed} transfers, AND an</a>
-<a name="162"><span class="lineNum">     162 </span>                :            :      *      authorized caller of `transferred` (the direct-binding topology). If the rule sits behind</a>
-<a name="163"><span class="lineNum">     163 </span>                :            :      *      a RuleEngine, additionally call {bindRuleEngine} so the engine may call `transferred` too.</a>
-<a name="164"><span class="lineNum">     164 </span>                :            :      * @dev ⚠️ Single-token binding alone does NOT guarantee token-scoped approvals: this rule's</a>
-<a name="165"><span class="lineNum">     165 </span>                :            :      *      approvals are keyed `(from, to, value)` with no token dimension. A multi-tenant</a>
-<a name="166"><span class="lineNum">     166 </span>                :            :      *      {bindRuleEngine} target would relay several tokens into the same approval bucket — see</a>
-<a name="167"><span class="lineNum">     167 </span>                :            :      *      the warning on {bindRuleEngine}.</a>
-<a name="168"><span class="lineNum">     168 </span>                :            :      * @dev WARNING: `unbindToken` does not clear `approvalCounts`, and does not clear the bound</a>
-<a name="169"><span class="lineNum">     169 </span>                :            :      *      {ruleEngine} either. Stale approvals from the previous token remain in storage and can be</a>
-<a name="170"><span class="lineNum">     170 </span>                :            :      *      consumed after rebinding — and the previously bound engine stays authorized to consume</a>
-<a name="171"><span class="lineNum">     171 </span>                :            :      *      them until {unbindRuleEngine} is called. The operator who controls rebinding also controls</a>
-<a name="172"><span class="lineNum">     172 </span>                :            :      *      approvals, so the trust model is preserved, but integrators should be aware of this</a>
-<a name="173"><span class="lineNum">     173 </span>                :            :      *      behavior. When migrating, call {resetApproval} for each affected transfer AND</a>
-<a name="174"><span class="lineNum">     174 </span>                :            :      *      {unbindRuleEngine} before rebinding.</a>
-<a name="175"><span class="lineNum">     175 </span>                :            :      * @param token The ERC-20 token to bind to this rule.</a>
-<a name="176"><span class="lineNum">     176 </span>                :            :      */</a>
-<a name="177"><span class="lineNum">     177 </span>                :<span class="lineCov">         45 :     function bindToken(address token) public override onlyComplianceManager {</span></a>
-<a name="178"><span class="lineNum">     178 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 43 times"> + </span>]:<span class="lineCov">         44 :         require(getTokenBound() == address(0), RuleConditionalTransferLight_TokenAlreadyBound());</span></a>
-<a name="179"><span class="lineNum">     179 </span>                :<span class="lineCov">         43 :         _bindToken(token);</span></a>
-<a name="180"><span class="lineNum">     180 </span>                :            :     }</a>
-<a name="181"><span class="lineNum">     181 </span>                :            : </a>
-<a name="182"><span class="lineNum">     182 </span>                :            :     /**</a>
-<a name="183"><span class="lineNum">     183 </span>                :            :      * @notice Authorizes a RuleEngine to call this rule's transfer execution hooks.</a>
-<a name="184"><span class="lineNum">     184 </span>                :            :      * @dev Independent of {bindToken}: the engine is authorized to call `transferred`, but is never</a>
-<a name="185"><span class="lineNum">     185 </span>                :            :      *      treated as the ERC-20 token. Bind the token with {bindToken} and the engine here, and</a>
-<a name="186"><span class="lineNum">     186 </span>                :            :      *      {approveAndTransferIfAllowed} works under the RuleEngine topology.</a>
-<a name="187"><span class="lineNum">     187 </span>                :            :      *      Reverts if a RuleEngine is already bound; call {unbindRuleEngine} first to migrate.</a>
-<a name="188"><span class="lineNum">     188 </span>                :            :      *</a>
-<a name="189"><span class="lineNum">     189 </span>                :            :      * @dev ⚠️ **Bind ONLY an engine that serves this one token.**</a>
-<a name="190"><span class="lineNum">     190 </span>                :            :      *      This rule's approvals are keyed `(from, to, value)` — they carry **no token dimension**.</a>
-<a name="191"><span class="lineNum">     191 </span>                :            :      *      A `RuleEngine` is multi-tenant by design (`_boundTokens` is a set), and it relays every</a>
-<a name="192"><span class="lineNum">     192 </span>                :            :      *      one of its tokens into the same `transferred(from, to, value)` hook, so the rule cannot</a>
-<a name="193"><span class="lineNum">     193 </span>                :            :      *      tell which token moved. If the bound engine serves several tokens, an approval recorded</a>
-<a name="194"><span class="lineNum">     194 </span>                :            :      *      for one of them is consumable by ANY of them:</a>
-<a name="195"><span class="lineNum">     195 </span>                :            :      *</a>
-<a name="196"><span class="lineNum">     196 </span>                :            :      *          approveTransfer(alice, bob, 100)      // intended for token A</a>
-<a name="197"><span class="lineNum">     197 </span>                :            :      *          &lt;alice sends 100 of token B&gt;          // -&gt; engine -&gt; transferred(alice, bob, 100)</a>
-<a name="198"><span class="lineNum">     198 </span>                :            :      *                                                // the token-A approval is consumed</a>
-<a name="199"><span class="lineNum">     199 </span>                :            :      *</a>
-<a name="200"><span class="lineNum">     200 </span>                :            :      *      This is inherent to the single-token rule and is why {RuleConditionalTransferLightMultiToken}</a>
-<a name="201"><span class="lineNum">     201 </span>                :            :      *      exists. Binding an engine does not change it — it only makes the topology usable, so the</a>
-<a name="202"><span class="lineNum">     202 </span>                :            :      *      constraint must be respected by the operator. If the engine is (or may become)</a>
-<a name="203"><span class="lineNum">     203 </span>                :            :      *      multi-tenant, do not use this rule.</a>
-<a name="204"><span class="lineNum">     204 </span>                :            :      *</a>
-<a name="205"><span class="lineNum">     205 </span>                :            :      * @param ruleEngine_ The RuleEngine allowed to call `transferred`. It MUST serve only the token</a>
-<a name="206"><span class="lineNum">     206 </span>                :            :      *                    bound via {bindToken}.</a>
-<a name="207"><span class="lineNum">     207 </span>                :            :      */</a>
-<a name="208"><span class="lineNum">     208 </span>                :<span class="lineCov">         13 :     function bindRuleEngine(address ruleEngine_) public virtual onlyComplianceManager {</span></a>
-<a name="209"><span class="lineNum">     209 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 11 times"> + </span>]:<span class="lineCov">         12 :         require(ruleEngine_ != address(0), RuleConditionalTransferLight_RuleEngineAddressZeroNotAllowed());</span></a>
-<a name="210"><span class="lineNum">     210 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 10 times"> + </span>]:<span class="lineCov">         11 :         require(ruleEngine == address(0), RuleConditionalTransferLight_RuleEngineAlreadyBound());</span></a>
-<a name="211"><span class="lineNum">     211 </span>                :<span class="lineCov">         10 :         ruleEngine = ruleEngine_;</span></a>
-<a name="212"><span class="lineNum">     212 </span>                :<span class="lineCov">         10 :         emit RuleEngineBound(ruleEngine_);</span></a>
-<a name="213"><span class="lineNum">     213 </span>                :            :     }</a>
-<a name="214"><span class="lineNum">     214 </span>                :            : </a>
-<a name="215"><span class="lineNum">     215 </span>                :            :     /**</a>
-<a name="216"><span class="lineNum">     216 </span>                :            :      * @notice Revokes the bound RuleEngine's authorization to call the transfer execution hooks.</a>
-<a name="217"><span class="lineNum">     217 </span>                :            :      * @dev Does NOT clear `approvalCounts` — see the {bindToken} warning and {resetApproval}.</a>
-<a name="218"><span class="lineNum">     218 </span>                :            :      */</a>
-<a name="219"><span class="lineNum">     219 </span>                :<span class="lineCov">          3 :     function unbindRuleEngine() public virtual onlyComplianceManager {</span></a>
-<a name="220"><span class="lineNum">     220 </span>                :<span class="lineCov">          2 :         address previous = ruleEngine;</span></a>
-<a name="221"><span class="lineNum">     221 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          2 :         require(previous != address(0), RuleConditionalTransferLight_RuleEngineNotBound());</span></a>
-<a name="222"><span class="lineNum">     222 </span>                :<span class="lineCov">          1 :         ruleEngine = address(0);</span></a>
-<a name="223"><span class="lineNum">     223 </span>                :<span class="lineCov">          1 :         emit RuleEngineUnbound(previous);</span></a>
-<a name="224"><span class="lineNum">     224 </span>                :            :     }</a>
-<a name="225"><span class="lineNum">     225 </span>                :            : </a>
-<a name="226"><span class="lineNum">     226 </span>                :            :     /**</a>
-<a name="227"><span class="lineNum">     227 </span>                :            :      * @notice Returns whether `caller` is authorized to call this rule's transfer execution hooks.</a>
-<a name="228"><span class="lineNum">     228 </span>                :            :      * @param caller The address to check.</a>
-<a name="229"><span class="lineNum">     229 </span>                :            :      * @return True if `caller` is the bound token or the bound RuleEngine.</a>
-<a name="230"><span class="lineNum">     230 </span>                :            :      */</a>
-<a name="231"><span class="lineNum">     231 </span>                :<span class="lineCov">          8 :     function isTransferExecutor(address caller) public view virtual returns (bool) {</span></a>
-<a name="232"><span class="lineNum">     232 </span>                :<span class="lineCov">       6365 :         return isTokenBound(caller) || (caller != address(0) &amp;&amp; caller == ruleEngine);</span></a>
-<a name="233"><span class="lineNum">     233 </span>                :            :     }</a>
-<a name="234"><span class="lineNum">     234 </span>                :            : </a>
-<a name="235"><span class="lineNum">     235 </span>                :            :     /**</a>
-<a name="236"><span class="lineNum">     236 </span>                :            :      * @inheritdoc IERC1404</a>
-<a name="237"><span class="lineNum">     237 </span>                :            :      */</a>
-<a name="238"><span class="lineNum">     238 </span>                :<span class="lineCov">          7 :     function detectTransferRestriction(address from, address to, uint256 value)</span></a>
-<a name="239"><span class="lineNum">     239 </span>                :            :         public</a>
-<a name="240"><span class="lineNum">     240 </span>                :            :         view</a>
-<a name="241"><span class="lineNum">     241 </span>                :            :         override(IERC1404)</a>
-<a name="242"><span class="lineNum">     242 </span>                :            :         returns (uint8)</a>
-<a name="243"><span class="lineNum">     243 </span>                :            :     {</a>
-<a name="244"><span class="lineNum">     244 </span>           [<span class="branchCov" title="Branch 0 was taken 4 times"> + </span>]:<span class="lineCov">         13 :         if (from == address(0) || to == address(0)) {</span></a>
-<a name="245"><span class="lineNum">     245 </span>                :<span class="lineCov">          4 :             return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
-<a name="246"><span class="lineNum">     246 </span>                :            :         }</a>
-<a name="247"><span class="lineNum">     247 </span>                :<span class="lineCov">          9 :         bytes32 transferHash = _transferHash(from, to, value);</span></a>
-<a name="248"><span class="lineNum">     248 </span>           [<span class="branchCov" title="Branch 0 was taken 6 times"> + </span>]:<span class="lineCov">          9 :         if (approvalCounts[transferHash] == 0) {</span></a>
-<a name="249"><span class="lineNum">     249 </span>                :<span class="lineCov">          6 :             return CODE_TRANSFER_REQUEST_NOT_APPROVED;</span></a>
-<a name="250"><span class="lineNum">     250 </span>                :            :         }</a>
-<a name="251"><span class="lineNum">     251 </span>                :<span class="lineCov">          3 :         return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
-<a name="252"><span class="lineNum">     252 </span>                :            :     }</a>
-<a name="253"><span class="lineNum">     253 </span>                :            : </a>
-<a name="254"><span class="lineNum">     254 </span>                :            :     /**</a>
-<a name="255"><span class="lineNum">     255 </span>                :            :      * @inheritdoc IERC1404Extend</a>
-<a name="256"><span class="lineNum">     256 </span>                :            :      */</a>
-<a name="257"><span class="lineNum">     257 </span>                :<span class="lineCov">          1 :     function detectTransferRestrictionFrom(</span></a>
-<a name="258"><span class="lineNum">     258 </span>                :            :         address,</a>
-<a name="259"><span class="lineNum">     259 </span>                :            :         /* spender */</a>
-<a name="260"><span class="lineNum">     260 </span>                :            :         address from,</a>
-<a name="261"><span class="lineNum">     261 </span>                :            :         address to,</a>
-<a name="262"><span class="lineNum">     262 </span>                :            :         uint256 value</a>
-<a name="263"><span class="lineNum">     263 </span>                :            :     )</a>
-<a name="264"><span class="lineNum">     264 </span>                :            :         public</a>
-<a name="265"><span class="lineNum">     265 </span>                :            :         view</a>
-<a name="266"><span class="lineNum">     266 </span>                :            :         override(IERC1404Extend)</a>
-<a name="267"><span class="lineNum">     267 </span>                :            :         returns (uint8)</a>
-<a name="268"><span class="lineNum">     268 </span>                :            :     {</a>
-<a name="269"><span class="lineNum">     269 </span>                :<span class="lineCov">          2 :         return detectTransferRestriction(from, to, value);</span></a>
-<a name="270"><span class="lineNum">     270 </span>                :            :     }</a>
-<a name="271"><span class="lineNum">     271 </span>                :            : </a>
-<a name="272"><span class="lineNum">     272 </span>                :            :     /**</a>
-<a name="273"><span class="lineNum">     273 </span>                :            :      * @inheritdoc IERC3643ComplianceRead</a>
-<a name="274"><span class="lineNum">     274 </span>                :            :      */</a>
-<a name="275"><span class="lineNum">     275 </span>                :<span class="lineCov">          4 :     function canTransfer(address from, address to, uint256 value)</span></a>
-<a name="276"><span class="lineNum">     276 </span>                :            :         public</a>
-<a name="277"><span class="lineNum">     277 </span>                :            :         view</a>
-<a name="278"><span class="lineNum">     278 </span>                :            :         override(IERC3643ComplianceRead)</a>
-<a name="279"><span class="lineNum">     279 </span>                :            :         returns (bool)</a>
-<a name="280"><span class="lineNum">     280 </span>                :            :     {</a>
-<a name="281"><span class="lineNum">     281 </span>                :<span class="lineCov">          4 :         return detectTransferRestriction(from, to, value) == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
-<a name="282"><span class="lineNum">     282 </span>                :            :     }</a>
-<a name="283"><span class="lineNum">     283 </span>                :            : </a>
-<a name="284"><span class="lineNum">     284 </span>                :            :     /**</a>
-<a name="285"><span class="lineNum">     285 </span>                :            :      * @inheritdoc IERC7551Compliance</a>
-<a name="286"><span class="lineNum">     286 </span>                :            :      */</a>
-<a name="287"><span class="lineNum">     287 </span>                :<span class="lineCov">          1 :     function canTransferFrom(address spender, address from, address to, uint256 value)</span></a>
-<a name="288"><span class="lineNum">     288 </span>                :            :         public</a>
-<a name="289"><span class="lineNum">     289 </span>                :            :         view</a>
-<a name="290"><span class="lineNum">     290 </span>                :            :         override(IERC7551Compliance)</a>
-<a name="291"><span class="lineNum">     291 </span>                :            :         returns (bool)</a>
-<a name="292"><span class="lineNum">     292 </span>                :            :     {</a>
-<a name="293"><span class="lineNum">     293 </span>                :<span class="lineCov">          1 :         return detectTransferRestrictionFrom(spender, from, to, value)</span></a>
-<a name="294"><span class="lineNum">     294 </span>                :            :             == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</a>
-<a name="295"><span class="lineNum">     295 </span>                :            :     }</a>
-<a name="296"><span class="lineNum">     296 </span>                :            : </a>
-<a name="297"><span class="lineNum">     297 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
-<a name="298"><span class="lineNum">     298 </span>                :            :                             ACCESS CONTROL</a>
-<a name="299"><span class="lineNum">     299 </span>                :            :     //////////////////////////////////////////////////////////////*/</a>
-<a name="300"><span class="lineNum">     300 </span>                :            : </a>
-<a name="301"><span class="lineNum">     301 </span>                :            :     /**</a>
-<a name="302"><span class="lineNum">     302 </span>                :            :      * @notice Authorizes transfer execution: the bound token OR the bound RuleEngine may call the</a>
-<a name="303"><span class="lineNum">     303 </span>                :            :      *         execution hooks. Both topologies are therefore supported without conflating the two</a>
-<a name="304"><span class="lineNum">     304 </span>                :            :      *         roles of the binding — see {ruleEngine}.</a>
-<a name="305"><span class="lineNum">     305 </span>                :            :      */</a>
-<a name="306"><span class="lineNum">     306 </span>                :<span class="lineCov">       6357 :     function _authorizeTransferExecution() internal view override {</span></a>
-<a name="307"><span class="lineNum">     307 </span>        [<span class="branchCov" title="Branch 0 was taken 6 times"> + </span><span class="branchCov" title="Branch 1 was taken 6351 times"> + </span>]:<span class="lineCov">       6357 :         require(</span></a>
-<a name="308"><span class="lineNum">     308 </span>                :            :             isTransferExecutor(_msgSender()), RuleConditionalTransferLight_TransferExecutorUnauthorized(_msgSender())</a>
-<a name="309"><span class="lineNum">     309 </span>                :            :         );</a>
-<a name="310"><span class="lineNum">     310 </span>                :            :     }</a>
-<a name="311"><span class="lineNum">     311 </span>                :            : }</a>
+<a name="144"><span class="lineNum">     144 </span>                :<span class="lineCov">       6236 :     function transferred(address from, address to, uint256 value)</span></a>
+<a name="145"><span class="lineNum">     145 </span>                :            :         public</a>
+<a name="146"><span class="lineNum">     146 </span>                :            :         virtual</a>
+<a name="147"><span class="lineNum">     147 </span>                :            :         override(IERC3643IComplianceContract)</a>
+<a name="148"><span class="lineNum">     148 </span>                :            :         onlyTransferExecutor</a>
+<a name="149"><span class="lineNum">     149 </span>                :            :     {</a>
+<a name="150"><span class="lineNum">     150 </span>                :<span class="lineCov">       6230 :         _transferred(from, to, value);</span></a>
+<a name="151"><span class="lineNum">     151 </span>                :            :     }</a>
+<a name="152"><span class="lineNum">     152 </span>                :            : </a>
+<a name="153"><span class="lineNum">     153 </span>                :            :     /**</a>
+<a name="154"><span class="lineNum">     154 </span>                :            :      * @inheritdoc IRuleEngine</a>
+<a name="155"><span class="lineNum">     155 </span>                :            :      */</a>
+<a name="156"><span class="lineNum">     156 </span>                :<span class="lineCov">          7 :     function transferred(</span></a>
+<a name="157"><span class="lineNum">     157 </span>                :            :         address,</a>
+<a name="158"><span class="lineNum">     158 </span>                :            :         /* spender */</a>
+<a name="159"><span class="lineNum">     159 </span>                :            :         address from,</a>
+<a name="160"><span class="lineNum">     160 </span>                :            :         address to,</a>
+<a name="161"><span class="lineNum">     161 </span>                :            :         uint256 value</a>
+<a name="162"><span class="lineNum">     162 </span>                :            :     )</a>
+<a name="163"><span class="lineNum">     163 </span>                :            :         public</a>
+<a name="164"><span class="lineNum">     164 </span>                :            :         virtual</a>
+<a name="165"><span class="lineNum">     165 </span>                :            :         override(IRuleEngine)</a>
+<a name="166"><span class="lineNum">     166 </span>                :            :         onlyTransferExecutor</a>
+<a name="167"><span class="lineNum">     167 </span>                :            :     {</a>
+<a name="168"><span class="lineNum">     168 </span>                :<span class="lineCov">          6 :         _transferred(from, to, value);</span></a>
+<a name="169"><span class="lineNum">     169 </span>                :            :     }</a>
+<a name="170"><span class="lineNum">     170 </span>                :            : </a>
+<a name="171"><span class="lineNum">     171 </span>                :            :     /**</a>
+<a name="172"><span class="lineNum">     172 </span>                :            :      * @notice Binds the ERC-20 token this rule acts on. Reverts if a token is already bound.</a>
+<a name="173"><span class="lineNum">     173 </span>                :            :      * @dev Only ONE token may be bound at a time. To migrate to a new token, call `unbindToken` first.</a>
+<a name="174"><span class="lineNum">     174 </span>                :            :      * @dev The bound token is BOTH the ERC-20 that {approveAndTransferIfAllowed} transfers, AND an</a>
+<a name="175"><span class="lineNum">     175 </span>                :            :      *      authorized caller of `transferred` (the direct-binding topology). If the rule sits behind</a>
+<a name="176"><span class="lineNum">     176 </span>                :            :      *      a RuleEngine, additionally call {bindRuleEngine} so the engine may call `transferred` too.</a>
+<a name="177"><span class="lineNum">     177 </span>                :            :      * @dev WARNING: Single-token binding alone does NOT guarantee token-scoped approvals: this rule's</a>
+<a name="178"><span class="lineNum">     178 </span>                :            :      *      approvals are keyed `(from, to, value)` with no token dimension. A multi-tenant</a>
+<a name="179"><span class="lineNum">     179 </span>                :            :      *      {bindRuleEngine} target would relay several tokens into the same approval bucket — see</a>
+<a name="180"><span class="lineNum">     180 </span>                :            :      *      the warning on {bindRuleEngine}.</a>
+<a name="181"><span class="lineNum">     181 </span>                :            :      * @dev WARNING: `unbindToken` does not clear `approvalCounts`, and does not clear the bound</a>
+<a name="182"><span class="lineNum">     182 </span>                :            :      *      {ruleEngine} either. Stale approvals from the previous token remain in storage and can be</a>
+<a name="183"><span class="lineNum">     183 </span>                :            :      *      consumed after rebinding — and the previously bound engine stays authorized to consume</a>
+<a name="184"><span class="lineNum">     184 </span>                :            :      *      them until {unbindRuleEngine} is called. The operator who controls rebinding also controls</a>
+<a name="185"><span class="lineNum">     185 </span>                :            :      *      approvals, so the trust model is preserved, but integrators should be aware of this</a>
+<a name="186"><span class="lineNum">     186 </span>                :            :      *      behavior. When migrating, call {resetApproval} for each affected transfer AND</a>
+<a name="187"><span class="lineNum">     187 </span>                :            :      *      {unbindRuleEngine} before rebinding.</a>
+<a name="188"><span class="lineNum">     188 </span>                :            :      * @param token The ERC-20 token to bind to this rule.</a>
+<a name="189"><span class="lineNum">     189 </span>                :            :      */</a>
+<a name="190"><span class="lineNum">     190 </span>                :<span class="lineCov">         58 :     function bindToken(address token) public virtual override onlyComplianceManager {</span></a>
+<a name="191"><span class="lineNum">     191 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 56 times"> + </span>]:<span class="lineCov">         57 :         require(getTokenBound() == address(0), RuleConditionalTransferLight_TokenAlreadyBound());</span></a>
+<a name="192"><span class="lineNum">     192 </span>                :<span class="lineCov">         56 :         _bindToken(token);</span></a>
+<a name="193"><span class="lineNum">     193 </span>                :            :     }</a>
+<a name="194"><span class="lineNum">     194 </span>                :            : </a>
+<a name="195"><span class="lineNum">     195 </span>                :            :     /**</a>
+<a name="196"><span class="lineNum">     196 </span>                :            :      * @notice Authorizes a RuleEngine to call this rule's transfer execution hooks.</a>
+<a name="197"><span class="lineNum">     197 </span>                :            :      * @dev Independent of {bindToken}: the engine may call `transferred` but is never treated as the</a>
+<a name="198"><span class="lineNum">     198 </span>                :            :      *      ERC-20 token. Bind both and {approveAndTransferIfAllowed} works under the engine topology.</a>
+<a name="199"><span class="lineNum">     199 </span>                :            :      *      Reverts if an engine is already bound; call {unbindRuleEngine} first to migrate.</a>
+<a name="200"><span class="lineNum">     200 </span>                :            :      *</a>
+<a name="201"><span class="lineNum">     201 </span>                :            :      * @dev WARNING: **bind ONLY an engine that serves this one token.** Approvals here are keyed</a>
+<a name="202"><span class="lineNum">     202 </span>                :            :      *      `(from, to, value)` with **no token dimension**, while a `RuleEngine` is multi-tenant by</a>
+<a name="203"><span class="lineNum">     203 </span>                :            :      *      design and relays every one of its tokens into the same hook. If the engine serves several</a>
+<a name="204"><span class="lineNum">     204 </span>                :            :      *      tokens, an approval recorded for one is consumable by ANY of them -- approve 100 for token</a>
+<a name="205"><span class="lineNum">     205 </span>                :            :      *      A, and a 100 transfer of token B consumes it. That is inherent to the single-token rule and</a>
+<a name="206"><span class="lineNum">     206 </span>                :            :      *      is why {RuleConditionalTransferLightMultiToken} exists; binding an engine does not change</a>
+<a name="207"><span class="lineNum">     207 </span>                :            :      *      it. If the engine is or may become multi-tenant, do not use this rule.</a>
+<a name="208"><span class="lineNum">     208 </span>                :            :      * @param ruleEngine_ The RuleEngine allowed to call `transferred`. It MUST serve only the token</a>
+<a name="209"><span class="lineNum">     209 </span>                :            :      *                    bound via {bindToken}.</a>
+<a name="210"><span class="lineNum">     210 </span>                :            :      */</a>
+<a name="211"><span class="lineNum">     211 </span>                :<span class="lineCov">         13 :     function bindRuleEngine(address ruleEngine_) public virtual onlyComplianceManager {</span></a>
+<a name="212"><span class="lineNum">     212 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 11 times"> + </span>]:<span class="lineCov">         12 :         require(ruleEngine_ != address(0), RuleConditionalTransferLight_RuleEngineAddressZeroNotAllowed());</span></a>
+<a name="213"><span class="lineNum">     213 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 10 times"> + </span>]:<span class="lineCov">         11 :         require(ruleEngine == address(0), RuleConditionalTransferLight_RuleEngineAlreadyBound());</span></a>
+<a name="214"><span class="lineNum">     214 </span>                :<span class="lineCov">         10 :         ruleEngine = ruleEngine_;</span></a>
+<a name="215"><span class="lineNum">     215 </span>                :<span class="lineCov">         10 :         emit RuleEngineBound(ruleEngine_);</span></a>
+<a name="216"><span class="lineNum">     216 </span>                :            :     }</a>
+<a name="217"><span class="lineNum">     217 </span>                :            : </a>
+<a name="218"><span class="lineNum">     218 </span>                :            :     /**</a>
+<a name="219"><span class="lineNum">     219 </span>                :            :      * @notice Revokes the bound RuleEngine's authorization to call the transfer execution hooks.</a>
+<a name="220"><span class="lineNum">     220 </span>                :            :      * @dev Does NOT clear `approvalCounts` — see the {bindToken} warning and {resetApproval}.</a>
+<a name="221"><span class="lineNum">     221 </span>                :            :      */</a>
+<a name="222"><span class="lineNum">     222 </span>                :<span class="lineCov">          3 :     function unbindRuleEngine() public virtual onlyComplianceManager {</span></a>
+<a name="223"><span class="lineNum">     223 </span>                :<span class="lineCov">          2 :         address previous = ruleEngine;</span></a>
+<a name="224"><span class="lineNum">     224 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          2 :         require(previous != address(0), RuleConditionalTransferLight_RuleEngineNotBound());</span></a>
+<a name="225"><span class="lineNum">     225 </span>                :<span class="lineCov">          1 :         ruleEngine = address(0);</span></a>
+<a name="226"><span class="lineNum">     226 </span>                :<span class="lineCov">          1 :         emit RuleEngineUnbound(previous);</span></a>
+<a name="227"><span class="lineNum">     227 </span>                :            :     }</a>
+<a name="228"><span class="lineNum">     228 </span>                :            : </a>
+<a name="229"><span class="lineNum">     229 </span>                :            :     /**</a>
+<a name="230"><span class="lineNum">     230 </span>                :            :      * @notice Returns whether `caller` is authorized to call this rule's transfer execution hooks.</a>
+<a name="231"><span class="lineNum">     231 </span>                :            :      * @param caller The address to check.</a>
+<a name="232"><span class="lineNum">     232 </span>                :            :      * @return True if `caller` is the bound token or the bound RuleEngine.</a>
+<a name="233"><span class="lineNum">     233 </span>                :            :      */</a>
+<a name="234"><span class="lineNum">     234 </span>                :<span class="lineCov">          8 :     function isTransferExecutor(address caller) public view virtual returns (bool) {</span></a>
+<a name="235"><span class="lineNum">     235 </span>                :<span class="lineCov">       6254 :         return isTokenBound(caller) || (caller != address(0) &amp;&amp; caller == ruleEngine);</span></a>
+<a name="236"><span class="lineNum">     236 </span>                :            :     }</a>
+<a name="237"><span class="lineNum">     237 </span>                :            : </a>
+<a name="238"><span class="lineNum">     238 </span>                :            :     /**</a>
+<a name="239"><span class="lineNum">     239 </span>                :            :      * @inheritdoc IERC1404</a>
+<a name="240"><span class="lineNum">     240 </span>                :            :      */</a>
+<a name="241"><span class="lineNum">     241 </span>                :<span class="lineCov">          7 :     function detectTransferRestriction(address from, address to, uint256 value)</span></a>
+<a name="242"><span class="lineNum">     242 </span>                :            :         public</a>
+<a name="243"><span class="lineNum">     243 </span>                :            :         view</a>
+<a name="244"><span class="lineNum">     244 </span>                :            :         override(IERC1404)</a>
+<a name="245"><span class="lineNum">     245 </span>                :            :         returns (uint8)</a>
+<a name="246"><span class="lineNum">     246 </span>                :            :     {</a>
+<a name="247"><span class="lineNum">     247 </span>           [<span class="branchCov" title="Branch 0 was taken 4 times"> + </span>]:<span class="lineCov">         13 :         if (from == address(0) || to == address(0)) {</span></a>
+<a name="248"><span class="lineNum">     248 </span>                :<span class="lineCov">          4 :             return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
+<a name="249"><span class="lineNum">     249 </span>                :            :         }</a>
+<a name="250"><span class="lineNum">     250 </span>                :<span class="lineCov">          9 :         bytes32 transferHash = _transferHash(from, to, value);</span></a>
+<a name="251"><span class="lineNum">     251 </span>           [<span class="branchCov" title="Branch 0 was taken 6 times"> + </span>]:<span class="lineCov">          9 :         if (approvalCounts[transferHash] == 0) {</span></a>
+<a name="252"><span class="lineNum">     252 </span>                :<span class="lineCov">          6 :             return CODE_TRANSFER_REQUEST_NOT_APPROVED;</span></a>
+<a name="253"><span class="lineNum">     253 </span>                :            :         }</a>
+<a name="254"><span class="lineNum">     254 </span>                :<span class="lineCov">          3 :         return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
+<a name="255"><span class="lineNum">     255 </span>                :            :     }</a>
+<a name="256"><span class="lineNum">     256 </span>                :            : </a>
+<a name="257"><span class="lineNum">     257 </span>                :            :     /**</a>
+<a name="258"><span class="lineNum">     258 </span>                :            :      * @inheritdoc IERC1404Extend</a>
+<a name="259"><span class="lineNum">     259 </span>                :            :      */</a>
+<a name="260"><span class="lineNum">     260 </span>                :<span class="lineCov">          1 :     function detectTransferRestrictionFrom(</span></a>
+<a name="261"><span class="lineNum">     261 </span>                :            :         address,</a>
+<a name="262"><span class="lineNum">     262 </span>                :            :         /* spender */</a>
+<a name="263"><span class="lineNum">     263 </span>                :            :         address from,</a>
+<a name="264"><span class="lineNum">     264 </span>                :            :         address to,</a>
+<a name="265"><span class="lineNum">     265 </span>                :            :         uint256 value</a>
+<a name="266"><span class="lineNum">     266 </span>                :            :     )</a>
+<a name="267"><span class="lineNum">     267 </span>                :            :         public</a>
+<a name="268"><span class="lineNum">     268 </span>                :            :         view</a>
+<a name="269"><span class="lineNum">     269 </span>                :            :         override(IERC1404Extend)</a>
+<a name="270"><span class="lineNum">     270 </span>                :            :         returns (uint8)</a>
+<a name="271"><span class="lineNum">     271 </span>                :            :     {</a>
+<a name="272"><span class="lineNum">     272 </span>                :<span class="lineCov">          2 :         return detectTransferRestriction(from, to, value);</span></a>
+<a name="273"><span class="lineNum">     273 </span>                :            :     }</a>
+<a name="274"><span class="lineNum">     274 </span>                :            : </a>
+<a name="275"><span class="lineNum">     275 </span>                :            :     /**</a>
+<a name="276"><span class="lineNum">     276 </span>                :            :      * @inheritdoc IERC3643ComplianceRead</a>
+<a name="277"><span class="lineNum">     277 </span>                :            :      */</a>
+<a name="278"><span class="lineNum">     278 </span>                :<span class="lineCov">          4 :     function canTransfer(address from, address to, uint256 value)</span></a>
+<a name="279"><span class="lineNum">     279 </span>                :            :         public</a>
+<a name="280"><span class="lineNum">     280 </span>                :            :         view</a>
+<a name="281"><span class="lineNum">     281 </span>                :            :         override(IERC3643ComplianceRead)</a>
+<a name="282"><span class="lineNum">     282 </span>                :            :         returns (bool)</a>
+<a name="283"><span class="lineNum">     283 </span>                :            :     {</a>
+<a name="284"><span class="lineNum">     284 </span>                :<span class="lineCov">          4 :         return detectTransferRestriction(from, to, value) == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
+<a name="285"><span class="lineNum">     285 </span>                :            :     }</a>
+<a name="286"><span class="lineNum">     286 </span>                :            : </a>
+<a name="287"><span class="lineNum">     287 </span>                :            :     /**</a>
+<a name="288"><span class="lineNum">     288 </span>                :            :      * @inheritdoc IERC7551Compliance</a>
+<a name="289"><span class="lineNum">     289 </span>                :            :      */</a>
+<a name="290"><span class="lineNum">     290 </span>                :<span class="lineCov">          1 :     function canTransferFrom(address spender, address from, address to, uint256 value)</span></a>
+<a name="291"><span class="lineNum">     291 </span>                :            :         public</a>
+<a name="292"><span class="lineNum">     292 </span>                :            :         view</a>
+<a name="293"><span class="lineNum">     293 </span>                :            :         override(IERC7551Compliance)</a>
+<a name="294"><span class="lineNum">     294 </span>                :            :         returns (bool)</a>
+<a name="295"><span class="lineNum">     295 </span>                :            :     {</a>
+<a name="296"><span class="lineNum">     296 </span>                :<span class="lineCov">          1 :         return detectTransferRestrictionFrom(spender, from, to, value)</span></a>
+<a name="297"><span class="lineNum">     297 </span>                :            :             == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</a>
+<a name="298"><span class="lineNum">     298 </span>                :            :     }</a>
+<a name="299"><span class="lineNum">     299 </span>                :            : </a>
+<a name="300"><span class="lineNum">     300 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
+<a name="301"><span class="lineNum">     301 </span>                :            :                             ACCESS CONTROL</a>
+<a name="302"><span class="lineNum">     302 </span>                :            :     //////////////////////////////////////////////////////////////*/</a>
+<a name="303"><span class="lineNum">     303 </span>                :            : </a>
+<a name="304"><span class="lineNum">     304 </span>                :            :     /**</a>
+<a name="305"><span class="lineNum">     305 </span>                :            :      * @notice Authorizes transfer execution: the bound token OR the bound RuleEngine may call the</a>
+<a name="306"><span class="lineNum">     306 </span>                :            :      *         execution hooks. Both topologies are therefore supported without conflating the two</a>
+<a name="307"><span class="lineNum">     307 </span>                :            :      *         roles of the binding — see {ruleEngine}.</a>
+<a name="308"><span class="lineNum">     308 </span>                :            :      */</a>
+<a name="309"><span class="lineNum">     309 </span>                :<span class="lineCov">       6246 :     function _authorizeTransferExecution() internal view virtual override {</span></a>
+<a name="310"><span class="lineNum">     310 </span>        [<span class="branchCov" title="Branch 0 was taken 6 times"> + </span><span class="branchCov" title="Branch 1 was taken 6240 times"> + </span>]:<span class="lineCov">       6246 :         require(</span></a>
+<a name="311"><span class="lineNum">     311 </span>                :            :             isTransferExecutor(_msgSender()), RuleConditionalTransferLight_TransferExecutorUnauthorized(_msgSender())</a>
+<a name="312"><span class="lineNum">     312 </span>                :            :         );</a>
+<a name="313"><span class="lineNum">     313 </span>                :            :     }</a>
+<a name="314"><span class="lineNum">     314 </span>                :            : }</a>
 </pre>
       </td>
     </tr>

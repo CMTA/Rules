@@ -255,6 +255,22 @@ deployments are unaffected unless they adopt the new contracts.
   above the cap. Coverage after: **100% statements, branches and functions** on `CapAccounting`,
   `RuleMaxBalanceBase`, `RuleMaxTotalSupplyBase` and `RuleChainlinkPoRBase`.
 
+- Added `test/RuleConditionalTransferLightMultiToken/MultiTokenGuardReverts.t.sol` (4 tests) closing the last
+  uncovered branches in `src/`: `approveAndTransferIfAllowed` against an unbound token and against a short
+  allowance, `cancelTransferApproval` against an unbound token, and the execution hook against a caller that is
+  not a bound token. Each guard's accept path was already exercised and its `require` never taken — a rule whose
+  purpose is to refuse transfers needs its refusals asserted. Two assert the rejection is total (no approval
+  recorded, no value moved; the approval survives a rejected execution). **Branch coverage across `src/` is now
+  100% (322/322).**
+- Regenerated the coverage report in [`doc/coverage`](./doc/coverage). The committed report was **stale** — it
+  predated the v0.6.0 contracts entirely (no `CapAccounting`, `RuleChainlinkPoRERC3643` or
+  `RuleMaxTotalSupplyERC3643` page) and still carried pages for test files, one of which no longer exists.
+  Measured on `src/` only: **98.34% lines (1421/1445), 100% statements (1396/1396), 100% branches (322/322),
+  95.15% functions (471/495)**. The 24 uncovered lines and 24 uncovered functions are the same items — bodyless
+  `internal virtual` declarations (18 `_authorize*` hooks plus `_transferred`, `_transferredFrom`,
+  `_detectTransferRestriction`, `_detectTransferRestrictionFrom` and `_supplyToken`). They have no body to
+  execute, so no test can reach them; they are counted, not missing.
+
 ### Documentation
 
 - **NM-23/24 declined**, with the reasoning recorded in the feedback file and the `CLAUDE.md` / `AGENTS.md`

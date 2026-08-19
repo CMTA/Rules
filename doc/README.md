@@ -1042,7 +1042,7 @@ This repository is developed and tested with [Foundry](https://book.getfoundry.s
 | Gas report | `forge test --gas-report` |
 | Gas snapshot | `forge snapshot` (check only: `forge snapshot --check`) |
 | Coverage | `forge coverage` |
-| Coverage report ([`doc/coverage`](./coverage/)) | `forge coverage --no-match-coverage "(script\|mocks\|test)" --report lcov && genhtml lcov.info --branch-coverage --prefix "$PWD/" --output-dir coverage` |
+| Coverage report ([`doc/coverage`](./coverage/)) | `forge coverage --exclude-tests --no-match-coverage '(test\|mocks?\|script)/' --report lcov --report-file doc/coverage/lcov.info && genhtml doc/coverage/lcov.info --branch-coverage --prefix "$PWD/" --output-dir doc/coverage/coverage` |
 | Invariant suite only | `forge test --match-path "test/invariant/*"` |
 | Format | `forge fmt` |
 | Deploy a script | `forge script script/<Deploy...>.s.sol --rpc-url <url> --account <keystore>` |
