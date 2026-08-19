@@ -65,7 +65,8 @@ documentation-only, was also fixed once it became clear the marker interface it 
 Two limits are worth reading before planning further work: **NM-5** cannot be fully fixed at the rule level at
 all (the compliance hooks carry no token identity, so it needs an upstream interface change), and **NM-18**'s
 read-time containment runs into the same uncatchable-decode problem as NM-23, which is why only its
-configuration-time layer was implemented. The two improvements still open are **NM-23/24** and **NM-5**.
+configuration-time layer was implemented. The two improvements that were specified and then **declined** are
+**NM-23/24** and **NM-5**; the reasoning is in each entry, and neither is left as an open TODO.
 
 **The one genuinely new and useful signal** is a theme the scanner keeps circling without naming:
 **several rules' guarantees depend on the token's callback shape and ordering, and a real ERC-3643 / T-REX token
@@ -101,7 +102,7 @@ running against the genuine vendored token.
 | NM-20 | Low → **Info** | Wrapper reads a `RuleBlacklist` child's membership as eligibility | ✅ **Fixed** in `v0.6.0` — polarity marker interface + ERC-165 |
 | NM-21 | Low → **Info** | `RuleMintAllowance` 3-arg pre-flight views fail open | Accepted as design — audit F-7 |
 | NM-22 | Low → **Low** | A misbehaving sanctions oracle reverts the read path | Accepted as design — trusted dependency (v0.4.0 audit) |
-| NM-23 | Low → **Info** | Short successful return data escapes `try/catch` | Accepted as design — already documented in-source |
+| NM-23 | Low → **Info** | Short successful return data escapes `try/catch` | Accepted as design — documented in-source; the low-level fix declined, see the entry |
 | NM-24 | Low → **Info** | Same, for `balanceOf` / `totalSupply` | Accepted as design — duplicate of NM-23 |
 
 ---
@@ -1145,8 +1146,48 @@ Costs, stated honestly:
 - The three long `@dev` blocks explaining the uncatchable decode would have to be rewritten, not deleted: they
   become the explanation of *why* the reads are low-level.
 
-Recommendation: worth doing, but as a deliberate change with its own review, not folded into an unrelated commit
-— it rewrites the read path of every cap rule and the reason those contracts give for their own safety.
+**Decision — declined.** Written up as "worth doing" above; re-examined and rejected, because the benefit does
+not survive scrutiny.
+
+*The headline benefit was overstated.* "Retires the Cancun / EIP-6780 precondition" reads as a safety gain and is
+not one: `foundry.toml` targets `evm_version = 'prague'`, so the precondition is **already satisfied**, and
+trivially so for any realistic deployment. Removing it deletes three NatSpec paragraphs, not a risk.
+
+*The behavioural delta is one error message on a token that has already failed.* The hole is real — a callee
+that succeeds while returning fewer bytes than the declared type fails ABI decoding in the **caller's** frame,
+outside `catch` — but work the consequence through:
+
+| Token state | Today | After the change |
+|---|---|---|
+| healthy | code `0` | code `0` |
+| reverts | code 51 / 78 / 83 | code 51 / 78 / 83 |
+| **returns short data** | **the view reverts** | code 51 / 78 / 83 |
+
+Only the last row moves, and it is **fail-closed in both columns**: the transfer is blocked either way. What
+improves is that a pre-flight query returns a diagnostic code instead of reverting, on a dependency that has
+already stopped honouring its own interface.
+
+*The cost is real and larger than first stated.* Not four files — **eight `try` blocks across three**, including
+`latestRoundData` with five return values needing a `>= 160` length check. Each becomes hand-rolled ABI handling
+in a compliance library that is otherwise high-level Solidity: `abi.decode(data, (uint256))` is an *assertion*
+rather than a compiler check, so a signature drift in `ITotalSupply` that the typed call catches at the call site
+would pass silently; eight bespoke `data.length` constants are eight chances to write `<` for `!=` or the wrong
+`N`, in the very code whose purpose is robustness; and a well-understood idiom is replaced by one every future
+reader must re-verify.
+
+*What would change the answer.* Two conditions, either of which makes it worth revisiting:
+
+1. **A concrete proxy-upgrade expectation.** Standard T-REX puts the token behind a `TokenProxy` with a swappable
+   implementation, so a deployment that actually expects implementation churn makes "returns short data" real
+   rather than hypothetical.
+2. **A pre-Cancun target chain**, where the code-length precondition genuinely is not satisfied.
+
+If either arrives, the implementation should be **one small internal library** (`tryReadUint256(address, bytes)`)
+that the eight sites delegate to — written once and tested once — not eight hand-rolled call sites. That is the
+difference between a helper and a hand-rolled workaround.
+
+The limitation itself stays documented in-source in all three contracts, as it already is; this entry records
+why it is not closed, so it does not read as unacknowledged debt.
 
 ---
 
@@ -1195,11 +1236,12 @@ are listed in rough order of value per unit of risk:
 | ERC-165 guard on wrapper children | NM-18 | `_checkRule` override + sub-interface | ✅ **Done in `v0.6.0`** — requires only the one selector the wrapper calls |
 | Normalise `spender == from` on the ERC-7943 overloads | NM-6 | 1 helper + 3 branches | ✅ **Done in `v0.6.0`** — 1 file, corrects one rule, changes no deny-list outcome |
 | Polarity marker interface + guard | NM-20 | 1 interface + 2 checks | ✅ **Done in `v0.6.0`** — makes allow/deny expressible; also closes a second wrong-child class |
-| `staticcall` + length check on the cap reads | NM-23/24 | 4 files | Worth it, as its own reviewed change — also retires the Cancun precondition |
+| `staticcall` + length check on the cap reads | NM-23/24 | 8 `try` blocks, 3 files | 🚫 **Declined** — trades a known idiom for hand-rolled ABI plumbing to improve an error message on an already-broken token |
 | Opt-in caller binding on the cap rules | NM-5 | 1 slot + setter, ×3 | **Partial only** — cannot isolate two tokens behind one engine; document and monitor instead for now |
 
 **Status.** The triage itself modified no contract; the seven fixes recorded above were made afterwards through
-the normal fix workflow and are described in each finding's `Resolution` block. Two improvements remain
-specified but unapplied (**NM-23/24**, **NM-5**), and one decision is outstanding rather than blocked on effort:
+the normal fix workflow and are described in each finding's `Resolution` block. Two improvements were specified
+and then **declined with reasons recorded** (**NM-23/24**, **NM-5**) rather than left as open TODOs, and one
+decision is outstanding rather than blocked on effort:
 whether an ERC-3643 agent's `forcedTransfer` should be exempt from `RuleMaxBalance`, which is what a variant of
 that rule waits on. **No finding is left open**: 7 fixed, 16 accepted as design, 1 declined.

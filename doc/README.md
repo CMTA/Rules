@@ -7,7 +7,7 @@ Each rule can be used **standalone**, directly plugged into a CMTAT token, **or*
 The **RuleEngine** is an external smart contract that applies transfer restrictions to security tokens such as **CMTAT** or [ERC-3643](https://eips.ethereum.org/EIPS/eip-3643)-compatible tokens through a RuleEngine.
 Rules are modular validator contracts that the `RuleEngine` or `CMTAT` compatible token can call on every transfer to ensure regulatory and business-logic compliance.
 
-**Current package version:** `v0.5.0` (contracts report `version()` → `"0.5.0"`). Built against CMTAT `v3.3.0-rc3` and RuleEngine `v3.0.0-rc5`; see [Compatibility](#compatibility) for the supported range.
+**Current package version:** `v0.6.0` (contracts report `version()` → `"0.6.0"`). Built against CMTAT `v3.3.0-rc3` and RuleEngine `v3.0.0-rc5`; see [Compatibility](#compatibility) for the supported range.
 
 > This project has not undergone an audit and is provided as-is without any warranties.
 
@@ -96,7 +96,7 @@ Interface details for each mode are documented under [Architecture](#architectur
 
 | Component        | Compatible Versions                                        |
 | ---------------- | ---------------------------------------------------------- |
-| **Rules v0.5.0** | CMTAT ≥ v3.0.0 (tested against v3.3.0-rc3)<br />RuleEngine v3.0.0-rc5 |
+| **Rules v0.6.0** | CMTAT ≥ v3.0.0 (tested against v3.3.0-rc3)<br />RuleEngine v3.0.0-rc5 |
 
 Spender-aware paths (e.g. `RuleMintAllowance`) rely on the 4-argument `canTransferFrom` / `transferred(spender, from, to, value)` callbacks, which require a CMTAT / RuleEngine that forwards the spender to the rule; this repository is validated against CMTAT `v3.3.0-rc3`. The other rules only use the 3-argument path and work across the full CMTAT ≥ v3.0.0 range.
 
@@ -725,7 +725,7 @@ Validation (read-only) rules have no binding requirement: they hold no per-trans
 - All AccessControl variants: use `onlyRole(ROLE)` in `_authorize*()` and mark internal helpers `virtual`.
 - All AccessControl variants: use `AccessControlEnumerable`, so role members can be enumerated with `getRoleMember` / `getRoleMemberCount`; default admin is treated as having all roles via `hasRole`, but may not appear in role member lists unless explicitly granted.
 - All meta-tx-enabled rules: `forwarderIrrevocable` is accepted as-is (including `address(0)`) and is not validated against ERC-165 because some forwarders do not implement it.
-- All rules: implement `IERC3643Version` via `VersionModule` and expose `version()` returning `"0.5.0"`.
+- All rules: implement `IERC3643Version` via `VersionModule` and expose `version()` returning `"0.6.0"`.
 
 ### Read-only (validation) rule
 

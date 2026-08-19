@@ -3,7 +3,7 @@
 > This is a security **overview** (analyses index + triage). It is **not** the vulnerability-reporting policy
 > (that belongs in a root `SECURITY.md`).
 
-**Current package version:** `v0.5.0`
+**Current package version:** `v0.6.0`
 **Scope:** production contracts under `src/` — mocks/tests (`src/mocks`, `test/`) and dependencies (`lib/`) are excluded from static-analysis runs unless a run is explicitly marked *mocks included*.
 
 > ⚠️ This project has **not** undergone a formal third-party security audit. The analyses below are automated

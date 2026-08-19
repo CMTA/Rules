@@ -11,7 +11,7 @@ Each rule enforces one transfer restriction. A rule can be plugged **directly** 
 
 | Rules | Contracts report `version()` | CMTAT | RuleEngine | OpenZeppelin |
 | --- | --- | --- | --- | --- |
-| **v0.5.0** (current) | `"0.5.0"` | **≥ v3.0.0**, validated against `v3.3.0-rc3` | `v3.0.0-rc5` | `v5.7.0` |
+| **v0.6.0** (current) | `"0.6.0"` | **≥ v3.0.0**, validated against `v3.3.0-rc3` | `v3.0.0-rc5` | `v5.7.0` |
 
 One rule needs more than the baseline, because it reads the **spender** the token forwards on mint:
 
