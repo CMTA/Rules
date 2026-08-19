@@ -18,4 +18,19 @@ library AddressListInterfaceId {
      * @notice ERC-165 interface ID of the full {IAddressList} hierarchy.
      */
     bytes4 public constant IADDRESS_LIST_INTERFACE_ID = 0x5d10e182;
+
+    /**
+     * @notice ERC-165 interface ID of {IAddressListBatchQuery}, the single function
+     * `areAddressesListed(address[])`.
+     * @dev This is what `RuleWhitelistWrapper` requires of a child, because it is the only function
+     * the wrapper ever calls. Demanding {IADDRESS_LIST_INTERFACE_ID} instead would also require four
+     * write functions, `listedAddressCount`, `isAddressListed` and `contains` — none of which the
+     * wrapper uses — and would exclude a read-only child that is otherwise perfectly usable.
+     *
+     * Safe to state as a literal: {IAddressListBatchQuery} declares one function and inherits
+     * nothing, so unlike {IADDRESS_LIST_INTERFACE_ID} there is no omitted-parent trap here. The
+     * value equals the selector of the single function; asserted in
+     * test/InterfaceId/AddressListInterfaceId.t.sol.
+     */
+    bytes4 public constant IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID = 0x20e8e17a;
 }

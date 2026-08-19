@@ -9,7 +9,9 @@ import {RuleTransferValidation} from "../core/RuleTransferValidation.sol";
 /* ==== RuleEngine === */
 import {RulesManagementModule} from "RuleEngine/modules/RulesManagementModule.sol";
 /* ==== Interfaces === */
-import {IAddressList} from "../../../interfaces/IAddressList.sol";
+import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import {IAddressListBatchQuery} from "../../../interfaces/IAddressList.sol";
+import {AddressListInterfaceId} from "../../../interfaces/library/AddressListInterfaceId.sol";
 import {IIdentityRegistryVerified} from "../../../interfaces/IIdentityRegistry.sol";
 
 /**
@@ -222,6 +224,31 @@ abstract contract RuleWhitelistWrapperBase is
     }
 
     /**
+     * @notice Rejects a child rule that cannot answer the only question this wrapper asks it.
+     * @dev Mirrors `RuleEngineBase._checkRule`, which guards its own children the same way. The
+     * requirement is {IAddressListBatchQuery} — a single function — rather than the whole of
+     * {IAddressList}, because `areAddressesListed` is the only function the wrapper ever calls;
+     * demanding the full interface would also require four write functions and three further reads,
+     * excluding a read-only child that works perfectly.
+     *
+     * `ERC165Checker.supportsInterface` is itself non-reverting -- a bounded staticcall returning
+     * false for a codeless address, a missing selector or malformed return data -- so a hostile
+     * candidate cannot brick the setter screening it.
+     *
+     * WARNING: this cannot check POLARITY. A deny-list answers `areAddressesListed` just as
+     * faithfully as an allow-list and advertises the same id, so it passes here and then inverts the
+     * wrapper's meaning. Children must be allow-lists by configuration; see the contract-level note.
+     * @param rule_ The candidate child rule.
+     */
+    function _checkRule(address rule_) internal view virtual override {
+        RulesManagementModule._checkRule(rule_);
+        require(
+            ERC165Checker.supportsInterface(rule_, AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID),
+            RuleWhitelistWrapper_ChildIsNotAnAddressList(rule_)
+        );
+    }
+
+    /**
      * @notice Evaluates target addresses across all child rules.
      * @param targetAddress Addresses to validate (from/to[/spender]).
      * @return result Boolean array aligned with targetAddress indicating if each address is listed.
@@ -242,7 +269,7 @@ abstract contract RuleWhitelistWrapperBase is
         for (uint256 i = 0; i < rulesLength; ++i) {
             // Call the whitelist rules
             // Gas cost grows with the number of rules. Keep the wrapper list bounded.
-            bool[] memory isListed = IAddressList(rule(i)).areAddressesListed(targetAddress);
+            bool[] memory isListed = IAddressListBatchQuery(rule(i)).areAddressesListed(targetAddress);
             for (uint256 j = 0; j < targetsLength; ++j) {
                 if (isListed[j] && !result[j]) {
                     result[j] = true;

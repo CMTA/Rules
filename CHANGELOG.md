@@ -121,6 +121,22 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   A rule that keeps its own running total controls when it updates it and so is immune to the accounting-phase
   question entirely.
 
+- **NM-18 (Nethermind AuditAgent) / audit F-5** — `RuleWhitelistWrapper` now ERC-165-checks its child rules.
+  `_checkRule` is overridden exactly as `RuleEngineBase` does it, so one override covers both `addRule` and
+  `setRules`; a candidate that does not advertise the required interface is rejected with
+  `RuleWhitelistWrapper_ChildIsNotAnAddressList(rule)`. Previously a valid `IRule` that was not an address list
+  was accepted and then reverted the blind `areAddressesListed` call during a transfer — and the early exit in
+  the child scan made that *input-dependent*, so the wrapper looked healthy until a pair needed the full scan.
+  A nested wrapper is now refused for the same reason.
+- **A purpose-built sub-interface, `IAddressListBatchQuery`**, split out of `IAddressList`. The wrapper calls
+  exactly one of `IAddressList`'s eight functions, so the guard requires
+  `IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID` (`0x20e8e17a`, the single `areAddressesListed(address[])` selector)
+  rather than the full `IADDRESS_LIST_INTERFACE_ID` — demanding the other seven, four of them **writes**, would
+  reject a read-only child that works perfectly. Factoring the selector into a parent left the flattened selector
+  set unchanged, so `0x5d10e182` keeps its value; the four address-list rules advertise both ids. Unlike the full
+  id, the sub-interface id is safe as a literal, because it inherits nothing and so has no omitted-parent trap.
+  **The guard still cannot check polarity** — a `RuleBlacklist` advertises the same ids and passes it (NM-20).
+
 ### Testing
 
 - Added `IdentityRegistryExtraCheckHarness` (`src/mocks/harness/IdentityRegistryDelegationHarness.sol`) — a
@@ -142,6 +158,14 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   "aligned" away later. Reverting the fix fails 6 of the suite's 10 tests across 5 rules. The suite's header
   comment, which described the parity as flat, now states the per-interface conventions. Coverage on
   `RuleNFTAdapter`: 100% statements, 100% branches.
+
+- The WW-2 threat-model PoC did what its convention promises: named `..._CurrentBehaviour` because it asserted
+  the broken behaviour, it **failed** when NM-18 was fixed. Renamed
+  `test_WW2_NonAddressListChildRuleIsRejectedAtAddRule` and rewritten to assert the rejection, plus two new tests
+  beside it — a nested wrapper is refused, and `test_WW2_GuardCannotRejectAnInvertedPolarityChild_CurrentBehaviour`
+  pins the guard's limit against NM-20. Four assertions added to `test/InterfaceId/AddressListInterfaceId.t.sol`
+  for the sub-interface id and its advertisement. `RuleWhitelistWrapperBase`: 100% statements, branches,
+  functions.
 
 - Added `test/ERC3643Real/ERC3643RealTokenMaxTotalSupply.t.sol` (10 tests, `FOUNDRY_PROFILE=erc3643`) and
   `test/RuleMaxTotalSupply/RuleMaxTotalSupplyERC3643.t.sol` (10 tests, default profile). The real-token suite

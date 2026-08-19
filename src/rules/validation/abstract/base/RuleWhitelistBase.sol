@@ -60,6 +60,7 @@ abstract contract RuleWhitelistBase is RuleAddressSet, RuleWhitelistShared, IIde
         // Advertise IAddressList: this rule manages an address set and is usable as a
         // child rule of RuleWhitelistWrapper, which calls it through IAddressList.
         return interfaceId == AddressListInterfaceId.IADDRESS_LIST_INTERFACE_ID
+            || interfaceId == AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID
             || RuleTransferValidation.supportsInterface(interfaceId);
     }
 

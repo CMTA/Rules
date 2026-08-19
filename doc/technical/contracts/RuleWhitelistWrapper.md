@@ -92,15 +92,54 @@ as well.
 | `RuleReceiverWhitelist`, `RuleReceiverWhitelistOwnable2Step` | `RuleSpenderWhitelist` — its set is spenders, not holders |
 | Any custom rule whose listed addresses are the **permitted** ones | Any rule whose `IAddressList` set means something other than "eligible holder" |
 
-Two related limits, so the whole shape is in one place:
+**The ERC-165 guard does not catch this**, and cannot. `RuleBlacklist` advertises the same interface id as the
+whitelist rules because the interface is genuinely the same — `IAddressList` describes *membership*, and both
+kinds of list have members. Distinguishing polarity would need a separate marker interface; until one exists this
+is configuration discipline, enforced by the `RULES_MANAGEMENT_ROLE` holder rather than by the contract. Pinned
+by `test_WW2_GuardCannotRejectAnInvertedPolarityChild_CurrentBehaviour`.
 
-- **No ERC-165 guard on children.** `addRule` checks only that the address is non-zero and not already present.
-  A child that is not an `IAddressList` at all is accepted and then reverts the blind `areAddressesListed` call
-  during a transfer, bricking the wrapper (audit finding `F-5`, still open).
-- **An ERC-165 guard would not catch this one anyway.** `RuleBlacklist` advertises
-  `IADDRESS_LIST_INTERFACE_ID` exactly as the whitelist rules do, because the interface is genuinely the same.
-  Distinguishing polarity would need a separate marker interface; until one exists this is a configuration
-  discipline, enforced by the `RULES_MANAGEMENT_ROLE` holder rather than by the contract.
+#### Children are ERC-165-checked
+
+`addRule` and `setRules` both route through `_checkRule`, which requires the candidate to advertise
+**`IAddressListBatchQuery`** via ERC-165, on top of the inherited non-zero and not-already-present checks. A
+candidate that does not is rejected with `RuleWhitelistWrapper_ChildIsNotAnAddressList(rule)`.
+
+This closes the failure where a valid `IRule` that is not an address list — `RuleMaxTotalSupply`, say — was
+accepted and then reverted the blind `areAddressesListed` call during a transfer. The early exit in the child
+scan made that *input-dependent*: an address pair already resolved by an earlier child still worked, so the
+wrapper looked healthy right up until a pair that needed the full scan (audit `F-5`, Nethermind AuditAgent
+`NM-18`). It also refuses a **nested wrapper**, which does not implement `areAddressesListed` and would brick the
+parent the same way.
+
+`ERC165Checker.supportsInterface` is itself non-reverting — a bounded staticcall returning `false` for a codeless
+address, a missing selector or malformed return data — so a hostile candidate cannot brick the setter that is
+screening it.
+
+##### Why the check asks for a sub-interface, not all of `IAddressList`
+
+The wrapper calls **one** function on its children:
+
+```solidity
+bool[] memory isListed = IAddressListBatchQuery(rule(i)).areAddressesListed(targetAddress);
+```
+
+`IAddressList` declares eight (`addAddress`, `removeAddress`, `addAddresses`, `removeAddresses`,
+`listedAddressCount`, `isAddressListed`, `areAddressesListed`, and `contains` inherited from
+`IIdentityRegistryContains`). Requiring the full id would demand seven functions the wrapper never touches —
+including all four **write** functions, which a read-only aggregating child has no reason to expose — and reject
+an otherwise perfectly serviceable child. An ERC-165 check should ask for what is actually called.
+
+`IAddressListBatchQuery` therefore declares `areAddressesListed` alone, and `IAddressList` inherits it:
+
+| Constant | Value | Covers |
+| --- | --- | --- |
+| `IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID` | `0x20e8e17a` | `areAddressesListed(address[])` — **what the wrapper requires** |
+| `IADDRESS_LIST_INTERFACE_ID` | `0x5d10e182` | the full eight-selector hierarchy |
+
+Factoring the selector into a parent left the flattened set unchanged, so `0x5d10e182` keeps its value and every
+rule advertises both ids. The sub-interface id is safe to state as a literal, unlike the full one: it declares a
+single function and inherits nothing, so there is no omitted-parent trap. All of this is asserted in
+`test/InterfaceId/AddressListInterfaceId.t.sol`.
 
 This is a category error by a trusted role rather than an attack — the same role can already remove every child
 outright, which fails closed — but it fails **open**, silently, so it is worth checking at configuration time and

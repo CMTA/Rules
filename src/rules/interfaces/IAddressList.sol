@@ -4,9 +4,33 @@ pragma solidity ^0.8.20;
 import {IIdentityRegistryContains} from "./IIdentityRegistry.sol";
 
 /**
- * @title IAddressList — interface for managing and querying a set of addresses.
+ * @title IAddressListBatchQuery — the batch membership question, and nothing else.
+ * @notice The minimum a contract must expose to be usable as a child of `RuleWhitelistWrapper`.
+ * @dev Split out of {IAddressList} deliberately. The wrapper calls exactly one function on its
+ * children, so demanding the whole of {IAddressList} — which also carries four write functions, two
+ * further read functions and `contains` — would reject a perfectly serviceable read-only child.
+ * ERC-165 checks should ask for what is actually called.
+ *
+ * WARNING: this interface conveys **membership, not polarity**. It says whether an address is in the
+ * implementer's set, never whether being in that set means "allowed" or "denied". A deny-list
+ * implements it just as faithfully as an allow-list, so no ERC-165 check can tell them apart; a
+ * consumer that reads `true` as "eligible" must constrain its children by configuration.
  */
-interface IAddressList is IIdentityRegistryContains {
+interface IAddressListBatchQuery {
+    /**
+     * @notice Checks multiple addresses for listing status.
+     * @param targetAddresses Array of addresses to check.
+     * @return results Boolean array aligned by index with listing results.
+     */
+    function areAddressesListed(address[] memory targetAddresses) external view returns (bool[] memory results);
+}
+
+/**
+ * @title IAddressList — interface for managing and querying a set of addresses.
+ * @dev Inherits {IAddressListBatchQuery}; the flattened selector set is unchanged, so
+ * {AddressListInterfaceId.IADDRESS_LIST_INTERFACE_ID} keeps its value.
+ */
+interface IAddressList is IIdentityRegistryContains, IAddressListBatchQuery {
     /* ============ Events ============ */
     /**
      * @notice Emitted when a batch add completes.
@@ -84,11 +108,4 @@ interface IAddressList is IIdentityRegistryContains {
      * @return isListed True if listed, otherwise false.
      */
     function isAddressListed(address targetAddress) external view returns (bool isListed);
-
-    /**
-     * @notice Checks multiple addresses for listing status.
-     * @param targetAddresses Array of addresses to check.
-     * @return results Boolean array aligned by index with listing results.
-     */
-    function areAddressesListed(address[] memory targetAddresses) external view returns (bool[] memory results);
 }

@@ -12,6 +12,7 @@ import {IdentityRegistryMock} from "src/mocks/IdentityRegistryMock.sol";
 import {TotalSupplyMock} from "src/mocks/TotalSupplyMock.sol";
 import {MockERC20WithTransferContext} from "src/mocks/MockERC20WithTransferContext.sol";
 
+import {RuleBlacklist} from "src/rules/validation/deployment/RuleBlacklist.sol";
 import {RuleWhitelist} from "src/rules/validation/deployment/RuleWhitelist.sol";
 import {RuleWhitelistWrapper} from "src/rules/validation/deployment/RuleWhitelistWrapper.sol";
 import {RuleMaxTotalSupply} from "src/rules/validation/deployment/RuleMaxTotalSupply.sol";
@@ -618,13 +619,20 @@ contract ThreatModelTests is Test, HelperContract {
     }
 
     /**
-     * @notice WW-2: unlike `RuleEngineBase`, the wrapper does not ERC-165-check that a child
-     *         rule implements `IAddressList`. Adding a conformant `IRule` that is not an
-     *         address list bricks every transfer check that has to scan past the first child.
-     *         Note the early-exit in `_detectTransferRestrictionForTargets`: a pair already
-     *         resolved by an earlier child still succeeds, so the breakage is input-dependent.
+     * @notice WW-2: **FIXED.** The wrapper now ERC-165-checks its children, so a conformant `IRule`
+     *         that is not an address list is rejected at `addRule` instead of being accepted and
+     *         bricking later transfer checks.
+     * @dev This test formerly asserted the broken behaviour and was named `..._CurrentBehaviour`:
+     *      the wrapper accepted `RuleMaxTotalSupply` as a child, and any check whose targets were
+     *      not already resolved by an earlier child reverted on the blind `areAddressesListed` call.
+     *      The early exit in `_detectTransferRestrictionForTargets` made that input-dependent —
+     *      `(ADDRESS1, ADDRESS2)` still passed while `(ADDRESS1, ADDRESS3)` reverted — which is what
+     *      made it hard to notice.
+     *
+     *      The guard requires {IAddressListBatchQuery}, the single function the wrapper actually
+     *      calls, rather than the whole of `IAddressList`. Nethermind AuditAgent NM-18, audit F-5.
      */
-    function test_WW2_NonAddressListChildRuleBricksWrapper_CurrentBehaviour() public {
+    function test_WW2_NonAddressListChildRuleIsRejectedAtAddRule() public {
         TotalSupplyMock token = new TotalSupplyMock();
         vm.startPrank(DEFAULT_ADMIN_ADDRESS);
         RuleWhitelist childA = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, FORWARDER, false, false);
@@ -637,16 +645,53 @@ contract ThreatModelTests is Test, HelperContract {
 
         // RuleMaxTotalSupply is a valid IRule but exposes no `areAddressesListed`.
         RuleMaxTotalSupply notAnAddressList = new RuleMaxTotalSupply(DEFAULT_ADMIN_ADDRESS, address(token), 1000);
+        vm.expectRevert(
+            abi.encodeWithSelector(RuleWhitelistWrapper_ChildIsNotAnAddressList.selector, address(notAnAddressList))
+        );
         wrapper.addRule(IRule(address(notAnAddressList)));
         vm.stopPrank();
 
-        // Both endpoints resolved by childA: the early-exit never reaches the broken child.
-        assertEq(wrapper.detectTransferRestriction(ADDRESS1, ADDRESS2, 10), TRANSFER_OK);
+        // The wrapper is intact: the pair that used to revert now answers normally.
+        assertEq(wrapper.detectTransferRestriction(ADDRESS1, ADDRESS3, 10), CODE_ADDRESS_TO_NOT_WHITELISTED);
+        assertEq(wrapper.rulesCount(), 1, "the bad child was never added");
+    }
 
-        // ADDRESS3 is listed nowhere, so the scan continues into the broken child and reverts
-        // instead of returning CODE_ADDRESS_TO_NOT_WHITELISTED.
-        vm.expectRevert();
-        wrapper.detectTransferRestriction(ADDRESS1, ADDRESS3, 10);
+    /**
+     * @notice WW-2: the guard also refuses a nested wrapper, which would otherwise brick the parent.
+     * @dev `RuleWhitelistWrapper` aggregates children but does not itself implement
+     *      `areAddressesListed`, so it cannot be a child of another wrapper. Before the guard that
+     *      configuration was accepted and reverted every transfer through the parent; now it is
+     *      refused up front. Enabling nesting is a separate change (NM-19).
+     */
+    function test_WW2_NestedWrapperIsRejectedAtAddRule() public {
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        RuleWhitelistWrapper inner = new RuleWhitelistWrapper(DEFAULT_ADMIN_ADDRESS, FORWARDER, false, true);
+        RuleWhitelistWrapper outer = new RuleWhitelistWrapper(DEFAULT_ADMIN_ADDRESS, FORWARDER, false, true);
+
+        vm.expectRevert(abi.encodeWithSelector(RuleWhitelistWrapper_ChildIsNotAnAddressList.selector, address(inner)));
+        outer.addRule(IRule(address(inner)));
+        vm.stopPrank();
+    }
+
+    /**
+     * @notice WW-2: the guard cannot check POLARITY — a blacklist child is still accepted (NM-20).
+     * @dev `RuleBlacklist` answers `areAddressesListed` just as faithfully as a whitelist and
+     *      advertises the same interface id, because the interface genuinely is the same. ERC-165
+     *      therefore cannot distinguish an allow-list from a deny-list, and this configuration
+     *      remains the rules manager's responsibility. Pinned so the limit of the NM-18 guard is
+     *      explicit rather than assumed.
+     */
+    function test_WW2_GuardCannotRejectAnInvertedPolarityChild_CurrentBehaviour() public {
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        RuleBlacklist denyList = new RuleBlacklist(DEFAULT_ADMIN_ADDRESS, FORWARDER);
+        denyList.addAddress(ATTACKER);
+
+        RuleWhitelistWrapper wrapper = new RuleWhitelistWrapper(DEFAULT_ADMIN_ADDRESS, FORWARDER, false, true);
+        wrapper.addRule(IRule(address(denyList))); // accepted: the interface is satisfied
+        vm.stopPrank();
+
+        // ...and the blacklisted address is now reported as an eligible investor.
+        assertTrue(wrapper.isVerified(ATTACKER), "NM-20: polarity is not expressible in IAddressList");
     }
 
     /**

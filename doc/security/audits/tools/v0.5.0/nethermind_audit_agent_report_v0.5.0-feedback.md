@@ -33,10 +33,10 @@ Tool: **[Nethermind AuditAgent](https://auditagent.nethermind.io/)** — an **AI
 
 | Disposition | Count | IDs |
 |---|---|---|
-| **Fixed** (in `v0.6.0`) | 4 | **NM-3**, **NM-6**, **NM-10**, **NM-11** |
+| **Fixed** (in `v0.6.0`) | 5 | **NM-3**, **NM-6**, **NM-10**, **NM-11**, **NM-18** |
 | Accepted as design (real behaviour, intentional, already documented) | 17 | NM-1, 2, 4, 5, 7, 8, 9, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24 |
 | Rejected — false positive | 0 | — |
-| Informational — valid, optional hardening | 3 | NM-18, 19 (open) · **NM-20 documented in `v0.6.0`** |
+| Informational — valid, optional hardening | 2 | NM-19 (open) · **NM-20 documented in `v0.6.0`** |
 | Fix recommended | 0 | — |
 | **Total** | **24** | |
 
@@ -92,7 +92,7 @@ running against the genuine vendored token.
 | NM-15 | Low → **Low** | Conditional approvals not token-scoped | Accepted as design — duplicate of NM-7 |
 | NM-16 | Low → **Info** | `RuleSpenderWhitelist` inert on spender-less hooks | Accepted as design — duplicate of NM-9 |
 | NM-17 | Low → **Low** | `approveAndTransferIfAllowed` leaves a residual approval if no callback | Accepted as design — documented CEI inversion |
-| NM-18 | Low → **Low** | Wrapper bricked by a non-`IAddressList` child | Informational — known open item (audit F-5) |
+| NM-18 | Low → **Low** | Wrapper bricked by a non-`IAddressList` child | ✅ **Fixed** in `v0.6.0` — ERC-165 guard on a purpose-built sub-interface |
 | NM-19 | Low → **Info** | Wrapper does not implement `IAddressList`, so it cannot nest | Informational — enhancement, never advertised |
 | NM-20 | Low → **Info** | Wrapper reads a `RuleBlacklist` child's membership as eligibility | ✅ **Documented** in `v0.6.0` — no code fix possible |
 | NM-21 | Low → **Info** | `RuleMintAllowance` 3-arg pre-flight views fail open | Accepted as design — audit F-7 |
@@ -780,7 +780,7 @@ normal direct-binding and engine-binding flows still succeed with the count back
 Recommended: it converts a silent, operator-created compliance hole into an immediate, named failure at the exact
 moment the misconfiguration is exercised.
 
-### NM-18 — The wrapper can be bricked by a non-`IAddressList` child
+### NM-18 — The wrapper can be bricked by a non-`IAddressList` child — ✅ FIXED (`v0.6.0`)
 
 **Claim (Low).** `RuleWhitelistWrapperBase._detectTransferRestrictionForTargets` casts every child to
 `IAddressList` without checking. A rules manager can add a valid `IRule` that is not an address list (e.g.
@@ -864,12 +864,64 @@ where a broken child stops contributing without any signal. That is a real cost 
 already prevents at configuration, so **layer 1 alone is the recommendation**; layer 2 only earns its place if
 the wrapper is ever expected to hold children it does not control.
 
-*Why it has stayed open.* `RulesManagementModule._checkRule`, which the wrapper inherits directly, tests only
-non-zero and duplicate — but `RuleEngineBase` overrides it to add the `IRule` ERC-165 check, so the engine is
-guarded and the wrapper is not. The wrapper is in fact the *more* demanding of the two: the engine calls children
-through `IRule`, which every rule implements, while the wrapper calls them through `IAddressList`, which most do
-not. Nothing about the dependency argues against the guard; it supplies the template. Ship it with the F-5
-remediation, or on its own.
+**Resolution — `v0.6.0`.** Layer 1 implemented; layer 2 deliberately not.
+
+*The interface question, answered.* The wrapper calls **one** function on its children —
+`areAddressesListed(address[])`, at `RuleWhitelistWrapperBase.sol:245`. `IAddressList` declares **eight**
+(four writes, three reads, plus `contains` inherited from `IIdentityRegistryContains`). Guarding on the full id
+would demand seven functions the wrapper never touches, including every write function, and reject a read-only
+child that works perfectly. So the guard asks for a purpose-built sub-interface instead:
+
+```solidity
+interface IAddressListBatchQuery {
+    function areAddressesListed(address[] memory targetAddresses) external view returns (bool[] memory results);
+}
+
+interface IAddressList is IIdentityRegistryContains, IAddressListBatchQuery { /* the other seven */ }
+```
+
+| Constant | Value | Covers |
+|---|---|---|
+| `IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID` | `0x20e8e17a` | the one selector the wrapper requires |
+| `IADDRESS_LIST_INTERFACE_ID` | `0x5d10e182` | the full eight-selector hierarchy, unchanged |
+
+Factoring the selector into a parent left the **flattened set unchanged**, so `0x5d10e182` keeps its value and
+no rule's advertised id moves; all four address-list rules now advertise both. The sub-interface id is safe to
+state as a literal — it declares one function and inherits nothing, so the omitted-parent trap that forces the
+flattened-helper pattern for `IAddressList` does not apply. Asserted in
+`test/InterfaceId/AddressListInterfaceId.t.sol`.
+
+*The guard.* `_checkRule` is overridden exactly as `RuleEngineBase` does it, so one override covers both
+`addRule` and `setRules` and stays `view`:
+
+```solidity
+function _checkRule(address rule_) internal view virtual override {
+    RulesManagementModule._checkRule(rule_);
+    require(
+        ERC165Checker.supportsInterface(rule_, AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID),
+        RuleWhitelistWrapper_ChildIsNotAnAddressList(rule_)
+    );
+}
+```
+
+*Tests.* The WW-2 proof-of-concept in `test/ThreatModel/ThreatModelTests.t.sol` was named
+`..._CurrentBehaviour` precisely because it asserted the broken behaviour, and the fix duly made it fail — the
+signal the project's convention describes. It is renamed `test_WW2_NonAddressListChildRuleIsRejectedAtAddRule`
+and now asserts the rejection, that the wrapper is left intact, and that the bad child was never added. Two
+tests were added beside it: a **nested wrapper** is also refused (it does not implement `areAddressesListed`, so
+it would have bricked the parent — the NM-19 failure mode, though nesting itself remains unsupported), and
+`test_WW2_GuardCannotRejectAnInvertedPolarityChild_CurrentBehaviour` pins the guard's **limit**, since a
+`RuleBlacklist` passes it and still inverts the wrapper (NM-20). Four assertions were added to the interface-id
+suite; `RuleWhitelistWrapperBase` is at 100% statements, branches and functions.
+
+*Layer 2 (read-time containment) not implemented*, as recommended above: it needs an external self-call to make
+the dynamic `bool[]` decode catchable, adds a public helper to the ABI, and introduces silent degradation — all
+against a scenario layer 1 now prevents at configuration time.
+
+*The earlier "why it has stayed open" reasoning was wrong and is corrected.* `RulesManagementModule._checkRule`
+does test only non-zero and duplicate, but `RuleEngineBase` **overrides** it to add an `IRule` ERC-165 check
+(`RuleEngineBase.sol:228-233`), so the engine was already guarded and the wrapper was the outlier. The
+dependency supplied the template rather than an argument against it.
 
 ### NM-19 — The wrapper does not implement `IAddressList`, so wrappers cannot nest
 
@@ -1043,7 +1095,7 @@ over-issuance. **It has since been fixed** for the two supply-based cap rules, w
 `RuleMaxBalance` is deliberately left as CMTAT-path-only, because a post-update variant would revert an agent's
 forced transfer and, on T-REX <= 4.1, brick wallet recovery — a policy decision rather than a hook override.
 
-**Eight improvements are specified**, each with its code, its cost and its limit. Four are done; the other four
+**Eight improvements are specified**, each with its code, its cost and its limit. Five are done; the other three
 are listed in rough order of value per unit of risk:
 
 | Improvement | Where | Size | Status / verdict |
@@ -1052,7 +1104,7 @@ are listed in rough order of value per unit of risk:
 | Delegate instead of returning early | NM-3 | ~4 lines | ✅ **Done in `v0.6.0`** — behaviour-preserving, 8 regression tests, mutation-verified |
 | Future-dated PoR answer → code 77 | NM-10 | 1 line | ✅ **Done in `v0.6.0`** — 5 regression tests, mutation-verified |
 | Approval post-condition in `approveAndTransferIfAllowed` | NM-17 | ~5 lines + 1 error, ×2 variants | **Do it** — turns a silent operator-created hole into a named revert |
-| ERC-165 guard on wrapper children | NM-18 | `_checkRule` override | **Do it** — the pattern already exists in `RuleEngineBase` |
+| ERC-165 guard on wrapper children | NM-18 | `_checkRule` override + sub-interface | ✅ **Done in `v0.6.0`** — requires only the one selector the wrapper calls |
 | Normalise `spender == from` on the ERC-7943 overloads | NM-6 | 1 helper + 3 branches | ✅ **Done in `v0.6.0`** — 1 file, corrects one rule, changes no deny-list outcome |
 | `staticcall` + length check on the cap reads | NM-23/24 | 4 files | Worth it, as its own reviewed change — also retires the Cancun precondition |
 | Opt-in caller binding on the cap rules | NM-5 | 1 slot + setter, ×3 | **Partial only** — cannot isolate two tokens behind one engine; document and monitor instead for now |

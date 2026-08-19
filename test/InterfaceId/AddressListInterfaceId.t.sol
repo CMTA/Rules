@@ -8,6 +8,7 @@ import {RuleInterfaceId} from "RuleEngine/modules/library/RuleInterfaceId.sol";
 
 import {AddressListInterfaceId} from "src/rules/interfaces/library/AddressListInterfaceId.sol";
 import {IAddressListInterfaceIdHelper, IAddressListAllFunctions} from "src/mocks/IAddressListInterfaceIdHelper.sol";
+import {IAddressListBatchQuery} from "src/rules/interfaces/IAddressList.sol";
 import {IIdentityRegistryContains} from "src/rules/interfaces/IIdentityRegistry.sol";
 
 import {RuleWhitelist} from "src/rules/validation/deployment/RuleWhitelist.sol";
@@ -54,17 +55,67 @@ contract AddressListInterfaceIdTest is Test, HelperContract {
 
     /**
      * @notice Guards the reason the flat-helper pattern is required: `type(IAddressList).interfaceId`
-     *         omits `contains(address)`, inherited from `IIdentityRegistryContains`, so it must NOT
-     *         be used for the ERC-165 check.
+     *         omits every selector it inherits, so it must NOT be used for the ERC-165 check.
+     * @dev `IAddressList` now inherits from **two** parents — `IIdentityRegistryContains` for
+     *      `contains(address)` and `IAddressListBatchQuery` for `areAddressesListed(address[])` —
+     *      so the naive id omits both. That makes the point more sharply than before: the omission
+     *      grows silently every time a selector is factored out into a parent interface, which is
+     *      exactly why the flattened constant exists.
      */
     function test_NaiveInterfaceIdIsWrongAndMustNotBeUsed() public view {
         bytes4 naive = helper.getIAddressListInterfaceId();
         bytes4 full = AddressListInterfaceId.IADDRESS_LIST_INTERFACE_ID;
 
         assertTrue(naive != full, "naive id unexpectedly equals the full id");
-        // The difference is exactly the inherited selector, `contains(address)`.
-        assertEq(naive ^ full, helper.getIIdentityRegistryContainsInterfaceId());
-        assertEq(naive ^ full, IIdentityRegistryContains.contains.selector);
+        // The difference is exactly the two inherited selectors.
+        assertEq(
+            naive ^ full,
+            IIdentityRegistryContains.contains.selector ^ AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID
+        );
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                THE BATCH-QUERY SUB-INTERFACE (NM-18)
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice The sub-interface id is the selector of its single function.
+     * @dev `IAddressListBatchQuery` declares one function and inherits nothing, so unlike the full
+     *      hierarchy it has no omitted-parent trap and the literal is safe to state.
+     */
+    function test_BatchQueryInterfaceIdIsTheSingleSelector() public pure {
+        assertEq(AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID, bytes4(0x20e8e17a));
+        assertEq(
+            AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID,
+            IAddressListBatchQuery.areAddressesListed.selector
+        );
+        assertEq(
+            AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID, type(IAddressListBatchQuery).interfaceId
+        );
+    }
+
+    /// @notice The sub-interface is a strict subset: the full id contains its selector.
+    function test_BatchQueryIsASubsetOfTheFullInterface() public view {
+        bytes4 full = AddressListInterfaceId.IADDRESS_LIST_INTERFACE_ID;
+        bytes4 sub = AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID;
+        assertTrue(full != sub, "the wrapper must not be able to confuse the two");
+        // Removing the sub-interface selector from the flattened id leaves the other seven.
+        assertTrue((full ^ sub) != full, "the full id must actually include the sub-interface selector");
+    }
+
+    /// @notice Every rule usable as a wrapper child advertises the sub-interface, not just the full one.
+    function test_AddressListRulesAdvertiseTheBatchQuerySubInterface() public {
+        bytes4 sub = AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID;
+
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        RuleWhitelist whitelist = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, FORWARDER, false, false);
+        RuleBlacklist blacklist = new RuleBlacklist(DEFAULT_ADMIN_ADDRESS, FORWARDER);
+        RuleSpenderWhitelist spender = new RuleSpenderWhitelist(DEFAULT_ADMIN_ADDRESS, FORWARDER);
+        vm.stopPrank();
+
+        assertTrue(IERC165(address(whitelist)).supportsInterface(sub), "RuleWhitelist");
+        assertTrue(IERC165(address(blacklist)).supportsInterface(sub), "RuleBlacklist");
+        assertTrue(IERC165(address(spender)).supportsInterface(sub), "RuleSpenderWhitelist");
     }
 
     /*//////////////////////////////////////////////////////////////
