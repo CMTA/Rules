@@ -29,7 +29,10 @@ Tool: **[Nethermind AuditAgent](https://auditagent.nethermind.io/)** — an **AI
 
 ## Outcome
 
-**Nothing is exploitable, and no contract change is required for the CMTAT deployment path.**
+**Nothing is exploitable, and nothing required a contract change on the CMTAT deployment path.** Seven findings
+were nonetheless fixed in `v0.6.0` — six as hardening and one (NM-11) by shipping ERC-3643 variants of two cap
+rules — because each was cheap, verifiable and left the library better than the accepted-as-design disposition
+would have.
 
 | Disposition | Count | IDs |
 |---|---|---|
@@ -51,17 +54,18 @@ Two observations about the report as a whole:
    documented in-source, and recorded in a prior audit** — F-4 (multi-token approval scoping),
    F-7 (`canTransfer` non-authoritative for `RuleMintAllowance`), F-5 (the wrapper's unchecked children), and
    the v0.4.0 accepted-risk row "reverting sanctions oracle / identity registry bricks transfers". It found the
-   right things; it had no way to see that they were already decided.
+   right things; it had no way to see that they were already decided. Re-raising F-5 was useful anyway — it had
+   been open since v0.4.0 and this scan is what got it closed (NM-18).
 
-**Seven entries carry an `Improvement` section** — NM-3, NM-5, NM-6, NM-10, NM-17, NM-18 and NM-23/24 — setting
-out what could be implemented, the code to do it, what it buys, what it costs, and where the limit is. Two of
-those limits are worth reading before planning work: **NM-5** cannot be fully fixed at the rule level at all (the
-compliance hooks carry no token identity, so it needs an upstream interface change), and **NM-18**'s read-time
-containment runs into the same uncatchable-decode problem as NM-23, which is why only its configuration-time
-layer is recommended.
+**Eight entries carry an `Improvement` section** — NM-3, NM-5, NM-6, NM-10, NM-11, NM-17, NM-18 and NM-23/24 —
+setting out what could be implemented, the code to do it, what it buys, what it costs, and where the limit is.
+**Six are implemented in `v0.6.0`**; see the `Resolution` block in each. NM-20, originally dispositioned as
+documentation-only, was also fixed once it became clear the marker interface it called for was a single function.
 
-**Three of the seven have been implemented, all in `v0.6.0`: NM-3, NM-6 and NM-10** — see their `Resolution`
-blocks below. The remaining four are specified but not applied.
+Two limits are worth reading before planning further work: **NM-5** cannot be fully fixed at the rule level at
+all (the compliance hooks carry no token identity, so it needs an upstream interface change), and **NM-18**'s
+read-time containment runs into the same uncatchable-decode problem as NM-23, which is why only its
+configuration-time layer was implemented. The two improvements still open are **NM-23/24** and **NM-5**.
 
 **The one genuinely new and useful signal** is a theme the scanner keeps circling without naming:
 **several rules' guarantees depend on the token's callback shape and ordering, and a real ERC-3643 / T-REX token
@@ -1135,7 +1139,7 @@ transfer blocked by a broken oracle) or **inert** (a rule that cannot screen an 
 Every one of the 24 findings describes real code — there are no false positives — but 17 restate positions the
 project had already reached and written down, and the 24 items collapse to about 11 distinct claims.
 
-**One item is recommended for action: NM-11.** `RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR`
+**The one item that warranted new contracts was NM-11, and it has been acted on.** `RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR`
 assume the token calls the compliance hook *before* moving value; the vendored ERC-3643 / T-REX token calls it
 *after*, and that integration is one this repository supports and tests. The consequence is over-restriction, not
 over-issuance. **It has since been fixed** for the two supply-based cap rules, which now ship ERC-3643 variants
@@ -1143,7 +1147,7 @@ over-issuance. **It has since been fixed** for the two supply-based cap rules, w
 `RuleMaxBalance` is deliberately left as CMTAT-path-only, because a post-update variant would revert an agent's
 forced transfer and, on T-REX <= 4.1, brick wallet recovery — a policy decision rather than a hook override.
 
-**Eight improvements are specified**, each with its code, its cost and its limit. Six are done; the other two
+**Nine improvements are specified**, each with its code, its cost and its limit. Seven are done; the other two
 are listed in rough order of value per unit of risk:
 
 | Improvement | Where | Size | Status / verdict |
@@ -1154,8 +1158,12 @@ are listed in rough order of value per unit of risk:
 | Approval post-condition in `approveAndTransferIfAllowed` | NM-17 | ~5 lines + 1 error, ×2 variants | ✅ **Done in `v0.6.0`** — 5 regression tests, mutation-verified |
 | ERC-165 guard on wrapper children | NM-18 | `_checkRule` override + sub-interface | ✅ **Done in `v0.6.0`** — requires only the one selector the wrapper calls |
 | Normalise `spender == from` on the ERC-7943 overloads | NM-6 | 1 helper + 3 branches | ✅ **Done in `v0.6.0`** — 1 file, corrects one rule, changes no deny-list outcome |
+| Polarity marker interface + guard | NM-20 | 1 interface + 2 checks | ✅ **Done in `v0.6.0`** — makes allow/deny expressible; also closes a second wrong-child class |
 | `staticcall` + length check on the cap reads | NM-23/24 | 4 files | Worth it, as its own reviewed change — also retires the Cancun precondition |
 | Opt-in caller binding on the cap rules | NM-5 | 1 slot + setter, ×3 | **Partial only** — cannot isolate two tokens behind one engine; document and monitor instead for now |
 
-**No contract was modified by this triage.** Any fix goes through the normal fix workflow, after which
-`update-feedback-audit` maps the commits back into this file.
+**Status.** The triage itself modified no contract; the seven fixes recorded above were made afterwards through
+the normal fix workflow and are described in each finding's `Resolution` block. Two improvements remain
+specified but unapplied (**NM-23/24**, **NM-5**), one finding remains open as an enhancement (**NM-19**), and one
+decision is outstanding rather than blocked on effort: whether an ERC-3643 agent's `forcedTransfer` should be
+exempt from `RuleMaxBalance`, which is what a variant of that rule waits on.

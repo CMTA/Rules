@@ -159,6 +159,79 @@ Two constraints before building one:
 
 ---
 
+## 6. ERC-3643 compatibility — which rules actually work on a T-REX token
+
+A rule's guarantees depend on **what the token tells it and when**. CMTAT and ERC-3643 / T-REX differ on both,
+so a rule that is correct on one can be inert or wrong on the other — silently, with nothing reverting at
+deployment. This section is the per-rule answer.
+
+### The two differences that cause everything below
+
+| | CMTAT | ERC-3643 / T-REX |
+|---|---|---|
+| **Spender** | forwarded on the 4-arg `transferred(spender, from, to, value)` (v3.3+) | **never forwarded** — `transfer` *and* `transferFrom` both call the 3-arg `transferred(from, to, value)` |
+| **Ordering** | rule called **before** the value moves | rule called **after** — `_transfer` then `transferred`; `_mint` then `created` |
+| **Mint signal** | 4-arg `transferred(minter, address(0), to, value)` | `created(to, value)`, which `RuleEngine` forwards as 3-arg `transferred(address(0), to, value)` |
+
+Both paths also call `canTransfer` **before** the movement, so the read views are unaffected by the ordering
+difference and must always project the pending amount.
+
+### Per-rule status
+
+| Rule | On ERC-3643 | Why |
+|---|---|---|
+| `RuleWhitelist` | ✅ works, one flag inert | `from`/`to` arrive on the 3-arg path. **`checkSpender` never fires** |
+| `RuleWhitelistWrapper` | ✅ works, one flag inert | as above |
+| `RuleReceiverWhitelist` | ✅ works | screens `to` only, which the 3-arg path carries |
+| `RuleBlacklist` | ✅ works, spender leg inert | blocks a listed `from`/`to`; a listed **spender** moving someone else's tokens is not caught |
+| `RuleSanctionsList` | ✅ works, spender leg inert | as above |
+| `RuleERC2980` | ✅ works, spender leg inert | whitelist and frozen checks on `from`/`to` fire; the frozen-**spender** leg does not |
+| `RuleIdentityRegistry` | ✅ works, one flag inert | `to` is screened. **`checkSpender` never fires**. Usually redundant anyway: the token already calls `isVerified(_to)` itself |
+| `RuleMaxTotalSupply` | ⚠️ **use `RuleMaxTotalSupplyERC3643`** | post-update ordering ⇒ the amount is counted twice and fully-backed mints revert |
+| `RuleChainlinkPoR` | ⚠️ **use `RuleChainlinkPoRERC3643`** | same |
+| `RuleMaxBalance` | ❌ **not supported** | same double-count, and no variant exists — see below |
+| `RuleConditionalTransferLight` | ✅ works | approvals are keyed `(from, to, value)`; ordering is irrelevant to consuming one. Requires `bindRuleEngine` |
+| `RuleConditionalTransferLightMultiToken` | ❌ **not supported** | direct-binding only, and ERC-3643 needs the engine for `created` / `destroyed` |
+| `RuleMintAllowance` | ❌ **inert** | the quota is debited only on the 4-arg path; `created` arrives with no minter identity, so nothing is debited and every mint passes |
+
+### Reading the three failure modes
+
+They are not equally dangerous, and the difference matters more than the symbol:
+
+- **"one flag / leg inert"** — the rule enforces less than its configuration suggests. Fail-**open** for that
+  leg: an operator who set `checkSpender = true` gets no spender screening and no signal. The `from`/`to`
+  screening is unaffected, so the rule still does its main job.
+- **"use the ERC-3643 variant"** — the stock rule fails **closed**: it rejects mints that are within the cap.
+  Nothing is over-issued, but issuance breaks in a way that looks intermittent, because only the amount *in
+  flight* is double-counted. The variants re-phase the write path only.
+- **"inert" / "not supported"** — the rule enforces **nothing**, or cannot be wired at all. `RuleMintAllowance`
+  is the one to watch: it is silently permissive rather than restrictive, and its pre-flight view says
+  `TRANSFER_OK` too, so neither the token nor an integrator sees a problem.
+
+### Why `RuleMaxBalance` has no ERC-3643 variant
+
+Not effort — a policy decision that has not been made. Its observation is **per-address**, so unlike the two
+supply rules it engages on every transfer, and two T-REX agent powers interact badly with a post-update variant:
+
+- **`forcedTransfer` does notify compliance**, so the variant would *revert* an agent's forced transfer that
+  pushes the recipient over the cap. On T-REX ≤ 4.1, where `recoveryAddress` routes through `forcedTransfer`,
+  that **bricks wallet recovery** whenever the destination already holds tokens.
+- On the vendored **4.2.0-beta1 `recoveryAddress` notifies nobody**, so a recovered wallet can silently sit
+  above the cap. A token-reading rule self-heals — further receipts are blocked — but the invariant is violated
+  in state with no event.
+
+Whether an agent action should be cap-exempt is the question to settle first. T-REX's own module library also
+ships a `MaxBalanceModule`, so the marginal value is the lowest of the three.
+
+### Wiring, whichever rules you choose
+
+Use a **`RuleEngine`**, never a bare rule. ERC-3643 drives mint and burn through `created` / `destroyed`, which
+the validation rules do not implement; the engine implements the full `ICompliance` surface and forwards them.
+And build a `RuleChainlinkPoRERC3643` **after** `Token.init` — an uninitialised token reports `decimals() == 0`,
+which the rule's constructor accepts and caches.
+
+---
+
 ---
 
 See [`CLAUDE_AUDIT.md`](../../security/audits/tools/v0.4.0/claude-audit/CLAUDE_AUDIT.md) for the findings referenced above.

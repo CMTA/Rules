@@ -106,6 +106,11 @@ Use `RuleEngine`, not a bare rule. ERC-3643 drives mint and burn through `create
 The operation rules do implement `created` / `destroyed`, but they are bound to a single token and are not a compliance contract on
 their own.
 
+**Not every rule behaves the same on this path.** ERC-3643 never forwards a spender (both `transfer` and `transferFrom` call the
+3-argument `transferred`) and calls compliance *after* it moves the value. Some rules are therefore inert, and the two supply-cap
+rules need their `…ERC3643` variant. The per-rule matrix is
+[`RULE_SEMANTICS.md` §6](./doc/technical/guides/RULE_SEMANTICS.md).
+
 ### Identity verification
 
 ERC-3643 decides who may hold a token by asking an **identity registry** one question:

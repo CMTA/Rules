@@ -226,6 +226,24 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 ### Documentation
 
+- **Per-rule ERC-3643 compatibility matrix** (`RULE_SEMANTICS.md` §6). The scan's most useful signal was that a
+  rule's guarantees depend on what the token tells it and when, and there was no single place saying so per rule.
+  ERC-3643 / T-REX **never forwards a spender** (both `transfer` and `transferFrom` call the 3-argument
+  `transferred`) and calls compliance **after** it moves the value, which produces three distinct and unequally
+  dangerous failure modes: a rule with an inert *leg* (fail-open for that leg, main screening intact), a cap rule
+  that needs its `…ERC3643` variant (fail-closed, rejects valid mints), and a rule that is wholly inert
+  (`RuleMintAllowance` — silently permissive, and its pre-flight view agrees, so neither the token nor an
+  integrator sees a problem). The section also records why `RuleMaxBalance` has no variant.
+- **Corrected the ERC-3643 column of `doc/README.md`'s rule table**, which showed a green checkmark for **all 13
+  rules** — including the two that mis-enforce on that path and the three that enforce nothing. Now ✔ / ⚠ / ✘
+  with per-rule footnotes. This was an outstanding item recorded in the NM-11 remedy and not previously carried
+  out.
+- Pointers to the matrix from both READMEs' ERC-3643 sections and from the `CLAUDE.md` / `AGENTS.md` gotcha.
+- Brought the AuditAgent feedback file back into agreement with itself: it still stated "no contract was modified
+  by this triage", "three of the seven improvements have been implemented" and "one item is recommended for
+  action" after seven findings had been fixed.
+
+
 - Added the **Nethermind AuditAgent** (AI automated scan) run for `v0.5.0` — report and per-finding triage in
   `doc/security/audits/tools/v0.5.0/` (Scan ID `10`, commit `01632da`, 0 High / 13 Medium / 11 Low). No false
   positives, nothing exploitable, no contract change required for the CMTAT path; 17 of the 24 findings restate
