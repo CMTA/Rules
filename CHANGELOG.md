@@ -50,7 +50,7 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 _Nothing yet._
 
-## v0.6.0 - 2026-08-18
+## v0.6.0 - 2026-08-20
 
 Commit: _pending — 15 commits since the `v0.5.0` tag, plus the documentation changes still in the working tree._
 
