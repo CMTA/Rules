@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/core/RuleNFTAdapter.sol | 77a5fb86eed3006ca5020e7d6f223758c8b309a1 |
+| ./rules/validation/abstract/core/RuleNFTAdapter.sol | d70064b1ef2bff9e602f871259cd0f17ee44dd5d |
 
 
 ### Contracts Description Table
@@ -24,6 +24,7 @@
 | └ | detectTransferRestrictionFrom | Public ❗️ |   |NO❗️ |
 | └ | canTransfer | Public ❗️ |   |NO❗️ |
 | └ | canTransferFrom | Public ❗️ |   |NO❗️ |
+| └ | _isDelegated | Internal 🔒 |   | |
 | └ | _transferred | Internal 🔒 | 🛑  | |
 | └ | _transferredFrom | Internal 🔒 | 🛑  | |
 

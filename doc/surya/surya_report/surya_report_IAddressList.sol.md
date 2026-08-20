@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/interfaces/IAddressList.sol | e043af3e25afec3f5015f668979e5b32cc36f490 |
+| ./rules/interfaces/IAddressList.sol | 2986fa01ee3211e35276e0ef8970a939c1c9f050 |
 
 
 ### Contracts Description Table
@@ -15,14 +15,19 @@
 |:----------:|:-------------------:|:----------------:|:----------------:|:---------------:|
 |     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 ||||||
-| **IAddressList** | Interface | IIdentityRegistryContains |||
+| **IAddressListBatchQuery** | Interface |  |||
+| └ | areAddressesListed | External ❗️ |   |NO❗️ |
+||||||
+| **IAddressListPolarity** | Interface |  |||
+| └ | isAllowList | External ❗️ |   |NO❗️ |
+||||||
+| **IAddressList** | Interface | IIdentityRegistryContains, IAddressListBatchQuery |||
 | └ | addAddresses | External ❗️ | 🛑  |NO❗️ |
 | └ | removeAddresses | External ❗️ | 🛑  |NO❗️ |
 | └ | addAddress | External ❗️ | 🛑  |NO❗️ |
 | └ | removeAddress | External ❗️ | 🛑  |NO❗️ |
 | └ | listedAddressCount | External ❗️ |   |NO❗️ |
 | └ | isAddressListed | External ❗️ |   |NO❗️ |
-| └ | areAddressesListed | External ❗️ |   |NO❗️ |
 
 
 ### Legend

@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/base/RuleChainlinkPoRBase.sol | a1e200478baa5885cb422102d6800a094cf5abda |
+| ./rules/validation/abstract/base/RuleChainlinkPoRBase.sol | f91ce6934da8dd4f13c8c136d1dea1d549695f45 |
 
 
 ### Contracts Description Table
@@ -23,6 +23,7 @@
 | └ | messageForTransferRestriction | Public ❗️ |   |NO❗️ |
 | └ | _detectTransferRestriction | Internal 🔒 |   | |
 | └ | _detectTransferRestrictionFrom | Internal 🔒 |   | |
+| └ | _detectTransferRestrictionOnNotify | Internal 🔒 |   | |
 | └ | _transferred | Internal 🔒 |   | |
 | └ | _transferredFrom | Internal 🔒 |   | |
 

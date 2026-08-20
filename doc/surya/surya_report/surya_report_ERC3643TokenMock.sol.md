@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./mocks/ERC3643TokenMock.sol | 09e3ec529557577b366c9e48ba1be2ed6fda0d4f |
+| ./mocks/ERC3643TokenMock.sol | 1ed75c6e22c5677378835a73273381ce42e7b7aa |
 
 
 ### Contracts Description Table
