@@ -14,8 +14,8 @@
 | Date | Type | Tool / Source | Version | Reports |
 |---|---|---|---|---|
 | 2026-08-18 | AI-assisted review | Claude Code (Anthropic) | v0.6.0 | [**CLAUDE_ANALYSIS.md**](./tools/v0.6.0/CLAUDE_ANALYSIS.md) (code quality, `src/`) |
-| 2026-08-18 | Static analysis | Slither 0.11.5 | v0.6.0 | [report](./tools/v0.6.0/slither-report.md) · [feedback](./tools/v0.6.0/slither-report-feedback.md) |
-| 2026-08-18 | Static analysis | Aderyn 0.6.5 | v0.6.0 | [report](./tools/v0.6.0/aderyn-report.md) · [feedback](./tools/v0.6.0/aderyn-report-feedback.md) |
+| 2026-08-21 | Static analysis | Slither 0.11.5 | v0.6.0 | [report](./tools/v0.6.0/slither-report.md) · [feedback](./tools/v0.6.0/slither-report-feedback.md) — re-run after the RuleEngine `v3.0.0-rc6` bump, supersedes 2026-08-18 |
+| 2026-08-21 | Static analysis | Aderyn 0.6.5 | v0.6.0 | [report](./tools/v0.6.0/aderyn-report.md) · [feedback](./tools/v0.6.0/aderyn-report-feedback.md) — re-run after the RuleEngine `v3.0.0-rc6` bump, supersedes 2026-08-18 |
 | 2026-08-17 | AI automated scan | [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | v0.5.0 | [report (PDF)](./tools/v0.5.0/nethermind_audit_agent_report_v0.5.0.pdf) · [feedback](./tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md) |
 | 2026-08-12 | AI-assisted review | Claude Code (Anthropic) | v0.5.0 | [**CLAUDE_ANALYSIS.md**](./tools/v0.5.0/CLAUDE_ANALYSIS.md) (code quality, `src/`) · [**CLAUDE_ANALYSIS_SCRIPT.md**](./tools/v0.5.0/CLAUDE_ANALYSIS_SCRIPT.md) (deployment scripts) |
 | 2026-07 | AI-assisted review | Claude (Anthropic) + custom security-audit skills | v0.4.0 | [**CLAUDE_AUDIT.md**](./tools/v0.4.0/claude-audit/CLAUDE_AUDIT.md) |
@@ -28,8 +28,9 @@
 
 ## Static-analysis results (v0.6.0)
 
-Re-run **2026-08-18** for the `v0.6.0` release, at solc `0.8.36`, with the same tool versions as `v0.5.0` so the
-delta is directly comparable. Scope: production contracts only — mocks excluded, vendored dependencies excluded
+Re-run **2026-08-21** for the `v0.6.0` release, at solc `0.8.36`, with the same tool versions as `v0.5.0` so the
+delta is directly comparable. This supersedes the 2026-08-18 run, which was already one commit stale when it
+was committed. Scope: production contracts only — mocks excluded, vendored dependencies excluded
 via the `lib` filter.
 
 | Tool | High | Medium | Low | Info | Relevant to fix? |
@@ -46,13 +47,25 @@ via the `lib` filter.
   in the same file, the contract is at 100% function coverage, and the byte-identical seam in
   `RuleMaxTotalSupplyBase` is not flagged — the detector is unreliable for `internal virtual` functions reached
   through inheritance.
-- **Aderyn 336 → 346 (+10)** on +204 nSLOC, and the +10 is *exactly* the five new production files appearing once
+- **Aderyn 336 → 346 (+10)** on +203 nSLOC, and the +10 is *exactly* the five new production files appearing once
   each in `Unspecific Solidity Pragma` and `PUSH0 Opcode`. No new category.
 
 Two non-results are more informative than the totals. **`Centralization Risk` did not move (80 → 80)** despite
 four new deployable contracts: the ERC-3643 variants subclass existing deployables and override one `internal`
 hook, adding no privileged external function. **`Empty Block` did not move (70 → 70)** either, so no new
 access-control hook was introduced.
+
+**Re-run 2026-08-18 → 2026-08-21, after the RuleEngine `v3.0.0-rc6` bump: no detector moved in either tool.**
+Slither holds 46 results across the same nine detectors, Aderyn holds 346 instances across the same nine
+categories, and the only body changes are line numbers plus four renamed snippets. Two commits are covered — the
+NatSpec trim (`c1ebe57`, which is what made the 2026-08-18 reports stale) and the rc6 bump (`f920b07`), which
+renamed `onlyComplianceManager` to `onlyTokenBindingManager`, renamed `_authorizeComplianceBindingChange` to
+`_authorizeTokenBindingChange` and deleted one redundant override. Aderyn's nSLOC moved 4 146 → 4 145. Slither's
+**contract count rose 221 → 225 without any change in `src/`**: rc6 split the binding registry out of
+`ERC3643ComplianceModule` into five new upstream contracts and removed one, all under `lib/` and all filtered out
+of the results — flagged here so a future reader does not mistake it for scope creep. Two stable counts carry
+information: `dead-code` staying at 3 confirms the deleted override was reachable and therefore redundant rather
+than load-bearing, and `Centralization Risk` staying at 80 confirms the rename re-gated nothing.
 
 As in `v0.5.0`: a clean static-analysis report means the tools' pattern sets matched nothing. **None of the seven
 findings fixed in this release was reachable by either analyser** — they came from the Nethermind AuditAgent scan

@@ -5,9 +5,10 @@ slither . --checklist --filter-paths "node_modules,lib,test,forge-std,mocks" \
   > doc/security/audits/tools/v0.6.0/slither-report.md
 ```
 
-Tool: **Slither 0.11.5** · Compiler: solc `0.8.36` · Run date: **2026-08-18**
+Tool: **Slither 0.11.5** · Compiler: solc `0.8.36` · Run date: **2026-08-21** (re-run after the RuleEngine
+`v3.0.0-rc6` bump; supersedes the 2026-08-18 run)
 Scope: production contracts only. Mocks excluded via the `mocks` filter, vendored dependencies via `lib`.
-221 contracts, 101 detectors, **46 results**.
+225 contracts, 101 detectors, **46 results**.
 
 **Executive triage: nothing to fix.** No finding is exploitable. Both High-impact results are the same
 false positive dismissed in `v0.4.0` and `v0.5.0`, on a permissioned path. The two results new since `v0.5.0`
@@ -92,6 +93,42 @@ inconsistency — `RuleMaxTotalSupplyBase` has the byte-identical seam, overridd
 
 The two pre-existing instances are unchanged: `RuleERC2980Internal._requireNotZeroAddress` and
 `RuleAddressSetInternal._requireNotZeroAddress`, both internal guards reached from the public layer.
+
+## Re-run within `v0.6.0` (2026-08-18 → 2026-08-21)
+
+**No detector moved.** All nine hold their exact result counts, so the summary table above is unchanged. The
+entire body diff is **line numbers in three files** — `RuleConditionalTransferLightBase`,
+`RuleConditionalTransferLightMultiTokenBase` and `RuleChainlinkPoRBase`. Two commits landed between the runs:
+
+- `c1ebe57` — trimmed NatSpec to the 20-line ceiling and marked two pointer-passed guards `virtual`. This is
+  what moved `RuleChainlinkPoRBase`, a file the rc6 bump never touched, and it means the 2026-08-18 report was
+  **already one commit stale when it was committed**.
+- `f920b07` — RuleEngine `v3.0.0-rc6`: two access-control hooks renamed and one redundant override deleted.
+
+### Contract count 221 → 225 — not this repository's code
+
+Slither walks the full inheritance graph, including the vendored dependencies it then filters out of the
+*results*. `v3.0.0-rc6` split the token-binding registry out of `ERC3643ComplianceModule`, adding
+`TokenBindingModule`, `TokenBindingExtendedModule`, `ITokenBinding`, `ITokenBindingExtended` and
+`TokenBindingModuleInvariantStorage`, and removing `ERC3643ComplianceModuleInvariantStorage` — net **+4**.
+Every one of them is under `lib/` and contributes zero results. This is the one number in the report that
+changed without a corresponding change in `src/`, and it is worth naming explicitly so a future reader does not
+read it as scope creep.
+
+### What did *not* move, and why that is the useful check
+
+- **`dead-code` stayed at 3.** Deleting `RuleConditionalTransferLightMultiTokenBase._authorizeComplianceBindingChange`
+  removed an `internal` function that Slither did *not* consider dead — it was reached through the
+  `bindToken` / `unbindToken` path. Had the count dropped to 2, that would have meant the deletion removed a
+  live authorization check rather than a redundant one.
+- **`arbitrary-send-erc20` stayed at 2**, still on `approveAndTransferIfAllowed` in both conditional-transfer
+  bases. The rename changed which modifier gates `bindToken`, not the gating of the transfer helper.
+- **`unused-return` stayed at 9.** `_bindToken` still consumes the `EnumerableSet.add` return value through a
+  `require`; the registry moved upstream, the call site did not change.
+
+### Scope check re-verified
+
+`grep -c 'lib/\|node_modules/'` on the fresh report is **0**.
 
 ## Findings carried over from `v0.5.0`
 

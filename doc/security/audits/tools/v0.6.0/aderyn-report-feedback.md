@@ -4,8 +4,9 @@
 aderyn -x mocks --output doc/security/audits/tools/v0.6.0/aderyn-report.md
 ```
 
-Tool: **Aderyn 0.6.5** · Compiler: solc `0.8.36` · Run date: **2026-08-18**
-Scope: production contracts only, mocks excluded via `-x mocks`. 94 source files, 87 detectors. **4 146 nSLOC.**
+Tool: **Aderyn 0.6.5** · Compiler: solc `0.8.36` · Run date: **2026-08-21** (re-run after the RuleEngine
+`v3.0.0-rc6` bump; supersedes the 2026-08-18 run)
+Scope: production contracts only, mocks excluded via `-x mocks`. 94 source files, 87 detectors. **4 145 nSLOC.**
 **0 High · 9 Low categories, 346 instances.**
 
 **Executive triage: nothing to fix.** Aderyn reports no High or Medium finding. Every Low category is by design,
@@ -33,7 +34,7 @@ by itself, so it needs no equivalent of Slither's `--filter-paths`; `-x mocks` i
 
 ## Delta from `v0.5.0`
 
-**336 → 346 instances (+10)** on **3 942 → 4 146 nSLOC (+204)**. Categories unchanged at 9 — none added, none
+**336 → 346 instances (+10)** on **3 942 → 4 145 nSLOC (+203)**. Categories unchanged at 9 — none added, none
 removed.
 
 | ID | v0.5.0 | v0.6.0 | Δ |
@@ -60,6 +61,31 @@ That is a stronger result than the raw number suggests, and worth stating explic
   overrides have real bodies, and no new `_authorize*()` hook was introduced.
 - **`L-9 Unchecked Return` did not grow**, despite `RuleWhitelistWrapperBase._checkRule` gaining two
   `ERC165Checker.supportsInterface` calls and one `isAllowList()` — all three are consumed by a `require`.
+
+## Re-run within `v0.6.0` (2026-08-18 → 2026-08-21)
+
+**No detector moved.** All 9 categories hold their exact instance counts, so the summary table above is
+unchanged. Two commits landed between the runs:
+
+- `c1ebe57` — trimmed NatSpec to the 20-line ceiling and marked two pointer-passed guards `virtual`.
+- `f920b07` — RuleEngine `v3.0.0-rc6`: `onlyComplianceManager` renamed to `onlyTokenBindingManager`,
+  `_authorizeComplianceBindingChange` renamed to `_authorizeTokenBindingChange`, and the redundant
+  `RuleConditionalTransferLightMultiTokenBase` binding-authorization override deleted.
+
+The entire body diff is line numbers plus four renamed `L-7` snippets, which is the expected shape: renaming a
+hook cannot change how many empty blocks exist, and the deleted override was **not** an empty block — it had a
+body — so `L-7` correctly stays at 70. nSLOC moved **4 146 → 4 145**: −3 for the deleted override, −12 for
+`forge fmt` re-flowing two multi-line signatures onto one line, +14 for two added imports and two signatures
+that `forge fmt` expanded the other way.
+
+Worth stating for the same reason as the `v0.5.0` delta below:
+
+- **`L-1 Centralization Risk` did not grow (80 → 80).** The rename touched two access-control hooks and one
+  modifier; no privileged external function was added, removed or re-gated. That the count is stable is the
+  cheap confirmation that a rename really was a rename.
+- **`L-6 Modifier Invoked Only Once` did not grow (1 → 1)**, and still points at
+  `RuleWhitelistShared.onlyCheckSpenderManager`. `onlyTokenBindingManager` is invoked four times in
+  `RuleConditionalTransferLightBase` alone, so it correctly does not appear.
 
 ## Notes on the two large categories
 

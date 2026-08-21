@@ -1973,7 +1973,7 @@ See the consolidated [Audit & Security-Analysis Overview](./security/audits/AUDI
 
 #### Static analysis (v0.6.0)
 
-Re-run **2026-08-18** for the v0.6.0 release, at solc `0.8.36`, with the same tool versions as v0.5.0 so the
+Re-run **2026-08-21** for the v0.6.0 release, at solc `0.8.36`, with the same tool versions as v0.5.0 so the
 delta is directly comparable. Full reports and per-finding triage in
 [`doc/security/audits/tools/v0.6.0/`](./security/audits/tools/v0.6.0/).
 
@@ -1988,6 +1988,11 @@ categories (`Unspecific Solidity Pragma`, `PUSH0 Opcode`); no new category appea
 `Centralization Risk` nor `Empty Block` moved, because the new ERC-3643 variants add no privileged external
 function. Slither's one new `dead-code` hit is a false positive that would be damaging to act on — it names the
 notification seam `RuleChainlinkPoRERC3643` exists to override.
+
+The 2026-08-21 re-run, after the RuleEngine `v3.0.0-rc6` bump, **moved no detector in either tool** — same 46
+Slither results, same 346 Aderyn instances, same categories. Slither's contract count rose 221 → 225 purely
+because rc6 added five upstream contracts to the inheritance graph, all under `lib/` and all filtered out of the
+results.
 
 Commands used for `v0.6.0` (mocks excluded):
 

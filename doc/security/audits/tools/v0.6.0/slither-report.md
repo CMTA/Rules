@@ -5,9 +5,10 @@ slither . --checklist --filter-paths "node_modules,lib,test,forge-std,mocks" \
   > doc/security/audits/tools/v0.6.0/slither-report.md
 ```
 
-Tool: **Slither 0.11.5** · Compiler: solc `0.8.36` · Run date: **2026-08-18**
+Tool: **Slither 0.11.5** · Compiler: solc `0.8.36` · Run date: **2026-08-21** (re-run after the RuleEngine
+`v3.0.0-rc6` bump; supersedes the 2026-08-18 run)
 Scope: production contracts only — **mocks excluded**, vendored dependencies excluded via the `lib` filter.
-221 contracts, 101 detectors, **46 results**.
+225 contracts, 101 detectors, **46 results**.
 
 **0 High\* · 2 High-impact (both false positives) · 11 Medium · 18 Low · 15 Informational.**
 
@@ -29,6 +30,15 @@ and are verified false positives.
 **Nothing to fix.** No finding is exploitable. The delta from `v0.5.0` is **+2** (44 → 46), both traceable to
 code added in this release and both dismissed against the source.
 
+**Re-run delta (2026-08-18 → 2026-08-21): no detector moved.** Every one of the nine detectors holds its exact
+result count; the entire diff is **line numbers in three files** (`RuleConditionalTransferLightBase`,
+`RuleConditionalTransferLightMultiTokenBase`, `RuleChainlinkPoRBase`). The contract count rose **221 → 225**,
+which is not this repository's code: RuleEngine `v3.0.0-rc6` split the binding registry out of
+`ERC3643ComplianceModule`, adding `TokenBindingModule`, `TokenBindingExtendedModule`, `ITokenBinding`,
+`ITokenBindingExtended` and `TokenBindingModuleInvariantStorage` while removing
+`ERC3643ComplianceModuleInvariantStorage` — net +4 contracts in the inheritance graph Slither walks, all of
+them filtered out of the results by the `lib` path filter.
+
 Triage: [`slither-report-feedback.md`](./slither-report-feedback.md) ·
 Overview: [`AUDIT_OVERVIEW.md`](../../AUDIT_OVERVIEW.md)
 
@@ -49,9 +59,9 @@ Summary
 Impact: High
 Confidence: High
  - [ ] ID-0
-[RuleConditionalTransferLightBase.approveAndTransferIfAllowed(address,address,uint256)](src/rules/operation/abstract/RuleConditionalTransferLightBase.sol#L113-L139) uses arbitrary from in transferFrom: [IERC20(token).safeTransferFrom(from,to,value)](src/rules/operation/abstract/RuleConditionalTransferLightBase.sol#L128)
+[RuleConditionalTransferLightBase.approveAndTransferIfAllowed(address,address,uint256)](src/rules/operation/abstract/RuleConditionalTransferLightBase.sol#L115-L141) uses arbitrary from in transferFrom: [IERC20(token).safeTransferFrom(from,to,value)](src/rules/operation/abstract/RuleConditionalTransferLightBase.sol#L130)
 
-src/rules/operation/abstract/RuleConditionalTransferLightBase.sol#L113-L139
+src/rules/operation/abstract/RuleConditionalTransferLightBase.sol#L115-L141
 
 
  - [ ] ID-1
@@ -346,10 +356,10 @@ src/rules/operation/abstract/RuleConditionalTransferLightApprovalBase.sol#L163-L
 
 
  - [ ] ID-32
-[RuleConditionalTransferLightMultiTokenBase._transferHash(address,address,address,uint256)](src/rules/operation/abstract/RuleConditionalTransferLightMultiTokenBase.sol#L465-L479) uses assembly
-	- [INLINE ASM](src/rules/operation/abstract/RuleConditionalTransferLightMultiTokenBase.sol#L471-L478)
+[RuleConditionalTransferLightMultiTokenBase._transferHash(address,address,address,uint256)](src/rules/operation/abstract/RuleConditionalTransferLightMultiTokenBase.sol#L450-L464) uses assembly
+	- [INLINE ASM](src/rules/operation/abstract/RuleConditionalTransferLightMultiTokenBase.sol#L456-L463)
 
-src/rules/operation/abstract/RuleConditionalTransferLightMultiTokenBase.sol#L465-L479
+src/rules/operation/abstract/RuleConditionalTransferLightMultiTokenBase.sol#L450-L464
 
 
 ## dead-code
@@ -362,9 +372,9 @@ src/rules/validation/abstract/RuleERC2980/RuleERC2980Internal.sol#L142-L144
 
 
  - [ ] ID-34
-[RuleChainlinkPoRBase._detectTransferRestrictionOnNotify(address,address,uint256)](src/rules/validation/abstract/base/RuleChainlinkPoRBase.sol#L186-L193) is never used and should be removed
+[RuleChainlinkPoRBase._detectTransferRestrictionOnNotify(address,address,uint256)](src/rules/validation/abstract/base/RuleChainlinkPoRBase.sol#L175-L182) is never used and should be removed
 
-src/rules/validation/abstract/base/RuleChainlinkPoRBase.sol#L186-L193
+src/rules/validation/abstract/base/RuleChainlinkPoRBase.sol#L175-L182
 
 
  - [ ] ID-35
