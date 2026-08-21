@@ -7,6 +7,8 @@ import {IERC3643ComplianceRead, IERC3643IComplianceContract} from "CMTAT/interfa
 import {IERC7551Compliance} from "CMTAT/interfaces/tokenization/draft-IERC7551.sol";
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
 import {ERC3643ComplianceModule} from "RuleEngine/modules/ERC3643ComplianceModule.sol";
+import {TokenBindingModule} from "RuleEngine/modules/TokenBindingModule.sol";
+import {ITokenBinding} from "RuleEngine/interfaces/ITokenBinding.sol";
 import {VersionModule} from "../../../modules/VersionModule.sol";
 import {RuleMintAllowanceInvariantStorage} from "./RuleMintAllowanceInvariantStorage.sol";
 
@@ -139,7 +141,12 @@ abstract contract RuleMintAllowanceBase is
      *      behavior. Call {clearMintAllowances} before rebinding to discard the previous quotas.
      * @param token The caller (RuleEngine/token) to bind to this rule.
      */
-    function bindToken(address token) public virtual override onlyComplianceManager {
+    function bindToken(address token)
+        public
+        virtual
+        override(ITokenBinding, TokenBindingModule)
+        onlyTokenBindingManager
+    {
         require(getTokenBound() == address(0), RuleMintAllowance_TokenAlreadyBound());
         _bindToken(token);
     }

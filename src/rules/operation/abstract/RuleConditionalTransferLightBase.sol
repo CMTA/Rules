@@ -7,6 +7,8 @@ import {IERC3643ComplianceRead, IERC3643IComplianceContract} from "CMTAT/interfa
 import {IERC7551Compliance} from "CMTAT/interfaces/tokenization/draft-IERC7551.sol";
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
 import {ERC3643ComplianceModule} from "RuleEngine/modules/ERC3643ComplianceModule.sol";
+import {TokenBindingModule} from "RuleEngine/modules/TokenBindingModule.sol";
+import {ITokenBinding} from "RuleEngine/interfaces/ITokenBinding.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {RuleConditionalTransferLightApprovalBase} from "./RuleConditionalTransferLightApprovalBase.sol";
@@ -187,7 +189,12 @@ abstract contract RuleConditionalTransferLightBase is
      *      {unbindRuleEngine} before rebinding.
      * @param token The ERC-20 token to bind to this rule.
      */
-    function bindToken(address token) public virtual override onlyComplianceManager {
+    function bindToken(address token)
+        public
+        virtual
+        override(ITokenBinding, TokenBindingModule)
+        onlyTokenBindingManager
+    {
         require(getTokenBound() == address(0), RuleConditionalTransferLight_TokenAlreadyBound());
         _bindToken(token);
     }
@@ -208,7 +215,7 @@ abstract contract RuleConditionalTransferLightBase is
      * @param ruleEngine_ The RuleEngine allowed to call `transferred`. It MUST serve only the token
      *                    bound via {bindToken}.
      */
-    function bindRuleEngine(address ruleEngine_) public virtual onlyComplianceManager {
+    function bindRuleEngine(address ruleEngine_) public virtual onlyTokenBindingManager {
         require(ruleEngine_ != address(0), RuleConditionalTransferLight_RuleEngineAddressZeroNotAllowed());
         require(ruleEngine == address(0), RuleConditionalTransferLight_RuleEngineAlreadyBound());
         ruleEngine = ruleEngine_;
@@ -219,7 +226,7 @@ abstract contract RuleConditionalTransferLightBase is
      * @notice Revokes the bound RuleEngine's authorization to call the transfer execution hooks.
      * @dev Does NOT clear `approvalCounts` — see the {bindToken} warning and {resetApproval}.
      */
-    function unbindRuleEngine() public virtual onlyComplianceManager {
+    function unbindRuleEngine() public virtual onlyTokenBindingManager {
         address previous = ruleEngine;
         require(previous != address(0), RuleConditionalTransferLight_RuleEngineNotBound());
         ruleEngine = address(0);

@@ -30,7 +30,7 @@ Here are the settings for [Hardhat](https://hardhat.org) and [Foundry](https://g
 
   - CMTAT [v3.3.0-rc3](https://github.com/CMTA/CMTAT/releases/tag/v3.3.0-rc3)
 
-  - RuleEngine [v3.0.0-rc5](https://github.com/CMTA/RuleEngine/releases/tag/v3.0.0-rc5)
+  - RuleEngine [v3.0.0-rc6](https://github.com/CMTA/RuleEngine/releases/tag/v3.0.0-rc6)
 
 ## Toolchain installation
 

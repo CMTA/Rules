@@ -64,5 +64,5 @@ contract RuleMintAllowanceOwnable2Step is RuleMintAllowanceBase, Ownable2Step, O
     /**
      * @notice Reverts unless the caller is the owner.
      */
-    function _authorizeComplianceBindingChange(address) internal view virtual override onlyOwner {}
+    function _authorizeTokenBindingChange(address) internal view virtual override onlyOwner {}
 }

@@ -67,11 +67,5 @@ contract RuleMintAllowance is AccessControlModuleStandalone, RuleMintAllowanceBa
     /**
      * @notice Reverts unless the caller holds `COMPLIANCE_MANAGER_ROLE`.
      */
-    function _authorizeComplianceBindingChange(address)
-        internal
-        view
-        virtual
-        override
-        onlyRole(COMPLIANCE_MANAGER_ROLE)
-    {}
+    function _authorizeTokenBindingChange(address) internal view virtual override onlyRole(COMPLIANCE_MANAGER_ROLE) {}
 }

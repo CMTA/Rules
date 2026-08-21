@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/operation/abstract/RuleConditionalTransferLightMultiTokenBase.sol | a99ca92af6fd9f2c2e8e7f1cb5579371c95594a4 |
+| ./rules/operation/abstract/RuleConditionalTransferLightMultiTokenBase.sol | 920bbe385eb3b6e11472d296798f9a5e259b0a81 |
 
 
 ### Contracts Description Table
@@ -34,7 +34,6 @@
 | └ | detectTransferRestrictionFrom | Public ❗️ |   |NO❗️ |
 | └ | canTransfer | Public ❗️ |   |NO❗️ |
 | └ | canTransferFrom | Public ❗️ |   |NO❗️ |
-| └ | _authorizeComplianceBindingChange | Internal 🔒 | 🛑  | |
 | └ | _approveTransfer | Internal 🔒 | 🛑  | |
 | └ | _cancelTransferApproval | Internal 🔒 | 🛑  | |
 | └ | _transferred | Internal 🔒 | 🛑  | |

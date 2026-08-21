@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/operation/abstract/RuleMintAllowanceBase.sol | c702b5250dc5dea9ee0a34fb1644def4b6a1385b |
+| ./rules/operation/abstract/RuleMintAllowanceBase.sol | 579db19d0f10e2d0f5e6df95220dc1fd4d3fff42 |
 
 
 ### Contracts Description Table
@@ -23,7 +23,7 @@
 | └ | increaseMintAllowance | Public ❗️ | 🛑  | onlyAllowanceOperator |
 | └ | decreaseMintAllowance | Public ❗️ | 🛑  | onlyAllowanceOperator |
 | └ | clearMintAllowances | Public ❗️ | 🛑  | onlyAllowanceOperator |
-| └ | bindToken | Public ❗️ | 🛑  | onlyComplianceManager |
+| └ | bindToken | Public ❗️ | 🛑  | onlyTokenBindingManager |
 | └ | transferred | Public ❗️ | 🛑  | onlyBoundToken |
 | └ | transferred | Public ❗️ | 🛑  | onlyBoundToken |
 | └ | messageForTransferRestriction | Public ❗️ |   |NO❗️ |

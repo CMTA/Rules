@@ -7,7 +7,7 @@ Each rule can be used **standalone**, directly plugged into a CMTAT token, **or*
 The **RuleEngine** is an external smart contract that applies transfer restrictions to security tokens such as **CMTAT** or [ERC-3643](https://eips.ethereum.org/EIPS/eip-3643)-compatible tokens through a RuleEngine.
 Rules are modular validator contracts that the `RuleEngine` or `CMTAT` compatible token can call on every transfer to ensure regulatory and business-logic compliance.
 
-**Current package version:** `v0.6.0` (contracts report `version()` → `"0.6.0"`). Built against CMTAT `v3.3.0-rc3` and RuleEngine `v3.0.0-rc5`; see [Compatibility](#compatibility) for the supported range.
+**Current package version:** `v0.6.0` (contracts report `version()` → `"0.6.0"`). Built against CMTAT `v3.3.0-rc3` and RuleEngine `v3.0.0-rc6`; see [Compatibility](#compatibility) for the supported range.
 
 > This project has not undergone an audit and is provided as-is without any warranties.
 
@@ -96,7 +96,7 @@ Interface details for each mode are documented under [Architecture](#architectur
 
 | Component        | Compatible Versions                                        |
 | ---------------- | ---------------------------------------------------------- |
-| **Rules v0.6.0** | CMTAT ≥ v3.0.0 (tested against v3.3.0-rc3)<br />RuleEngine v3.0.0-rc5 |
+| **Rules v0.6.0** | CMTAT ≥ v3.0.0 (tested against v3.3.0-rc3)<br />RuleEngine v3.0.0-rc6 |
 
 Spender-aware paths (e.g. `RuleMintAllowance`) rely on the 4-argument `canTransferFrom` / `transferred(spender, from, to, value)` callbacks, which require a CMTAT / RuleEngine that forwards the spender to the rule; this repository is validated against CMTAT `v3.3.0-rc3`. The other rules only use the 3-argument path and work across the full CMTAT ≥ v3.0.0 range.
 

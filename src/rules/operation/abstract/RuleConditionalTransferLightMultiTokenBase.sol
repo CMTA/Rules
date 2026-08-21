@@ -331,21 +331,6 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
     }
 
     /**
-     * @notice Authorizes changes to compliance binding: restricted to the compliance manager.
-     * @dev NOT `view`, unlike every other access-control hook in this codebase. This is structural,
-     *      not an oversight: the implementation delegates to `_onlyComplianceManager()`, which
-     *      `lib/RuleEngine`'s {ERC3643ComplianceModule} declares as `internal virtual` (non-`view`).
-     *      Solidity checks mutability against a virtual's DECLARED type, not the installed override,
-     *      so calling it from a `view` function is a compile error — even though every override of it
-     *      in this repo is `view`. It can only become `view` once the upstream declaration does.
-     *      (The single-token rules avoid this by overriding this hook directly with `onlyRole(...)`
-     *      instead of delegating, which is why they are already `view`.)
-     */
-    function _authorizeComplianceBindingChange(address) internal virtual override {
-        _onlyComplianceManager();
-    }
-
-    /**
      * @notice Records a new approval for the given per-token transfer; reverts if the token is not bound.
      * @param token The token the transfer applies to.
      * @param from The sender of the transfer.
