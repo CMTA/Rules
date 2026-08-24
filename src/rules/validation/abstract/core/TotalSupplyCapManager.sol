@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {RuleMaxTotalSupplyInvariantStorage} from "../invariant/RuleMaxTotalSupplyInvariantStorage.sol";
 import {ITotalSupply} from "../../../interfaces/ITotalSupply.sol";
 import {TokenSupplyReader} from "./TokenSupplyReader.sol";
+import {CapAccounting} from "./CapAccounting.sol";
 
 /**
  * @title TotalSupplyCapManager
@@ -18,7 +19,7 @@ import {TokenSupplyReader} from "./TokenSupplyReader.sol";
  * {TokenSupplyReader} via {_supplyToken}; the deployment precondition documented there applies
  * unchanged.
  */
-abstract contract TotalSupplyCapManager is TokenSupplyReader, RuleMaxTotalSupplyInvariantStorage {
+abstract contract TotalSupplyCapManager is CapAccounting, TokenSupplyReader, RuleMaxTotalSupplyInvariantStorage {
     /**
      * @dev tokenContract is trusted to report an *accurate* totalSupply -- nothing on-chain can
      * verify that -- but it is NOT trusted to stay callable: a reverting or codeless token yields
@@ -128,7 +129,6 @@ abstract contract TotalSupplyCapManager is TokenSupplyReader, RuleMaxTotalSupply
         if (!supplyAvailable) {
             return (false, false);
         }
-        uint256 cap = maxTotalSupply;
-        return (true, currentSupply > cap || value > cap - currentSupply);
+        return (true, _capExceededBy(currentSupply, maxTotalSupply, value));
     }
 }

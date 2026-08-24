@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/operation/RuleConditionalTransferLight.sol | d20cf57626e59b0e16ae7d8ae18d7c7f1c1de7a5 |
+| ./rules/operation/RuleConditionalTransferLight.sol | 4e1e3943d4e53454fa1b24c263871ffd4dc4c0f7 |
 
 
 ### Contracts Description Table
@@ -20,7 +20,7 @@
 | └ | supportsInterface | Public ❗️ |   |NO❗️ |
 | └ | _onlyComplianceManager | Internal 🔒 |   | onlyRole |
 | └ | _authorizeTransferApproval | Internal 🔒 |   | onlyRole |
-| └ | _authorizeComplianceBindingChange | Internal 🔒 |   | onlyRole |
+| └ | _authorizeTokenBindingChange | Internal 🔒 |   | onlyRole |
 
 
 ### Legend

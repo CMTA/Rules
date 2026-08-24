@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/core/ChainlinkPoRFeedManager.sol | 4c296843d471b9cc60a86ef8253205dabbc45558 |
+| ./rules/validation/abstract/core/ChainlinkPoRFeedManager.sol | 4d917002775897247442a336203c5436d3f444e3 |
 
 
 ### Contracts Description Table
@@ -15,7 +15,7 @@
 |:----------:|:-------------------:|:----------------:|:----------------:|:---------------:|
 |     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 ||||||
-| **ChainlinkPoRFeedManager** | Implementation | TokenSupplyReader, RuleChainlinkPoRInvariantStorage |||
+| **ChainlinkPoRFeedManager** | Implementation | CapAccounting, TokenSupplyReader, RuleChainlinkPoRInvariantStorage |||
 | └ | setReservesFeed | Public ❗️ | 🛑  | onlyChainlinkPoRManager |
 | └ | setTokenMetadata | Public ❗️ | 🛑  | onlyChainlinkPoRManager |
 | └ | setMaxStalenessSeconds | Public ❗️ | 🛑  | onlyChainlinkPoRManager |

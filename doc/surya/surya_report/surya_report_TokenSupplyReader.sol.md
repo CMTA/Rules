@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/core/TokenSupplyReader.sol | d7faee1c8cfbc1c31fb97f65823c1c4648b3d793 |
+| ./rules/validation/abstract/core/TokenSupplyReader.sol | f7d1c2a381bcba1a7224165f1298b98984ebbf60 |
 
 
 ### Contracts Description Table

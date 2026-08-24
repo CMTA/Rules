@@ -70,6 +70,34 @@ abstract contract RuleWhitelistInvariantStorage is RuleSharedInvariantStorage {
      */
     event AllowBurnUpdated(bool newValue);
 
+    /**
+     * @notice A candidate child rule does not answer `areAddressesListed(address[])`.
+     * @dev Raised by `RuleWhitelistWrapper` when a rule is added that does not advertise
+     * {AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID} via ERC-165. Without the guard
+     * the wrapper accepted it and then reverted on the blind call during a transfer, bricking every
+     * check whose targets were not already resolved. Nethermind AuditAgent NM-18, audit F-5.
+     * @param rule The rejected candidate.
+     */
+    error RuleWhitelistWrapper_ChildIsNotAnAddressList(address rule);
+
+    /**
+     * @notice A candidate child rule does not declare whether its list means "allowed" or "denied".
+     * @dev Absence is treated as a refusal, never as an assumed allow-list: that is the only reading
+     * that fails closed for a contract predating {IAddressListPolarity} or deliberately declining it
+     * (`RuleSpenderWhitelist` declines, because its set is spenders rather than holders).
+     * @param rule The rejected candidate.
+     */
+    error RuleWhitelistWrapper_ChildDoesNotDeclarePolarity(address rule);
+
+    /**
+     * @notice A candidate child rule declares itself a DENY-list; this wrapper aggregates allow-lists.
+     * @dev The wrapper ORs its children's membership answers and reads `true` as eligible, so a
+     * deny-list child would make its blocked addresses permitted and `isVerified` report them as
+     * verified investors. Nethermind AuditAgent NM-20.
+     * @param rule The rejected candidate.
+     */
+    error RuleWhitelistWrapper_ChildIsNotAnAllowList(address rule);
+
     error RuleWhitelist_InvalidTransfer(address rule, address from, address to, uint256 value, uint8 code);
     error RuleWhitelist_InvalidTransferFrom(
         address rule, address spender, address from, address to, uint256 value, uint8 code

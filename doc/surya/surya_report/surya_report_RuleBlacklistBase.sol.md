@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/base/RuleBlacklistBase.sol | 8abdb2e4e56f45a1ee470fa4b4951df84280a2d8 |
+| ./rules/validation/abstract/base/RuleBlacklistBase.sol | 164a28f65e9b2baa95956289185ce05ca9ca0137 |
 
 
 ### Contracts Description Table
@@ -15,13 +15,14 @@
 |:----------:|:-------------------:|:----------------:|:----------------:|:---------------:|
 |     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 ||||||
-| **RuleBlacklistBase** | Implementation | RuleAddressSet, RuleNFTAdapter, RuleBlacklistInvariantStorage |||
+| **RuleBlacklistBase** | Implementation | RuleAddressSet, RuleNFTAdapter, RuleBlacklistInvariantStorage, IAddressListPolarity |||
 | └ | <Constructor> | Public ❗️ | 🛑  | RuleAddressSet |
 | └ | transferred | Public ❗️ |   |NO❗️ |
 | └ | transferred | Public ❗️ |   |NO❗️ |
 | └ | canReturnTransferRestrictionCode | Public ❗️ |   |NO❗️ |
 | └ | messageForTransferRestriction | Public ❗️ |   |NO❗️ |
 | └ | supportsInterface | Public ❗️ |   |NO❗️ |
+| └ | isAllowList | Public ❗️ |   |NO❗️ |
 | └ | _detectTransferRestriction | Internal 🔒 |   | |
 | └ | _detectTransferRestrictionFrom | Internal 🔒 |   | |
 | └ | _transferred | Internal 🔒 |   | |

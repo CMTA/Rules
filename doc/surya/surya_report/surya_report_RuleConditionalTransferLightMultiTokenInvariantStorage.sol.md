@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/operation/abstract/RuleConditionalTransferLightMultiTokenInvariantStorage.sol | 69581e98b6b327335f84cefe92a064e0189d9532 |
+| ./rules/operation/abstract/RuleConditionalTransferLightMultiTokenInvariantStorage.sol | 6e7143e1c1de75bc9c11870f7c9802c23a4628d2 |
 
 
 ### Contracts Description Table

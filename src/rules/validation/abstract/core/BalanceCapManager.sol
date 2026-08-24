@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {RuleMaxBalanceInvariantStorage} from "../invariant/RuleMaxBalanceInvariantStorage.sol";
 import {IBalanceOf} from "../../../interfaces/IBalanceOf.sol";
 import {RuleAddressSetInternal} from "../RuleAddressSet/RuleAddressSetInternal.sol";
+import {CapAccounting} from "./CapAccounting.sol";
 
 /**
  * @title BalanceCapManager
@@ -24,7 +25,7 @@ import {RuleAddressSetInternal} from "../RuleAddressSet/RuleAddressSetInternal.s
  * @dev The exemption list reuses {RuleAddressSetInternal}, so the set storage, the zero-address guard
  * and the batch semantics are shared code rather than a second implementation.
  */
-abstract contract BalanceCapManager is RuleAddressSetInternal, RuleMaxBalanceInvariantStorage {
+abstract contract BalanceCapManager is CapAccounting, RuleAddressSetInternal, RuleMaxBalanceInvariantStorage {
     /**
      * @notice The token whose balances are observed.
      * @dev Trusted to report an accurate balance; not trusted to stay callable.
@@ -212,8 +213,7 @@ abstract contract BalanceCapManager is RuleAddressSetInternal, RuleMaxBalanceInv
         if (!available) {
             return (false, 0);
         }
-        uint256 cap = maxBalance;
-        return (true, balance >= cap ? 0 : cap - balance);
+        return (true, _capHeadroom(balance, maxBalance));
     }
 
     /**
@@ -261,7 +261,6 @@ abstract contract BalanceCapManager is RuleAddressSetInternal, RuleMaxBalanceInv
         if (!balanceAvailable) {
             return (false, false);
         }
-        uint256 cap = maxBalance;
-        return (true, balance > cap || value > cap - balance);
+        return (true, _capExceededBy(balance, maxBalance, value));
     }
 }

@@ -62,9 +62,22 @@ interface INFTAdapterRule {
  *         struct entrypoints on EVERY rule that inherits {RuleNFTAdapter}, closing the residual
  *         coverage gap in `RuleNFTAdapter` / `RuleTransferValidation`.
  * @dev The property under test is **parity**: `RuleNFTAdapter` exists only to re-expose the same
- *      restriction logic under extra signatures, ignoring `tokenId`. So for every rule and every
- *      input, the `tokenId` overload MUST be indistinguishable from its fungible counterpart, and
- *      the `ctx` entrypoints MUST dispatch to the same internal hooks. Any divergence is a bug.
+ *      restriction logic under extra signatures, ignoring `tokenId`. So for every rule, entrypoints
+ *      that describe the SAME transfer MUST return the same answer, and any divergence is a bug.
+ *
+ *      "The same transfer" is the subtlety, because the interfaces signal a direct transfer
+ *      differently — this is what NM-6 turned on, and stating it loosely is what hid the gap:
+ *
+ *      | Interface | A direct transfer arrives as | A delegated one as |
+ *      |---|---|---|
+ *      | CMTAT 3-arg / 4-arg  | 3-arg, or `spender == address(0)` | `spender != 0`, any value |
+ *      | ERC-7943 5-arg       | `spender == from` (the spec calls it "owner/operator") | `spender != from` |
+ *      | {ITransferContext}   | `sender == from`, or `sender == 0`  | `sender != from` |
+ *
+ *      So `4-arg(spender == from)` and `5-arg(spender == from)` describe DIFFERENT transfers and are
+ *      expected to differ; `test_NM6_CmtatFourArgPathKeepsScreeningASelfSpender` pins that on purpose.
+ *      Everything that does describe the same transfer must agree, which is what
+ *      `_assertSelfSpenderIsDirect` adds to the original two cases (`sender == 0`, `sender != from`).
  *
  *      This also pins threat `AC-5`: the `ctx` entrypoints are `external` with no access control on
  *      validation rules. That is acceptable precisely because they are view-only — an unprivileged
@@ -154,6 +167,49 @@ contract OverloadParity is Test, HelperContract {
         );
     }
 
+    /**
+     * @dev NM-6: `spender == from` is an OWNER-INITIATED transfer, and every entrypoint whose
+     *      interface reports the initiator (the ERC-7943 spender-aware overloads and both
+     *      {ITransferContext} structs) must route it to the DIRECT hook — the same answer a plain
+     *      `transfer` gets. Before the fix the ERC-7943 overloads called the spender-aware hook
+     *      unconditionally, so an owner-initiated ERC-721 `transferFrom` was screened as delegated
+     *      while the identical `ctx` call was not.
+     */
+    function _assertSelfSpenderIsDirect(address rule, address from, address to, uint256 value, string memory w)
+        internal
+    {
+        INFTAdapterRule r = INFTAdapterRule(rule);
+        uint8 directCode = r.detectTransferRestriction(from, to, value);
+
+        assertEq(
+            r.detectTransferRestrictionFrom(from, from, to, TOKEN_ID, value),
+            directCode,
+            string.concat(w, ": ERC-7943 detectTransferRestrictionFrom(spender==from) must equal the direct code")
+        );
+        assertEq(
+            r.canTransferFrom(from, from, to, TOKEN_ID, value),
+            r.canTransfer(from, to, value),
+            string.concat(w, ": ERC-7943 canTransferFrom(spender==from) must equal canTransfer")
+        );
+
+        bool direct = _try3(rule, from, to, value);
+        assertEq(
+            _try5Nft(rule, from, from, to, value),
+            direct,
+            string.concat(w, ": ERC-7943 transferred(spender==from) must match transferred(from,to,value)")
+        );
+        assertEq(
+            _tryFungibleCtx(rule, from, from, to, value),
+            direct,
+            string.concat(w, ": FungibleContext(sender==from) must match transferred(from,to,value)")
+        );
+        assertEq(
+            _tryMultiCtx(rule, from, from, to, value),
+            direct,
+            string.concat(w, ": MultiTokenContext(sender==from) must match transferred(from,to,value)")
+        );
+    }
+
     /// @dev Runs both parity checks for an allowed pair and a blocked pair.
     function _assertParity(
         address rule,
@@ -169,6 +225,9 @@ contract OverloadParity is Test, HelperContract {
 
         _assertReadParity(rule, spender, badFrom, badTo, 10, string.concat(what, " [blocked]"));
         _assertWriteParity(rule, spender, badFrom, badTo, 10, string.concat(what, " [blocked]"));
+
+        _assertSelfSpenderIsDirect(rule, okFrom, okTo, 10, string.concat(what, " [self-spender, allowed]"));
+        _assertSelfSpenderIsDirect(rule, badFrom, badTo, 10, string.concat(what, " [self-spender, blocked]"));
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -220,6 +279,67 @@ contract OverloadParity is Test, HelperContract {
         _assertWriteParity(address(rule), ADDRESS3, ADDRESS1, ADDRESS2, 10, "RuleSpenderWhitelist [ok spender]");
         _assertReadParity(address(rule), ATTACKER, ADDRESS1, ADDRESS2, 10, "RuleSpenderWhitelist [bad spender]");
         _assertWriteParity(address(rule), ATTACKER, ADDRESS1, ADDRESS2, 10, "RuleSpenderWhitelist [bad spender]");
+
+        // NM-6. ADDRESS1 is NOT on the spender whitelist, so this is the rule where the self-spender
+        // routing is observable rather than merely tidy.
+        _assertSelfSpenderIsDirect(address(rule), ADDRESS1, ADDRESS2, 10, "RuleSpenderWhitelist [self-spender]");
+    }
+
+    /**
+     * @notice NM-6: an owner moving their own tokens is never blocked by the spender whitelist,
+     *         whichever spender-reporting entrypoint the token uses.
+     * @dev This rule documents that direct transfers are always allowed and only delegated ones are
+     *      screened. An owner-initiated ERC-721 `transferFrom` arrives as `spender == from` per the
+     *      ERC-7943 interface ("the address performing the transfer (owner/operator)"), so routing it
+     *      to the spender-aware hook contradicted that contract.
+     */
+    function test_NM6_SelfSpenderIsNotScreenedByTheSpenderWhitelist() public {
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        RuleSpenderWhitelist rule = new RuleSpenderWhitelist(DEFAULT_ADMIN_ADDRESS, FORWARDER);
+        rule.addAddress(ADDRESS3);
+        vm.stopPrank();
+
+        // ADDRESS1 is not a whitelisted spender, but it owns the tokens.
+        assertFalse(rule.isAddressListed(ADDRESS1), "precondition: owner is not a listed spender");
+
+        assertEq(
+            rule.detectTransferRestrictionFrom(ADDRESS1, ADDRESS1, ADDRESS2, TOKEN_ID, 10),
+            TRANSFER_OK,
+            "owner-initiated ERC-7943 transfer must not be screened as delegated"
+        );
+        assertTrue(_try5Nft(address(rule), ADDRESS1, ADDRESS1, ADDRESS2, 10), "write path must accept it too");
+        assertTrue(_tryFungibleCtx(address(rule), ADDRESS1, ADDRESS1, ADDRESS2, 10), "ctx path already accepted it");
+
+        // A genuine delegated transfer by the same unlisted address is still rejected: the fix
+        // narrows the screen to what it was always documented to cover, it does not remove it.
+        assertEq(
+            rule.detectTransferRestrictionFrom(ADDRESS1, ADDRESS3, ADDRESS2, TOKEN_ID, 10),
+            rule.CODE_ADDRESS_SPENDER_NOT_WHITELISTED(),
+            "an unlisted spender acting for someone else must still be blocked"
+        );
+        assertFalse(_try5Nft(address(rule), ADDRESS1, ADDRESS3, ADDRESS2, 10), "and blocked on the write path");
+    }
+
+    /**
+     * @notice NM-6, the deliberate asymmetry: the CMTAT 4-arg path is NOT normalised.
+     * @dev It signals a direct transfer with `spender == address(0)` and the 3-arg overload, so
+     *      `spender == from` there means the caller explicitly named a spender. The ERC-7943 and
+     *      `ctx` interfaces have no zero-sentinel convention, which is why only they normalise.
+     *      Pinned so nobody "aligns" the two and silently disables spender screening on the main path.
+     */
+    function test_NM6_CmtatFourArgPathKeepsScreeningASelfSpender() public {
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        RuleSpenderWhitelist rule = new RuleSpenderWhitelist(DEFAULT_ADMIN_ADDRESS, FORWARDER);
+        rule.addAddress(ADDRESS3);
+        vm.stopPrank();
+
+        assertEq(
+            rule.detectTransferRestrictionFrom(ADDRESS1, ADDRESS1, ADDRESS2, 10),
+            rule.CODE_ADDRESS_SPENDER_NOT_WHITELISTED(),
+            "the 4-arg CMTAT path screens whatever spender it is given"
+        );
+        // ...while a plain transfer on that path carries no spender and passes.
+        assertEq(rule.detectTransferRestriction(ADDRESS1, ADDRESS2, 10), TRANSFER_OK);
     }
 
     function test_Parity_RuleSanctionsList() public {

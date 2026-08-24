@@ -7,8 +7,11 @@ pragma solidity ^0.8.20;
  *      including functions inherited by IERC3643Compliance from its parent interfaces
  *      (IERC3643ComplianceRead.canTransfer, IERC3643IComplianceContract.transferred).
  *
- *      Purpose: computing the correct ERC-165 interface ID for the full ERC-3643
- *      ICompliance interface via `type(IERC3643ComplianceFull).interfaceId`.
+ *      Purpose: pinning the ERC-165 interface ID of the full ERC-3643 ICompliance
+ *      interface from an independent source. The rules themselves advertise
+ *      `ComplianceInterfaceId.ERC3643_COMPLIANCE_INTERFACE_ID`, which RuleEngine derives from
+ *      its own interface hierarchy; this flat redeclaration is the cross-check that the
+ *      derivation still yields the wire value, so a refactor upstream cannot silently move it.
  *
  *      Background: `type(IFoo).interfaceId` only XORs selectors defined *directly* on
  *      `IFoo`, not those inherited from parent interfaces. Using `type(IERC3643Compliance).interfaceId`

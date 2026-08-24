@@ -136,6 +136,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
     {
         require(isTokenBound(token), RuleConditionalTransferLightMultiToken_InvalidToken());
 
+        uint256 approvalsBefore = approvedCount(token, from, to, value);
         _approveTransfer(token, from, to, value);
 
         uint256 allowed = IERC20(token).allowance(from, address(this));
@@ -144,6 +145,14 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
         );
 
         IERC20(token).safeTransferFrom(from, to, value);
+
+        // See the single-token twin: the approval exists only for the token's compliance callback, so
+        // a count that did not come back down means no callback reached this rule and the surplus
+        // would otherwise stay spendable.
+        require(
+            approvedCount(token, from, to, value) == approvalsBefore,
+            RuleConditionalTransferLightMultiToken_ApprovalNotConsumed(token, from, to, value)
+        );
         return true;
     }
 
@@ -319,21 +328,6 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
     {
         return detectTransferRestrictionFrom(spender, from, to, value)
             == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
-    }
-
-    /**
-     * @notice Authorizes changes to compliance binding: restricted to the compliance manager.
-     * @dev NOT `view`, unlike every other access-control hook in this codebase. This is structural,
-     *      not an oversight: the implementation delegates to `_onlyComplianceManager()`, which
-     *      `lib/RuleEngine`'s {ERC3643ComplianceModule} declares as `internal virtual` (non-`view`).
-     *      Solidity checks mutability against a virtual's DECLARED type, not the installed override,
-     *      so calling it from a `view` function is a compile error — even though every override of it
-     *      in this repo is `view`. It can only become `view` once the upstream declaration does.
-     *      (The single-token rules avoid this by overriding this hook directly with `onlyRole(...)`
-     *      instead of delegating, which is why they are already `view`.)
-     */
-    function _authorizeComplianceBindingChange(address) internal virtual override {
-        _onlyComplianceManager();
     }
 
     /**

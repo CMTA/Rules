@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/operation/abstract/RuleConditionalTransferLightBase.sol | 61bc28f3f3069112e53a7939da7cb4bfeca103f9 |
+| ./rules/operation/abstract/RuleConditionalTransferLightBase.sol | d69293485b40c9f6bd53bb0b7cce2e86938939c2 |
 
 
 ### Contracts Description Table
@@ -23,9 +23,9 @@
 | └ | approveAndTransferIfAllowed | Public ❗️ | 🛑  | onlyTransferApprover |
 | └ | transferred | Public ❗️ | 🛑  | onlyTransferExecutor |
 | └ | transferred | Public ❗️ | 🛑  | onlyTransferExecutor |
-| └ | bindToken | Public ❗️ | 🛑  | onlyComplianceManager |
-| └ | bindRuleEngine | Public ❗️ | 🛑  | onlyComplianceManager |
-| └ | unbindRuleEngine | Public ❗️ | 🛑  | onlyComplianceManager |
+| └ | bindToken | Public ❗️ | 🛑  | onlyTokenBindingManager |
+| └ | bindRuleEngine | Public ❗️ | 🛑  | onlyTokenBindingManager |
+| └ | unbindRuleEngine | Public ❗️ | 🛑  | onlyTokenBindingManager |
 | └ | isTransferExecutor | Public ❗️ |   |NO❗️ |
 | └ | detectTransferRestriction | Public ❗️ |   |NO❗️ |
 | └ | detectTransferRestrictionFrom | Public ❗️ |   |NO❗️ |

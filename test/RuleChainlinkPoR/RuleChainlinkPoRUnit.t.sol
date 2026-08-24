@@ -296,6 +296,58 @@ contract RuleChainlinkPoRUnit is Test, HelperContract {
         assertEq(resUint8, CODE_RESERVES_FEED_UNAVAILABLE);
     }
 
+    /*//////////////////////////////////////////////////////////////
+              FUTURE-DATED ROUND (NM-10 REGRESSION)
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice A round stamped in the future is a malformed answer, not a fresh one.
+     * @dev THE REGRESSION: the staleness comparison was guarded by `block.timestamp > updatedAt` to keep
+     *      the subtraction from underflowing, which silently accepted ANY future timestamp -- a feed
+     *      frozen on an old reserve answer could keep authorising mints until that timestamp elapsed.
+     */
+    function testDetectRestriction_FutureDatedRoundBlocksMint() public {
+        feed.setUpdatedAt(block.timestamp + 1);
+        token.setTotalSupply(0);
+        assertEq(rule.detectTransferRestriction(ZERO_ADDRESS, ADDRESS1, 1), CODE_RESERVES_ANSWER_INVALID);
+        assertFalse(rule.canTransfer(ZERO_ADDRESS, ADDRESS1, 1));
+    }
+
+    function testDetectRestriction_FutureDatedRoundIsRejectedEvenWithStalenessDisabled() public {
+        // `maxStalenessSeconds == 0` disables FRESHNESS checking. It must not also disable the
+        // malformed-answer check, or an operator who opts out of staleness opts into forged timestamps.
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.setMaxStalenessSeconds(0);
+
+        feed.setUpdatedAt(block.timestamp + 3650 days);
+        token.setTotalSupply(0);
+        assertEq(rule.detectTransferRestriction(ZERO_ADDRESS, ADDRESS1, 1), CODE_RESERVES_ANSWER_INVALID);
+    }
+
+    function testDetectRestriction_RoundAtExactlyTheCurrentBlockIsAccepted() public {
+        // The boundary: `updatedAt == block.timestamp` is the normal case for a just-published round.
+        feed.setUpdatedAt(block.timestamp);
+        token.setTotalSupply(0);
+        assertEq(rule.detectTransferRestriction(ZERO_ADDRESS, ADDRESS1, 1), TRANSFER_OK);
+    }
+
+    function testMaxBackedSupply_ReportsTheFutureDatedRound() public {
+        // The preview accessor must agree with what a mint would return, and must not revert.
+        feed.setUpdatedAt(block.timestamp + 1);
+        (uint8 code, uint256 backed) = rule.maxBackedSupply();
+        assertEq(code, CODE_RESERVES_ANSWER_INVALID);
+        assertEq(backed, 0);
+    }
+
+    function testTransferred_FutureDatedRoundRevertsTheMint() public {
+        // Enforcement, not just the view: the write hook must reject the mint.
+        feed.setUpdatedAt(block.timestamp + 1);
+        token.setTotalSupply(0);
+        vm.prank(address(token));
+        vm.expectRevert();
+        rule.transferred(ZERO_ADDRESS, ADDRESS1, 1);
+    }
+
     function testDetectRestriction_ZeroReserveBlocksAnyMint() public {
         feed.setAnswer(0);
         token.setTotalSupply(0);

@@ -65,6 +65,44 @@ Approves the transfer and immediately calls `SafeERC20.safeTransferFrom` on the 
 
 Works in **both** topologies, provided the bindings are set correctly — see [Binding: token vs RuleEngine](#binding-token-vs-ruleengine).
 
+#### It requires a token that calls back, and now checks that it did
+
+The helper **inverts checks-effects-interactions on purpose**: it records the approval *before*
+`safeTransferFrom`, so the approval exists while the token runs its compliance callback into this rule and the
+callback can consume it. That is only correct if the callback actually arrives.
+
+It ends with a post-condition:
+
+```solidity
+uint256 approvalsBefore = approvedCount(from, to, value);
+approveTransfer(from, to, value);
+...
+IERC20(token).safeTransferFrom(from, to, value);
+require(
+    approvedCount(from, to, value) == approvalsBefore,
+    RuleConditionalTransferLight_ApprovalNotConsumed(token, from, to, value)
+);
+```
+
+If the count did not come back down, no callback reached the rule — a plain ERC-20 bound with `bindToken`, or a
+RuleEngine never bound or since unbound with `unbindRuleEngine`. Before this check the transfer **succeeded** and
+left the approval standing, indistinguishable from an operator-created one and enough to authorise a later,
+never-approved transfer of exactly `(from, to, value)`. The only remedy was for the operator to notice the
+leftover count and call `resetApproval` (Nethermind AuditAgent `NM-17`).
+
+Points worth knowing:
+
+- It compares against the count **before** the helper ran, not against zero, so an operator's own outstanding
+  approvals for the same tuple survive untouched.
+- Reading state *after* the external call is deliberate. A hostile token can only make the check **fail**, never
+  pass spuriously; a path that consumed more than one approval also fails, which is the direction you want.
+- It is a **behaviour change** for a deployment that ran the helper against a non-callback token: that call now
+  reverts instead of completing. That is the point — the transfer was leaving a compliance hole behind.
+- Cost: two warm `SLOAD`s on an operator-only path.
+
+Pinned by `testRevertsWhenTheTokenDoesNotCallBack`, `testPreExistingApprovalsSurviveTheHelper` and
+`testDirectBindingFlowStillConsumesExactlyOne`.
+
 ### `approvedCount(address from, address to, uint256 value) → uint256`
 
 Returns the current approval count for the `(from, to, value)` tuple.

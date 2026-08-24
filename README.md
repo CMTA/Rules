@@ -11,7 +11,7 @@ Each rule enforces one transfer restriction. A rule can be plugged **directly** 
 
 | Rules | Contracts report `version()` | CMTAT | RuleEngine | OpenZeppelin |
 | --- | --- | --- | --- | --- |
-| **v0.5.0** (current) | `"0.5.0"` | **≥ v3.0.0**, validated against `v3.3.0-rc3` | `v3.0.0-rc5` | `v5.7.0` |
+| **v0.6.0** (current) | `"0.6.0"` | **≥ v3.0.0**, validated against `v3.3.0-rc3` | `v3.0.0-rc6` | `v5.7.0` |
 
 One rule needs more than the baseline, because it reads the **spender** the token forwards on mint:
 
@@ -20,7 +20,7 @@ One rule needs more than the baseline, because it reads the **spender** the toke
 | `RuleMintAllowance` | **v3.3** | Debits the minter's quota from the 4-argument `transferred(spender, from, to, value)` / `canTransferFrom`. A token that does not forward the spender cannot drive it. |
 | Every other rule | v3.0.0 | Uses the 3-argument path only. |
 
-The submodules in `lib/` are pinned to the validated versions (CMTAT `v3.3.0-rc3`, RuleEngine `v3.0.0-rc5`), so
+The submodules in `lib/` are pinned to the validated versions (CMTAT `v3.3.0-rc3`, RuleEngine `v3.0.0-rc6`), so
 a `git submodule update --init --recursive` checkout builds and tests against exactly what this release was verified with.
 
 📖 **[Full documentation →](./doc/README.md)** — the complete reference: every rule in detail, the API, access-control model, restriction codes, deployment guide, and security findings. This page is a summary.
@@ -74,8 +74,10 @@ access-control policy, in either an `AccessControl` or an `Ownable2Step` flavour
 | `RuleERC2980` | ERC-2980 whitelist plus frozenlist | 60–65 |
 | `RuleIdentityRegistry` | Consults an ERC-3643 identity registry | 55–57 |
 | `RuleMaxTotalSupply` | Caps total supply on mint | 50, 51 |
+| `RuleMaxTotalSupplyERC3643` | Same, for **ERC-3643 tokens** — compliance called *after* the mint | 50, 51 |
 | `RuleMaxBalance` | Caps how many tokens one address may hold | 82, 83 |
 | `RuleChainlinkPoR` | Caps minting at Chainlink Proof of Reserve reserves | 75–79 |
+| `RuleChainlinkPoRERC3643` | Same, for **ERC-3643 tokens** — compliance called *after* the mint | 75–79 |
 | `RuleConditionalTransferLight` | Requires operator approval per transfer | 46 |
 | `RuleMintAllowance` | Per-minter mint quota | 70 |
 
@@ -103,6 +105,11 @@ Use `RuleEngine`, not a bare rule. ERC-3643 drives mint and burn through `create
 
 The operation rules do implement `created` / `destroyed`, but they are bound to a single token and are not a compliance contract on
 their own.
+
+**Not every rule behaves the same on this path.** ERC-3643 never forwards a spender (both `transfer` and `transferFrom` call the
+3-argument `transferred`) and calls compliance *after* it moves the value. Some rules are therefore inert, and the two supply-cap
+rules need their `…ERC3643` variant. The per-rule matrix is
+[`RULE_SEMANTICS.md` §6](./doc/technical/guides/RULE_SEMANTICS.md).
 
 ### Identity verification
 
@@ -190,15 +197,33 @@ AI-assisted review, each triaged by the project team:
 
 | Type | Tool | Latest run |
 | --- | --- | --- |
-| Static analysis | [Slither](https://github.com/crytic/slither) 0.11.5 | v0.5.0 |
-| Static analysis | [Aderyn](https://github.com/Cyfrin/aderyn) 0.6.5 | v0.5.0 |
+| Static analysis | [Slither](https://github.com/crytic/slither) 0.11.5 | v0.6.0 |
+| Static analysis | [Aderyn](https://github.com/Cyfrin/aderyn) 0.6.5 | v0.6.0 |
+| AI automated scan | [Nethermind AuditAgent](https://auditagent.nethermind.io/) | v0.5.0 |
 | AI-assisted review | Claude Code (Anthropic) | v0.5.0 |
 | AI-assisted review | Claude + custom security-audit skills | v0.4.0 |
 | AI-assisted review | [Wake Arena](https://getwake.io) (Ackee Blockchain Security) | v0.2.0 |
 
 Scope is the production contracts under `src/`; mocks, tests and vendored dependencies are excluded. 
 
-Every finding carries a written triage, including the ones dismissed as false positives or by-design. Nothing was outstanding as of `v0.5.0`.
+Every finding carries a written triage, including the ones dismissed as false positives or by-design. Nothing is outstanding as of `v0.6.0`: the static analysers report nothing to fix (Slither 46 results, Aderyn 346 Low instances — all false-positive, by-design, environmental or cosmetic), and the AuditAgent scan is fully dispositioned.
+
+### Nethermind AuditAgent (v0.5.0)
+
+| Scan | High | Medium | Low | Info | Anything to fix? |
+| --- | --- | --- | --- | --- | --- |
+| 2026-08-17, commit `01632da` | 0 | 13 | 11 | 0 | **Nothing exploitable** — 7 fixed in `v0.6.0`, 16 accepted as design, 1 declined; nothing left open |
+
+> Note: This scan was performed by an AI-powered automated tool, not a formal human-led audit.
+
+No false positives, but 17 of the 24 findings restate design positions already documented in the source and in the previous audit, so the set collapses to about 11 distinct claims. Seven were fixed in `v0.6.0`; the substantive ones:
+
+- **NM-3** — the identity-registry rule's `transferFrom` path now always delegates to the direct restriction check. A subclass extending only that hook could previously have its check applied to `transfer` but silently skipped on `transferFrom` and `burnFrom`.
+- **NM-6** — the ERC-7943 overloads now read an owner-initiated transfer (`spender == from`) as direct, matching the `ITransferContext` entrypoints, so `RuleSpenderWhitelist` no longer blocks an owner moving their own tokens.
+- **NM-10** — a Proof-of-Reserve round stamped in the future is rejected as a malformed answer instead of being accepted as fresh.
+- **NM-11** — the cap rules assume the token calls the compliance hook *before* moving value. CMTAT does; ERC-3643 / T-REX does not, so the stock rule counted the amount twice and reverted mints that were within the cap. `RuleChainlinkPoRERC3643` and `RuleMaxTotalSupplyERC3643` now ship for that path, verified against the vendored T-REX token; `RuleMaxBalance` stays CMTAT-only by design.
+
+[Report (PDF)](./doc/security/audits/tools/v0.5.0/nethermind_audit_agent_report_v0.5.0.pdf) · [feedback](./doc/security/audits/tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md).
 
 Reports, triage and the threat model live in [`doc/security/audits/`](./doc/security/audits/), indexed by [`AUDIT_OVERVIEW.md`](./doc/security/audits/AUDIT_OVERVIEW.md).
 

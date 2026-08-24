@@ -105,6 +105,19 @@ Returns the current identity registry address. Returns `address(0)` if none is s
     This is what lets an **unverified minter** mint to a verified recipient, exactly as ERC-3643 requires
     (*"`mint` … only require[s] the receiver to be whitelisted and verified"*).
 
+### Note for subclasses: the two hooks cannot diverge
+
+`_detectTransferRestrictionFrom` screens the spender and then **always delegates** to
+`_detectTransferRestriction`, including when no registry is set and when the transfer is a burn. Those two cases
+resolve to `TRANSFER_OK` inside the delegate, so the answer is unchanged — but the delegation is what guarantees
+that a subclass overriding **only** `_detectTransferRestriction`, the natural hook for adding a check, has that
+check honoured on `transferFrom` and `burnFrom` as well as on `transfer`.
+
+Until `v0.6.0` the function returned `TRANSFER_OK` directly in those two cases, so such a subclass silently
+screened one entrypoint and not the other. `RuleSanctionsListBase` carries the same guarantee for the same
+reason. If you extend either rule, override `_detectTransferRestriction` and leave the delegation intact; the
+behaviour is pinned by `test/RuleIdentityRegistry/RuleIdentityRegistryDelegation.t.sol`.
+
 ## Usage scenario
 
 The operator deploys `RuleIdentityRegistry` and calls `setIdentityRegistry(registry)`. The registry is maintained by a compliance provider who verifies investor identities. When Alice (unverified) attempts to receive tokens, `isVerified(alice)` returns `false` and the transfer is rejected with code 56. After the registry marks Alice as verified, the transfer succeeds. Calling `clearIdentityRegistry()` disables checks entirely.

@@ -5,6 +5,7 @@ import {RuleAddressSet} from "../RuleAddressSet/RuleAddressSet.sol";
 import {RuleNFTAdapter} from "../core/RuleNFTAdapter.sol";
 import {RuleTransferValidation} from "../core/RuleTransferValidation.sol";
 import {RuleReceiverWhitelistInvariantStorage} from "../invariant/RuleReceiverWhitelistInvariantStorage.sol";
+import {IAddressListPolarity} from "../../../interfaces/IAddressList.sol";
 import {AddressListInterfaceId} from "../../../interfaces/library/AddressListInterfaceId.sol";
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
@@ -29,7 +30,12 @@ import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
  * @dev There is no `allowMint` flag, unlike {RuleWhitelist}: ERC-3643 gates minting on receiver
  * eligibility alone. Compose with `RuleMaxTotalSupply` or `RuleChainlinkPoR` to cap issuance.
  */
-abstract contract RuleReceiverWhitelistBase is RuleAddressSet, RuleNFTAdapter, RuleReceiverWhitelistInvariantStorage {
+abstract contract RuleReceiverWhitelistBase is
+    RuleAddressSet,
+    RuleNFTAdapter,
+    RuleReceiverWhitelistInvariantStorage,
+    IAddressListPolarity
+{
     /*//////////////////////////////////////////////////////////////
                              CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
@@ -93,7 +99,17 @@ abstract contract RuleReceiverWhitelistBase is RuleAddressSet, RuleNFTAdapter, R
         // Advertise IAddressList: this rule manages an address set and is callable through
         // the IAddressList interface.
         return interfaceId == AddressListInterfaceId.IADDRESS_LIST_INTERFACE_ID
+            || interfaceId == AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID
+            || interfaceId == AddressListInterfaceId.IADDRESS_LIST_POLARITY_INTERFACE_ID
             || RuleTransferValidation.supportsInterface(interfaceId);
+    }
+
+    /**
+     * @inheritdoc IAddressListPolarity
+     * @dev Listed addresses are the permitted receivers.
+     */
+    function isAllowList() public pure virtual override returns (bool) {
+        return true;
     }
 
     /*//////////////////////////////////////////////////////////////

@@ -137,9 +137,9 @@ abstract contract RuleChainlinkPoRBase is RuleTransferValidation, ChainlinkPoRFe
         if (!supplyAvailable) {
             return CODE_TOTAL_SUPPLY_UNAVAILABLE;
         }
-        // Overflow-safe: `currentSupply + value` could exceed uint256 and this is a
-        // MUST-NOT-revert ERC-1404/ERC-3643 view, so compare against the remaining headroom.
-        if (currentSupply > backedSupply || value > backedSupply - currentSupply) {
+        // The comparison, the overflow-safety and the pre-update accounting assumption all live in
+        // {CapAccounting}; the reserve figure is simply this rule's cap.
+        if (_capExceededBy(currentSupply, backedSupply, value)) {
             return CODE_RESERVES_EXCEEDED;
         }
         return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
@@ -159,13 +159,36 @@ abstract contract RuleChainlinkPoRBase is RuleTransferValidation, ChainlinkPoRFe
     }
 
     /**
+     * @notice Restriction code for the NOTIFICATION phase, i.e. what the write hook enforces.
+     * @dev **The seam an ERC-3643 variant overrides.** Defaults to the pre-flight check, correct for a token
+     * that notifies BEFORE moving the value (CMTAT). A token that notifies AFTERWARDS reports an observation
+     * that already includes `value`, and counting it again halves the effective cap; such a variant overrides
+     * this with `_detectTransferRestriction(from, to, 0)`.
+     *
+     * The read path is deliberately NOT routed through here: a pre-flight view always runs before the movement
+     * on either kind of token, so it must always count `value`.
+     * @param from Sender address.
+     * @param to Recipient address.
+     * @param value Amount moved.
+     * @return The restriction code the write hook will enforce.
+     */
+    function _detectTransferRestrictionOnNotify(address from, address to, uint256 value)
+        internal
+        view
+        virtual
+        returns (uint8)
+    {
+        return _detectTransferRestriction(from, to, value);
+    }
+
+    /**
      * @notice Enforces the reserve backing for a direct transfer, reverting on violation.
      * @param from Sender address; the zero address denotes a mint whose backing is checked.
      * @param to Recipient address.
      * @param value Transfer amount.
      */
     function _transferred(address from, address to, uint256 value) internal view virtual {
-        uint8 code = _detectTransferRestriction(from, to, value);
+        uint8 code = _detectTransferRestrictionOnNotify(from, to, value);
         require(
             code == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK),
             RuleChainlinkPoR_InvalidTransfer(address(this), from, to, value, code)
@@ -180,7 +203,7 @@ abstract contract RuleChainlinkPoRBase is RuleTransferValidation, ChainlinkPoRFe
      * @param value Transfer amount.
      */
     function _transferredFrom(address spender, address from, address to, uint256 value) internal view virtual {
-        uint8 code = _detectTransferRestrictionFrom(spender, from, to, value);
+        uint8 code = _detectTransferRestrictionOnNotify(from, to, value);
         require(
             code == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK),
             RuleChainlinkPoR_InvalidTransferFrom(address(this), spender, from, to, value, code)

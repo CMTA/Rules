@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/core/BalanceCapManager.sol | e9fc2e355458aed8576d8aa0c26daaa9b3b88650 |
+| ./rules/validation/abstract/core/BalanceCapManager.sol | 8d23cbb921630627842b86c40e4941ae4ef676f6 |
 
 
 ### Contracts Description Table
@@ -15,7 +15,7 @@
 |:----------:|:-------------------:|:----------------:|:----------------:|:---------------:|
 |     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 ||||||
-| **BalanceCapManager** | Implementation | RuleAddressSetInternal, RuleMaxBalanceInvariantStorage |||
+| **BalanceCapManager** | Implementation | CapAccounting, RuleAddressSetInternal, RuleMaxBalanceInvariantStorage |||
 | └ | setMaxBalance | Public ❗️ | 🛑  | onlyMaxBalanceManager |
 | └ | setBalanceToken | Public ❗️ | 🛑  | onlyMaxBalanceManager |
 | └ | addExemptAddress | Public ❗️ | 🛑  | onlyMaxBalanceManager |

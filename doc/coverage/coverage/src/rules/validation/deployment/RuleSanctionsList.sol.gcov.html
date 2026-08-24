@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - lcov.info - src/rules/validation/deployment/RuleSanctionsList.sol</title>
+  <title>LCOV - lcov2.info - src/rules/validation/deployment/RuleSanctionsList.sol</title>
   <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
 </head>
 
@@ -28,7 +28,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">lcov.info</td>
+            <td class="headerValue">lcov2.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntry">10</td>
@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-07-14 13:44:06</td>
+            <td class="headerValue">2026-08-19 15:38:25</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">5</td>
@@ -108,15 +108,15 @@
 <a name="37"><span class="lineNum">      37 </span>                :            :      * @param interfaceId The interface identifier, as specified in ERC-165.</a>
 <a name="38"><span class="lineNum">      38 </span>                :            :      * @return True if the interface is supported.</a>
 <a name="39"><span class="lineNum">      39 </span>                :            :      */</a>
-<a name="40"><span class="lineNum">      40 </span>                :<span class="lineCov">         58 :     function supportsInterface(bytes4 interfaceId)</span></a>
+<a name="40"><span class="lineNum">      40 </span>                :<span class="lineCov">        115 :     function supportsInterface(bytes4 interfaceId)</span></a>
 <a name="41"><span class="lineNum">      41 </span>                :            :         public</a>
 <a name="42"><span class="lineNum">      42 </span>                :            :         view</a>
 <a name="43"><span class="lineNum">      43 </span>                :            :         virtual</a>
 <a name="44"><span class="lineNum">      44 </span>                :            :         override(AccessControlEnumerable, RuleTransferValidation)</a>
 <a name="45"><span class="lineNum">      45 </span>                :            :         returns (bool)</a>
 <a name="46"><span class="lineNum">      46 </span>                :            :     {</a>
-<a name="47"><span class="lineNum">      47 </span>                :<span class="lineCov">         58 :         return AccessControlEnumerable.supportsInterface(interfaceId)</span></a>
-<a name="48"><span class="lineNum">      48 </span>                :<span class="lineCov">         39 :             || RuleTransferValidation.supportsInterface(interfaceId);</span></a>
+<a name="47"><span class="lineNum">      47 </span>                :<span class="lineCov">        115 :         return AccessControlEnumerable.supportsInterface(interfaceId)</span></a>
+<a name="48"><span class="lineNum">      48 </span>                :<span class="lineCov">         77 :             || RuleTransferValidation.supportsInterface(interfaceId);</span></a>
 <a name="49"><span class="lineNum">      49 </span>                :            :     }</a>
 <a name="50"><span class="lineNum">      50 </span>                :            : </a>
 <a name="51"><span class="lineNum">      51 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
@@ -136,8 +136,8 @@
 <a name="65"><span class="lineNum">      65 </span>                :            :      * @notice Returns the message sender, accounting for meta-transaction (ERC-2771) context.</a>
 <a name="66"><span class="lineNum">      66 </span>                :            :      * @return sender The address of the message sender.</a>
 <a name="67"><span class="lineNum">      67 </span>                :            :      */</a>
-<a name="68"><span class="lineNum">      68 </span>                :<span class="lineCov">         60 :     function _msgSender() internal view virtual override(ERC2771Context, Context) returns (address sender) {</span></a>
-<a name="69"><span class="lineNum">      69 </span>                :<span class="lineCov">         60 :         return ERC2771Context._msgSender();</span></a>
+<a name="68"><span class="lineNum">      68 </span>                :<span class="lineCov">         93 :     function _msgSender() internal view virtual override(ERC2771Context, Context) returns (address sender) {</span></a>
+<a name="69"><span class="lineNum">      69 </span>                :<span class="lineCov">         93 :         return ERC2771Context._msgSender();</span></a>
 <a name="70"><span class="lineNum">      70 </span>                :            :     }</a>
 <a name="71"><span class="lineNum">      71 </span>                :            : </a>
 <a name="72"><span class="lineNum">      72 </span>                :            :     /**</a>
@@ -152,8 +152,8 @@
 <a name="81"><span class="lineNum">      81 </span>                :            :      * @notice Returns the length of the context suffix appended by the forwarder.</a>
 <a name="82"><span class="lineNum">      82 </span>                :            :      * @return The context suffix length in bytes.</a>
 <a name="83"><span class="lineNum">      83 </span>                :            :      */</a>
-<a name="84"><span class="lineNum">      84 </span>                :<span class="lineCov">         61 :     function _contextSuffixLength() internal view virtual override(ERC2771Context, Context) returns (uint256) {</span></a>
-<a name="85"><span class="lineNum">      85 </span>                :<span class="lineCov">         61 :         return ERC2771Context._contextSuffixLength();</span></a>
+<a name="84"><span class="lineNum">      84 </span>                :<span class="lineCov">         94 :     function _contextSuffixLength() internal view virtual override(ERC2771Context, Context) returns (uint256) {</span></a>
+<a name="85"><span class="lineNum">      85 </span>                :<span class="lineCov">         94 :         return ERC2771Context._contextSuffixLength();</span></a>
 <a name="86"><span class="lineNum">      86 </span>                :            :     }</a>
 <a name="87"><span class="lineNum">      87 </span>                :            : }</a>
 </pre>

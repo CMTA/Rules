@@ -15,12 +15,12 @@ import {
  * @dev These hooks had no coverage before: the only test naming
  *      `RuleConditionalTransferLightMultiTokenOwnable2Step` was an ERC-165 support check, which never
  *      reaches an access-control path. Three concrete overrides were therefore unexercised —
- *      `_authorizeComplianceBindingChange` on the single-token variant, and `_onlyComplianceManager`
+ *      `_authorizeTokenBindingChange` on the single-token variant, and `_onlyComplianceManager`
  *      plus `_authorizeTransferApproval` on the multi-token one.
  *
  *      Note which entrypoint reaches which hook. `RuleConditionalTransferLightBase` overrides
- *      `bindToken` with its own `onlyComplianceManager` modifier, so on the single-token rule the
- *      only route to `_authorizeComplianceBindingChange` is the inherited `unbindToken`.
+ *      `bindToken` with its own `onlyTokenBindingManager` modifier, so on the single-token rule the
+ *      only route to `_authorizeTokenBindingChange` is the inherited `unbindToken`.
  */
 contract ConditionalTransferOwnable2StepBindingAuthorizationTest is Test {
     address constant OWNER = address(0xA11CE);
@@ -39,7 +39,7 @@ contract ConditionalTransferOwnable2StepBindingAuthorizationTest is Test {
     }
 
     /*//////////////////////////////////////////////////////////////
-              SINGLE TOKEN -- _authorizeComplianceBindingChange
+              SINGLE TOKEN -- _authorizeTokenBindingChange
     //////////////////////////////////////////////////////////////*/
 
     function testSingleUnbindTokenRejectsNonOwner() public {

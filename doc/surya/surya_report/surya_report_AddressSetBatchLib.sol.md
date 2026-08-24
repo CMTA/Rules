@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/RuleAddressSet/AddressSetBatchLib.sol | 1b09ddf8af7c9b32fc572b329b1786122a132dad |
+| ./rules/validation/abstract/RuleAddressSet/AddressSetBatchLib.sol | 720f435fb0932fd60fc43f50f93cc0e1c2711db6 |
 
 
 ### Contracts Description Table

@@ -6,7 +6,9 @@ This rule aggregates multiple child whitelist rules using OR logic. An address i
 
 ## Architecture
 
-Each child rule must implement `IAddressList`. The wrapper iterates through all registered rules and returns `true` for an address as soon as one rule lists it. Iteration stops early once all required addresses are resolved.
+Each child rule must implement `IAddressList` **and must be an allow-list**. The wrapper iterates through all registered rules and returns `true` for an address as soon as one rule lists it. Iteration stops early once all required addresses are resolved.
+
+> ⚠️ **`IAddressList` carries membership, not polarity.** The wrapper reads a child's `areAddressesListed` answer and treats `true` as *eligible*. It has no way to ask whether the child meant "allowed" or "denied", and nothing in `addRule` constrains that — see [Child rules must be allow-lists](#child-rules-must-be-allow-lists).
 
 ![ruleWhitelistWrapper.drawio](../../schema/rule/ruleWhitelistWrapper.drawio.png)
 
@@ -71,13 +73,140 @@ The wrapper reuses restriction codes from the whitelist rule:
 | `removeRule(address rule_)` | `RULES_MANAGEMENT_ROLE` | Removes a single child rule |
 | `clearRules()` | `RULES_MANAGEMENT_ROLE` | Removes all child rules |
 
+#### Child rules must be allow-lists
+
+**The wrapper cannot tell an allow-list from a deny-list, and adding the wrong one inverts its meaning.**
+
+`IAddressList` expresses only *membership* — "is this address in my set?" — never what membership means. The
+wrapper ORs those answers and reads `true` as **eligible**. A `RuleBlacklist` is a perfectly valid `IRule`,
+exposes the same `IAddressList` surface, and passes every check `addRule` performs, but its set means the
+opposite: listed addresses are the ones that must be **denied**.
+
+Add a `RuleBlacklist` as a child and the wrapper reports its blacklisted addresses as whitelisted. Because the
+wrapper is also the token's `isVerified` answer under ERC-3643, `isVerified(blacklistedAddress)` returns `true`
+as well.
+
+| Safe as a child | Not a child |
+| --- | --- |
+| `RuleWhitelist`, `RuleWhitelistOwnable2Step` | `RuleBlacklist` — inverted polarity |
+| `RuleReceiverWhitelist`, `RuleReceiverWhitelistOwnable2Step` | `RuleSpenderWhitelist` — its set is spenders, not holders |
+| Any custom rule whose listed addresses are the **permitted** ones | Any rule whose `IAddressList` set means something other than "eligible holder" |
+
+**This is now enforced, not merely documented.** It could not be caught by ERC-165 alone — `RuleBlacklist`
+advertises the same `IAddressList` ids as the whitelist rules, because `IAddressList` describes *membership* and
+both kinds of list have members. The fix is the separate marker interface that observation implies:
+[`IAddressListPolarity`](#child-rules-are-erc-165-checked) adds a single `isAllowList()` function, the wrapper
+requires it and refuses any child answering `false`. Pinned by `test_WW2_DenyListChildIsRejectedAtAddRule`.
+
+#### Children are ERC-165-checked
+
+`addRule` and `setRules` both route through `_checkRule`, which requires the candidate to advertise
+**`IAddressListBatchQuery`** via ERC-165, on top of the inherited non-zero and not-already-present checks. A
+candidate that does not is rejected with `RuleWhitelistWrapper_ChildIsNotAnAddressList(rule)`.
+
+This closes the failure where a valid `IRule` that is not an address list — `RuleMaxTotalSupply`, say — was
+accepted and then reverted the blind `areAddressesListed` call during a transfer. The early exit in the child
+scan made that *input-dependent*: an address pair already resolved by an earlier child still worked, so the
+wrapper looked healthy right up until a pair that needed the full scan (audit `F-5`, Nethermind AuditAgent
+`NM-18`). It also refuses a **nested wrapper**, which does not implement `areAddressesListed` and would brick the
+parent the same way.
+
+`ERC165Checker.supportsInterface` is itself non-reverting — a bounded staticcall returning `false` for a codeless
+address, a missing selector or malformed return data — so a hostile candidate cannot brick the setter that is
+screening it.
+
+##### Two questions, two interfaces
+
+Membership and meaning are different questions, so the guard asks both:
+
+| Requirement | Interface | Failure |
+| --- | --- | --- |
+| Can you answer "is this address listed?" | `IAddressListBatchQuery` (`0x20e8e17a`) | `RuleWhitelistWrapper_ChildIsNotAnAddressList` |
+| Do you declare what membership *means*? | `IAddressListPolarity` (`0xdc4efe10`) | `RuleWhitelistWrapper_ChildDoesNotDeclarePolarity` |
+| Does it mean **allowed**? | `isAllowList() == true` | `RuleWhitelistWrapper_ChildIsNotAnAllowList` |
+
+**Absence of the polarity declaration is a refusal, never an assumed allow-list.** That is the only reading that
+fails closed for a contract predating the interface or deliberately declining it.
+
+What each rule declares:
+
+| Rule | `isAllowList()` | As a wrapper child |
+| --- | --- | --- |
+| `RuleWhitelist` | `true` | ✅ accepted |
+| `RuleReceiverWhitelist` | `true` | ✅ accepted |
+| `RuleBlacklist` | `false` | ❌ rejected — deny-list |
+| `RuleSpenderWhitelist` | *does not implement the interface* | ❌ rejected — see below |
+| `RuleWhitelistWrapper` (nested) | *does not implement `areAddressesListed`* | ❌ rejected at the first check |
+
+`RuleSpenderWhitelist` **deliberately abstains, and must not be "fixed" to declare `true`.** Its set genuinely is
+an allow-list, so `true` would be honest about polarity and still wrong: the listed addresses are permitted
+*spenders*, not permitted *holders*, and the wrapper would read them as eligible transfer participants. Polarity
+is only half the question; the other half is what the addresses are. Withholding the declaration is what makes
+the fail-closed check refuse it — pinned by `test_WW2_ChildDecliningToDeclarePolarityIsRejected`.
+
+##### Wrappers cannot nest, deliberately
+
+A `RuleWhitelistWrapper` does not implement `areAddressesListed`, so it fails the first check and cannot be a
+child of another wrapper. That is a decision, not an omission (Nethermind AuditAgent `NM-19`, declined).
+
+**Nesting would buy no expressive power.** The wrapper is an OR, and `OR(OR(a,b), OR(c,d))` ≡ `OR(a,b,c,d)` — an
+OR nested in an OR flattens. Every policy a nested wrapper could express is expressible with a flat child list,
+and the composition integrators actually reach for is already available one level up:
+
+| Composition | How |
+| --- | --- |
+| **OR** of lists | one wrapper, flat children |
+| **AND** of ORs | several wrappers in the `RuleEngine`, which returns the first non-zero code |
+| OR of ORs | identical to a flat wrapper |
+
+It would also cost. The scan is [~8.8k gas per child](#gas-cost-of-the-child-rule-scan) and the *rejected* path
+never early-exits, so a 10 × 10 nest costs **~880k gas per transfer** where the equivalent flat wrapper costs
+**~90k** — the same policy at ten times the price, paid by every transferring holder. And it would open a cycle
+class (`A → B → A`) that recurses to out-of-gas, bricking transfers *and* `isVerified`, with no cheap on-chain
+defence.
+
+Delegated administration — the real motivation — already works flat: see the [usage scenario](#usage-scenario),
+where three operators each manage their own `RuleWhitelist` under one wrapper.
+
+##### Why the check asks for a sub-interface, not all of `IAddressList`
+
+The wrapper calls **one** function on its children:
+
+```solidity
+bool[] memory isListed = IAddressListBatchQuery(rule(i)).areAddressesListed(targetAddress);
+```
+
+`IAddressList` declares eight (`addAddress`, `removeAddress`, `addAddresses`, `removeAddresses`,
+`listedAddressCount`, `isAddressListed`, `areAddressesListed`, and `contains` inherited from
+`IIdentityRegistryContains`). Requiring the full id would demand seven functions the wrapper never touches —
+including all four **write** functions, which a read-only aggregating child has no reason to expose — and reject
+an otherwise perfectly serviceable child. An ERC-165 check should ask for what is actually called.
+
+`IAddressListBatchQuery` therefore declares `areAddressesListed` alone, and `IAddressList` inherits it:
+
+| Constant | Value | Covers |
+| --- | --- | --- |
+| `IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID` | `0x20e8e17a` | `areAddressesListed(address[])` — **what the wrapper requires** |
+| `IADDRESS_LIST_INTERFACE_ID` | `0x5d10e182` | the full eight-selector hierarchy |
+
+Factoring the selector into a parent left the flattened set unchanged, so `0x5d10e182` keeps its value and every
+rule advertises both ids. The sub-interface id is safe to state as a literal, unlike the full one: it declares a
+single function and inherits nothing, so there is no omitted-parent trap. All of this is asserted in
+`test/InterfaceId/AddressListInterfaceId.t.sol`.
+
+This is a category error by a trusted role rather than an attack — the same role can already remove every child
+outright, which fails closed — but it fails **open**, silently, so it is worth checking at configuration time and
+in any deployment review. Reported as Nethermind AuditAgent `NM-20`.
+
 ### `setCheckSpender(bool value)`
 
 Enables or disables spender checks. Restricted to `DEFAULT_ADMIN_ROLE`.
 
 ### `isVerified(address targetAddress) → bool`
 
-Returns `true` if the address is listed in at least one child rule.
+Returns `true` if the address is listed in at least one child rule. This is the ERC-3643 eligibility answer, and
+it resolves through the same child scan as the transfer check, so the two can never disagree about an address —
+including when a child's polarity is wrong (see [Child rules must be allow-lists](#child-rules-must-be-allow-lists)).
 
 ### `rule(uint256 index) → address`
 

@@ -59,10 +59,13 @@ abstract contract RuleChainlinkPoRInvariantStorage is RuleSharedInvariantStorage
     uint8 public constant CODE_RESERVES_FEED_STALE = 76;
     /**
      * @notice Restriction code returned when the feed responded but the answer cannot be used:
-     * a negative reserve, or an incomplete round (`updatedAt == 0`).
+     * a negative reserve, an incomplete round (`updatedAt == 0`), or a round stamped in the future.
      * @dev Distinct from {CODE_RESERVES_FEED_UNAVAILABLE}: here a round *was* returned, so the feed
      * is reachable and the problem is the data. An operator seeing this checks whether the
      * configured address is really a Proof of Reserve feed, or waits for the round to complete.
+     * @dev A future `updatedAt` is rejected here, NOT as staleness: `maxStalenessSeconds == 0` disables
+     * freshness checking, and a forged timestamp must not become acceptable because an operator chose
+     * not to police staleness.
      */
     uint8 public constant CODE_RESERVES_ANSWER_INVALID = 77;
     /**

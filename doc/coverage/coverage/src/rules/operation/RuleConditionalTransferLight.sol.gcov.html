@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - lcov.info - src/rules/operation/RuleConditionalTransferLight.sol</title>
+  <title>LCOV - lcov2.info - src/rules/operation/RuleConditionalTransferLight.sol</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
 </head>
 
@@ -28,7 +28,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">lcov.info</td>
+            <td class="headerValue">lcov2.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntry">9</td>
@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-07-14 13:44:06</td>
+            <td class="headerValue">2026-08-19 15:38:25</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">4</td>
@@ -130,12 +130,12 @@
 <a name="59"><span class="lineNum">      59 </span>                :            :     /**</a>
 <a name="60"><span class="lineNum">      60 </span>                :            :      * @notice Reverts unless the caller holds `COMPLIANCE_MANAGER_ROLE`.</a>
 <a name="61"><span class="lineNum">      61 </span>                :            :      */</a>
-<a name="62"><span class="lineNum">      62 </span>                :<span class="lineCov">         58 :     function _onlyComplianceManager() internal view virtual override onlyRole(COMPLIANCE_MANAGER_ROLE) {}</span></a>
+<a name="62"><span class="lineNum">      62 </span>                :<span class="lineCov">         69 :     function _onlyComplianceManager() internal view virtual override onlyRole(COMPLIANCE_MANAGER_ROLE) {}</span></a>
 <a name="63"><span class="lineNum">      63 </span>                :            : </a>
 <a name="64"><span class="lineNum">      64 </span>                :            :     /**</a>
 <a name="65"><span class="lineNum">      65 </span>                :            :      * @notice Reverts unless the caller holds `OPERATOR_ROLE`.</a>
 <a name="66"><span class="lineNum">      66 </span>                :            :      */</a>
-<a name="67"><span class="lineNum">      67 </span>                :<span class="lineCov">       7607 :     function _authorizeTransferApproval() internal view virtual override onlyRole(OPERATOR_ROLE) {}</span></a>
+<a name="67"><span class="lineNum">      67 </span>                :<span class="lineCov">       7655 :     function _authorizeTransferApproval() internal view virtual override onlyRole(OPERATOR_ROLE) {}</span></a>
 <a name="68"><span class="lineNum">      68 </span>                :            : </a>
 <a name="69"><span class="lineNum">      69 </span>                :            :     /**</a>
 <a name="70"><span class="lineNum">      70 </span>                :            :      * @notice Reverts unless the caller holds `COMPLIANCE_MANAGER_ROLE`.</a>

@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - lcov.info - src/modules/Ownable2StepERC165Module.sol</title>
+  <title>LCOV - lcov2.info - src/modules/Ownable2StepERC165Module.sol</title>
   <link rel="stylesheet" type="text/css" href="../../gcov.css">
 </head>
 
@@ -28,7 +28,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">lcov.info</td>
+            <td class="headerValue">lcov2.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntry">4</td>
@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-07-14 13:44:06</td>
+            <td class="headerValue">2026-08-19 15:38:25</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">1</td>
@@ -85,10 +85,10 @@
 <a name="14"><span class="lineNum">      14 </span>                :            :      * @inheritdoc ERC165</a>
 <a name="15"><span class="lineNum">      15 </span>                :            :      * @dev Also advertises support for the IERC173 and IOwnable2Step interfaces.</a>
 <a name="16"><span class="lineNum">      16 </span>                :            :      */</a>
-<a name="17"><span class="lineNum">      17 </span>                :<span class="lineCov">         68 :     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {</span></a>
-<a name="18"><span class="lineNum">      18 </span>                :<span class="lineCov">         68 :         return interfaceId == OwnableInterfaceId.IERC173_INTERFACE_ID</span></a>
-<a name="19"><span class="lineNum">      19 </span>                :<span class="lineCov">         57 :             || interfaceId == Ownable2StepInterfaceId.IOWNABLE2STEP_INTERFACE_ID</span></a>
-<a name="20"><span class="lineNum">      20 </span>                :<span class="lineCov">         46 :             || ERC165.supportsInterface(interfaceId);</span></a>
+<a name="17"><span class="lineNum">      17 </span>                :<span class="lineCov">         81 :     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {</span></a>
+<a name="18"><span class="lineNum">      18 </span>                :<span class="lineCov">         81 :         return interfaceId == OwnableInterfaceId.IERC173_INTERFACE_ID</span></a>
+<a name="19"><span class="lineNum">      19 </span>                :<span class="lineCov">         69 :             || interfaceId == Ownable2StepInterfaceId.IOWNABLE2STEP_INTERFACE_ID</span></a>
+<a name="20"><span class="lineNum">      20 </span>                :<span class="lineCov">         57 :             || ERC165.supportsInterface(interfaceId);</span></a>
 <a name="21"><span class="lineNum">      21 </span>                :            :     }</a>
 <a name="22"><span class="lineNum">      22 </span>                :            : }</a>
 </pre>

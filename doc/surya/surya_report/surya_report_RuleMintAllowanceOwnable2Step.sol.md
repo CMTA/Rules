@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/operation/RuleMintAllowanceOwnable2Step.sol | 47d79e70bd08f2719e55e4f27c356b494e25196f |
+| ./rules/operation/RuleMintAllowanceOwnable2Step.sol | 61ec71bd1ee13b2711aea2345717825ddbe0e934 |
 
 
 ### Contracts Description Table
@@ -20,7 +20,7 @@
 | └ | supportsInterface | Public ❗️ |   |NO❗️ |
 | └ | _onlyComplianceManager | Internal 🔒 |   | onlyOwner |
 | └ | _authorizeSetMintAllowance | Internal 🔒 |   | onlyOwner |
-| └ | _authorizeComplianceBindingChange | Internal 🔒 |   | onlyOwner |
+| └ | _authorizeTokenBindingChange | Internal 🔒 |   | onlyOwner |
 
 
 ### Legend

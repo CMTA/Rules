@@ -11,7 +11,7 @@ abstract contract VersionModule is IERC3643Version {
     /**
      * @notice The contract version string returned by {version}.
      */
-    string private constant VERSION = "0.5.0";
+    string private constant VERSION = "0.6.0";
 
     /*//////////////////////////////////////////////////////////////
                           PUBLIC FUNCTIONS

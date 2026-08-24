@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - lcov.info - src/rules/validation/abstract/base/RuleERC2980Base.sol</title>
+  <title>LCOV - lcov2.info - src/rules/validation/abstract/base/RuleERC2980Base.sol</title>
   <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
 </head>
 
@@ -28,16 +28,16 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">lcov.info</td>
+            <td class="headerValue">lcov2.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntry">127</td>
-            <td class="headerCovTableEntry">132</td>
-            <td class="headerCovTableEntryHi">96.2 %</td>
+            <td class="headerCovTableEntry">123</td>
+            <td class="headerCovTableEntry">128</td>
+            <td class="headerCovTableEntryHi">96.1 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-07-14 13:44:06</td>
+            <td class="headerValue">2026-08-19 15:38:25</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">37</td>
@@ -132,11 +132,11 @@
 <a name="61"><span class="lineNum">      61 </span>                :            :      * @param forwarderIrrevocable Trusted ERC-2771 forwarder address, set permanently at deployment.</a>
 <a name="62"><span class="lineNum">      62 </span>                :            :      * @param allowMintBurn When true, permits both minting and burning.</a>
 <a name="63"><span class="lineNum">      63 </span>                :            :      */</a>
-<a name="64"><span class="lineNum">      64 </span>                :<span class="lineCov">         75 :     constructor(address forwarderIrrevocable, bool allowMintBurn) MetaTxModuleStandalone(forwarderIrrevocable) {</span></a>
-<a name="65"><span class="lineNum">      65 </span>                :<span class="lineCov">         75 :         allowMint = allowMintBurn;</span></a>
-<a name="66"><span class="lineNum">      66 </span>                :<span class="lineCov">         75 :         allowBurn = allowMintBurn;</span></a>
-<a name="67"><span class="lineNum">      67 </span>                :<span class="lineCov">         75 :         emit AllowMintUpdated(allowMintBurn);</span></a>
-<a name="68"><span class="lineNum">      68 </span>                :<span class="lineCov">         75 :         emit AllowBurnUpdated(allowMintBurn);</span></a>
+<a name="64"><span class="lineNum">      64 </span>                :<span class="lineCov">         87 :     constructor(address forwarderIrrevocable, bool allowMintBurn) MetaTxModuleStandalone(forwarderIrrevocable) {</span></a>
+<a name="65"><span class="lineNum">      65 </span>                :<span class="lineCov">         87 :         allowMint = allowMintBurn;</span></a>
+<a name="66"><span class="lineNum">      66 </span>                :<span class="lineCov">         87 :         allowBurn = allowMintBurn;</span></a>
+<a name="67"><span class="lineNum">      67 </span>                :<span class="lineCov">         87 :         emit AllowMintUpdated(allowMintBurn);</span></a>
+<a name="68"><span class="lineNum">      68 </span>                :<span class="lineCov">         87 :         emit AllowBurnUpdated(allowMintBurn);</span></a>
 <a name="69"><span class="lineNum">      69 </span>                :            :     }</a>
 <a name="70"><span class="lineNum">      70 </span>                :            : </a>
 <a name="71"><span class="lineNum">      71 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
@@ -148,8 +148,8 @@
 <a name="77"><span class="lineNum">      77 </span>                :            :         _;</a>
 <a name="78"><span class="lineNum">      78 </span>                :            :     }</a>
 <a name="79"><span class="lineNum">      79 </span>                :            : </a>
-<a name="80"><span class="lineNum">      80 </span>                :<span class="lineCov">          6 :     modifier onlyWhitelistAdd() {</span></a>
-<a name="81"><span class="lineNum">      81 </span>                :<span class="lineCov">          6 :         _authorizeWhitelistAdd();</span></a>
+<a name="80"><span class="lineNum">      80 </span>                :<span class="lineCov">          9 :     modifier onlyWhitelistAdd() {</span></a>
+<a name="81"><span class="lineNum">      81 </span>                :<span class="lineCov">          9 :         _authorizeWhitelistAdd();</span></a>
 <a name="82"><span class="lineNum">      82 </span>                :            :         _;</a>
 <a name="83"><span class="lineNum">      83 </span>                :            :     }</a>
 <a name="84"><span class="lineNum">      84 </span>                :            : </a>
@@ -158,13 +158,13 @@
 <a name="87"><span class="lineNum">      87 </span>                :            :         _;</a>
 <a name="88"><span class="lineNum">      88 </span>                :            :     }</a>
 <a name="89"><span class="lineNum">      89 </span>                :            : </a>
-<a name="90"><span class="lineNum">      90 </span>                :<span class="lineCov">          6 :     modifier onlyFrozenlistAdd() {</span></a>
-<a name="91"><span class="lineNum">      91 </span>                :<span class="lineCov">          6 :         _authorizeFrozenlistAdd();</span></a>
+<a name="90"><span class="lineNum">      90 </span>                :<span class="lineCov">          8 :     modifier onlyFrozenlistAdd() {</span></a>
+<a name="91"><span class="lineNum">      91 </span>                :<span class="lineCov">          8 :         _authorizeFrozenlistAdd();</span></a>
 <a name="92"><span class="lineNum">      92 </span>                :            :         _;</a>
 <a name="93"><span class="lineNum">      93 </span>                :            :     }</a>
 <a name="94"><span class="lineNum">      94 </span>                :            : </a>
-<a name="95"><span class="lineNum">      95 </span>                :<span class="lineCov">          2 :     modifier onlyFrozenlistRemove() {</span></a>
-<a name="96"><span class="lineNum">      96 </span>                :<span class="lineCov">          2 :         _authorizeFrozenlistRemove();</span></a>
+<a name="95"><span class="lineNum">      95 </span>                :<span class="lineCov">          3 :     modifier onlyFrozenlistRemove() {</span></a>
+<a name="96"><span class="lineNum">      96 </span>                :<span class="lineCov">          3 :         _authorizeFrozenlistRemove();</span></a>
 <a name="97"><span class="lineNum">      97 </span>                :            :         _;</a>
 <a name="98"><span class="lineNum">      98 </span>                :            :     }</a>
 <a name="99"><span class="lineNum">      99 </span>                :            : </a>
@@ -174,38 +174,38 @@
 <a name="103"><span class="lineNum">     103 </span>                :            : </a>
 <a name="104"><span class="lineNum">     104 </span>                :            :     /**</a>
 <a name="105"><span class="lineNum">     105 </span>                :            :      * @notice Adds multiple addresses to the whitelist.</a>
-<a name="106"><span class="lineNum">     106 </span>                :            :      * @dev Does not revert if an address is already listed.</a>
-<a name="107"><span class="lineNum">     107 </span>                :            :      * @param targetAddresses Addresses to add to the whitelist.</a>
-<a name="108"><span class="lineNum">     108 </span>                :            :      */</a>
-<a name="109"><span class="lineNum">     109 </span>                :<span class="lineCov">          6 :     function addWhitelistAddresses(address[] calldata targetAddresses) public onlyWhitelistAdd {</span></a>
-<a name="110"><span class="lineNum">     110 </span>                :<span class="lineCov">          4 :         _addWhitelistAddresses(targetAddresses);</span></a>
-<a name="111"><span class="lineNum">     111 </span>                :<span class="lineCov">          4 :         emit AddWhitelistAddresses(targetAddresses);</span></a>
-<a name="112"><span class="lineNum">     112 </span>                :            :     }</a>
-<a name="113"><span class="lineNum">     113 </span>                :            : </a>
-<a name="114"><span class="lineNum">     114 </span>                :            :     /**</a>
-<a name="115"><span class="lineNum">     115 </span>                :            :      * @notice Removes multiple addresses from the whitelist.</a>
-<a name="116"><span class="lineNum">     116 </span>                :            :      * @dev Does not revert if an address is not listed.</a>
-<a name="117"><span class="lineNum">     117 </span>                :            :      * @param targetAddresses Addresses to remove from the whitelist.</a>
-<a name="118"><span class="lineNum">     118 </span>                :            :      */</a>
-<a name="119"><span class="lineNum">     119 </span>                :<span class="lineCov">          4 :     function removeWhitelistAddresses(address[] calldata targetAddresses) public onlyWhitelistRemove {</span></a>
-<a name="120"><span class="lineNum">     120 </span>                :<span class="lineCov">          3 :         _removeWhitelistAddresses(targetAddresses);</span></a>
-<a name="121"><span class="lineNum">     121 </span>                :<span class="lineCov">          3 :         emit RemoveWhitelistAddresses(targetAddresses);</span></a>
-<a name="122"><span class="lineNum">     122 </span>                :            :     }</a>
-<a name="123"><span class="lineNum">     123 </span>                :            : </a>
-<a name="124"><span class="lineNum">     124 </span>                :            :     /**</a>
-<a name="125"><span class="lineNum">     125 </span>                :            :      * @notice Adds a single address to the whitelist.</a>
-<a name="126"><span class="lineNum">     126 </span>                :            :      * @dev</a>
-<a name="127"><span class="lineNum">     127 </span>                :            :      * Reverts if the address is already listed.</a>
-<a name="128"><span class="lineNum">     128 </span>                :            :      * Deviation from ERC-2980 `Whitelistable` example interface: the spec's `addAddressToWhitelist`</a>
-<a name="129"><span class="lineNum">     129 </span>                :            :      * returns `false` on duplicates instead of reverting. This implementation follows the codebase</a>
-<a name="130"><span class="lineNum">     130 </span>                :            :      * convention of reverting on invalid single-item operations.</a>
-<a name="131"><span class="lineNum">     131 </span>                :            :      * @param targetAddress Address to add to the whitelist.</a>
-<a name="132"><span class="lineNum">     132 </span>                :            :      */</a>
-<a name="133"><span class="lineNum">     133 </span>                :<span class="lineCov">         49 :     function addWhitelistAddress(address targetAddress) public onlyWhitelistAdd {</span></a>
-<a name="134"><span class="lineNum">     134 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 45 times"> + </span>]:<span class="lineCov">         46 :         require(targetAddress != address(0), RuleERC2980_ZeroAddressNotAllowed());</span></a>
-<a name="135"><span class="lineNum">     135 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 44 times"> + </span>]:<span class="lineCov">         45 :         require(!_isWhitelisted(targetAddress), RuleERC2980_AddressAlreadyWhitelisted());</span></a>
-<a name="136"><span class="lineNum">     136 </span>                :<span class="lineCov">         44 :         _addWhitelistAddress(targetAddress);</span></a>
-<a name="137"><span class="lineNum">     137 </span>                :<span class="lineCov">         44 :         emit AddWhitelistAddress(targetAddress);</span></a>
+<a name="106"><span class="lineNum">     106 </span>                :            :      * @dev Does not revert if an address is already listed; duplicates are skipped. REVERTS on</a>
+<a name="107"><span class="lineNum">     107 </span>                :            :      *      `address(0)`, rejecting the whole batch -- see {addWhitelistAddress}.</a>
+<a name="108"><span class="lineNum">     108 </span>                :            :      * @param targetAddresses Addresses to add to the whitelist.</a>
+<a name="109"><span class="lineNum">     109 </span>                :            :      */</a>
+<a name="110"><span class="lineNum">     110 </span>                :<span class="lineCov">          9 :     function addWhitelistAddresses(address[] calldata targetAddresses) public virtual onlyWhitelistAdd {</span></a>
+<a name="111"><span class="lineNum">     111 </span>                :<span class="lineCov">          7 :         (uint256 added, uint256 skipped) = _addWhitelistAddresses(targetAddresses);</span></a>
+<a name="112"><span class="lineNum">     112 </span>                :<span class="lineCov">          6 :         emit AddWhitelistAddresses(targetAddresses, added, skipped);</span></a>
+<a name="113"><span class="lineNum">     113 </span>                :            :     }</a>
+<a name="114"><span class="lineNum">     114 </span>                :            : </a>
+<a name="115"><span class="lineNum">     115 </span>                :            :     /**</a>
+<a name="116"><span class="lineNum">     116 </span>                :            :      * @notice Removes multiple addresses from the whitelist.</a>
+<a name="117"><span class="lineNum">     117 </span>                :            :      * @dev Does not revert if an address is not listed.</a>
+<a name="118"><span class="lineNum">     118 </span>                :            :      * @param targetAddresses Addresses to remove from the whitelist.</a>
+<a name="119"><span class="lineNum">     119 </span>                :            :      */</a>
+<a name="120"><span class="lineNum">     120 </span>                :<span class="lineCov">          5 :     function removeWhitelistAddresses(address[] calldata targetAddresses) public virtual onlyWhitelistRemove {</span></a>
+<a name="121"><span class="lineNum">     121 </span>                :<span class="lineCov">          4 :         (uint256 removed, uint256 skipped) = _removeWhitelistAddresses(targetAddresses);</span></a>
+<a name="122"><span class="lineNum">     122 </span>                :<span class="lineCov">          4 :         emit RemoveWhitelistAddresses(targetAddresses, removed, skipped);</span></a>
+<a name="123"><span class="lineNum">     123 </span>                :            :     }</a>
+<a name="124"><span class="lineNum">     124 </span>                :            : </a>
+<a name="125"><span class="lineNum">     125 </span>                :            :     /**</a>
+<a name="126"><span class="lineNum">     126 </span>                :            :      * @notice Adds a single address to the whitelist.</a>
+<a name="127"><span class="lineNum">     127 </span>                :            :      * @dev</a>
+<a name="128"><span class="lineNum">     128 </span>                :            :      * Reverts if the address is already listed.</a>
+<a name="129"><span class="lineNum">     129 </span>                :            :      * Deviation from ERC-2980 `Whitelistable` example interface: the spec's `addAddressToWhitelist`</a>
+<a name="130"><span class="lineNum">     130 </span>                :            :      * returns `false` on duplicates instead of reverting. This implementation follows the codebase</a>
+<a name="131"><span class="lineNum">     131 </span>                :            :      * convention of reverting on invalid single-item operations.</a>
+<a name="132"><span class="lineNum">     132 </span>                :            :      * @param targetAddress Address to add to the whitelist.</a>
+<a name="133"><span class="lineNum">     133 </span>                :            :      */</a>
+<a name="134"><span class="lineNum">     134 </span>                :<span class="lineCov">         55 :     function addWhitelistAddress(address targetAddress) public virtual onlyWhitelistAdd {</span></a>
+<a name="135"><span class="lineNum">     135 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 51 times"> + </span>]:<span class="lineCov">         52 :         require(targetAddress != address(0), RuleERC2980_ZeroAddressNotAllowed());</span></a>
+<a name="136"><span class="lineNum">     136 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 50 times"> + </span>]:<span class="lineCov">         51 :         require(_addWhitelistAddress(targetAddress), RuleERC2980_AddressAlreadyWhitelisted());</span></a>
+<a name="137"><span class="lineNum">     137 </span>                :<span class="lineCov">         50 :         emit AddWhitelistAddress(targetAddress);</span></a>
 <a name="138"><span class="lineNum">     138 </span>                :            :     }</a>
 <a name="139"><span class="lineNum">     139 </span>                :            : </a>
 <a name="140"><span class="lineNum">     140 </span>                :            :     /**</a>
@@ -217,24 +217,24 @@
 <a name="146"><span class="lineNum">     146 </span>                :            :      * convention of reverting on invalid single-item operations.</a>
 <a name="147"><span class="lineNum">     147 </span>                :            :      * @param targetAddress Address to remove from the whitelist.</a>
 <a name="148"><span class="lineNum">     148 </span>                :            :      */</a>
-<a name="149"><span class="lineNum">     149 </span>                :<span class="lineCov">          7 :     function removeWhitelistAddress(address targetAddress) public onlyWhitelistRemove {</span></a>
-<a name="150"><span class="lineNum">     150 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 4 times"> + </span>]:<span class="lineCov">          5 :         require(_isWhitelisted(targetAddress), RuleERC2980_AddressNotWhitelisted());</span></a>
-<a name="151"><span class="lineNum">     151 </span>                :<span class="lineCov">          4 :         _removeWhitelistAddress(targetAddress);</span></a>
-<a name="152"><span class="lineNum">     152 </span>                :<span class="lineCov">          4 :         emit RemoveWhitelistAddress(targetAddress);</span></a>
-<a name="153"><span class="lineNum">     153 </span>                :            :     }</a>
-<a name="154"><span class="lineNum">     154 </span>                :            : </a>
-<a name="155"><span class="lineNum">     155 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
-<a name="156"><span class="lineNum">     156 </span>                :            :                       FROZENLIST MANAGEMENT</a>
-<a name="157"><span class="lineNum">     157 </span>                :            :     //////////////////////////////////////////////////////////////*/</a>
-<a name="158"><span class="lineNum">     158 </span>                :            : </a>
-<a name="159"><span class="lineNum">     159 </span>                :            :     /**</a>
-<a name="160"><span class="lineNum">     160 </span>                :            :      * @notice Adds multiple addresses to the frozenlist.</a>
-<a name="161"><span class="lineNum">     161 </span>                :            :      * @dev Does not revert if an address is already listed.</a>
+<a name="149"><span class="lineNum">     149 </span>                :<span class="lineCov">          7 :     function removeWhitelistAddress(address targetAddress) public virtual onlyWhitelistRemove {</span></a>
+<a name="150"><span class="lineNum">     150 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 4 times"> + </span>]:<span class="lineCov">          5 :         require(_removeWhitelistAddress(targetAddress), RuleERC2980_AddressNotWhitelisted());</span></a>
+<a name="151"><span class="lineNum">     151 </span>                :<span class="lineCov">          4 :         emit RemoveWhitelistAddress(targetAddress);</span></a>
+<a name="152"><span class="lineNum">     152 </span>                :            :     }</a>
+<a name="153"><span class="lineNum">     153 </span>                :            : </a>
+<a name="154"><span class="lineNum">     154 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
+<a name="155"><span class="lineNum">     155 </span>                :            :                       FROZENLIST MANAGEMENT</a>
+<a name="156"><span class="lineNum">     156 </span>                :            :     //////////////////////////////////////////////////////////////*/</a>
+<a name="157"><span class="lineNum">     157 </span>                :            : </a>
+<a name="158"><span class="lineNum">     158 </span>                :            :     /**</a>
+<a name="159"><span class="lineNum">     159 </span>                :            :      * @notice Adds multiple addresses to the frozenlist.</a>
+<a name="160"><span class="lineNum">     160 </span>                :            :      * @dev Does not revert if an address is already listed; duplicates are skipped. REVERTS on</a>
+<a name="161"><span class="lineNum">     161 </span>                :            :      *      `address(0)`, rejecting the whole batch -- see {addFrozenlistAddress}.</a>
 <a name="162"><span class="lineNum">     162 </span>                :            :      * @param targetAddresses Addresses to add to the frozenlist.</a>
 <a name="163"><span class="lineNum">     163 </span>                :            :      */</a>
-<a name="164"><span class="lineNum">     164 </span>                :<span class="lineCov">          6 :     function addFrozenlistAddresses(address[] calldata targetAddresses) public onlyFrozenlistAdd {</span></a>
-<a name="165"><span class="lineNum">     165 </span>                :<span class="lineCov">          4 :         _addFrozenlistAddresses(targetAddresses);</span></a>
-<a name="166"><span class="lineNum">     166 </span>                :<span class="lineCov">          4 :         emit AddFrozenlistAddresses(targetAddresses);</span></a>
+<a name="164"><span class="lineNum">     164 </span>                :<span class="lineCov">          8 :     function addFrozenlistAddresses(address[] calldata targetAddresses) public virtual onlyFrozenlistAdd {</span></a>
+<a name="165"><span class="lineNum">     165 </span>                :<span class="lineCov">          6 :         (uint256 added, uint256 skipped) = _addFrozenlistAddresses(targetAddresses);</span></a>
+<a name="166"><span class="lineNum">     166 </span>                :<span class="lineCov">          5 :         emit AddFrozenlistAddresses(targetAddresses, added, skipped);</span></a>
 <a name="167"><span class="lineNum">     167 </span>                :            :     }</a>
 <a name="168"><span class="lineNum">     168 </span>                :            : </a>
 <a name="169"><span class="lineNum">     169 </span>                :            :     /**</a>
@@ -242,9 +242,9 @@
 <a name="171"><span class="lineNum">     171 </span>                :            :      * @dev Does not revert if an address is not listed.</a>
 <a name="172"><span class="lineNum">     172 </span>                :            :      * @param targetAddresses Addresses to remove from the frozenlist.</a>
 <a name="173"><span class="lineNum">     173 </span>                :            :      */</a>
-<a name="174"><span class="lineNum">     174 </span>                :<span class="lineCov">          2 :     function removeFrozenlistAddresses(address[] calldata targetAddresses) public onlyFrozenlistRemove {</span></a>
-<a name="175"><span class="lineNum">     175 </span>                :<span class="lineCov">          2 :         _removeFrozenlistAddresses(targetAddresses);</span></a>
-<a name="176"><span class="lineNum">     176 </span>                :<span class="lineCov">          2 :         emit RemoveFrozenlistAddresses(targetAddresses);</span></a>
+<a name="174"><span class="lineNum">     174 </span>                :<span class="lineCov">          3 :     function removeFrozenlistAddresses(address[] calldata targetAddresses) public virtual onlyFrozenlistRemove {</span></a>
+<a name="175"><span class="lineNum">     175 </span>                :<span class="lineCov">          3 :         (uint256 removed, uint256 skipped) = _removeFrozenlistAddresses(targetAddresses);</span></a>
+<a name="176"><span class="lineNum">     176 </span>                :<span class="lineCov">          3 :         emit RemoveFrozenlistAddresses(targetAddresses, removed, skipped);</span></a>
 <a name="177"><span class="lineNum">     177 </span>                :            :     }</a>
 <a name="178"><span class="lineNum">     178 </span>                :            : </a>
 <a name="179"><span class="lineNum">     179 </span>                :            :     /**</a>
@@ -256,334 +256,332 @@
 <a name="185"><span class="lineNum">     185 </span>                :            :      * convention of reverting on invalid single-item operations.</a>
 <a name="186"><span class="lineNum">     186 </span>                :            :      * @param targetAddress Address to add to the frozenlist.</a>
 <a name="187"><span class="lineNum">     187 </span>                :            :      */</a>
-<a name="188"><span class="lineNum">     188 </span>                :<span class="lineCov">         24 :     function addFrozenlistAddress(address targetAddress) public onlyFrozenlistAdd {</span></a>
-<a name="189"><span class="lineNum">     189 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 20 times"> + </span>]:<span class="lineCov">         21 :         require(targetAddress != address(0), RuleERC2980_ZeroAddressNotAllowed());</span></a>
-<a name="190"><span class="lineNum">     190 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 19 times"> + </span>]:<span class="lineCov">         20 :         require(!_isFrozen(targetAddress), RuleERC2980_AddressAlreadyFrozen());</span></a>
-<a name="191"><span class="lineNum">     191 </span>                :<span class="lineCov">         19 :         _addFrozenlistAddress(targetAddress);</span></a>
-<a name="192"><span class="lineNum">     192 </span>                :<span class="lineCov">         19 :         emit AddFrozenlistAddress(targetAddress);</span></a>
-<a name="193"><span class="lineNum">     193 </span>                :            :     }</a>
-<a name="194"><span class="lineNum">     194 </span>                :            : </a>
-<a name="195"><span class="lineNum">     195 </span>                :            :     /**</a>
-<a name="196"><span class="lineNum">     196 </span>                :            :      * @notice Removes a single address from the frozenlist.</a>
-<a name="197"><span class="lineNum">     197 </span>                :            :      * @dev</a>
-<a name="198"><span class="lineNum">     198 </span>                :            :      * Reverts if the address is not listed.</a>
-<a name="199"><span class="lineNum">     199 </span>                :            :      * Deviation from ERC-2980 `Freezable` example interface: the spec's `removeAddressFromFrozenlist`</a>
-<a name="200"><span class="lineNum">     200 </span>                :            :      * returns `false` when not found instead of reverting. This implementation follows the codebase</a>
-<a name="201"><span class="lineNum">     201 </span>                :            :      * convention of reverting on invalid single-item operations.</a>
-<a name="202"><span class="lineNum">     202 </span>                :            :      * @param targetAddress Address to remove from the frozenlist.</a>
-<a name="203"><span class="lineNum">     203 </span>                :            :      */</a>
-<a name="204"><span class="lineNum">     204 </span>                :<span class="lineCov">          7 :     function removeFrozenlistAddress(address targetAddress) public onlyFrozenlistRemove {</span></a>
-<a name="205"><span class="lineNum">     205 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 4 times"> + </span>]:<span class="lineCov">          5 :         require(_isFrozen(targetAddress), RuleERC2980_AddressNotFrozen());</span></a>
-<a name="206"><span class="lineNum">     206 </span>                :<span class="lineCov">          4 :         _removeFrozenlistAddress(targetAddress);</span></a>
-<a name="207"><span class="lineNum">     207 </span>                :<span class="lineCov">          4 :         emit RemoveFrozenlistAddress(targetAddress);</span></a>
-<a name="208"><span class="lineNum">     208 </span>                :            :     }</a>
-<a name="209"><span class="lineNum">     209 </span>                :            : </a>
-<a name="210"><span class="lineNum">     210 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
-<a name="211"><span class="lineNum">     211 </span>                :            :                         PUBLIC FUNCTIONS</a>
-<a name="212"><span class="lineNum">     212 </span>                :            :     //////////////////////////////////////////////////////////////*/</a>
-<a name="213"><span class="lineNum">     213 </span>                :            : </a>
-<a name="214"><span class="lineNum">     214 </span>                :            :     /**</a>
-<a name="215"><span class="lineNum">     215 </span>                :            :      * @notice Enables or disables minting through this rule.</a>
-<a name="216"><span class="lineNum">     216 </span>                :            :      * @param value The new value of the `allowMint` flag.</a>
-<a name="217"><span class="lineNum">     217 </span>                :            :      */</a>
-<a name="218"><span class="lineNum">     218 </span>                :<span class="lineCov">          5 :     function setAllowMint(bool value) public virtual onlyMintBurnManager {</span></a>
-<a name="219"><span class="lineNum">     219 </span>                :<span class="lineCov">          3 :         allowMint = value;</span></a>
-<a name="220"><span class="lineNum">     220 </span>                :<span class="lineCov">          3 :         emit AllowMintUpdated(value);</span></a>
-<a name="221"><span class="lineNum">     221 </span>                :            :     }</a>
-<a name="222"><span class="lineNum">     222 </span>                :            : </a>
-<a name="223"><span class="lineNum">     223 </span>                :            :     /**</a>
-<a name="224"><span class="lineNum">     224 </span>                :            :      * @notice Enables or disables burning through this rule.</a>
-<a name="225"><span class="lineNum">     225 </span>                :            :      * @param value The new value of the `allowBurn` flag.</a>
-<a name="226"><span class="lineNum">     226 </span>                :            :      */</a>
-<a name="227"><span class="lineNum">     227 </span>                :<span class="lineCov">          3 :     function setAllowBurn(bool value) public virtual onlyMintBurnManager {</span></a>
-<a name="228"><span class="lineNum">     228 </span>                :<span class="lineCov">          2 :         allowBurn = value;</span></a>
-<a name="229"><span class="lineNum">     229 </span>                :<span class="lineCov">          2 :         emit AllowBurnUpdated(value);</span></a>
-<a name="230"><span class="lineNum">     230 </span>                :            :     }</a>
-<a name="231"><span class="lineNum">     231 </span>                :            : </a>
-<a name="232"><span class="lineNum">     232 </span>                :            :     /**</a>
-<a name="233"><span class="lineNum">     233 </span>                :            :      * @inheritdoc IERC3643IComplianceContract</a>
-<a name="234"><span class="lineNum">     234 </span>                :            :      */</a>
-<a name="235"><span class="lineNum">     235 </span>                :<span class="lineCov">          6 :     function transferred(address from, address to, uint256 value)</span></a>
-<a name="236"><span class="lineNum">     236 </span>                :            :         public</a>
-<a name="237"><span class="lineNum">     237 </span>                :            :         view</a>
-<a name="238"><span class="lineNum">     238 </span>                :            :         virtual</a>
-<a name="239"><span class="lineNum">     239 </span>                :            :         override(IERC3643IComplianceContract)</a>
-<a name="240"><span class="lineNum">     240 </span>                :            :     {</a>
-<a name="241"><span class="lineNum">     241 </span>                :<span class="lineCov">          6 :         _transferred(from, to, value);</span></a>
-<a name="242"><span class="lineNum">     242 </span>                :            :     }</a>
-<a name="243"><span class="lineNum">     243 </span>                :            : </a>
-<a name="244"><span class="lineNum">     244 </span>                :            :     /**</a>
-<a name="245"><span class="lineNum">     245 </span>                :            :      * @inheritdoc IRuleEngine</a>
-<a name="246"><span class="lineNum">     246 </span>                :            :      */</a>
-<a name="247"><span class="lineNum">     247 </span>                :<span class="lineCov">          4 :     function transferred(address spender, address from, address to, uint256 value)</span></a>
-<a name="248"><span class="lineNum">     248 </span>                :            :         public</a>
-<a name="249"><span class="lineNum">     249 </span>                :            :         view</a>
-<a name="250"><span class="lineNum">     250 </span>                :            :         virtual</a>
-<a name="251"><span class="lineNum">     251 </span>                :            :         override(IRuleEngine)</a>
-<a name="252"><span class="lineNum">     252 </span>                :            :     {</a>
-<a name="253"><span class="lineNum">     253 </span>                :<span class="lineCov">          4 :         _transferredFrom(spender, from, to, value);</span></a>
-<a name="254"><span class="lineNum">     254 </span>                :            :     }</a>
-<a name="255"><span class="lineNum">     255 </span>                :            : </a>
-<a name="256"><span class="lineNum">     256 </span>                :            :     /**</a>
-<a name="257"><span class="lineNum">     257 </span>                :            :      * @inheritdoc IRule</a>
-<a name="258"><span class="lineNum">     258 </span>                :            :      */</a>
-<a name="259"><span class="lineNum">     259 </span>                :<span class="lineCov">          5 :     function canReturnTransferRestrictionCode(uint8 restrictionCode)</span></a>
-<a name="260"><span class="lineNum">     260 </span>                :            :         public</a>
-<a name="261"><span class="lineNum">     261 </span>                :            :         pure</a>
-<a name="262"><span class="lineNum">     262 </span>                :            :         virtual</a>
-<a name="263"><span class="lineNum">     263 </span>                :            :         override(IRule)</a>
-<a name="264"><span class="lineNum">     264 </span>                :            :         returns (bool)</a>
-<a name="265"><span class="lineNum">     265 </span>                :            :     {</a>
-<a name="266"><span class="lineNum">     266 </span>                :<span class="lineCov">          5 :         return restrictionCode == CODE_ADDRESS_FROM_IS_FROZEN || restrictionCode == CODE_ADDRESS_TO_IS_FROZEN</span></a>
-<a name="267"><span class="lineNum">     267 </span>                :<span class="lineCov">          3 :             || restrictionCode == CODE_ADDRESS_SPENDER_IS_FROZEN || restrictionCode == CODE_ADDRESS_TO_NOT_WHITELISTED</span></a>
-<a name="268"><span class="lineNum">     268 </span>                :<span class="lineCov">          1 :             || restrictionCode == CODE_MINT_NOT_ALLOWED || restrictionCode == CODE_BURN_NOT_ALLOWED;</span></a>
-<a name="269"><span class="lineNum">     269 </span>                :            :     }</a>
-<a name="270"><span class="lineNum">     270 </span>                :            : </a>
-<a name="271"><span class="lineNum">     271 </span>                :            :     /**</a>
-<a name="272"><span class="lineNum">     272 </span>                :            :      * @inheritdoc IERC1404</a>
-<a name="273"><span class="lineNum">     273 </span>                :            :      */</a>
-<a name="274"><span class="lineNum">     274 </span>                :<span class="lineCov">          7 :     function messageForTransferRestriction(uint8 restrictionCode)</span></a>
-<a name="275"><span class="lineNum">     275 </span>                :            :         public</a>
-<a name="276"><span class="lineNum">     276 </span>                :            :         pure</a>
-<a name="277"><span class="lineNum">     277 </span>                :            :         virtual</a>
-<a name="278"><span class="lineNum">     278 </span>                :            :         override(IERC1404)</a>
-<a name="279"><span class="lineNum">     279 </span>                :            :         returns (string memory)</a>
-<a name="280"><span class="lineNum">     280 </span>                :            :     {</a>
-<a name="281"><span class="lineNum">     281 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          7 :         if (restrictionCode == CODE_ADDRESS_FROM_IS_FROZEN) {</span></a>
-<a name="282"><span class="lineNum">     282 </span>                :<span class="lineCov">          1 :             return TEXT_ADDRESS_FROM_IS_FROZEN;</span></a>
-<a name="283"><span class="lineNum">     283 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          6 :         } else if (restrictionCode == CODE_ADDRESS_TO_IS_FROZEN) {</span></a>
-<a name="284"><span class="lineNum">     284 </span>                :<span class="lineCov">          1 :             return TEXT_ADDRESS_TO_IS_FROZEN;</span></a>
-<a name="285"><span class="lineNum">     285 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          5 :         } else if (restrictionCode == CODE_ADDRESS_SPENDER_IS_FROZEN) {</span></a>
-<a name="286"><span class="lineNum">     286 </span>                :<span class="lineCov">          1 :             return TEXT_ADDRESS_SPENDER_IS_FROZEN;</span></a>
-<a name="287"><span class="lineNum">     287 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          4 :         } else if (restrictionCode == CODE_ADDRESS_TO_NOT_WHITELISTED) {</span></a>
-<a name="288"><span class="lineNum">     288 </span>                :<span class="lineCov">          1 :             return TEXT_ADDRESS_TO_NOT_WHITELISTED;</span></a>
-<a name="289"><span class="lineNum">     289 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          3 :         } else if (restrictionCode == CODE_MINT_NOT_ALLOWED) {</span></a>
-<a name="290"><span class="lineNum">     290 </span>                :<span class="lineCov">          1 :             return TEXT_MINT_NOT_ALLOWED;</span></a>
-<a name="291"><span class="lineNum">     291 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          2 :         } else if (restrictionCode == CODE_BURN_NOT_ALLOWED) {</span></a>
-<a name="292"><span class="lineNum">     292 </span>                :<span class="lineCov">          1 :             return TEXT_BURN_NOT_ALLOWED;</span></a>
-<a name="293"><span class="lineNum">     293 </span>                :            :         } else {</a>
-<a name="294"><span class="lineNum">     294 </span>                :<span class="lineCov">          1 :             return TEXT_CODE_NOT_FOUND;</span></a>
-<a name="295"><span class="lineNum">     295 </span>                :            :         }</a>
-<a name="296"><span class="lineNum">     296 </span>                :            :     }</a>
-<a name="297"><span class="lineNum">     297 </span>                :            : </a>
-<a name="298"><span class="lineNum">     298 </span>                :            :     /**</a>
-<a name="299"><span class="lineNum">     299 </span>                :            :      * @inheritdoc RuleTransferValidation</a>
-<a name="300"><span class="lineNum">     300 </span>                :            :      */</a>
-<a name="301"><span class="lineNum">     301 </span>                :<span class="lineCov">          3 :     function supportsInterface(bytes4 interfaceId) public view virtual override(RuleTransferValidation) returns (bool) {</span></a>
-<a name="302"><span class="lineNum">     302 </span>                :<span class="lineCov">          3 :         return RuleTransferValidation.supportsInterface(interfaceId);</span></a>
-<a name="303"><span class="lineNum">     303 </span>                :            :     }</a>
-<a name="304"><span class="lineNum">     304 </span>                :            : </a>
-<a name="305"><span class="lineNum">     305 </span>                :            :     /**</a>
-<a name="306"><span class="lineNum">     306 </span>                :            :      * @notice Returns the number of whitelisted addresses.</a>
-<a name="307"><span class="lineNum">     307 </span>                :            :      * @return The count of addresses currently in the whitelist.</a>
-<a name="308"><span class="lineNum">     308 </span>                :            :      */</a>
-<a name="309"><span class="lineNum">     309 </span>                :<span class="lineCov">          5 :     function whitelistAddressCount() public view returns (uint256) {</span></a>
-<a name="310"><span class="lineNum">     310 </span>                :<span class="lineCov">          5 :         return _whitelistCount();</span></a>
-<a name="311"><span class="lineNum">     311 </span>                :            :     }</a>
-<a name="312"><span class="lineNum">     312 </span>                :            : </a>
-<a name="313"><span class="lineNum">     313 </span>                :            :     /**</a>
-<a name="314"><span class="lineNum">     314 </span>                :            :      * @notice Returns true if the address is in the whitelist.</a>
-<a name="315"><span class="lineNum">     315 </span>                :            :      * @param targetAddress Address to check.</a>
-<a name="316"><span class="lineNum">     316 </span>                :            :      * @return True if the address is whitelisted.</a>
-<a name="317"><span class="lineNum">     317 </span>                :            :      */</a>
-<a name="318"><span class="lineNum">     318 </span>                :<span class="lineCov">         15 :     function isWhitelisted(address targetAddress) public view returns (bool) {</span></a>
-<a name="319"><span class="lineNum">     319 </span>                :<span class="lineCov">         15 :         return _isWhitelisted(targetAddress);</span></a>
-<a name="320"><span class="lineNum">     320 </span>                :            :     }</a>
-<a name="321"><span class="lineNum">     321 </span>                :            : </a>
-<a name="322"><span class="lineNum">     322 </span>                :            :     /**</a>
-<a name="323"><span class="lineNum">     323 </span>                :            :      * @notice ERC-2980 getter: returns true if the address is whitelisted.</a>
-<a name="324"><span class="lineNum">     324 </span>                :            :      * @param _operator Address to check.</a>
-<a name="325"><span class="lineNum">     325 </span>                :            :      * @return True if the address is whitelisted.</a>
-<a name="326"><span class="lineNum">     326 </span>                :            :      */</a>
-<a name="327"><span class="lineNum">     327 </span>                :<span class="lineCov">         11 :     function whitelist(address _operator) public view virtual override(IERC2980) returns (bool) {</span></a>
-<a name="328"><span class="lineNum">     328 </span>                :<span class="lineCov">         11 :         return _isWhitelisted(_operator);</span></a>
-<a name="329"><span class="lineNum">     329 </span>                :            :     }</a>
-<a name="330"><span class="lineNum">     330 </span>                :            : </a>
-<a name="331"><span class="lineNum">     331 </span>                :            :     /**</a>
-<a name="332"><span class="lineNum">     332 </span>                :            :      * @notice Returns true if the address is whitelisted (identity-verified).</a>
-<a name="333"><span class="lineNum">     333 </span>                :            :      * @dev Reflects whitelist membership only. Frozen status is intentionally excluded:</a>
-<a name="334"><span class="lineNum">     334 </span>                :            :      * freezing is a temporary enforcement action and does not revoke identity verification.</a>
-<a name="335"><span class="lineNum">     335 </span>                :            :      * @param targetAddress Address to check.</a>
-<a name="336"><span class="lineNum">     336 </span>                :            :      * @return True if the address is whitelisted.</a>
-<a name="337"><span class="lineNum">     337 </span>                :            :      */</a>
-<a name="338"><span class="lineNum">     338 </span>                :<span class="lineCov">          5 :     function isVerified(address targetAddress) public view virtual override(IIdentityRegistryVerified) returns (bool) {</span></a>
-<a name="339"><span class="lineNum">     339 </span>                :<span class="lineCov">          5 :         return _isWhitelisted(targetAddress);</span></a>
-<a name="340"><span class="lineNum">     340 </span>                :            :     }</a>
-<a name="341"><span class="lineNum">     341 </span>                :            : </a>
-<a name="342"><span class="lineNum">     342 </span>                :            :     /**</a>
-<a name="343"><span class="lineNum">     343 </span>                :            :      * @notice Checks multiple addresses for whitelist membership.</a>
-<a name="344"><span class="lineNum">     344 </span>                :            :      * @param targetAddresses Addresses to check.</a>
-<a name="345"><span class="lineNum">     345 </span>                :            :      * @return results Array of booleans, true where the corresponding address is whitelisted.</a>
-<a name="346"><span class="lineNum">     346 </span>                :            :      */</a>
-<a name="347"><span class="lineNum">     347 </span>                :<span class="lineCov">          1 :     function areWhitelisted(address[] memory targetAddresses) public view returns (bool[] memory results) {</span></a>
-<a name="348"><span class="lineNum">     348 </span>                :<span class="lineCov">          1 :         results = new bool[](targetAddresses.length);</span></a>
-<a name="349"><span class="lineNum">     349 </span>                :<span class="lineCov">          1 :         for (uint256 i = 0; i &lt; targetAddresses.length; ++i) {</span></a>
-<a name="350"><span class="lineNum">     350 </span>                :<span class="lineCov">          2 :             results[i] = _isWhitelisted(targetAddresses[i]);</span></a>
-<a name="351"><span class="lineNum">     351 </span>                :            :         }</a>
-<a name="352"><span class="lineNum">     352 </span>                :            :     }</a>
-<a name="353"><span class="lineNum">     353 </span>                :            : </a>
-<a name="354"><span class="lineNum">     354 </span>                :            :     /**</a>
-<a name="355"><span class="lineNum">     355 </span>                :            :      * @notice Returns the number of frozen addresses.</a>
-<a name="356"><span class="lineNum">     356 </span>                :            :      * @return The count of addresses currently in the frozenlist.</a>
-<a name="357"><span class="lineNum">     357 </span>                :            :      */</a>
-<a name="358"><span class="lineNum">     358 </span>                :<span class="lineCov">          4 :     function frozenlistAddressCount() public view returns (uint256) {</span></a>
-<a name="359"><span class="lineNum">     359 </span>                :<span class="lineCov">          4 :         return _frozenlistCount();</span></a>
-<a name="360"><span class="lineNum">     360 </span>                :            :     }</a>
-<a name="361"><span class="lineNum">     361 </span>                :            : </a>
-<a name="362"><span class="lineNum">     362 </span>                :            :     /**</a>
-<a name="363"><span class="lineNum">     363 </span>                :            :      * @notice Returns true if the address is in the frozenlist.</a>
-<a name="364"><span class="lineNum">     364 </span>                :            :      * @param targetAddress Address to check.</a>
-<a name="365"><span class="lineNum">     365 </span>                :            :      * @return True if the address is frozen.</a>
-<a name="366"><span class="lineNum">     366 </span>                :            :      */</a>
-<a name="367"><span class="lineNum">     367 </span>                :<span class="lineCov">         12 :     function isFrozen(address targetAddress) public view returns (bool) {</span></a>
-<a name="368"><span class="lineNum">     368 </span>                :<span class="lineCov">         12 :         return _isFrozen(targetAddress);</span></a>
-<a name="369"><span class="lineNum">     369 </span>                :            :     }</a>
-<a name="370"><span class="lineNum">     370 </span>                :            : </a>
-<a name="371"><span class="lineNum">     371 </span>                :            :     /**</a>
-<a name="372"><span class="lineNum">     372 </span>                :            :      * @notice ERC-2980 getter: returns true if the address is frozen.</a>
-<a name="373"><span class="lineNum">     373 </span>                :            :      * @param _operator Address to check.</a>
-<a name="374"><span class="lineNum">     374 </span>                :            :      * @return True if the address is frozen.</a>
-<a name="375"><span class="lineNum">     375 </span>                :            :      */</a>
-<a name="376"><span class="lineNum">     376 </span>                :<span class="lineCov">          7 :     function frozenlist(address _operator) public view virtual override(IERC2980) returns (bool) {</span></a>
-<a name="377"><span class="lineNum">     377 </span>                :<span class="lineCov">          7 :         return _isFrozen(_operator);</span></a>
-<a name="378"><span class="lineNum">     378 </span>                :            :     }</a>
-<a name="379"><span class="lineNum">     379 </span>                :            : </a>
-<a name="380"><span class="lineNum">     380 </span>                :            :     /**</a>
-<a name="381"><span class="lineNum">     381 </span>                :            :      * @notice Checks multiple addresses for frozenlist membership.</a>
-<a name="382"><span class="lineNum">     382 </span>                :            :      * @param targetAddresses Addresses to check.</a>
-<a name="383"><span class="lineNum">     383 </span>                :            :      * @return results Array of booleans, true where the corresponding address is frozen.</a>
-<a name="384"><span class="lineNum">     384 </span>                :            :      */</a>
-<a name="385"><span class="lineNum">     385 </span>                :<span class="lineCov">          1 :     function areFrozen(address[] memory targetAddresses) public view returns (bool[] memory results) {</span></a>
-<a name="386"><span class="lineNum">     386 </span>                :<span class="lineCov">          1 :         results = new bool[](targetAddresses.length);</span></a>
-<a name="387"><span class="lineNum">     387 </span>                :<span class="lineCov">          1 :         for (uint256 i = 0; i &lt; targetAddresses.length; ++i) {</span></a>
-<a name="388"><span class="lineNum">     388 </span>                :<span class="lineCov">          2 :             results[i] = _isFrozen(targetAddresses[i]);</span></a>
-<a name="389"><span class="lineNum">     389 </span>                :            :         }</a>
-<a name="390"><span class="lineNum">     390 </span>                :            :     }</a>
-<a name="391"><span class="lineNum">     391 </span>                :            : </a>
-<a name="392"><span class="lineNum">     392 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
-<a name="393"><span class="lineNum">     393 </span>                :            :                         INTERNAL FUNCTIONS</a>
-<a name="394"><span class="lineNum">     394 </span>                :            :     //////////////////////////////////////////////////////////////*/</a>
-<a name="395"><span class="lineNum">     395 </span>                :            : </a>
-<a name="396"><span class="lineNum">     396 </span>                :            :     /**</a>
-<a name="397"><span class="lineNum">     397 </span>                :            :      * @notice Authorization hook invoked before toggling `allowMint` / `allowBurn`.</a>
-<a name="398"><span class="lineNum">     398 </span>                :            :      */</a>
-<a name="399"><span class="lineNum">     399 </span>                :<span class="lineNoCov">          0 :     function _authorizeMintBurnManager() internal view virtual;</span></a>
-<a name="400"><span class="lineNum">     400 </span>                :            : </a>
-<a name="401"><span class="lineNum">     401 </span>                :            :     /**</a>
-<a name="402"><span class="lineNum">     402 </span>                :            :      * @notice Authorization hook invoked before adding addresses to the whitelist.</a>
-<a name="403"><span class="lineNum">     403 </span>                :            :      */</a>
-<a name="404"><span class="lineNum">     404 </span>                :<span class="lineNoCov">          0 :     function _authorizeWhitelistAdd() internal view virtual;</span></a>
-<a name="405"><span class="lineNum">     405 </span>                :            :     /**</a>
-<a name="406"><span class="lineNum">     406 </span>                :            :      * @notice Authorization hook invoked before removing addresses from the whitelist.</a>
-<a name="407"><span class="lineNum">     407 </span>                :            :      */</a>
-<a name="408"><span class="lineNum">     408 </span>                :<span class="lineNoCov">          0 :     function _authorizeWhitelistRemove() internal view virtual;</span></a>
-<a name="409"><span class="lineNum">     409 </span>                :            :     /**</a>
-<a name="410"><span class="lineNum">     410 </span>                :            :      * @notice Authorization hook invoked before adding addresses to the frozenlist.</a>
-<a name="411"><span class="lineNum">     411 </span>                :            :      */</a>
-<a name="412"><span class="lineNum">     412 </span>                :<span class="lineNoCov">          0 :     function _authorizeFrozenlistAdd() internal view virtual;</span></a>
-<a name="413"><span class="lineNum">     413 </span>                :            :     /**</a>
-<a name="414"><span class="lineNum">     414 </span>                :            :      * @notice Authorization hook invoked before removing addresses from the frozenlist.</a>
-<a name="415"><span class="lineNum">     415 </span>                :            :      */</a>
-<a name="416"><span class="lineNum">     416 </span>                :<span class="lineNoCov">          0 :     function _authorizeFrozenlistRemove() internal view virtual;</span></a>
-<a name="417"><span class="lineNum">     417 </span>                :            : </a>
-<a name="418"><span class="lineNum">     418 </span>                :            :     /**</a>
-<a name="419"><span class="lineNum">     419 </span>                :            :      * @inheritdoc RuleTransferValidation</a>
-<a name="420"><span class="lineNum">     420 </span>                :            :      */</a>
-<a name="421"><span class="lineNum">     421 </span>                :<span class="lineCov">         62 :     function _detectTransferRestriction(</span></a>
-<a name="422"><span class="lineNum">     422 </span>                :            :         address from,</a>
-<a name="423"><span class="lineNum">     423 </span>                :            :         address to,</a>
-<a name="424"><span class="lineNum">     424 </span>                :            :         uint256 /* value */</a>
-<a name="425"><span class="lineNum">     425 </span>                :            :     )</a>
-<a name="426"><span class="lineNum">     426 </span>                :            :         internal</a>
-<a name="427"><span class="lineNum">     427 </span>                :            :         view</a>
-<a name="428"><span class="lineNum">     428 </span>                :            :         virtual</a>
-<a name="429"><span class="lineNum">     429 </span>                :            :         override</a>
-<a name="430"><span class="lineNum">     430 </span>                :            :         returns (uint8)</a>
-<a name="431"><span class="lineNum">     431 </span>                :            :     {</a>
-<a name="432"><span class="lineNum">     432 </span>                :<span class="lineCov">         62 :         bool isMint = from == address(0);</span></a>
-<a name="433"><span class="lineNum">     433 </span>                :<span class="lineCov">         62 :         bool isBurn = to == address(0);</span></a>
-<a name="434"><span class="lineNum">     434 </span>                :            : </a>
-<a name="435"><span class="lineNum">     435 </span>                :            :         // Gate the mint/burn OPERATION explicitly, rather than by whitelisting the zero address.</a>
-<a name="436"><span class="lineNum">     436 </span>           [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span>]:<span class="lineCov">         62 :         if (isMint &amp;&amp; !allowMint) {</span></a>
-<a name="437"><span class="lineNum">     437 </span>                :<span class="lineCov">          1 :             return CODE_MINT_NOT_ALLOWED;</span></a>
-<a name="438"><span class="lineNum">     438 </span>                :            :         }</a>
-<a name="439"><span class="lineNum">     439 </span>           [<span class="branchCov" title="Branch 0 was taken 2 times"> + </span>]:<span class="lineCov">         61 :         if (isBurn &amp;&amp; !allowBurn) {</span></a>
-<a name="440"><span class="lineNum">     440 </span>                :<span class="lineCov">          2 :             return CODE_BURN_NOT_ALLOWED;</span></a>
-<a name="441"><span class="lineNum">     441 </span>                :            :         }</a>
-<a name="442"><span class="lineNum">     442 </span>                :            : </a>
-<a name="443"><span class="lineNum">     443 </span>                :            :         // Frozenlist check has priority — but only for REAL participants.</a>
-<a name="444"><span class="lineNum">     444 </span>           [<span class="branchCov" title="Branch 0 was taken 20 times"> + </span>]:<span class="lineCov">         59 :         if (!isMint &amp;&amp; _isFrozen(from)) {</span></a>
-<a name="445"><span class="lineNum">     445 </span>                :<span class="lineCov">         20 :             return CODE_ADDRESS_FROM_IS_FROZEN;</span></a>
-<a name="446"><span class="lineNum">     446 </span>                :            :         }</a>
-<a name="447"><span class="lineNum">     447 </span>           [<span class="branchCov" title="Branch 0 was taken 4 times"> + </span>]:<span class="lineCov">         39 :         if (!isBurn &amp;&amp; _isFrozen(to)) {</span></a>
-<a name="448"><span class="lineNum">     448 </span>                :<span class="lineCov">          4 :             return CODE_ADDRESS_TO_IS_FROZEN;</span></a>
-<a name="449"><span class="lineNum">     449 </span>                :            :         }</a>
-<a name="450"><span class="lineNum">     450 </span>                :            :         // Whitelist check: only the recipient must be whitelisted (ERC-2980); no recipient on a burn.</a>
-<a name="451"><span class="lineNum">     451 </span>           [<span class="branchCov" title="Branch 0 was taken 5 times"> + </span>]:<span class="lineCov">         35 :         if (!isBurn &amp;&amp; !_isWhitelisted(to)) {</span></a>
-<a name="452"><span class="lineNum">     452 </span>                :<span class="lineCov">          5 :             return CODE_ADDRESS_TO_NOT_WHITELISTED;</span></a>
-<a name="453"><span class="lineNum">     453 </span>                :            :         }</a>
-<a name="454"><span class="lineNum">     454 </span>                :<span class="lineCov">         30 :         return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
-<a name="455"><span class="lineNum">     455 </span>                :            :     }</a>
-<a name="456"><span class="lineNum">     456 </span>                :            : </a>
-<a name="457"><span class="lineNum">     457 </span>                :            :     /**</a>
-<a name="458"><span class="lineNum">     458 </span>                :            :      * @inheritdoc RuleTransferValidation</a>
-<a name="459"><span class="lineNum">     459 </span>                :            :      */</a>
-<a name="460"><span class="lineNum">     460 </span>                :<span class="lineCov">         24 :     function _detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)</span></a>
-<a name="461"><span class="lineNum">     461 </span>                :            :         internal</a>
-<a name="462"><span class="lineNum">     462 </span>                :            :         view</a>
-<a name="463"><span class="lineNum">     463 </span>                :            :         virtual</a>
-<a name="464"><span class="lineNum">     464 </span>                :            :         override</a>
-<a name="465"><span class="lineNum">     465 </span>                :            :         returns (uint8)</a>
-<a name="466"><span class="lineNum">     466 </span>                :            :     {</a>
-<a name="467"><span class="lineNum">     467 </span>           [<span class="branchCov" title="Branch 0 was taken 4 times"> + </span>]:<span class="lineCov">         24 :         if (_isFrozen(spender)) {</span></a>
-<a name="468"><span class="lineNum">     468 </span>                :<span class="lineCov">          4 :             return CODE_ADDRESS_SPENDER_IS_FROZEN;</span></a>
-<a name="469"><span class="lineNum">     469 </span>                :            :         }</a>
-<a name="470"><span class="lineNum">     470 </span>                :<span class="lineCov">         20 :         return _detectTransferRestriction(from, to, value);</span></a>
-<a name="471"><span class="lineNum">     471 </span>                :            :     }</a>
-<a name="472"><span class="lineNum">     472 </span>                :            : </a>
-<a name="473"><span class="lineNum">     473 </span>                :            :     /**</a>
-<a name="474"><span class="lineNum">     474 </span>                :            :      * @inheritdoc RuleNFTAdapter</a>
-<a name="475"><span class="lineNum">     475 </span>                :            :      */</a>
-<a name="476"><span class="lineNum">     476 </span>                :<span class="lineCov">         13 :     function _transferred(address from, address to, uint256 value) internal view virtual override {</span></a>
-<a name="477"><span class="lineNum">     477 </span>                :<span class="lineCov">         13 :         uint8 code = _detectTransferRestriction(from, to, value);</span></a>
-<a name="478"><span class="lineNum">     478 </span>        [<span class="branchCov" title="Branch 0 was taken 7 times"> + </span><span class="branchCov" title="Branch 1 was taken 6 times"> + </span>]:<span class="lineCov">         13 :         require(</span></a>
-<a name="479"><span class="lineNum">     479 </span>                :            :             code == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK),</a>
-<a name="480"><span class="lineNum">     480 </span>                :            :             RuleERC2980_InvalidTransfer(address(this), from, to, value, code)</a>
-<a name="481"><span class="lineNum">     481 </span>                :            :         );</a>
-<a name="482"><span class="lineNum">     482 </span>                :            :     }</a>
-<a name="483"><span class="lineNum">     483 </span>                :            : </a>
-<a name="484"><span class="lineNum">     484 </span>                :            :     /**</a>
-<a name="485"><span class="lineNum">     485 </span>                :            :      * @inheritdoc RuleNFTAdapter</a>
-<a name="486"><span class="lineNum">     486 </span>                :            :      */</a>
-<a name="487"><span class="lineNum">     487 </span>                :<span class="lineCov">         11 :     function _transferredFrom(address spender, address from, address to, uint256 value) internal view virtual override {</span></a>
-<a name="488"><span class="lineNum">     488 </span>                :<span class="lineCov">         11 :         uint8 code = _detectTransferRestrictionFrom(spender, from, to, value);</span></a>
-<a name="489"><span class="lineNum">     489 </span>        [<span class="branchCov" title="Branch 0 was taken 5 times"> + </span><span class="branchCov" title="Branch 1 was taken 6 times"> + </span>]:<span class="lineCov">         11 :         require(</span></a>
-<a name="490"><span class="lineNum">     490 </span>                :            :             code == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK),</a>
-<a name="491"><span class="lineNum">     491 </span>                :            :             RuleERC2980_InvalidTransferFrom(address(this), spender, from, to, value, code)</a>
-<a name="492"><span class="lineNum">     492 </span>                :            :         );</a>
-<a name="493"><span class="lineNum">     493 </span>                :            :     }</a>
-<a name="494"><span class="lineNum">     494 </span>                :            : </a>
-<a name="495"><span class="lineNum">     495 </span>                :            :     /**</a>
-<a name="496"><span class="lineNum">     496 </span>                :            :      * @inheritdoc ERC2771Context</a>
-<a name="497"><span class="lineNum">     497 </span>                :            :      */</a>
-<a name="498"><span class="lineNum">     498 </span>                :<span class="lineCov">        293 :     function _msgSender() internal view virtual override(ERC2771Context) returns (address sender) {</span></a>
-<a name="499"><span class="lineNum">     499 </span>                :<span class="lineCov">        293 :         return ERC2771Context._msgSender();</span></a>
-<a name="500"><span class="lineNum">     500 </span>                :            :     }</a>
-<a name="501"><span class="lineNum">     501 </span>                :            : </a>
-<a name="502"><span class="lineNum">     502 </span>                :            :     /**</a>
-<a name="503"><span class="lineNum">     503 </span>                :            :      * @inheritdoc ERC2771Context</a>
-<a name="504"><span class="lineNum">     504 </span>                :            :      */</a>
-<a name="505"><span class="lineNum">     505 </span>                :<span class="lineCov">          2 :     function _msgData() internal view virtual override(ERC2771Context) returns (bytes calldata) {</span></a>
-<a name="506"><span class="lineNum">     506 </span>                :<span class="lineCov">          2 :         return ERC2771Context._msgData();</span></a>
-<a name="507"><span class="lineNum">     507 </span>                :            :     }</a>
-<a name="508"><span class="lineNum">     508 </span>                :            : </a>
-<a name="509"><span class="lineNum">     509 </span>                :            :     /**</a>
-<a name="510"><span class="lineNum">     510 </span>                :            :      * @inheritdoc ERC2771Context</a>
-<a name="511"><span class="lineNum">     511 </span>                :            :      */</a>
-<a name="512"><span class="lineNum">     512 </span>                :<span class="lineCov">        295 :     function _contextSuffixLength() internal view virtual override(ERC2771Context) returns (uint256) {</span></a>
-<a name="513"><span class="lineNum">     513 </span>                :<span class="lineCov">        295 :         return ERC2771Context._contextSuffixLength();</span></a>
-<a name="514"><span class="lineNum">     514 </span>                :            :     }</a>
-<a name="515"><span class="lineNum">     515 </span>                :            : }</a>
+<a name="188"><span class="lineNum">     188 </span>                :<span class="lineCov">         26 :     function addFrozenlistAddress(address targetAddress) public virtual onlyFrozenlistAdd {</span></a>
+<a name="189"><span class="lineNum">     189 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 22 times"> + </span>]:<span class="lineCov">         23 :         require(targetAddress != address(0), RuleERC2980_ZeroAddressNotAllowed());</span></a>
+<a name="190"><span class="lineNum">     190 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 21 times"> + </span>]:<span class="lineCov">         22 :         require(_addFrozenlistAddress(targetAddress), RuleERC2980_AddressAlreadyFrozen());</span></a>
+<a name="191"><span class="lineNum">     191 </span>                :<span class="lineCov">         21 :         emit AddFrozenlistAddress(targetAddress);</span></a>
+<a name="192"><span class="lineNum">     192 </span>                :            :     }</a>
+<a name="193"><span class="lineNum">     193 </span>                :            : </a>
+<a name="194"><span class="lineNum">     194 </span>                :            :     /**</a>
+<a name="195"><span class="lineNum">     195 </span>                :            :      * @notice Removes a single address from the frozenlist.</a>
+<a name="196"><span class="lineNum">     196 </span>                :            :      * @dev</a>
+<a name="197"><span class="lineNum">     197 </span>                :            :      * Reverts if the address is not listed.</a>
+<a name="198"><span class="lineNum">     198 </span>                :            :      * Deviation from ERC-2980 `Freezable` example interface: the spec's `removeAddressFromFrozenlist`</a>
+<a name="199"><span class="lineNum">     199 </span>                :            :      * returns `false` when not found instead of reverting. This implementation follows the codebase</a>
+<a name="200"><span class="lineNum">     200 </span>                :            :      * convention of reverting on invalid single-item operations.</a>
+<a name="201"><span class="lineNum">     201 </span>                :            :      * @param targetAddress Address to remove from the frozenlist.</a>
+<a name="202"><span class="lineNum">     202 </span>                :            :      */</a>
+<a name="203"><span class="lineNum">     203 </span>                :<span class="lineCov">          7 :     function removeFrozenlistAddress(address targetAddress) public virtual onlyFrozenlistRemove {</span></a>
+<a name="204"><span class="lineNum">     204 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 4 times"> + </span>]:<span class="lineCov">          5 :         require(_removeFrozenlistAddress(targetAddress), RuleERC2980_AddressNotFrozen());</span></a>
+<a name="205"><span class="lineNum">     205 </span>                :<span class="lineCov">          4 :         emit RemoveFrozenlistAddress(targetAddress);</span></a>
+<a name="206"><span class="lineNum">     206 </span>                :            :     }</a>
+<a name="207"><span class="lineNum">     207 </span>                :            : </a>
+<a name="208"><span class="lineNum">     208 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
+<a name="209"><span class="lineNum">     209 </span>                :            :                         PUBLIC FUNCTIONS</a>
+<a name="210"><span class="lineNum">     210 </span>                :            :     //////////////////////////////////////////////////////////////*/</a>
+<a name="211"><span class="lineNum">     211 </span>                :            : </a>
+<a name="212"><span class="lineNum">     212 </span>                :            :     /**</a>
+<a name="213"><span class="lineNum">     213 </span>                :            :      * @notice Enables or disables minting through this rule.</a>
+<a name="214"><span class="lineNum">     214 </span>                :            :      * @param value The new value of the `allowMint` flag.</a>
+<a name="215"><span class="lineNum">     215 </span>                :            :      */</a>
+<a name="216"><span class="lineNum">     216 </span>                :<span class="lineCov">          5 :     function setAllowMint(bool value) public virtual onlyMintBurnManager {</span></a>
+<a name="217"><span class="lineNum">     217 </span>                :<span class="lineCov">          3 :         allowMint = value;</span></a>
+<a name="218"><span class="lineNum">     218 </span>                :<span class="lineCov">          3 :         emit AllowMintUpdated(value);</span></a>
+<a name="219"><span class="lineNum">     219 </span>                :            :     }</a>
+<a name="220"><span class="lineNum">     220 </span>                :            : </a>
+<a name="221"><span class="lineNum">     221 </span>                :            :     /**</a>
+<a name="222"><span class="lineNum">     222 </span>                :            :      * @notice Enables or disables burning through this rule.</a>
+<a name="223"><span class="lineNum">     223 </span>                :            :      * @param value The new value of the `allowBurn` flag.</a>
+<a name="224"><span class="lineNum">     224 </span>                :            :      */</a>
+<a name="225"><span class="lineNum">     225 </span>                :<span class="lineCov">          3 :     function setAllowBurn(bool value) public virtual onlyMintBurnManager {</span></a>
+<a name="226"><span class="lineNum">     226 </span>                :<span class="lineCov">          2 :         allowBurn = value;</span></a>
+<a name="227"><span class="lineNum">     227 </span>                :<span class="lineCov">          2 :         emit AllowBurnUpdated(value);</span></a>
+<a name="228"><span class="lineNum">     228 </span>                :            :     }</a>
+<a name="229"><span class="lineNum">     229 </span>                :            : </a>
+<a name="230"><span class="lineNum">     230 </span>                :            :     /**</a>
+<a name="231"><span class="lineNum">     231 </span>                :            :      * @inheritdoc IERC3643IComplianceContract</a>
+<a name="232"><span class="lineNum">     232 </span>                :            :      */</a>
+<a name="233"><span class="lineNum">     233 </span>                :<span class="lineCov">          8 :     function transferred(address from, address to, uint256 value)</span></a>
+<a name="234"><span class="lineNum">     234 </span>                :            :         public</a>
+<a name="235"><span class="lineNum">     235 </span>                :            :         view</a>
+<a name="236"><span class="lineNum">     236 </span>                :            :         virtual</a>
+<a name="237"><span class="lineNum">     237 </span>                :            :         override(IERC3643IComplianceContract)</a>
+<a name="238"><span class="lineNum">     238 </span>                :            :     {</a>
+<a name="239"><span class="lineNum">     239 </span>                :<span class="lineCov">          8 :         _transferred(from, to, value);</span></a>
+<a name="240"><span class="lineNum">     240 </span>                :            :     }</a>
+<a name="241"><span class="lineNum">     241 </span>                :            : </a>
+<a name="242"><span class="lineNum">     242 </span>                :            :     /**</a>
+<a name="243"><span class="lineNum">     243 </span>                :            :      * @inheritdoc IRuleEngine</a>
+<a name="244"><span class="lineNum">     244 </span>                :            :      */</a>
+<a name="245"><span class="lineNum">     245 </span>                :<span class="lineCov">          4 :     function transferred(address spender, address from, address to, uint256 value)</span></a>
+<a name="246"><span class="lineNum">     246 </span>                :            :         public</a>
+<a name="247"><span class="lineNum">     247 </span>                :            :         view</a>
+<a name="248"><span class="lineNum">     248 </span>                :            :         virtual</a>
+<a name="249"><span class="lineNum">     249 </span>                :            :         override(IRuleEngine)</a>
+<a name="250"><span class="lineNum">     250 </span>                :            :     {</a>
+<a name="251"><span class="lineNum">     251 </span>                :<span class="lineCov">          4 :         _transferredFrom(spender, from, to, value);</span></a>
+<a name="252"><span class="lineNum">     252 </span>                :            :     }</a>
+<a name="253"><span class="lineNum">     253 </span>                :            : </a>
+<a name="254"><span class="lineNum">     254 </span>                :            :     /**</a>
+<a name="255"><span class="lineNum">     255 </span>                :            :      * @inheritdoc IRule</a>
+<a name="256"><span class="lineNum">     256 </span>                :            :      */</a>
+<a name="257"><span class="lineNum">     257 </span>                :<span class="lineCov">          5 :     function canReturnTransferRestrictionCode(uint8 restrictionCode)</span></a>
+<a name="258"><span class="lineNum">     258 </span>                :            :         public</a>
+<a name="259"><span class="lineNum">     259 </span>                :            :         pure</a>
+<a name="260"><span class="lineNum">     260 </span>                :            :         virtual</a>
+<a name="261"><span class="lineNum">     261 </span>                :            :         override(IRule)</a>
+<a name="262"><span class="lineNum">     262 </span>                :            :         returns (bool)</a>
+<a name="263"><span class="lineNum">     263 </span>                :            :     {</a>
+<a name="264"><span class="lineNum">     264 </span>                :<span class="lineCov">          5 :         return restrictionCode == CODE_ADDRESS_FROM_IS_FROZEN || restrictionCode == CODE_ADDRESS_TO_IS_FROZEN</span></a>
+<a name="265"><span class="lineNum">     265 </span>                :<span class="lineCov">          3 :             || restrictionCode == CODE_ADDRESS_SPENDER_IS_FROZEN || restrictionCode == CODE_ADDRESS_TO_NOT_WHITELISTED</span></a>
+<a name="266"><span class="lineNum">     266 </span>                :<span class="lineCov">          1 :             || restrictionCode == CODE_MINT_NOT_ALLOWED || restrictionCode == CODE_BURN_NOT_ALLOWED;</span></a>
+<a name="267"><span class="lineNum">     267 </span>                :            :     }</a>
+<a name="268"><span class="lineNum">     268 </span>                :            : </a>
+<a name="269"><span class="lineNum">     269 </span>                :            :     /**</a>
+<a name="270"><span class="lineNum">     270 </span>                :            :      * @inheritdoc IERC1404</a>
+<a name="271"><span class="lineNum">     271 </span>                :            :      */</a>
+<a name="272"><span class="lineNum">     272 </span>                :<span class="lineCov">          7 :     function messageForTransferRestriction(uint8 restrictionCode)</span></a>
+<a name="273"><span class="lineNum">     273 </span>                :            :         public</a>
+<a name="274"><span class="lineNum">     274 </span>                :            :         pure</a>
+<a name="275"><span class="lineNum">     275 </span>                :            :         virtual</a>
+<a name="276"><span class="lineNum">     276 </span>                :            :         override(IERC1404)</a>
+<a name="277"><span class="lineNum">     277 </span>                :            :         returns (string memory)</a>
+<a name="278"><span class="lineNum">     278 </span>                :            :     {</a>
+<a name="279"><span class="lineNum">     279 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          7 :         if (restrictionCode == CODE_ADDRESS_FROM_IS_FROZEN) {</span></a>
+<a name="280"><span class="lineNum">     280 </span>                :<span class="lineCov">          1 :             return TEXT_ADDRESS_FROM_IS_FROZEN;</span></a>
+<a name="281"><span class="lineNum">     281 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          6 :         } else if (restrictionCode == CODE_ADDRESS_TO_IS_FROZEN) {</span></a>
+<a name="282"><span class="lineNum">     282 </span>                :<span class="lineCov">          1 :             return TEXT_ADDRESS_TO_IS_FROZEN;</span></a>
+<a name="283"><span class="lineNum">     283 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          5 :         } else if (restrictionCode == CODE_ADDRESS_SPENDER_IS_FROZEN) {</span></a>
+<a name="284"><span class="lineNum">     284 </span>                :<span class="lineCov">          1 :             return TEXT_ADDRESS_SPENDER_IS_FROZEN;</span></a>
+<a name="285"><span class="lineNum">     285 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          4 :         } else if (restrictionCode == CODE_ADDRESS_TO_NOT_WHITELISTED) {</span></a>
+<a name="286"><span class="lineNum">     286 </span>                :<span class="lineCov">          1 :             return TEXT_ADDRESS_TO_NOT_WHITELISTED;</span></a>
+<a name="287"><span class="lineNum">     287 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          3 :         } else if (restrictionCode == CODE_MINT_NOT_ALLOWED) {</span></a>
+<a name="288"><span class="lineNum">     288 </span>                :<span class="lineCov">          1 :             return TEXT_MINT_NOT_ALLOWED;</span></a>
+<a name="289"><span class="lineNum">     289 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          2 :         } else if (restrictionCode == CODE_BURN_NOT_ALLOWED) {</span></a>
+<a name="290"><span class="lineNum">     290 </span>                :<span class="lineCov">          1 :             return TEXT_BURN_NOT_ALLOWED;</span></a>
+<a name="291"><span class="lineNum">     291 </span>                :            :         } else {</a>
+<a name="292"><span class="lineNum">     292 </span>                :<span class="lineCov">          1 :             return TEXT_CODE_NOT_FOUND;</span></a>
+<a name="293"><span class="lineNum">     293 </span>                :            :         }</a>
+<a name="294"><span class="lineNum">     294 </span>                :            :     }</a>
+<a name="295"><span class="lineNum">     295 </span>                :            : </a>
+<a name="296"><span class="lineNum">     296 </span>                :            :     /**</a>
+<a name="297"><span class="lineNum">     297 </span>                :            :      * @inheritdoc RuleTransferValidation</a>
+<a name="298"><span class="lineNum">     298 </span>                :            :      */</a>
+<a name="299"><span class="lineNum">     299 </span>                :<span class="lineCov">          3 :     function supportsInterface(bytes4 interfaceId) public view virtual override(RuleTransferValidation) returns (bool) {</span></a>
+<a name="300"><span class="lineNum">     300 </span>                :<span class="lineCov">          3 :         return RuleTransferValidation.supportsInterface(interfaceId);</span></a>
+<a name="301"><span class="lineNum">     301 </span>                :            :     }</a>
+<a name="302"><span class="lineNum">     302 </span>                :            : </a>
+<a name="303"><span class="lineNum">     303 </span>                :            :     /**</a>
+<a name="304"><span class="lineNum">     304 </span>                :            :      * @notice Returns the number of whitelisted addresses.</a>
+<a name="305"><span class="lineNum">     305 </span>                :            :      * @return The count of addresses currently in the whitelist.</a>
+<a name="306"><span class="lineNum">     306 </span>                :            :      */</a>
+<a name="307"><span class="lineNum">     307 </span>                :<span class="lineCov">          5 :     function whitelistAddressCount() public view returns (uint256) {</span></a>
+<a name="308"><span class="lineNum">     308 </span>                :<span class="lineCov">          5 :         return _whitelistCount();</span></a>
+<a name="309"><span class="lineNum">     309 </span>                :            :     }</a>
+<a name="310"><span class="lineNum">     310 </span>                :            : </a>
+<a name="311"><span class="lineNum">     311 </span>                :            :     /**</a>
+<a name="312"><span class="lineNum">     312 </span>                :            :      * @notice Returns true if the address is in the whitelist.</a>
+<a name="313"><span class="lineNum">     313 </span>                :            :      * @param targetAddress Address to check.</a>
+<a name="314"><span class="lineNum">     314 </span>                :            :      * @return True if the address is whitelisted.</a>
+<a name="315"><span class="lineNum">     315 </span>                :            :      */</a>
+<a name="316"><span class="lineNum">     316 </span>                :<span class="lineCov">         16 :     function isWhitelisted(address targetAddress) public view returns (bool) {</span></a>
+<a name="317"><span class="lineNum">     317 </span>                :<span class="lineCov">         16 :         return _isWhitelisted(targetAddress);</span></a>
+<a name="318"><span class="lineNum">     318 </span>                :            :     }</a>
+<a name="319"><span class="lineNum">     319 </span>                :            : </a>
+<a name="320"><span class="lineNum">     320 </span>                :            :     /**</a>
+<a name="321"><span class="lineNum">     321 </span>                :            :      * @notice ERC-2980 getter: returns true if the address is whitelisted.</a>
+<a name="322"><span class="lineNum">     322 </span>                :            :      * @param _operator Address to check.</a>
+<a name="323"><span class="lineNum">     323 </span>                :            :      * @return True if the address is whitelisted.</a>
+<a name="324"><span class="lineNum">     324 </span>                :            :      */</a>
+<a name="325"><span class="lineNum">     325 </span>                :<span class="lineCov">         17 :     function whitelist(address _operator) public view virtual override(IERC2980) returns (bool) {</span></a>
+<a name="326"><span class="lineNum">     326 </span>                :<span class="lineCov">         17 :         return _isWhitelisted(_operator);</span></a>
+<a name="327"><span class="lineNum">     327 </span>                :            :     }</a>
+<a name="328"><span class="lineNum">     328 </span>                :            : </a>
+<a name="329"><span class="lineNum">     329 </span>                :            :     /**</a>
+<a name="330"><span class="lineNum">     330 </span>                :            :      * @notice Returns true if the address is whitelisted (identity-verified).</a>
+<a name="331"><span class="lineNum">     331 </span>                :            :      * @dev Reflects whitelist membership only. Frozen status is intentionally excluded:</a>
+<a name="332"><span class="lineNum">     332 </span>                :            :      * freezing is a temporary enforcement action and does not revoke identity verification.</a>
+<a name="333"><span class="lineNum">     333 </span>                :            :      * @param targetAddress Address to check.</a>
+<a name="334"><span class="lineNum">     334 </span>                :            :      * @return True if the address is whitelisted.</a>
+<a name="335"><span class="lineNum">     335 </span>                :            :      */</a>
+<a name="336"><span class="lineNum">     336 </span>                :<span class="lineCov">          5 :     function isVerified(address targetAddress) public view virtual override(IIdentityRegistryVerified) returns (bool) {</span></a>
+<a name="337"><span class="lineNum">     337 </span>                :<span class="lineCov">          5 :         return _isWhitelisted(targetAddress);</span></a>
+<a name="338"><span class="lineNum">     338 </span>                :            :     }</a>
+<a name="339"><span class="lineNum">     339 </span>                :            : </a>
+<a name="340"><span class="lineNum">     340 </span>                :            :     /**</a>
+<a name="341"><span class="lineNum">     341 </span>                :            :      * @notice Checks multiple addresses for whitelist membership.</a>
+<a name="342"><span class="lineNum">     342 </span>                :            :      * @param targetAddresses Addresses to check.</a>
+<a name="343"><span class="lineNum">     343 </span>                :            :      * @return results Array of booleans, true where the corresponding address is whitelisted.</a>
+<a name="344"><span class="lineNum">     344 </span>                :            :      */</a>
+<a name="345"><span class="lineNum">     345 </span>                :<span class="lineCov">          1 :     function areWhitelisted(address[] memory targetAddresses) public view returns (bool[] memory results) {</span></a>
+<a name="346"><span class="lineNum">     346 </span>                :<span class="lineCov">          1 :         results = new bool[](targetAddresses.length);</span></a>
+<a name="347"><span class="lineNum">     347 </span>                :<span class="lineCov">          1 :         for (uint256 i = 0; i &lt; targetAddresses.length; ++i) {</span></a>
+<a name="348"><span class="lineNum">     348 </span>                :<span class="lineCov">          2 :             results[i] = _isWhitelisted(targetAddresses[i]);</span></a>
+<a name="349"><span class="lineNum">     349 </span>                :            :         }</a>
+<a name="350"><span class="lineNum">     350 </span>                :            :     }</a>
+<a name="351"><span class="lineNum">     351 </span>                :            : </a>
+<a name="352"><span class="lineNum">     352 </span>                :            :     /**</a>
+<a name="353"><span class="lineNum">     353 </span>                :            :      * @notice Returns the number of frozen addresses.</a>
+<a name="354"><span class="lineNum">     354 </span>                :            :      * @return The count of addresses currently in the frozenlist.</a>
+<a name="355"><span class="lineNum">     355 </span>                :            :      */</a>
+<a name="356"><span class="lineNum">     356 </span>                :<span class="lineCov">          4 :     function frozenlistAddressCount() public view returns (uint256) {</span></a>
+<a name="357"><span class="lineNum">     357 </span>                :<span class="lineCov">          4 :         return _frozenlistCount();</span></a>
+<a name="358"><span class="lineNum">     358 </span>                :            :     }</a>
+<a name="359"><span class="lineNum">     359 </span>                :            : </a>
+<a name="360"><span class="lineNum">     360 </span>                :            :     /**</a>
+<a name="361"><span class="lineNum">     361 </span>                :            :      * @notice Returns true if the address is in the frozenlist.</a>
+<a name="362"><span class="lineNum">     362 </span>                :            :      * @param targetAddress Address to check.</a>
+<a name="363"><span class="lineNum">     363 </span>                :            :      * @return True if the address is frozen.</a>
+<a name="364"><span class="lineNum">     364 </span>                :            :      */</a>
+<a name="365"><span class="lineNum">     365 </span>                :<span class="lineCov">         12 :     function isFrozen(address targetAddress) public view returns (bool) {</span></a>
+<a name="366"><span class="lineNum">     366 </span>                :<span class="lineCov">         12 :         return _isFrozen(targetAddress);</span></a>
+<a name="367"><span class="lineNum">     367 </span>                :            :     }</a>
+<a name="368"><span class="lineNum">     368 </span>                :            : </a>
+<a name="369"><span class="lineNum">     369 </span>                :            :     /**</a>
+<a name="370"><span class="lineNum">     370 </span>                :            :      * @notice ERC-2980 getter: returns true if the address is frozen.</a>
+<a name="371"><span class="lineNum">     371 </span>                :            :      * @param _operator Address to check.</a>
+<a name="372"><span class="lineNum">     372 </span>                :            :      * @return True if the address is frozen.</a>
+<a name="373"><span class="lineNum">     373 </span>                :            :      */</a>
+<a name="374"><span class="lineNum">     374 </span>                :<span class="lineCov">         10 :     function frozenlist(address _operator) public view virtual override(IERC2980) returns (bool) {</span></a>
+<a name="375"><span class="lineNum">     375 </span>                :<span class="lineCov">         10 :         return _isFrozen(_operator);</span></a>
+<a name="376"><span class="lineNum">     376 </span>                :            :     }</a>
+<a name="377"><span class="lineNum">     377 </span>                :            : </a>
+<a name="378"><span class="lineNum">     378 </span>                :            :     /**</a>
+<a name="379"><span class="lineNum">     379 </span>                :            :      * @notice Checks multiple addresses for frozenlist membership.</a>
+<a name="380"><span class="lineNum">     380 </span>                :            :      * @param targetAddresses Addresses to check.</a>
+<a name="381"><span class="lineNum">     381 </span>                :            :      * @return results Array of booleans, true where the corresponding address is frozen.</a>
+<a name="382"><span class="lineNum">     382 </span>                :            :      */</a>
+<a name="383"><span class="lineNum">     383 </span>                :<span class="lineCov">          1 :     function areFrozen(address[] memory targetAddresses) public view returns (bool[] memory results) {</span></a>
+<a name="384"><span class="lineNum">     384 </span>                :<span class="lineCov">          1 :         results = new bool[](targetAddresses.length);</span></a>
+<a name="385"><span class="lineNum">     385 </span>                :<span class="lineCov">          1 :         for (uint256 i = 0; i &lt; targetAddresses.length; ++i) {</span></a>
+<a name="386"><span class="lineNum">     386 </span>                :<span class="lineCov">          2 :             results[i] = _isFrozen(targetAddresses[i]);</span></a>
+<a name="387"><span class="lineNum">     387 </span>                :            :         }</a>
+<a name="388"><span class="lineNum">     388 </span>                :            :     }</a>
+<a name="389"><span class="lineNum">     389 </span>                :            : </a>
+<a name="390"><span class="lineNum">     390 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
+<a name="391"><span class="lineNum">     391 </span>                :            :                         INTERNAL FUNCTIONS</a>
+<a name="392"><span class="lineNum">     392 </span>                :            :     //////////////////////////////////////////////////////////////*/</a>
+<a name="393"><span class="lineNum">     393 </span>                :            : </a>
+<a name="394"><span class="lineNum">     394 </span>                :            :     /**</a>
+<a name="395"><span class="lineNum">     395 </span>                :            :      * @notice Authorization hook invoked before toggling `allowMint` / `allowBurn`.</a>
+<a name="396"><span class="lineNum">     396 </span>                :            :      */</a>
+<a name="397"><span class="lineNum">     397 </span>                :<span class="lineNoCov">          0 :     function _authorizeMintBurnManager() internal view virtual;</span></a>
+<a name="398"><span class="lineNum">     398 </span>                :            : </a>
+<a name="399"><span class="lineNum">     399 </span>                :            :     /**</a>
+<a name="400"><span class="lineNum">     400 </span>                :            :      * @notice Authorization hook invoked before adding addresses to the whitelist.</a>
+<a name="401"><span class="lineNum">     401 </span>                :            :      */</a>
+<a name="402"><span class="lineNum">     402 </span>                :<span class="lineNoCov">          0 :     function _authorizeWhitelistAdd() internal view virtual;</span></a>
+<a name="403"><span class="lineNum">     403 </span>                :            :     /**</a>
+<a name="404"><span class="lineNum">     404 </span>                :            :      * @notice Authorization hook invoked before removing addresses from the whitelist.</a>
+<a name="405"><span class="lineNum">     405 </span>                :            :      */</a>
+<a name="406"><span class="lineNum">     406 </span>                :<span class="lineNoCov">          0 :     function _authorizeWhitelistRemove() internal view virtual;</span></a>
+<a name="407"><span class="lineNum">     407 </span>                :            :     /**</a>
+<a name="408"><span class="lineNum">     408 </span>                :            :      * @notice Authorization hook invoked before adding addresses to the frozenlist.</a>
+<a name="409"><span class="lineNum">     409 </span>                :            :      */</a>
+<a name="410"><span class="lineNum">     410 </span>                :<span class="lineNoCov">          0 :     function _authorizeFrozenlistAdd() internal view virtual;</span></a>
+<a name="411"><span class="lineNum">     411 </span>                :            :     /**</a>
+<a name="412"><span class="lineNum">     412 </span>                :            :      * @notice Authorization hook invoked before removing addresses from the frozenlist.</a>
+<a name="413"><span class="lineNum">     413 </span>                :            :      */</a>
+<a name="414"><span class="lineNum">     414 </span>                :<span class="lineNoCov">          0 :     function _authorizeFrozenlistRemove() internal view virtual;</span></a>
+<a name="415"><span class="lineNum">     415 </span>                :            : </a>
+<a name="416"><span class="lineNum">     416 </span>                :            :     /**</a>
+<a name="417"><span class="lineNum">     417 </span>                :            :      * @inheritdoc RuleTransferValidation</a>
+<a name="418"><span class="lineNum">     418 </span>                :            :      */</a>
+<a name="419"><span class="lineNum">     419 </span>                :<span class="lineCov">         78 :     function _detectTransferRestriction(</span></a>
+<a name="420"><span class="lineNum">     420 </span>                :            :         address from,</a>
+<a name="421"><span class="lineNum">     421 </span>                :            :         address to,</a>
+<a name="422"><span class="lineNum">     422 </span>                :            :         uint256 /* value */</a>
+<a name="423"><span class="lineNum">     423 </span>                :            :     )</a>
+<a name="424"><span class="lineNum">     424 </span>                :            :         internal</a>
+<a name="425"><span class="lineNum">     425 </span>                :            :         view</a>
+<a name="426"><span class="lineNum">     426 </span>                :            :         virtual</a>
+<a name="427"><span class="lineNum">     427 </span>                :            :         override</a>
+<a name="428"><span class="lineNum">     428 </span>                :            :         returns (uint8)</a>
+<a name="429"><span class="lineNum">     429 </span>                :            :     {</a>
+<a name="430"><span class="lineNum">     430 </span>                :<span class="lineCov">         78 :         bool isMint = from == address(0);</span></a>
+<a name="431"><span class="lineNum">     431 </span>                :<span class="lineCov">         78 :         bool isBurn = to == address(0);</span></a>
+<a name="432"><span class="lineNum">     432 </span>                :            : </a>
+<a name="433"><span class="lineNum">     433 </span>                :            :         // Gate the mint/burn OPERATION explicitly, rather than by whitelisting the zero address.</a>
+<a name="434"><span class="lineNum">     434 </span>           [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span>]:<span class="lineCov">         78 :         if (isMint &amp;&amp; !allowMint) {</span></a>
+<a name="435"><span class="lineNum">     435 </span>                :<span class="lineCov">          1 :             return CODE_MINT_NOT_ALLOWED;</span></a>
+<a name="436"><span class="lineNum">     436 </span>                :            :         }</a>
+<a name="437"><span class="lineNum">     437 </span>           [<span class="branchCov" title="Branch 0 was taken 2 times"> + </span>]:<span class="lineCov">         77 :         if (isBurn &amp;&amp; !allowBurn) {</span></a>
+<a name="438"><span class="lineNum">     438 </span>                :<span class="lineCov">          2 :             return CODE_BURN_NOT_ALLOWED;</span></a>
+<a name="439"><span class="lineNum">     439 </span>                :            :         }</a>
+<a name="440"><span class="lineNum">     440 </span>                :            : </a>
+<a name="441"><span class="lineNum">     441 </span>                :            :         // Frozenlist check has priority — but only for REAL participants.</a>
+<a name="442"><span class="lineNum">     442 </span>           [<span class="branchCov" title="Branch 0 was taken 28 times"> + </span>]:<span class="lineCov">         75 :         if (!isMint &amp;&amp; _isFrozen(from)) {</span></a>
+<a name="443"><span class="lineNum">     443 </span>                :<span class="lineCov">         28 :             return CODE_ADDRESS_FROM_IS_FROZEN;</span></a>
+<a name="444"><span class="lineNum">     444 </span>                :            :         }</a>
+<a name="445"><span class="lineNum">     445 </span>           [<span class="branchCov" title="Branch 0 was taken 4 times"> + </span>]:<span class="lineCov">         47 :         if (!isBurn &amp;&amp; _isFrozen(to)) {</span></a>
+<a name="446"><span class="lineNum">     446 </span>                :<span class="lineCov">          4 :             return CODE_ADDRESS_TO_IS_FROZEN;</span></a>
+<a name="447"><span class="lineNum">     447 </span>                :            :         }</a>
+<a name="448"><span class="lineNum">     448 </span>                :            :         // Whitelist check: only the recipient must be whitelisted (ERC-2980); no recipient on a burn.</a>
+<a name="449"><span class="lineNum">     449 </span>           [<span class="branchCov" title="Branch 0 was taken 5 times"> + </span>]:<span class="lineCov">         43 :         if (!isBurn &amp;&amp; !_isWhitelisted(to)) {</span></a>
+<a name="450"><span class="lineNum">     450 </span>                :<span class="lineCov">          5 :             return CODE_ADDRESS_TO_NOT_WHITELISTED;</span></a>
+<a name="451"><span class="lineNum">     451 </span>                :            :         }</a>
+<a name="452"><span class="lineNum">     452 </span>                :<span class="lineCov">         38 :         return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
+<a name="453"><span class="lineNum">     453 </span>                :            :     }</a>
+<a name="454"><span class="lineNum">     454 </span>                :            : </a>
+<a name="455"><span class="lineNum">     455 </span>                :            :     /**</a>
+<a name="456"><span class="lineNum">     456 </span>                :            :      * @inheritdoc RuleTransferValidation</a>
+<a name="457"><span class="lineNum">     457 </span>                :            :      */</a>
+<a name="458"><span class="lineNum">     458 </span>                :<span class="lineCov">         24 :     function _detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)</span></a>
+<a name="459"><span class="lineNum">     459 </span>                :            :         internal</a>
+<a name="460"><span class="lineNum">     460 </span>                :            :         view</a>
+<a name="461"><span class="lineNum">     461 </span>                :            :         virtual</a>
+<a name="462"><span class="lineNum">     462 </span>                :            :         override</a>
+<a name="463"><span class="lineNum">     463 </span>                :            :         returns (uint8)</a>
+<a name="464"><span class="lineNum">     464 </span>                :            :     {</a>
+<a name="465"><span class="lineNum">     465 </span>           [<span class="branchCov" title="Branch 0 was taken 4 times"> + </span>]:<span class="lineCov">         24 :         if (_isFrozen(spender)) {</span></a>
+<a name="466"><span class="lineNum">     466 </span>                :<span class="lineCov">          4 :             return CODE_ADDRESS_SPENDER_IS_FROZEN;</span></a>
+<a name="467"><span class="lineNum">     467 </span>                :            :         }</a>
+<a name="468"><span class="lineNum">     468 </span>                :<span class="lineCov">         20 :         return _detectTransferRestriction(from, to, value);</span></a>
+<a name="469"><span class="lineNum">     469 </span>                :            :     }</a>
+<a name="470"><span class="lineNum">     470 </span>                :            : </a>
+<a name="471"><span class="lineNum">     471 </span>                :            :     /**</a>
+<a name="472"><span class="lineNum">     472 </span>                :            :      * @inheritdoc RuleNFTAdapter</a>
+<a name="473"><span class="lineNum">     473 </span>                :            :      */</a>
+<a name="474"><span class="lineNum">     474 </span>                :<span class="lineCov">         21 :     function _transferred(address from, address to, uint256 value) internal view virtual override {</span></a>
+<a name="475"><span class="lineNum">     475 </span>                :<span class="lineCov">         21 :         uint8 code = _detectTransferRestriction(from, to, value);</span></a>
+<a name="476"><span class="lineNum">     476 </span>        [<span class="branchCov" title="Branch 0 was taken 11 times"> + </span><span class="branchCov" title="Branch 1 was taken 10 times"> + </span>]:<span class="lineCov">         21 :         require(</span></a>
+<a name="477"><span class="lineNum">     477 </span>                :            :             code == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK),</a>
+<a name="478"><span class="lineNum">     478 </span>                :            :             RuleERC2980_InvalidTransfer(address(this), from, to, value, code)</a>
+<a name="479"><span class="lineNum">     479 </span>                :            :         );</a>
+<a name="480"><span class="lineNum">     480 </span>                :            :     }</a>
+<a name="481"><span class="lineNum">     481 </span>                :            : </a>
+<a name="482"><span class="lineNum">     482 </span>                :            :     /**</a>
+<a name="483"><span class="lineNum">     483 </span>                :            :      * @inheritdoc RuleNFTAdapter</a>
+<a name="484"><span class="lineNum">     484 </span>                :            :      */</a>
+<a name="485"><span class="lineNum">     485 </span>                :<span class="lineCov">         11 :     function _transferredFrom(address spender, address from, address to, uint256 value) internal view virtual override {</span></a>
+<a name="486"><span class="lineNum">     486 </span>                :<span class="lineCov">         11 :         uint8 code = _detectTransferRestrictionFrom(spender, from, to, value);</span></a>
+<a name="487"><span class="lineNum">     487 </span>        [<span class="branchCov" title="Branch 0 was taken 5 times"> + </span><span class="branchCov" title="Branch 1 was taken 6 times"> + </span>]:<span class="lineCov">         11 :         require(</span></a>
+<a name="488"><span class="lineNum">     488 </span>                :            :             code == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK),</a>
+<a name="489"><span class="lineNum">     489 </span>                :            :             RuleERC2980_InvalidTransferFrom(address(this), spender, from, to, value, code)</a>
+<a name="490"><span class="lineNum">     490 </span>                :            :         );</a>
+<a name="491"><span class="lineNum">     491 </span>                :            :     }</a>
+<a name="492"><span class="lineNum">     492 </span>                :            : </a>
+<a name="493"><span class="lineNum">     493 </span>                :            :     /**</a>
+<a name="494"><span class="lineNum">     494 </span>                :            :      * @inheritdoc ERC2771Context</a>
+<a name="495"><span class="lineNum">     495 </span>                :            :      */</a>
+<a name="496"><span class="lineNum">     496 </span>                :<span class="lineCov">        320 :     function _msgSender() internal view virtual override(ERC2771Context) returns (address sender) {</span></a>
+<a name="497"><span class="lineNum">     497 </span>                :<span class="lineCov">        320 :         return ERC2771Context._msgSender();</span></a>
+<a name="498"><span class="lineNum">     498 </span>                :            :     }</a>
+<a name="499"><span class="lineNum">     499 </span>                :            : </a>
+<a name="500"><span class="lineNum">     500 </span>                :            :     /**</a>
+<a name="501"><span class="lineNum">     501 </span>                :            :      * @inheritdoc ERC2771Context</a>
+<a name="502"><span class="lineNum">     502 </span>                :            :      */</a>
+<a name="503"><span class="lineNum">     503 </span>                :<span class="lineCov">          2 :     function _msgData() internal view virtual override(ERC2771Context) returns (bytes calldata) {</span></a>
+<a name="504"><span class="lineNum">     504 </span>                :<span class="lineCov">          2 :         return ERC2771Context._msgData();</span></a>
+<a name="505"><span class="lineNum">     505 </span>                :            :     }</a>
+<a name="506"><span class="lineNum">     506 </span>                :            : </a>
+<a name="507"><span class="lineNum">     507 </span>                :            :     /**</a>
+<a name="508"><span class="lineNum">     508 </span>                :            :      * @inheritdoc ERC2771Context</a>
+<a name="509"><span class="lineNum">     509 </span>                :            :      */</a>
+<a name="510"><span class="lineNum">     510 </span>                :<span class="lineCov">        322 :     function _contextSuffixLength() internal view virtual override(ERC2771Context) returns (uint256) {</span></a>
+<a name="511"><span class="lineNum">     511 </span>                :<span class="lineCov">        322 :         return ERC2771Context._contextSuffixLength();</span></a>
+<a name="512"><span class="lineNum">     512 </span>                :            :     }</a>
+<a name="513"><span class="lineNum">     513 </span>                :            : }</a>
 </pre>
       </td>
     </tr>

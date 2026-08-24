@@ -22,7 +22,7 @@ import {RuleWhitelist} from "src/rules/validation/deployment/RuleWhitelist.sol";
  *         Wiring, transcribed from `Token.setCompliance` (`Token.sol:515-522`): the token calls
  *         `bindToken(address(this))` on the compliance contract **itself**, so the engine needs
  *         `setTokenSelfBindingApproval(token, true)` beforehand. That path exists in
- *         `ERC3643ComplianceExtendedModule._authorizeComplianceBindingChange` specifically for
+ *         `TokenBindingExtendedModule._authorizeTokenBindingChange` specifically for
  *         ERC-3643 compatibility.
  */
 contract ERC3643RuleEngineWhitelist is Test, HelperContract, IdentityRegistryWhitelistInvariantStorage {

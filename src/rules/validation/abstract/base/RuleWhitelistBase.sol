@@ -5,13 +5,19 @@ import {RuleAddressSet} from "../RuleAddressSet/RuleAddressSet.sol";
 import {RuleWhitelistShared} from "../core/RuleWhitelistShared.sol";
 import {RuleTransferValidation} from "../core/RuleTransferValidation.sol";
 import {IIdentityRegistryVerified} from "../../../interfaces/IIdentityRegistry.sol";
+import {IAddressListPolarity} from "../../../interfaces/IAddressList.sol";
 import {AddressListInterfaceId} from "../../../interfaces/library/AddressListInterfaceId.sol";
 
 /**
  * @title RuleWhitelistBase
  * @notice Core whitelist logic without access-control policy.
  */
-abstract contract RuleWhitelistBase is RuleAddressSet, RuleWhitelistShared, IIdentityRegistryVerified {
+abstract contract RuleWhitelistBase is
+    RuleAddressSet,
+    RuleWhitelistShared,
+    IIdentityRegistryVerified,
+    IAddressListPolarity
+{
     /*//////////////////////////////////////////////////////////////
                              CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
@@ -60,7 +66,17 @@ abstract contract RuleWhitelistBase is RuleAddressSet, RuleWhitelistShared, IIde
         // Advertise IAddressList: this rule manages an address set and is usable as a
         // child rule of RuleWhitelistWrapper, which calls it through IAddressList.
         return interfaceId == AddressListInterfaceId.IADDRESS_LIST_INTERFACE_ID
+            || interfaceId == AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID
+            || interfaceId == AddressListInterfaceId.IADDRESS_LIST_POLARITY_INTERFACE_ID
             || RuleTransferValidation.supportsInterface(interfaceId);
+    }
+
+    /**
+     * @inheritdoc IAddressListPolarity
+     * @dev Listed addresses are the permitted transfer participants.
+     */
+    function isAllowList() public pure virtual override returns (bool) {
+        return true;
     }
 
     /*//////////////////////////////////////////////////////////////

@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/base/RuleMaxBalanceBase.sol | 62f929cdc9564258f602ff2a298f31a304d1c53f |
+| ./rules/validation/abstract/base/RuleMaxBalanceBase.sol | fa72a00a34cec050299ab9f2cd4be2a4ee5030bc |
 
 
 ### Contracts Description Table
@@ -24,6 +24,7 @@
 | └ | messageForTransferRestriction | Public ❗️ |   |NO❗️ |
 | └ | _detectTransferRestriction | Internal 🔒 |   | |
 | └ | _detectTransferRestrictionFrom | Internal 🔒 |   | |
+| └ | _detectTransferRestrictionOnNotify | Internal 🔒 |   | |
 | └ | _transferred | Internal 🔒 |   | |
 | └ | _transferredFrom | Internal 🔒 |   | |
 

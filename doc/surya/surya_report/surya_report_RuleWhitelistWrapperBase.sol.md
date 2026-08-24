@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/base/RuleWhitelistWrapperBase.sol | bb3b6454d4316c7a7bcc82e6e599ffc45bacdd7a |
+| ./rules/validation/abstract/base/RuleWhitelistWrapperBase.sol | 7676e74e58ea3b9b2b56ebefd897a434f79735c6 |
 
 
 ### Contracts Description Table
@@ -24,6 +24,7 @@
 | └ | _detectTransferRestrictionFrom | Internal 🔒 |   | |
 | └ | _transferred | Internal 🔒 |   | |
 | └ | _transferred | Internal 🔒 |   | |
+| └ | _checkRule | Internal 🔒 |   | |
 | └ | _detectTransferRestrictionForTargets | Internal 🔒 |   | |
 | └ | _msgSender | Internal 🔒 |   | |
 | └ | _msgData | Internal 🔒 |   | |

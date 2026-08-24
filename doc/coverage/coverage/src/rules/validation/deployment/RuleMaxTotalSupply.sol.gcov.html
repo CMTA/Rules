@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - lcov.info - src/rules/validation/deployment/RuleMaxTotalSupply.sol</title>
+  <title>LCOV - lcov2.info - src/rules/validation/deployment/RuleMaxTotalSupply.sol</title>
   <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
 </head>
 
@@ -28,7 +28,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">lcov.info</td>
+            <td class="headerValue">lcov2.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntry">4</td>
@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-07-14 13:44:06</td>
+            <td class="headerValue">2026-08-19 15:38:25</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">2</td>
@@ -105,15 +105,15 @@
 <a name="34"><span class="lineNum">      34 </span>                :            :      * @param interfaceId The interface identifier, as specified in ERC-165.</a>
 <a name="35"><span class="lineNum">      35 </span>                :            :      * @return True if the interface is supported.</a>
 <a name="36"><span class="lineNum">      36 </span>                :            :      */</a>
-<a name="37"><span class="lineNum">      37 </span>                :<span class="lineCov">         19 :     function supportsInterface(bytes4 interfaceId)</span></a>
+<a name="37"><span class="lineNum">      37 </span>                :<span class="lineCov">         79 :     function supportsInterface(bytes4 interfaceId)</span></a>
 <a name="38"><span class="lineNum">      38 </span>                :            :         public</a>
 <a name="39"><span class="lineNum">      39 </span>                :            :         view</a>
 <a name="40"><span class="lineNum">      40 </span>                :            :         virtual</a>
 <a name="41"><span class="lineNum">      41 </span>                :            :         override(AccessControlEnumerable, RuleTransferValidation)</a>
 <a name="42"><span class="lineNum">      42 </span>                :            :         returns (bool)</a>
 <a name="43"><span class="lineNum">      43 </span>                :            :     {</a>
-<a name="44"><span class="lineNum">      44 </span>                :<span class="lineCov">         19 :         return AccessControlEnumerable.supportsInterface(interfaceId)</span></a>
-<a name="45"><span class="lineNum">      45 </span>                :<span class="lineCov">         13 :             || RuleTransferValidation.supportsInterface(interfaceId);</span></a>
+<a name="44"><span class="lineNum">      44 </span>                :<span class="lineCov">         79 :         return AccessControlEnumerable.supportsInterface(interfaceId)</span></a>
+<a name="45"><span class="lineNum">      45 </span>                :<span class="lineCov">         53 :             || RuleTransferValidation.supportsInterface(interfaceId);</span></a>
 <a name="46"><span class="lineNum">      46 </span>                :            :     }</a>
 <a name="47"><span class="lineNum">      47 </span>                :            : </a>
 <a name="48"><span class="lineNum">      48 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
@@ -123,7 +123,7 @@
 <a name="52"><span class="lineNum">      52 </span>                :            :     /**</a>
 <a name="53"><span class="lineNum">      53 </span>                :            :      * @notice Restricts maximum total supply management to holders of DEFAULT_ADMIN_ROLE.</a>
 <a name="54"><span class="lineNum">      54 </span>                :            :      */</a>
-<a name="55"><span class="lineNum">      55 </span>                :<span class="lineCov">        260 :     function _authorizeMaxTotalSupplyManager() internal view virtual override onlyRole(DEFAULT_ADMIN_ROLE) {}</span></a>
+<a name="55"><span class="lineNum">      55 </span>                :<span class="lineCov">        266 :     function _authorizeMaxTotalSupplyManager() internal view virtual override onlyRole(DEFAULT_ADMIN_ROLE) {}</span></a>
 <a name="56"><span class="lineNum">      56 </span>                :            : }</a>
 </pre>
       </td>

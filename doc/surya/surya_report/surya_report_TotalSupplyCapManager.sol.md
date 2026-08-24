@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/core/TotalSupplyCapManager.sol | 2ccec17348c8be7669d4241186fb870cc4069d8a |
+| ./rules/validation/abstract/core/TotalSupplyCapManager.sol | 4b3c48fb12e49a65c1a2ddb3998a5fd7d2cb3b37 |
 
 
 ### Contracts Description Table
@@ -15,7 +15,7 @@
 |:----------:|:-------------------:|:----------------:|:----------------:|:---------------:|
 |     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 ||||||
-| **TotalSupplyCapManager** | Implementation | TokenSupplyReader, RuleMaxTotalSupplyInvariantStorage |||
+| **TotalSupplyCapManager** | Implementation | CapAccounting, TokenSupplyReader, RuleMaxTotalSupplyInvariantStorage |||
 | └ | setMaxTotalSupply | Public ❗️ | 🛑  | onlyMaxTotalSupplyManager |
 | └ | setTokenContract | Public ❗️ | 🛑  | onlyMaxTotalSupplyManager |
 | └ | _setMaxTotalSupply | Internal 🔒 | 🛑  | |

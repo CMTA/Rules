@@ -75,6 +75,20 @@ abstract contract RuleConditionalTransferLightMultiTokenInvariantStorage is Rule
     error RuleConditionalTransferLightMultiToken_InsufficientAllowance(
         address token, address owner, uint256 allowance, uint256 required
     );
+    /**
+     * @notice The approval created by {approveAndTransferIfAllowed} was not consumed by the transfer.
+     * @dev See the single-token twin: the helper inverts CEI so the approval exists for the token's
+     * compliance callback, and this post-condition catches the case where no callback reached the
+     * rule and the approval would otherwise have been left spendable. Nethermind AuditAgent NM-17.
+     * @param token The token the transfer was executed on.
+     * @param from The sender of the transfer.
+     * @param to The recipient of the transfer.
+     * @param value The amount transferred.
+     */
+    error RuleConditionalTransferLightMultiToken_ApprovalNotConsumed(
+        address token, address from, address to, uint256 value
+    );
+
     error RuleConditionalTransferLightMultiToken_InvalidToken();
     error RuleConditionalTransferLightMultiToken_TransferNotApproved();
     error RuleConditionalTransferLightMultiToken_TransferApprovalNotFound();

@@ -5,6 +5,7 @@ import {RuleAddressSet} from "../RuleAddressSet/RuleAddressSet.sol";
 import {RuleNFTAdapter} from "../core/RuleNFTAdapter.sol";
 import {RuleTransferValidation} from "../core/RuleTransferValidation.sol";
 import {RuleBlacklistInvariantStorage} from "../RuleAddressSet/invariantStorage/RuleBlacklistInvariantStorage.sol";
+import {IAddressListPolarity} from "../../../interfaces/IAddressList.sol";
 import {AddressListInterfaceId} from "../../../interfaces/library/AddressListInterfaceId.sol";
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
@@ -15,7 +16,12 @@ import {IRule} from "RuleEngine/interfaces/IRule.sol";
  * @title RuleBlacklistBase
  * @notice Core blacklist logic without access-control policy.
  */
-abstract contract RuleBlacklistBase is RuleAddressSet, RuleNFTAdapter, RuleBlacklistInvariantStorage {
+abstract contract RuleBlacklistBase is
+    RuleAddressSet,
+    RuleNFTAdapter,
+    RuleBlacklistInvariantStorage,
+    IAddressListPolarity
+{
     /*//////////////////////////////////////////////////////////////
                              CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
@@ -98,7 +104,17 @@ abstract contract RuleBlacklistBase is RuleAddressSet, RuleNFTAdapter, RuleBlack
         // Advertise IAddressList: this rule manages an address set and is callable through
         // the IAddressList interface.
         return interfaceId == AddressListInterfaceId.IADDRESS_LIST_INTERFACE_ID
+            || interfaceId == AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID
+            || interfaceId == AddressListInterfaceId.IADDRESS_LIST_POLARITY_INTERFACE_ID
             || RuleTransferValidation.supportsInterface(interfaceId);
+    }
+
+    /**
+     * @inheritdoc IAddressListPolarity
+     * @dev Listed addresses are the BLOCKED ones. A consumer that reads membership as eligibility must refuse this rule.
+     */
+    function isAllowList() public pure virtual override returns (bool) {
+        return false;
     }
 
     /*//////////////////////////////////////////////////////////////
