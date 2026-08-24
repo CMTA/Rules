@@ -7,6 +7,27 @@ Each rule enforces one transfer restriction. A rule can be plugged **directly** 
 
 > This project has not undergone an audit and is provided as-is without any warranties.
 
+<!-- toc -->
+
+- [Compatibility](#compatibility)
+- [What a rule does](#what-a-rule-does)
+- [Architecture](#architecture)
+  - [Layout](#layout)
+- [The rules](#the-rules)
+- [ERC-3643](#erc-3643)
+  - [Compliance: go through a RuleEngine](#compliance-go-through-a-ruleengine)
+  - [Identity verification](#identity-verification)
+  - [Matching the spec's semantics](#matching-the-specs-semantics)
+  - [Tested against a real ERC-3643 token](#tested-against-a-real-erc-3643-token)
+- [Quick start](#quick-start)
+- [Documentation](#documentation)
+- [Security](#security)
+  - [Nethermind AuditAgent (v0.5.0)](#nethermind-auditagent-v050)
+- [Development](#development)
+- [Intellectual property](#intellectual-property)
+
+<!-- /toc -->
+
 ## Compatibility
 
 | Rules | Contracts report `version()` | CMTAT | RuleEngine | OpenZeppelin |
