@@ -216,19 +216,14 @@ Every finding carries a written triage, including the ones dismissed as false po
 
 > Note: This scan was performed by an AI-powered automated tool, not a formal human-led audit.
 
-No false positives, but 17 of the 24 findings restate design positions already documented in the source and in
-the previous audit, and the set collapses to about 11 distinct claims. **Three were fixed in `v0.6.0`**: NM-3 — the
-identity-registry rule's `transferFrom` path now always delegates to the direct restriction check, so a subclass
-extending only that hook can no longer have its check applied to `transfer` but silently skipped on
-`transferFrom` and `burnFrom`; NM-10 — a Proof-of-Reserve round stamped in the future is now rejected as a
-malformed answer instead of being accepted as fresh; and NM-6 — the ERC-7943 overloads now treat an
-owner-initiated transfer (`spender == from`) as direct, matching the `ITransferContext` entrypoints, so
-`RuleSpenderWhitelist` no longer blocks an owner moving their own tokens. And NM-11 — the cap rules assume the token calls the compliance hook
-*before* moving value (CMTAT does; ERC-3643 / T-REX does not, so the stock rule counts the amount twice and
-reverts mints that are within the cap). `RuleChainlinkPoRERC3643` and `RuleMaxTotalSupplyERC3643` now ship for
-that path, verified against the genuine vendored T-REX token; `RuleMaxBalance` stays CMTAT-only by design.
-[Report (PDF)](./doc/security/audits/tools/v0.5.0/nethermind_audit_agent_report_v0.5.0.pdf) ·
-[feedback](./doc/security/audits/tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md).
+No false positives, but 17 of the 24 findings restate design positions already documented in the source and in the previous audit, so the set collapses to about 11 distinct claims. Seven were fixed in `v0.6.0`; the substantive ones:
+
+- **NM-3** — the identity-registry rule's `transferFrom` path now always delegates to the direct restriction check. A subclass extending only that hook could previously have its check applied to `transfer` but silently skipped on `transferFrom` and `burnFrom`.
+- **NM-6** — the ERC-7943 overloads now read an owner-initiated transfer (`spender == from`) as direct, matching the `ITransferContext` entrypoints, so `RuleSpenderWhitelist` no longer blocks an owner moving their own tokens.
+- **NM-10** — a Proof-of-Reserve round stamped in the future is rejected as a malformed answer instead of being accepted as fresh.
+- **NM-11** — the cap rules assume the token calls the compliance hook *before* moving value. CMTAT does; ERC-3643 / T-REX does not, so the stock rule counted the amount twice and reverted mints that were within the cap. `RuleChainlinkPoRERC3643` and `RuleMaxTotalSupplyERC3643` now ship for that path, verified against the vendored T-REX token; `RuleMaxBalance` stays CMTAT-only by design.
+
+[Report (PDF)](./doc/security/audits/tools/v0.5.0/nethermind_audit_agent_report_v0.5.0.pdf) · [feedback](./doc/security/audits/tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md).
 
 Reports, triage and the threat model live in [`doc/security/audits/`](./doc/security/audits/), indexed by [`AUDIT_OVERVIEW.md`](./doc/security/audits/AUDIT_OVERVIEW.md).
 
