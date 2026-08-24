@@ -74,14 +74,17 @@ access-control policy, in either an `AccessControl` or an `Ownable2Step` flavour
 | `RuleERC2980` | ERC-2980 whitelist plus frozenlist | 60–65 |
 | `RuleIdentityRegistry` | Consults an ERC-3643 identity registry | 55–57 |
 | `RuleMaxTotalSupply` | Caps total supply on mint | 50, 51 |
-| `RuleMaxTotalSupplyERC3643` | Same, for **ERC-3643 tokens** — compliance called *after* the mint | 50, 51 |
+| `RuleMaxTotalSupplyERC3643` | Caps total supply on mint, for tokens that mint *first* and call the rule after | 50, 51 |
 | `RuleMaxBalance` | Caps how many tokens one address may hold | 82, 83 |
 | `RuleChainlinkPoR` | Caps minting at Chainlink Proof of Reserve reserves | 75–79 |
-| `RuleChainlinkPoRERC3643` | Same, for **ERC-3643 tokens** — compliance called *after* the mint | 75–79 |
+| `RuleChainlinkPoRERC3643` | Caps minting at reported reserves, for tokens that mint *first* and call the rule after | 75–79 |
 | `RuleConditionalTransferLight` | Requires operator approval per transfer | 46 |
 | `RuleMintAllowance` | Per-minter mint quota | 70 |
 
 Codes must stay unique across rules, since a RuleEngine returns the first non-zero one.
+
+**The two `…ERC3643` variants differ only in *when* they expect to be called**, and that is what to pick them by. CMTAT asks the rule before it moves the value, so the stock rule adds the pending amount to the supply it reads; ERC-3643 / T-REX mints first, so the variant must not add it again. Both mismatches are silent: the stock rule on an ERC-3643 token counts the amount twice and rejects mints that are inside the cap, and a variant on a CMTAT token stops enforcing the ceiling on the write path.
+
 Per-rule detail is in [`doc/technical/`](./doc/technical/); the semantics that differ between rules (who is screened, mint/burn handling, unset-oracle behaviour) are tabulated in [`RULE_SEMANTICS.md`](./doc/technical/guides/RULE_SEMANTICS.md).
 
 ## ERC-3643
