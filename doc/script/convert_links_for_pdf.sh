@@ -10,6 +10,8 @@ if [ -z "$1" ]; then
     echo ""
     echo "The release link may point at the repository root or at the input file's"
     echo "own directory; the missing part is derived from where the file sits."
+    echo "The output defaults to README_UPDATE.md beside the input file, so the"
+    echo "image links it keeps relative still resolve."
     echo ""
     echo "Example:"
     echo "  $0 https://github.com/CMTA/CMTAT/blob/v3.0.0"
@@ -21,7 +23,6 @@ fi
 GITHUB_LINK="${1%/}"  # Remove trailing slash if present
 
 INPUT_FILE="${2:-../README.md}"   # doc/README.md, the full reference (the root README is a short summary)
-OUTPUT_FILE="${3:-README_UPDATE.md}"
 
 if [ ! -f "$INPUT_FILE" ]; then
     echo "Error: Input file '$INPUT_FILE' not found"
@@ -54,6 +55,12 @@ GITHUB_LINK_PARENT=""
 if [ -n "$REL_DIR" ]; then
     GITHUB_LINK_PARENT="${GITHUB_LINK%/*}"
 fi
+
+# Default the output to the input file's own directory, not the caller's working
+# directory. The conversion leaves image links relative on purpose, so the
+# converted file only renders correctly from where the original sits: written
+# anywhere else, doc/README.md's "./schema/x.png" points at nothing.
+OUTPUT_FILE="${3:-$INPUT_DIR/README_UPDATE.md}"
 
 # Create a temporary file
 TMP_FILE=$(mktemp)
