@@ -88,6 +88,21 @@ abstract contract RuleMaxTotalSupplyV300Test is CMTATv300TestBase {
         assertEq(token.totalSupply(), 50);
     }
 
+    /// @notice Detaching lifts the cap; supply minted meanwhile is counted on re-attach, because the
+    /// rule reads the live `totalSupply()` and keeps no counter of its own.
+    function testSupplyMintedWhileDetachedIsCountedOnReattach() public {
+        _detach();
+        _mint(ADDRESS2, 70); // 130 > CAP: nothing checks it while detached
+        _reattach(_viaEngine() ? address(engine) : address(rule));
+        (, uint256 headroom) = rule.remainingMintable();
+        assertEq(headroom, 0);
+        vm.expectPartialRevert(RuleMaxTotalSupply_InvalidTransfer.selector);
+        _mint(ADDRESS2, 1);
+        _burn(ADDRESS2, 40); // back to 90
+        _mint(ADDRESS2, 10);
+        assertEq(token.totalSupply(), CAP);
+    }
+
     /// @notice Standard only: cross-chain mints are capped and cross-chain burns free room.
     function testCrosschainMintAndBurn() public {
         if (_isDebt()) return;

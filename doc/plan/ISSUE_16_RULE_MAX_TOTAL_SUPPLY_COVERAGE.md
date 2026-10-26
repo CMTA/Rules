@@ -92,7 +92,9 @@ The issue speaks of "operator functions". A `MAX_TOTAL_SUPPLY_ROLE` would let an
 - **Backward compatibility:** the admin implicitly holds every role (`AccessControlModuleStandalone.hasRole`), so existing deployments are unaffected.
 - **`setTokenContract`:** it should stay admin-only. Repointing the observed token disables the cap far more thoroughly than changing its value.
 
-### 3.5 Behaviours that are correct but undocumented in `RuleMaxTotalSupply.md` — **recommended (documentation only)**
+### 3.5 Behaviours that are correct but undocumented in `RuleMaxTotalSupply.md` — **done**
+
+> **Update:** now documented in `RuleMaxTotalSupply.md` ("What the cap measures", "Behaviour by token operation", "One instance per token"), each row with the test that pins it. The detach / re-attach row gained a test, `testSupplyMintedWhileDetachedIsCountedOnReattach`.
 
 Each line was checked against CMTAT v3.0.0. They are exactly the questions the issue raises:
 
@@ -140,7 +142,7 @@ So R3 needs a separate rule, as proposed in the plan. `RuleMaxTotalSupply` remai
 | --- | --- | --- |
 | 1 | Answer #16: R4 (replenishing) is already served by `RuleMaxTotalSupply` on CMTAT v3.0.0. R3 (non-replenishing) needs the new `RuleIssuanceCap` | Issue reply |
 | 2 | ~~Add `remainingMintable()` (§3.1)~~ **Done** | Code, non-breaking |
-| 3 | Document the §3.5 behaviours in `doc/technical/contracts/RuleMaxTotalSupply.md` | Documentation |
+| 3 | ~~Document the §3.5 behaviours in `doc/technical/contracts/RuleMaxTotalSupply.md`~~ **Done** | Documentation |
 | 4 | ~~Add the §3.7 tests, starting with real CMTAT v3.0.0~~ **Done** (`test/CMTATv3.0.0/`) | Tests |
 | 5 | Optional: dedicated `MAX_TOTAL_SUPPLY_ROLE` (§3.4), `increase` / `decrease` (§3.2) | Code, non-breaking |
 | 6 | Optional: `(previous, new)` event (§3.3), only alongside other breaking changes | Code, ABI change |

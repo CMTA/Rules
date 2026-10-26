@@ -104,6 +104,41 @@ A front end can size a mint from this one call, without computing the subtractio
 
 The rule only acts on mint operations (i.e. `from == address(0)`). It reads `tokenContract.totalSupply()` and rejects the mint if `totalSupply + value > maxTotalSupply`. Transfers and burns always pass.
 
+### What the cap measures
+
+The cap bounds the **outstanding supply**, read live from the token on every mint. It does **not** bound **cumulative issuance**: the rule keeps no counter, so every burn frees room for a later mint.
+
+- This is the right model for an issue volume that is redeemed and re-issued, or for a ceiling on shares in existence.
+- It is the wrong model for "never issue more than N in total, whatever is burned". That needs a counter the rule does not have, and cannot be emulated reliably by lowering the cap after each burn.
+
+Because the token's own supply is the counter, the rule cannot drift from it. Every row below follows from that.
+
+### Behaviour by token operation
+
+Each row was checked in the CMTAT source for v3.0.0 and v3.3.0-rc4, where these code paths are identical. Each is pinned by a test on a real CMTAT v3.0.0 token (Standard and Debt, direct and behind a `RuleEngine`) in `test/CMTATv3.0.0/RuleMaxTotalSupplyV300.t.sol`, unless another file is named. Where a row lists several entrypoints, the test drives the first. The others share the same token code path but are not tested on their own.
+
+| Operation | Effect on the remaining room | Why | Pinned by |
+| --- | --- | --- | --- |
+| `mint`, `batchMint` | Uses `value`; rejected (code `50`) if `value` exceeds the room | The engine is called before `_mint`, so `totalSupply()` excludes the amount being minted | `testMintLandingExactlyOnTheCap`, `testCannotMintAboveTheCap` |
+| `burn`, `batchBurn`, `burnFrom`, `burn(uint256)` | Frees `value` | `totalSupply()` falls; the rule never blocks a burn | `testBurnFreesHeadroom`; `testBurningFreesHeadroomForANewMint` (current CMTAT, `test/DeploymentScripts/`) |
+| `transfer`, `transferFrom`, `forcedTransfer` between holders | None | Supply is unchanged; the rule returns `TRANSFER_OK` without reading it | `testTransfersAreNotCapped` (`transfer`) |
+| `burnAndMint(from, to, burnAmount, mintAmount)` | Needs room only for the **net** increase, `mintAmount − burnAmount` | The burn leg runs first and lowers `totalSupply()`; the mint leg is then checked against the reduced supply. A correction or reissue therefore does not use up the cap | `testBurnAndMintNeedsRoomForTheNetIncreaseOnly` |
+| `crosschainMint` / `crosschainBurn` (Standard variant) | Same as `mint` / `burn` | Both go through the token's mint / burn path. A bridge-out followed by a bridge-in is net zero, so bridged tokens are safe | `testCrosschainMintAndBurn` |
+| `forcedTransfer(from, address(0), value)` (forced burn) | Frees `value`, visible at the next mint | The engine is **not** called, but `totalSupply()` still falls | `testForcedBurnFreesHeadroom` |
+| Cap set at or below the current supply (including `0`) | No room: every mint is rejected, **even a zero-value mint** when supply is above the cap; `remainingMintable()` returns `0` | Supply already over the line. Transfers and burns continue, so holders are never trapped. This is the emergency lever to stop minting | `testSettingTheCapBelowSupplyFreezesMintsOnly`; `testLoweringTheCapBelowTheSupplyBlocksFurtherMints`, `testSetMaxTotalSupplyToZero` (`test/RuleMaxTotalSupply/`) |
+| Supply that existed before the rule was installed | Counted | The cap is absolute, not "new issuance from now on". After a capital increase of N, set `maxTotalSupply = existing supply + N` | `testSupplyMintedWhileDetachedIsCountedOnReattach` |
+| Rule detached (`setRuleEngine(address(0))`, or `removeRule` on the engine), then re-attached | Cap lifted while detached; on re-attach it is evaluated against the **real** supply | No drift. Supply minted meanwhile is counted, and if it pushed supply above the cap, minting stays frozen until burns bring it back under | `testSupplyMintedWhileDetachedIsCountedOnReattach` |
+
+WARNING: detaching the rule is the one way to exceed the cap, and nothing on-chain records it. Whoever holds `DEFAULT_ADMIN_ROLE` on the token (`setRuleEngine`), or the rule-management role on the engine (`removeRule`), can lift the cap. Revoke `MINTER_ROLE` before any planned detachment.
+
+### One instance per token
+
+The rule reads the supply of its configured `tokenContract`, never of the token that triggered the check. Behind a `RuleEngine` it cannot learn that identity.
+
+- One instance added to two RuleEngines, or set on two tokens, caps **both** tokens against the **first** token's supply. One token is silently over-minted or frozen, and no call reverts at configuration.
+- Deploy one instance per protected token.
+- `setTokenContract` repoints the rule at another token, which changes the protected supply as thoroughly as changing the cap. It is restricted to the admin (the owner on `RuleMaxTotalSupplyOwnable2Step`) for that reason.
+
 ### Read-path safety
 
 `detectTransferRestriction` / `canTransfer` are ERC-1404 / ERC-3643 views that MUST NOT revert, so the supply read is guarded: a `tokenContract` that has lost its code, or whose `totalSupply()` reverts (a proxy upgraded to something broken, or a pausable implementation reverting while paused), yields `CODE_SUPPLY_ORACLE_UNAVAILABLE` (51) rather than propagating the failure. The comparison also uses remaining headroom (`value > maxTotalSupply - currentSupply`) instead of `currentSupply + value`, which could overflow.
@@ -153,6 +188,6 @@ The operator deploys `RuleMaxTotalSupply` with `tokenContract = CMTAT_address` a
 ✅ Supported, identical to v3.3.
 
 - v3.0.0 notifies the engine **before** `_mint` / `_burn`, the accounting the rule assumes, so no variant is needed.
-- Pinned behaviours: the burn leg of `burnAndMint` runs first, so a correction needs room only for the net increase; a forced burn (`forcedTransfer(from, address(0), v)`) bypasses the engine but still frees room; `crosschainMint` is capped and `crosschainBurn` frees room (Standard only); a cap below the supply freezes mints while transfers and burns continue.
+- Every row of [Behaviour by token operation](#behaviour-by-token-operation) is pinned on v3.0.0.
 
 Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleMaxTotalSupplyV300.t.sol`.

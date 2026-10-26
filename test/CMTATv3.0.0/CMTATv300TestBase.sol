@@ -82,6 +82,24 @@ abstract contract CMTATv300TestBase is Test, HelperContract {
     }
 
     /**
+     * @notice Removes the rule engine from the token (`setRuleEngine(address(0))`).
+     */
+    function _detach() internal {
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        (bool ok,) = address(token).call(abi.encodeWithSelector(SET_RULE_ENGINE, address(0)));
+        require(ok, "setRuleEngine failed");
+    }
+
+    /**
+     * @notice Re-installs `target` (the rule itself, or the engine already built by {_attach}).
+     */
+    function _reattach(address target) internal {
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        (bool ok,) = address(token).call(abi.encodeWithSelector(SET_RULE_ENGINE, target));
+        require(ok, "setRuleEngine failed");
+    }
+
+    /**
      * @notice The address a stateful rule sees as `msg.sender` on its write path: the engine or the token.
      */
     function _ruleCaller() internal view returns (address) {
