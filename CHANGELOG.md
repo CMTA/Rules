@@ -89,6 +89,7 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 ### Changed
 
+- `RuleMaxTotalSupplyBase`: the public `transferred` overloads, `canReturnTransferRestrictionCode` and `messageForTransferRestriction` are now `virtual`, so a subclass can extend them. No bytecode, ABI or behaviour change.
 - **Deployment scripts deploy `RuleEngine2771` only when a forwarder is given.** `DeployCMTATWithBlacklistAndSanctionsList` and `DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply` deploy `RuleEngine` when `forwarder == address(0)` and `RuleEngine2771` otherwise, so the engine trusts the same forwarder as the token and the rules, as it did with rc6. The returned engine is still typed `RuleEngine`.
 
 ### Testing
