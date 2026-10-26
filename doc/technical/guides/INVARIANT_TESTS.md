@@ -128,8 +128,9 @@ The handler differs from the other two in two ways:
 - It drives a **real CMTAT token** (`CMTATStandardStandalone`, with the rule set directly via `setRuleEngine(rule)`) and pranks the token admin for privileged calls. It is not bound to the rule.
 - Mints are **attempted with `try`**, because rejection is an expected outcome. Every other action is bounded so it cannot revert.
 
-Handler actions: `mint` · `mintAtBoundary` · `burnAndMint` · `burn` · `forcedBurn` · `transfer` · `setCap`.
+Handler actions: `mint` · `mintAtBoundary` · `burnAndMint` · `burn` · `forcedBurn` · `transfer` · `setCap` · `increaseCap` · `decreaseCap`.
 - `setCap` ranges from `0` to `4 000`, including caps below the current supply.
+- `increaseCap` / `decreaseCap` change the cap in relative steps; the decrease is bounded by the current cap, so it never reverts.
 - `forcedBurn` (`forcedTransfer(from, address(0), v)`) bypasses the engine.
 - `mintAtBoundary` mints exactly the remaining room −1, +0 or +1. Random amounts almost never land on `headroom + 1`, the only value an off-by-one would let through. Without this action the safety invariant missed such a mutation (§4).
 

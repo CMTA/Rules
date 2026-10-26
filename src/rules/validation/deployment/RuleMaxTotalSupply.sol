@@ -12,7 +12,8 @@ import {RuleTransferValidation} from "../abstract/core/RuleTransferValidation.so
  */
 contract RuleMaxTotalSupply is AccessControlModuleStandalone, RuleMaxTotalSupplyBase {
     /**
-     * @notice Role allowed to change the cap (`setMaxTotalSupply`). Repointing the token stays with
+     * @notice Role allowed to change the cap (`setMaxTotalSupply`, `increaseMaxTotalSupply`,
+     * `decreaseMaxTotalSupply`). Repointing the token stays with
      * `DEFAULT_ADMIN_ROLE`, which also implicitly holds this role.
      * @dev Declared here, not in the invariant storage, so the Ownable2Step variant does not publish a
      * role it never checks.

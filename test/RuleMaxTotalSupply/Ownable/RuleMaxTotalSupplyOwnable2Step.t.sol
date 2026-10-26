@@ -39,6 +39,23 @@ contract RuleMaxTotalSupplyOwnable2StepAccessControl is Test, HelperContract {
         assertEq(address(rule.tokenContract()), address(newToken));
     }
 
+    function testOwnerCanIncreaseAndDecrease() public {
+        vm.startPrank(WHITELIST_OPERATOR_ADDRESS);
+        rule.increaseMaxTotalSupply(50);
+        rule.decreaseMaxTotalSupply(30);
+        vm.stopPrank();
+        assertEq(rule.maxTotalSupply(), 120);
+    }
+
+    function testNonOwnerCannotIncreaseOrDecrease() public {
+        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, ATTACKER));
+        vm.prank(ATTACKER);
+        rule.increaseMaxTotalSupply(1);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, ATTACKER));
+        vm.prank(ATTACKER);
+        rule.decreaseMaxTotalSupply(1);
+    }
+
     function testNonOwnerCannotManageMaxTotalSupply() public {
         vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, ATTACKER));
         vm.prank(ATTACKER);

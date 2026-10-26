@@ -80,7 +80,7 @@ The default admin is the address passed as `admin` in the constructor. It is gra
 
 | Role | Hash | May call |
 | --- | --- | --- |
-| `MAX_TOTAL_SUPPLY_ROLE` | `0xff56c44a0b63a2f9b3aaada52f4982ecb1bd4eefdb286a7832ff51e8bc4e49f1` | `setMaxTotalSupply` |
+| `MAX_TOTAL_SUPPLY_ROLE` | `0xff56c44a0b63a2f9b3aaada52f4982ecb1bd4eefdb286a7832ff51e8bc4e49f1` | `setMaxTotalSupply`, `increaseMaxTotalSupply`, `decreaseMaxTotalSupply` |
 | `DEFAULT_ADMIN_ROLE` | `0x00…00` | `setTokenContract`, role management, and (implicitly) everything `MAX_TOTAL_SUPPLY_ROLE` may call |
 
 The split lets an issuer delegate cap changes, for example to a corporate-secretary key that records each capital increase, without granting full admin.
@@ -96,7 +96,7 @@ The split lets an issuer delegate cap changes, for example to a corporate-secret
 
 | Event | Emitted by | Notes |
 | --- | --- | --- |
-| `MaxTotalSupplyUpdated(uint256 previousMaxTotalSupply, uint256 newMaxTotalSupply)` | constructor, `setMaxTotalSupply` | Both values in the data, not indexed. `previousMaxTotalSupply` is `0` at construction. Up to v0.6.0 the event carried only the new cap (`MaxTotalSupplyUpdated(uint256)`, a different topic) |
+| `MaxTotalSupplyUpdated(uint256 previousMaxTotalSupply, uint256 newMaxTotalSupply)` | constructor, `setMaxTotalSupply`, `increaseMaxTotalSupply`, `decreaseMaxTotalSupply` | Both values in the data, not indexed. `previousMaxTotalSupply` is `0` at construction. Up to v0.6.0 the event carried only the new cap (`MaxTotalSupplyUpdated(uint256)`, a different topic) |
 | `TokenContractUpdated(address indexed newTokenContract)` | constructor, `setTokenContract` | |
 
 ## Methods
@@ -104,6 +104,22 @@ The split lets an issuer delegate cap changes, for example to a corporate-secret
 ### `setMaxTotalSupply(uint256 newMaxTotalSupply)`
 
 Updates the maximum total supply cap, in token base units (see [Unit of the cap](#unit-of-the-cap)). Restricted to `MAX_TOTAL_SUPPLY_ROLE` (the admin holds it implicitly; the owner on the Ownable2Step variant). Emits `MaxTotalSupplyUpdated(previousMaxTotalSupply, newMaxTotalSupply)`, also at construction, with `previousMaxTotalSupply = 0`.
+
+### `increaseMaxTotalSupply(uint256 amount)` / `decreaseMaxTotalSupply(uint256 amount)`
+
+Raise or lower the cap by `amount`, in base units. Same permissions as `setMaxTotalSupply`, and the same `MaxTotalSupplyUpdated(previous, new)` event.
+
+| Function | Reverts with | When |
+| --- | --- | --- |
+| `increaseMaxTotalSupply` | `RuleMaxTotalSupply_IncreaseOverflow(current, amount)` | the new cap would exceed `type(uint256).max` |
+| `decreaseMaxTotalSupply` | `RuleMaxTotalSupply_DecreaseBelowZero(current, amount)` | `amount` exceeds the current cap |
+
+Use the relative forms when changes are approved independently, such as two capital increases each authorised by its own resolution.
+- Two `increaseMaxTotalSupply(N)` calls raise the cap by `2N` in whatever order they land.
+- Two `setMaxTotalSupply(old + N)` calls, each computed from the same old cap, raise it by only `N`, because the second overwrites the first.
+- Use `setMaxTotalSupply` when the authorised amount is stated as an absolute figure.
+
+Decreasing below the current supply is allowed: it freezes minting while transfers and burns continue, as with `setMaxTotalSupply`.
 
 ### `setTokenContract(address newTokenContract)`
 

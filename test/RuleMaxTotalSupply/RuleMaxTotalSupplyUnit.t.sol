@@ -242,6 +242,93 @@ contract RuleMaxTotalSupplyUnit is Test, HelperContract {
         rule.setMaxTotalSupply(0);
     }
 
+    /*//////////////////////////////////////////////////////////////
+                   increase / decreaseMaxTotalSupply
+    //////////////////////////////////////////////////////////////*/
+
+    function testIncreaseMaxTotalSupply() public {
+        vm.expectEmit(address(rule));
+        emit MaxTotalSupplyUpdated(100, 150);
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.increaseMaxTotalSupply(50);
+        assertEq(rule.maxTotalSupply(), 150);
+    }
+
+    function testDecreaseMaxTotalSupply() public {
+        vm.expectEmit(address(rule));
+        emit MaxTotalSupplyUpdated(100, 30);
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.decreaseMaxTotalSupply(70);
+        assertEq(rule.maxTotalSupply(), 30);
+    }
+
+    function testDecreaseToExactlyZero() public {
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.decreaseMaxTotalSupply(100);
+        assertEq(rule.maxTotalSupply(), 0);
+    }
+
+    function testCannotDecreaseBelowZero() public {
+        vm.expectRevert(abi.encodeWithSelector(RuleMaxTotalSupply_DecreaseBelowZero.selector, 100, 101));
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.decreaseMaxTotalSupply(101);
+    }
+
+    function testCannotIncreasePastUint256Max() public {
+        uint256 amount = type(uint256).max - 99;
+        vm.expectRevert(abi.encodeWithSelector(RuleMaxTotalSupply_IncreaseOverflow.selector, 100, amount));
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.increaseMaxTotalSupply(amount);
+    }
+
+    function testIncreaseUpToUint256Max() public {
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.increaseMaxTotalSupply(type(uint256).max - 100);
+        assertEq(rule.maxTotalSupply(), type(uint256).max);
+    }
+
+    /// @notice Two increases approved against the same old cap compose; two absolute sets would not.
+    function testTwoIncreasesCompose() public {
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        rule.increaseMaxTotalSupply(25);
+        rule.increaseMaxTotalSupply(25);
+        vm.stopPrank();
+        assertEq(rule.maxTotalSupply(), 150);
+    }
+
+    /// @notice Lowering the cap below the supply is allowed: it freezes minting, nothing else.
+    function testDecreaseBelowSupplyFreezesMinting() public {
+        token.setTotalSupply(80);
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.decreaseMaxTotalSupply(50);
+        (, uint256 headroom) = rule.remainingMintable();
+        assertEq(headroom, 0);
+        assertEq(rule.detectTransferRestriction(ADDRESS1, ADDRESS2, 10), TRANSFER_OK);
+    }
+
+    function testCapOperatorCanIncreaseAndDecrease() public {
+        bytes32 role = rule.MAX_TOTAL_SUPPLY_ROLE();
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.grantRole(role, ADDRESS2);
+        vm.startPrank(ADDRESS2);
+        rule.increaseMaxTotalSupply(10);
+        rule.decreaseMaxTotalSupply(20);
+        vm.stopPrank();
+        assertEq(rule.maxTotalSupply(), 90);
+    }
+
+    function testIncreaseAndDecreaseRequireTheRole() public {
+        bytes memory err = abi.encodeWithSelector(
+            IAccessControl.AccessControlUnauthorizedAccount.selector, ADDRESS1, rule.MAX_TOTAL_SUPPLY_ROLE()
+        );
+        vm.expectRevert(err);
+        vm.prank(ADDRESS1);
+        rule.increaseMaxTotalSupply(1);
+        vm.expectRevert(err);
+        vm.prank(ADDRESS1);
+        rule.decreaseMaxTotalSupply(1);
+    }
+
     function testSetMaxTotalSupply_OnlyAdmin() public {
         vm.expectRevert();
         vm.prank(ADDRESS1);

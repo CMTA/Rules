@@ -149,7 +149,7 @@ contract MaxTotalSupplyInvariants is Test {
         // The handler pranks ADMIN for every privileged call, so it needs no role of its own.
         handler = new MaxTotalSupplyHandler(token, rule);
 
-        bytes4[] memory selectors = new bytes4[](7);
+        bytes4[] memory selectors = new bytes4[](9);
         selectors[0] = MaxTotalSupplyHandler.mint.selector;
         selectors[1] = MaxTotalSupplyHandler.burnAndMint.selector;
         selectors[2] = MaxTotalSupplyHandler.burn.selector;
@@ -157,6 +157,8 @@ contract MaxTotalSupplyInvariants is Test {
         selectors[4] = MaxTotalSupplyHandler.transfer.selector;
         selectors[5] = MaxTotalSupplyHandler.setCap.selector;
         selectors[6] = MaxTotalSupplyHandler.mintAtBoundary.selector;
+        selectors[7] = MaxTotalSupplyHandler.increaseCap.selector;
+        selectors[8] = MaxTotalSupplyHandler.decreaseCap.selector;
         targetSelector(FuzzSelector({addr: address(handler), selectors: selectors}));
         targetContract(address(handler));
     }

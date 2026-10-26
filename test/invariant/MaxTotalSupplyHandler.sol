@@ -123,6 +123,19 @@ contract MaxTotalSupplyHandler is Test {
         rule.setMaxTotalSupply(newCap);
     }
 
+    /// @dev Relative cap changes, bounded so they can neither underflow nor revert.
+    function increaseCap(uint256 amount) external {
+        amount = bound(amount, 0, MAX_AMOUNT);
+        vm.prank(ADMIN);
+        rule.increaseMaxTotalSupply(amount);
+    }
+
+    function decreaseCap(uint256 amount) external {
+        amount = bound(amount, 0, rule.maxTotalSupply());
+        vm.prank(ADMIN);
+        rule.decreaseMaxTotalSupply(amount);
+    }
+
     /*//////////////////////////////////////////////////////////////
                                INTERNAL
     //////////////////////////////////////////////////////////////*/

@@ -63,7 +63,9 @@ function remainingMintable() public view virtual returns (uint8 restrictionCode,
 - **Compatibility:** non-breaking; adds a selector, changes no storage.
 - **ERC-3643 variant:** `RuleMaxTotalSupplyERC3643` inherits it unchanged, since a view always runs before the movement.
 
-### 3.2 No `increaseMaxTotalSupply` / `decreaseMaxTotalSupply` (R5) — **optional**
+### 3.2 No `increaseMaxTotalSupply` / `decreaseMaxTotalSupply` (R5) — **done**
+
+> **Update:** implemented. Both are gated by `MAX_TOTAL_SUPPLY_ROLE` (owner on Ownable2Step) and emit `MaxTotalSupplyUpdated(previous, new)`. They revert with `RuleMaxTotalSupply_IncreaseOverflow` / `RuleMaxTotalSupply_DecreaseBelowZero`. R5 is now fully covered.
 
 `setMaxTotalSupply` is absolute. The relative forms the issue asks for matter in one real case:
 - two pending governance actions (say, two multisig proposals each authorising a capital increase of `N`), both computed from the same old cap;
@@ -148,6 +150,6 @@ So R3 needs a separate rule, as proposed in the plan. `RuleMaxTotalSupply` remai
 | 2 | ~~Add `remainingMintable()` (§3.1)~~ **Done** | Code, non-breaking |
 | 3 | ~~Document the §3.5 behaviours in `doc/technical/contracts/RuleMaxTotalSupply.md`~~ **Done** | Documentation |
 | 4 | ~~Add the §3.7 tests, starting with real CMTAT v3.0.0~~ **Done** (`test/CMTATv3.0.0/`) | Tests |
-| 5 | Optional: ~~dedicated `MAX_TOTAL_SUPPLY_ROLE` (§3.4)~~ **done**; `increase` / `decrease` (§3.2) still open | Code, non-breaking |
+| 5 | ~~Optional: dedicated `MAX_TOTAL_SUPPLY_ROLE` (§3.4), `increase` / `decrease` (§3.2)~~ **Done** | Code, non-breaking |
 | 6 | ~~Optional: `(previous, new)` event (§3.3)~~ **Done** (breaking: new event topic) | Code, ABI change |
 | 7 | Update the plan document so that `RuleIssuanceCap` reuses `CapAccounting` (§4) | Plan |

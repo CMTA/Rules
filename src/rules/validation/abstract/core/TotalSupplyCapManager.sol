@@ -61,6 +61,31 @@ abstract contract TotalSupplyCapManager is CapAccounting, TokenSupplyReader, Rul
     }
 
     /**
+     * @notice Raises the cap by `amount`.
+     * @dev Relative, so two independently approved increases compose (each adds its own amount),
+     * where two absolute {setMaxTotalSupply} calls computed from the same old cap would overwrite each
+     * other. Emits {MaxTotalSupplyUpdated} with the previous and new cap.
+     * @param amount Amount to add, in token base units (see {maxTotalSupply}).
+     */
+    function increaseMaxTotalSupply(uint256 amount) public virtual onlyMaxTotalSupplyManager {
+        uint256 current = maxTotalSupply;
+        require(amount <= type(uint256).max - current, RuleMaxTotalSupply_IncreaseOverflow(current, amount));
+        _setMaxTotalSupply(current + amount);
+    }
+
+    /**
+     * @notice Lowers the cap by `amount`; reverts if `amount` exceeds the current cap.
+     * @dev Lowering the cap below the current supply is allowed: it freezes minting while transfers
+     * and burns continue. Emits {MaxTotalSupplyUpdated} with the previous and new cap.
+     * @param amount Amount to subtract, in token base units (see {maxTotalSupply}).
+     */
+    function decreaseMaxTotalSupply(uint256 amount) public virtual onlyMaxTotalSupplyManager {
+        uint256 current = maxTotalSupply;
+        require(amount <= current, RuleMaxTotalSupply_DecreaseBelowZero(current, amount));
+        _setMaxTotalSupply(current - amount);
+    }
+
+    /**
      * @notice Updates the token contract whose total supply is checked.
      * @param newTokenContract New token contract address; must not be the zero address.
      */

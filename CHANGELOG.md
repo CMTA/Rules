@@ -78,6 +78,10 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   - Saturates at `0` when the cap is at or below the current supply; returns code `51` instead of reverting when `totalSupply()` is unreadable.
   - Same shape as `RuleMaxBalance.remainingCapacity(to)`: the revert-free internal half `_remainingMintable()` lives in `TotalSupplyCapManager` and reuses the previously unused `CapAccounting._capHeadroom`; the code-returning public half lives in `RuleMaxTotalSupplyBase`.
   - Inherited unchanged by `RuleMaxTotalSupplyOwnable2Step` and both `…ERC3643` variants. Non-breaking: one new selector, no storage change.
+- **`increaseMaxTotalSupply(amount)` / `decreaseMaxTotalSupply(amount)`** on `RuleMaxTotalSupply` and its three variants: relative cap changes.
+  - Two independently approved increases compose, where two absolute `setMaxTotalSupply` calls computed from the same old cap would overwrite each other.
+  - Gated like `setMaxTotalSupply` (`MAX_TOTAL_SUPPLY_ROLE`; owner on Ownable2Step) and emit the same `MaxTotalSupplyUpdated(previous, new)`.
+  - New errors `RuleMaxTotalSupply_IncreaseOverflow(current, amount)` and `RuleMaxTotalSupply_DecreaseBelowZero(current, amount)`. Decreasing below the current supply is allowed (it freezes minting). Non-breaking: two new selectors, no storage change.
 - **`MAX_TOTAL_SUPPLY_ROLE` on `RuleMaxTotalSupply`** (and `RuleMaxTotalSupplyERC3643`, which extends it): `setMaxTotalSupply` now requires this dedicated role instead of `DEFAULT_ADMIN_ROLE`, so an issuer can delegate cap changes without granting full admin.
   - `setTokenContract` stays with `DEFAULT_ADMIN_ROLE`: repointing the observed token changes the protected supply as thoroughly as changing the cap. `TotalSupplyCapManager` gains a second hook, `_authorizeTokenContractManager`, for this split; both hooks are `internal view virtual`.
   - Backward compatible: the admin holds every role implicitly, so existing deployments behave as before. The admin is not enumerated as a member of the new role.
@@ -95,6 +99,7 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   - Shared harness: `CMTATv300TestBase` (a variant-neutral token interface, wiring, and view assertions that check `canTransfer` and, on Standard, `detectTransferRestriction*`), the four variant/topology mixins in `CMTATv300Variants.sol`, and `test/utils/CMTATDeploymentV300.sol`.
   - Pinned v3.0.0 differences: a blacklisted, sanctioned or frozen **minter** is not screened by `RuleBlacklist`, `RuleSanctionsList` and `RuleERC2980` (v3.0.0 sends mint and burn without a spender); `RuleMintAllowance` is inert (every mint passes, no quota debited).
   - Pinned `RuleMaxTotalSupply` behaviours: `burnAndMint` needs room only for the net increase, a forced burn frees room, `crosschainMint` / `crosschainBurn` are capped / free room, and supply minted while the rule is detached is counted on re-attach.
+- `increase/decreaseMaxTotalSupply`: events, decrease to exactly zero and below zero, increase up to and past `uint256` max, two increases composing, decrease below supply freezing mints only, role and owner gating. The invariant handler gains `increaseCap` / `decreaseCap` actions.
 - `MaxTotalSupplyUpdated(previous, new)`: the constructor test (`test/Events/ConstructorEvents.t.sol`) checks the new signature and `previous == 0`; a unit test checks the previous/new pair over two successive updates.
 - `MAX_TOTAL_SUPPLY_ROLE`: role hash, a cap operator who can change the cap but not the token (exact `AccessControlUnauthorizedAccount` errors), revocation, implicit admin holding, role enumeration, and inheritance by the ERC-3643 AccessControl variant.
 - **Invariant suite for `RuleMaxTotalSupply`** (`MaxTotalSupplyInvariants`, handler `test/invariant/MaxTotalSupplyHandler.sol`, 5 invariants × 8,192 calls) on a real CMTAT token, driving mints, boundary mints, `burnAndMint`, burns, forced burns, transfers and cap changes.
@@ -102,7 +107,7 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   - Negative controls: three mutations (off-by-one cap, over-strict cap, wrong headroom view) each fail the suite. A first version missed the off-by-one on the safety invariant, because random amounts never hit `headroom + 1`; the `mintAtBoundary` action fixes that. Recorded in `INVARIANT_TESTS.md` §4.
   - Documented in `INVARIANT_TESTS.md` §3.3 and in the "Invariant testing" section of `doc/README.md`.
 - `remainingMintable()`: unit tests (headroom, exact fit, cap below supply, unreadable supply), a fuzz property that the headroom is exactly the largest mint the pre-flight check accepts, the ERC-3643 variant, and a real CMTAT v3.0.0 token across mints and burns.
-- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,201 tests pass in the default profile and 53 in the `erc3643` profile.
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,213 tests pass in the default profile and 53 in the `erc3643` profile.
 
 ### Documentation
 

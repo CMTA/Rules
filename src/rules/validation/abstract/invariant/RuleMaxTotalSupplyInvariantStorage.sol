@@ -50,4 +50,6 @@ abstract contract RuleMaxTotalSupplyInvariantStorage is RuleSharedInvariantStora
     error RuleMaxTotalSupply_TokenAddressZeroNotAllowed();
     error RuleMaxTotalSupply_TokenIsNotAContract(address token);
     error RuleMaxTotalSupply_TokenTotalSupplyUnavailable(address token);
+    error RuleMaxTotalSupply_DecreaseBelowZero(uint256 currentMaxTotalSupply, uint256 decreaseAmount);
+    error RuleMaxTotalSupply_IncreaseOverflow(uint256 currentMaxTotalSupply, uint256 increaseAmount);
 }
