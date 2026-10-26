@@ -5,21 +5,13 @@ import {AccessControlEnumerable} from "@openzeppelin/contracts/access/extensions
 import {AccessControlModuleStandalone} from "../../../modules/AccessControlModuleStandalone.sol";
 import {RuleMaxTotalSupplyBase} from "../abstract/base/RuleMaxTotalSupplyBase.sol";
 import {RuleTransferValidation} from "../abstract/core/RuleTransferValidation.sol";
+import {RuleMaxTotalSupplyRolesStorage} from "../abstract/invariant/RuleMaxTotalSupplyRolesStorage.sol";
 
 /**
  * @title RuleMaxTotalSupply
  * @notice Restricts minting so that total supply never exceeds a maximum value.
  */
-contract RuleMaxTotalSupply is AccessControlModuleStandalone, RuleMaxTotalSupplyBase {
-    /**
-     * @notice Role allowed to change the cap (`setMaxTotalSupply`, `increaseMaxTotalSupply`,
-     * `decreaseMaxTotalSupply`). Repointing the token stays with
-     * `DEFAULT_ADMIN_ROLE`, which also implicitly holds this role.
-     * @dev Declared here, not in the invariant storage, so the Ownable2Step variant does not publish a
-     * role it never checks.
-     */
-    bytes32 public constant MAX_TOTAL_SUPPLY_ROLE = keccak256("MAX_TOTAL_SUPPLY_ROLE");
-
+contract RuleMaxTotalSupply is AccessControlModuleStandalone, RuleMaxTotalSupplyBase, RuleMaxTotalSupplyRolesStorage {
     /*//////////////////////////////////////////////////////////////
                              CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/

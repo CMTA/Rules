@@ -59,7 +59,7 @@ abstract contract RuleConditionalTransferLightBase is
      * @param to The recipient of the created tokens.
      * @param value The amount of tokens created.
      */
-    function created(address to, uint256 value) external onlyBoundToken {
+    function created(address to, uint256 value) external virtual onlyBoundToken {
         _transferred(address(0), to, value);
     }
 
@@ -68,14 +68,20 @@ abstract contract RuleConditionalTransferLightBase is
      * @param from The holder whose tokens are destroyed.
      * @param value The amount of tokens destroyed.
      */
-    function destroyed(address from, uint256 value) external onlyBoundToken {
+    function destroyed(address from, uint256 value) external virtual onlyBoundToken {
         _transferred(from, address(0), value);
     }
 
     /**
      * @inheritdoc IRule
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override(IRule) returns (bool) {
+    function canReturnTransferRestrictionCode(uint8 restrictionCode)
+        external
+        pure
+        virtual
+        override(IRule)
+        returns (bool)
+    {
         return restrictionCode == CODE_TRANSFER_REQUEST_NOT_APPROVED;
     }
 
@@ -85,6 +91,7 @@ abstract contract RuleConditionalTransferLightBase is
     function messageForTransferRestriction(uint8 restrictionCode)
         external
         pure
+        virtual
         override(IERC1404)
         returns (string memory)
     {
@@ -249,6 +256,7 @@ abstract contract RuleConditionalTransferLightBase is
     function detectTransferRestriction(address from, address to, uint256 value)
         public
         view
+        virtual
         override(IERC1404)
         returns (uint8)
     {
@@ -274,6 +282,7 @@ abstract contract RuleConditionalTransferLightBase is
     )
         public
         view
+        virtual
         override(IERC1404Extend)
         returns (uint8)
     {
@@ -286,6 +295,7 @@ abstract contract RuleConditionalTransferLightBase is
     function canTransfer(address from, address to, uint256 value)
         public
         view
+        virtual
         override(IERC3643ComplianceRead)
         returns (bool)
     {
@@ -298,6 +308,7 @@ abstract contract RuleConditionalTransferLightBase is
     function canTransferFrom(address spender, address from, address to, uint256 value)
         public
         view
+        virtual
         override(IERC7551Compliance)
         returns (bool)
     {

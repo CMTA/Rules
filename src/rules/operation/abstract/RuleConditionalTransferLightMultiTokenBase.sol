@@ -47,7 +47,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
      * @param to The recipient of the created tokens.
      * @param value The amount of tokens created.
      */
-    function created(address to, uint256 value) external onlyBoundToken {
+    function created(address to, uint256 value) external virtual onlyBoundToken {
         _transferred(_msgSender(), address(0), to, value);
     }
 
@@ -56,7 +56,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
      * @param from The holder whose tokens are destroyed.
      * @param value The amount of tokens destroyed.
      */
-    function destroyed(address from, uint256 value) external onlyBoundToken {
+    function destroyed(address from, uint256 value) external virtual onlyBoundToken {
         _transferred(_msgSender(), from, address(0), value);
     }
 
@@ -64,14 +64,20 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
      * @notice Consumes one approval for the transfer described by `ctx`, using the caller as the token.
      * @param ctx The fungible transfer context (from, to, value).
      */
-    function transferred(ITransferContext.FungibleTransferContext calldata ctx) external onlyTransferExecutor {
+    function transferred(ITransferContext.FungibleTransferContext calldata ctx) external virtual onlyTransferExecutor {
         _transferred(_msgSender(), ctx.from, ctx.to, ctx.value);
     }
 
     /**
      * @inheritdoc IRule
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override(IRule) returns (bool) {
+    function canReturnTransferRestrictionCode(uint8 restrictionCode)
+        external
+        pure
+        virtual
+        override(IRule)
+        returns (bool)
+    {
         return restrictionCode == CODE_TRANSFER_REQUEST_NOT_APPROVED;
     }
 
@@ -81,6 +87,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
     function messageForTransferRestriction(uint8 restrictionCode)
         external
         pure
+        virtual
         override(IERC1404)
         returns (string memory)
     {
@@ -223,7 +230,12 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
      * @param value The amount of the transfer.
      * @return The current approval count for the transfer.
      */
-    function approvedCount(address token, address from, address to, uint256 value) public view returns (uint256) {
+    function approvedCount(address token, address from, address to, uint256 value)
+        public
+        view
+        virtual
+        returns (uint256)
+    {
         bytes32 transferHash = _transferHash(token, from, to, value);
         return approvalCounts[transferHash];
     }
@@ -240,6 +252,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
     function detectTransferRestriction(address from, address to, uint256 value)
         public
         view
+        virtual
         override(IERC1404)
         returns (uint8)
     {
@@ -298,6 +311,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
     )
         public
         view
+        virtual
         override(IERC1404Extend)
         returns (uint8)
     {
@@ -312,6 +326,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
     function canTransfer(address from, address to, uint256 value)
         public
         view
+        virtual
         override(IERC3643ComplianceRead)
         returns (bool)
     {
@@ -324,6 +339,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
     function canTransferFrom(address spender, address from, address to, uint256 value)
         public
         view
+        virtual
         override(IERC7551Compliance)
         returns (bool)
     {

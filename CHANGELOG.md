@@ -99,6 +99,12 @@ Commit:
 
 ### Changed
 
+- **Code-quality review of `v0.7.0`** (`doc/security/audits/tools/v0.7.0/CLAUDE_ANALYSIS.md`, 24 findings): 8 fixed, 9 checked correct, 6 deliberately left, 1 open for decision (H-1, see the report). Nothing found is a vulnerability.
+  - `RuleIssuanceCapBase._afterMintChecked` reads `totalIssued` and `maxTotalSupply` once into locals instead of re-reading both for `require`'s eagerly evaluated error arguments: **−345 gas per mint**, measured.
+  - `MAX_TOTAL_SUPPLY_ROLE` is declared once, in the new `RuleMaxTotalSupplyRolesStorage`, inherited by the two AccessControl deployables only (the `RuleAddressSetRolesStorage` pattern). Role getters unchanged.
+  - **63 `public` / `external` functions in 16 production files are now `virtual`** (compliance entrypoints, views, restriction-code functions). Runtime size of every deployable is identical; the convention is now written in `CLAUDE.md`.
+  - Production comments no longer name test functions, a test file or a mock file (`RuleConditionalTransferLightApprovalBase`, `RuleMaxBalanceBase`, `AddressListInterfaceId`); each keeps what the test proved. `CLAUDE.md` gains the rule.
+  - `CLAUDE.md` / `AGENTS.md`: corrected two stale statements (the reason `IdentityRegistryWhitelist` reuses only the internal address-set layer, and `RuleIdentityRegistry` being listed as screening the minter) and the measured NatSpec percentile.
 - **Nine unused imports removed** from the validation bases (`RuleBlacklistBase`, `RuleChainlinkPoRBase`, `RuleERC2980Base`, `RuleIdentityRegistryBase`, `RuleMaxBalanceBase`, `RuleMaxTotalSupplyBase`, `RuleReceiverWhitelistBase`, `RuleSanctionsListBase`, `RuleSpenderWhitelistBase`), reported by Aderyn.
   - The RuleEngine `v3.0.0-rc7` migration had left `IRuleEngine` referenced only by an `@inheritdoc IRuleEngine` NatSpec tag, which `forge lint` counts as a use and Aderyn does not.
   - The tags now name a contract each file already uses (`RuleTransferValidation` or `IRule`), or carry a one-line `@notice` where neither is imported. `RuleTransferValidation`'s NatSpec on the 4-argument `transferred` was rewritten to read well when inherited. No code or ABI change.
@@ -121,6 +127,7 @@ Commit:
   - CMTAT v3.0.0 suite (`test/CMTATv3.0.0/RuleIssuanceCapV300.t.sol`, four variant/topology combinations): the requester's exact setup, including forced burns, `burnAndMint`, a bridge round trip and detach / re-attach. Integration with the current CMTAT, directly and behind a RuleEngine.
   - Invariants: the five supply-cap invariants were moved into an abstract `SupplyCapInvariantsBase` and now run for both rules. `IssuanceCapInvariants` adds exact counter accounting and issuance ≥ supply. `MaxTotalSupplyHandler` gained a virtual `_fits`, which `IssuanceCapHandler` overrides rather than copying the handler. Two new mutations (counter never recorded, off-by-one issuance cap) are caught.
 - `increase/decreaseMaxTotalSupply`: events, decrease to exactly zero and below zero, increase up to and past `uint256` max, two increases composing, decrease below supply freezing mints only, role and owner gating. The invariant handler gains `increaseCap` / `decreaseCap` actions.
+- Code-quality review follow-ups: tests for `unbindToken` on `RuleIssuanceCapOwnable2Step` (the last uncovered function in `src/`), `initialIssued` exactly equal to the supply, `bindToken(address(0))` and zero-step `increase` / `decrease`. `src/` coverage is now 100 % of lines, statements, branches and functions. Five mutation spot-checks on this release's code were all killed. Five braceless `if` bodies in new tests were braced.
 - `MaxTotalSupplyUpdated(previous, new)`: the constructor test (`test/Events/ConstructorEvents.t.sol`) checks the new signature and `previous == 0`; a unit test checks the previous/new pair over two successive updates.
 - `MAX_TOTAL_SUPPLY_ROLE`: role hash, a cap operator who can change the cap but not the token (exact `AccessControlUnauthorizedAccount` errors), revocation, implicit admin holding, role enumeration, and inheritance by the ERC-3643 AccessControl variant.
 - **Invariant suite for `RuleMaxTotalSupply`** (`MaxTotalSupplyInvariants`, handler `test/invariant/MaxTotalSupplyHandler.sol`, 5 invariants × 8,192 calls) on a real CMTAT token, driving mints, boundary mints, `burnAndMint`, burns, forced burns, transfers and cap changes.
@@ -128,7 +135,7 @@ Commit:
   - Negative controls: three mutations (off-by-one cap, over-strict cap, wrong headroom view) each fail the suite. A first version missed the off-by-one on the safety invariant, because random amounts never hit `headroom + 1`; the `mintAtBoundary` action fixes that. Recorded in `INVARIANT_TESTS.md` §4.
   - Documented in `INVARIANT_TESTS.md` §3.3 and in the "Invariant testing" section of `doc/README.md`.
 - `remainingMintable()`: unit tests (headroom, exact fit, cap below supply, unreadable supply), a fuzz property that the headroom is exactly the largest mint the pre-flight check accepts, the ERC-3643 variant, and a real CMTAT v3.0.0 token across mints and burns.
-- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,285 tests pass in the default profile and 53 in the `erc3643` profile.
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,289 tests pass in the default profile and 53 in the `erc3643` profile.
 
 ### Documentation
 

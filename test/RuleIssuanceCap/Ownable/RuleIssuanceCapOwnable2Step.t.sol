@@ -54,6 +54,18 @@ contract RuleIssuanceCapOwnable2StepAccessControl is Test, HelperContract, RuleI
         rule.increaseMaxTotalSupply(1);
     }
 
+    /// @notice `unbindToken` goes through `_authorizeTokenBindingChange`, also owner-only.
+    function testOnlyTheOwnerUnbinds() public {
+        vm.prank(OWNER);
+        rule.bindToken(ADDRESS1);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, ATTACKER));
+        vm.prank(ATTACKER);
+        rule.unbindToken(ADDRESS1);
+        vm.prank(OWNER);
+        rule.unbindToken(ADDRESS1);
+        assertEq(rule.getTokenBound(), ZERO_ADDRESS);
+    }
+
     function testTokenContractIsLockedEvenForTheOwner() public {
         address other = address(new TotalSupplyMock());
         vm.expectRevert(RuleIssuanceCap_TokenContractLocked.selector);

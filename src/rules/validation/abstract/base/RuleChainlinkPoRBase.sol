@@ -58,7 +58,7 @@ abstract contract RuleChainlinkPoRBase is RuleTransferValidation, ChainlinkPoRFe
      * @param restrictionCode Restriction code to test.
      * @return True if `restrictionCode` is one of this rule's codes.
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override returns (bool) {
+    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure virtual override returns (bool) {
         return restrictionCode == CODE_RESERVES_EXCEEDED || restrictionCode == CODE_RESERVES_FEED_STALE
             || restrictionCode == CODE_RESERVES_ANSWER_INVALID || restrictionCode == CODE_RESERVES_FEED_UNAVAILABLE
             || restrictionCode == CODE_TOTAL_SUPPLY_UNAVAILABLE;
@@ -71,14 +71,19 @@ abstract contract RuleChainlinkPoRBase is RuleTransferValidation, ChainlinkPoRFe
     /**
      * @inheritdoc IERC3643IComplianceContract
      */
-    function transferred(address from, address to, uint256 value) public view override(IERC3643IComplianceContract) {
+    function transferred(address from, address to, uint256 value)
+        public
+        view
+        virtual
+        override(IERC3643IComplianceContract)
+    {
         _transferred(from, to, value);
     }
 
     /**
      * @inheritdoc RuleTransferValidation
      */
-    function transferred(address spender, address from, address to, uint256 value) public view override {
+    function transferred(address spender, address from, address to, uint256 value) public view virtual override {
         _transferredFrom(spender, from, to, value);
     }
 
@@ -88,6 +93,7 @@ abstract contract RuleChainlinkPoRBase is RuleTransferValidation, ChainlinkPoRFe
     function messageForTransferRestriction(uint8 restrictionCode)
         public
         pure
+        virtual
         override(IERC1404)
         returns (string memory)
     {

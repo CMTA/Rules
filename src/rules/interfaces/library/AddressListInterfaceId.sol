@@ -8,10 +8,8 @@ pragma solidity ^0.8.27;
  *
  *      `type(IAddressList).interfaceId` CANNOT be used: it XORs only the selectors declared directly
  *      on `IAddressList` and omits `contains(address)`, inherited from `IIdentityRegistryContains`.
- *      This constant is computed from the flattened `IAddressListAllFunctions` interface instead.
- *
- *      See src/mocks/IAddressListInterfaceIdHelper.sol; the value is asserted by
- *      test/InterfaceId/AddressListInterfaceId.t.sol.
+ *      The value below is the XOR of every selector of `IAddressList` and of all its parents, i.e. the
+ *      id of a flattened interface that redeclares them all.
  */
 library AddressListInterfaceId {
     /**
@@ -29,8 +27,7 @@ library AddressListInterfaceId {
      *
      * Safe to state as a literal: {IAddressListBatchQuery} declares one function and inherits
      * nothing, so unlike {IADDRESS_LIST_INTERFACE_ID} there is no omitted-parent trap here. The
-     * value equals the selector of the single function; asserted in
-     * test/InterfaceId/AddressListInterfaceId.t.sol.
+     * value equals the selector of `areAddressesListed(address[])`.
      */
     bytes4 public constant IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID = 0x20e8e17a;
 

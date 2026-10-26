@@ -84,7 +84,7 @@ abstract contract RuleIdentityRegistryBase is RuleNFTAdapter, RuleIdentityRegist
      * @param restrictionCode Restriction code to test.
      * @return True if `restrictionCode` is one of this rule's identity-verification codes.
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override returns (bool) {
+    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure virtual override returns (bool) {
         return restrictionCode == CODE_ADDRESS_FROM_NOT_VERIFIED || restrictionCode == CODE_ADDRESS_TO_NOT_VERIFIED
             || restrictionCode == CODE_ADDRESS_SPENDER_NOT_VERIFIED;
     }
@@ -135,7 +135,12 @@ abstract contract RuleIdentityRegistryBase is RuleNFTAdapter, RuleIdentityRegist
     /**
      * @inheritdoc IERC3643IComplianceContract
      */
-    function transferred(address from, address to, uint256 value) public view override(IERC3643IComplianceContract) {
+    function transferred(address from, address to, uint256 value)
+        public
+        view
+        virtual
+        override(IERC3643IComplianceContract)
+    {
         _transferred(from, to, value);
     }
 
@@ -143,7 +148,7 @@ abstract contract RuleIdentityRegistryBase is RuleNFTAdapter, RuleIdentityRegist
      * @notice Applies the rule to an operation that carries a spender (`transferFrom`, and mint / burn since
      * CMTAT v3.3); reverts if it is not allowed.
      */
-    function transferred(address spender, address from, address to, uint256 value) public view override {
+    function transferred(address spender, address from, address to, uint256 value) public view virtual override {
         _transferredFrom(spender, from, to, value);
     }
 
@@ -153,6 +158,7 @@ abstract contract RuleIdentityRegistryBase is RuleNFTAdapter, RuleIdentityRegist
     function messageForTransferRestriction(uint8 restrictionCode)
         public
         pure
+        virtual
         override(IERC1404)
         returns (string memory)
     {

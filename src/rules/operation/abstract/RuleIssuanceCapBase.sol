@@ -157,14 +157,16 @@ abstract contract RuleIssuanceCapBase is
      * check runs with `value = 0` and would not catch it.
      */
     function _afterMintChecked(uint256 value) internal virtual override {
+        // Both slots are read once, into locals: `require` evaluates its error arguments on the success path too.
+        uint256 issued = totalIssued;
+        uint256 cap = maxTotalSupply;
         require(
-            !_issuanceExceededBy(value),
-            RuleIssuanceCap_IssuanceCapExceeded(address(this), totalIssued, maxTotalSupply, value)
+            !_capExceededBy(issued, cap, value), RuleIssuanceCap_IssuanceCapExceeded(address(this), issued, cap, value)
         );
         if (value == 0) {
             return;
         }
-        uint256 issued = totalIssued + value;
+        issued += value;
         totalIssued = issued;
         emit IssuanceRecorded(value, issued);
     }

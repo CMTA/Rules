@@ -109,7 +109,7 @@ abstract contract RuleAddressSet is
      * @notice Returns the total number of currently listed addresses.
      * @return count The number of listed addresses.
      */
-    function listedAddressCount() public view returns (uint256 count) {
+    function listedAddressCount() public view virtual returns (uint256 count) {
         count = _listedAddressCount();
     }
 
@@ -118,7 +118,13 @@ abstract contract RuleAddressSet is
      * @param targetAddress The address to check.
      * @return isListed True if listed, false otherwise.
      */
-    function contains(address targetAddress) public view override(IIdentityRegistryContains) returns (bool isListed) {
+    function contains(address targetAddress)
+        public
+        view
+        virtual
+        override(IIdentityRegistryContains)
+        returns (bool isListed)
+    {
         isListed = _isAddressListed(targetAddress);
     }
 
@@ -127,7 +133,7 @@ abstract contract RuleAddressSet is
      * @param targetAddress The address to check.
      * @return isListed True if listed, false otherwise.
      */
-    function isAddressListed(address targetAddress) public view returns (bool isListed) {
+    function isAddressListed(address targetAddress) public view virtual returns (bool isListed) {
         isListed = _isAddressListed(targetAddress);
     }
 
@@ -136,7 +142,7 @@ abstract contract RuleAddressSet is
      * @param targetAddresses Array of addresses to check.
      * @return results Array of booleans corresponding to listing status.
      */
-    function areAddressesListed(address[] memory targetAddresses) public view returns (bool[] memory results) {
+    function areAddressesListed(address[] memory targetAddresses) public view virtual returns (bool[] memory results) {
         results = new bool[](targetAddresses.length);
         for (uint256 i = 0; i < targetAddresses.length; ++i) {
             results[i] = _isAddressListed(targetAddresses[i]);

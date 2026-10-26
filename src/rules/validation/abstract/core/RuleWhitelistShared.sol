@@ -63,7 +63,13 @@ abstract contract RuleWhitelistShared is RuleNFTAdapter, RuleWhitelistInvariantS
      * @param restrictionCode The restriction code to validate.
      * @return isKnown True if the restriction code is recognized by this rule, false otherwise.
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override returns (bool isKnown) {
+    function canReturnTransferRestrictionCode(uint8 restrictionCode)
+        external
+        pure
+        virtual
+        override
+        returns (bool isKnown)
+    {
         return restrictionCode == CODE_ADDRESS_FROM_NOT_WHITELISTED
             || restrictionCode == CODE_ADDRESS_TO_NOT_WHITELISTED
             || restrictionCode == CODE_ADDRESS_SPENDER_NOT_WHITELISTED || restrictionCode == CODE_MINT_NOT_ALLOWED
@@ -80,6 +86,7 @@ abstract contract RuleWhitelistShared is RuleNFTAdapter, RuleWhitelistInvariantS
     function messageForTransferRestriction(uint8 restrictionCode)
         external
         pure
+        virtual
         override
         returns (string memory message)
     {
@@ -140,7 +147,12 @@ abstract contract RuleWhitelistShared is RuleNFTAdapter, RuleWhitelistInvariantS
      * @param to The address receiving tokens.
      * @param value The token amount being transferred.
      */
-    function transferred(address from, address to, uint256 value) public view override(IERC3643IComplianceContract) {
+    function transferred(address from, address to, uint256 value)
+        public
+        view
+        virtual
+        override(IERC3643IComplianceContract)
+    {
         _transferred(from, to, value);
     }
 
@@ -155,7 +167,7 @@ abstract contract RuleWhitelistShared is RuleNFTAdapter, RuleWhitelistInvariantS
      * @param to The recipient address.
      * @param value The token amount being transferred.
      */
-    function transferred(address spender, address from, address to, uint256 value) public view override {
+    function transferred(address spender, address from, address to, uint256 value) public view virtual override {
         _transferredFrom(spender, from, to, value);
     }
 

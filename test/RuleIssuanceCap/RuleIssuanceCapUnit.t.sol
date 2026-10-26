@@ -93,6 +93,23 @@ contract RuleIssuanceCapUnit is Test, HelperContract, RuleIssuanceCapInvariantSt
         new RuleIssuanceCap(DEFAULT_ADMIN_ADDRESS, address(token), CAP, 29);
     }
 
+    /// @notice Boundary: issuance exactly equal to the current supply (nothing burned yet) is accepted.
+    function testConstructorAcceptsInitialIssuedEqualToSupply() public {
+        token.setTotalSupply(30);
+        RuleIssuanceCap fresh = new RuleIssuanceCap(DEFAULT_ADMIN_ADDRESS, address(token), CAP, 30);
+        assertEq(fresh.totalIssued(), 30);
+        (, uint256 headroom) = fresh.remainingMintable();
+        assertEq(headroom, CAP - 30);
+    }
+
+    function testCannotBindTheZeroAddress() public {
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        rule.unbindToken(CALLER);
+        vm.expectRevert(TokenBindingModuleInvariantStorage.TokenBinding_InvalidTokenAddress.selector);
+        rule.bindToken(ZERO_ADDRESS);
+        vm.stopPrank();
+    }
+
     /*//////////////////////////////////////////////////////////////
                          NON-REPLENISHING COUNTER
     //////////////////////////////////////////////////////////////*/

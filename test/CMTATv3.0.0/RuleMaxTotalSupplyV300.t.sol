@@ -105,7 +105,9 @@ abstract contract RuleMaxTotalSupplyV300Test is CMTATv300TestBase {
 
     /// @notice Standard only: cross-chain mints are capped and cross-chain burns free room.
     function testCrosschainMintAndBurn() public {
-        if (_isDebt()) return;
+        if (_isDebt()) {
+            return;
+        }
         // `crosschainBurn` spends the holder's allowance to the bridge (here the admin, holding CROSS_CHAIN_ROLE).
         _approve(ADDRESS1, DEFAULT_ADMIN_ADDRESS, 10);
         vm.startPrank(DEFAULT_ADMIN_ADDRESS);

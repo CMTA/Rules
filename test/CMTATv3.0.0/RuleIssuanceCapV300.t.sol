@@ -59,7 +59,9 @@ abstract contract RuleIssuanceCapV300Test is CMTATv300TestBase {
 
     /// @notice Standard only: a bridge round trip uses up the cap (bridge-in is counted as issuance).
     function testBridgeRoundTripUsesUpTheCap() public {
-        if (_isDebt()) return;
+        if (_isDebt()) {
+            return;
+        }
         _approve(ADDRESS1, DEFAULT_ADMIN_ADDRESS, 30);
         vm.startPrank(DEFAULT_ADMIN_ADDRESS);
         token.crosschainBurn(ADDRESS1, 30);

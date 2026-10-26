@@ -67,7 +67,9 @@ contract MaxTotalSupplyHandler is Test {
         uint256 cap = rule.maxTotalSupply();
         uint256 headroom = supplyBefore >= cap ? 0 : cap - supplyBefore;
         uint256 offset = offsetSeed % 3; // 0: -1, 1: exact, 2: +1
-        if (offset == 0 && headroom == 0) offset = 1;
+        if (offset == 0 && headroom == 0) {
+            offset = 1;
+        }
         uint256 value = headroom + offset - 1;
         vm.prank(ADMIN);
         try token.mint(_actor(actorSeed), value) {
@@ -103,7 +105,9 @@ contract MaxTotalSupplyHandler is Test {
     function forcedBurn(uint256 actorSeed, uint256 value) external {
         address from = _actor(actorSeed);
         value = bound(value, 1, MAX_AMOUNT);
-        if (token.balanceOf(from) < value) return;
+        if (token.balanceOf(from) < value) {
+            return;
+        }
         vm.prank(ADMIN);
         token.forcedTransfer(from, address(0), value);
     }
@@ -148,7 +152,9 @@ contract MaxTotalSupplyHandler is Test {
 
     function _recordAccepted(uint256 supplyBefore, uint256 value, uint256 cap) internal virtual {
         ++mintsAccepted;
-        if (!_fits(supplyBefore, value, cap)) ++ghostBreaches;
+        if (!_fits(supplyBefore, value, cap)) {
+            ++ghostBreaches;
+        }
     }
 
     function _recordRejected(uint256 supplyBefore, uint256 value, uint256 cap, bytes memory reason) internal {

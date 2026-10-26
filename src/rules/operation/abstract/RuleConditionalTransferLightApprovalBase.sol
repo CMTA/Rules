@@ -37,7 +37,7 @@ abstract contract RuleConditionalTransferLightApprovalBase is RuleConditionalTra
      * @notice Consumes one approval for the transfer described by `ctx`.
      * @param ctx The fungible transfer context (from, to, value).
      */
-    function transferred(ITransferContext.FungibleTransferContext calldata ctx) external onlyTransferExecutor {
+    function transferred(ITransferContext.FungibleTransferContext calldata ctx) external virtual onlyTransferExecutor {
         _transferredFromContext(ctx);
     }
 
@@ -104,7 +104,7 @@ abstract contract RuleConditionalTransferLightApprovalBase is RuleConditionalTra
      * @param value The amount of the transfer.
      * @return The current approval count for the transfer.
      */
-    function approvedCount(address from, address to, uint256 value) public view returns (uint256) {
+    function approvedCount(address from, address to, uint256 value) public view virtual returns (uint256) {
         bytes32 transferHash = _transferHash(from, to, value);
         return approvalCounts[transferHash];
     }
@@ -153,8 +153,7 @@ abstract contract RuleConditionalTransferLightApprovalBase is RuleConditionalTra
      * keccak256(abi.encodePacked(from, bytes12(0), to, bytes12(0), value))
      * keccak256(abi.encode(bytes32(bytes20(from)), bytes32(bytes20(to)), value))
      * ```
-     * Pinned by `testDocumentedPreimageMatchesTheStorageKey`. Use {approvedCount} unless you need
-     * the storage slot directly.
+     * Use {approvedCount} unless you need the storage slot directly.
      * @param from The sender of the transfer.
      * @param to The recipient of the transfer.
      * @param value The amount of the transfer.

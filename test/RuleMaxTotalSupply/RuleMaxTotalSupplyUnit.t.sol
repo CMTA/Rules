@@ -304,6 +304,19 @@ contract RuleMaxTotalSupplyUnit is Test, HelperContract {
         assertEq(rule.maxTotalSupply(), type(uint256).max);
     }
 
+    /// @notice A zero step is a no-op that still records the (unchanged) cap in the event.
+    function testZeroIncreaseAndDecreaseAreNoOps() public {
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        vm.expectEmit(address(rule));
+        emit MaxTotalSupplyUpdated(100, 100);
+        rule.increaseMaxTotalSupply(0);
+        vm.expectEmit(address(rule));
+        emit MaxTotalSupplyUpdated(100, 100);
+        rule.decreaseMaxTotalSupply(0);
+        vm.stopPrank();
+        assertEq(rule.maxTotalSupply(), 100);
+    }
+
     /// @notice Two increases approved against the same old cap compose; two absolute sets would not.
     function testTwoIncreasesCompose() public {
         vm.startPrank(DEFAULT_ADMIN_ADDRESS);

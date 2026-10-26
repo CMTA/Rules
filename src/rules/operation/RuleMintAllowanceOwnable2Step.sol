@@ -36,6 +36,7 @@ contract RuleMintAllowanceOwnable2Step is RuleMintAllowanceBase, Ownable2Step, O
     function supportsInterface(bytes4 interfaceId)
         public
         view
+        virtual
         override(Ownable2StepERC165Module, IERC165)
         returns (bool)
     {

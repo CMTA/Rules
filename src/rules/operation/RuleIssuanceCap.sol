@@ -6,6 +6,7 @@ import {ERC3643ComplianceRolesStorage} from "RuleEngine/modules/library/ERC3643C
 import {AccessControlModuleStandalone} from "../../modules/AccessControlModuleStandalone.sol";
 import {RuleTransferValidation} from "../validation/abstract/core/RuleTransferValidation.sol";
 import {RuleIssuanceCapBase} from "./abstract/RuleIssuanceCapBase.sol";
+import {RuleMaxTotalSupplyRolesStorage} from "../validation/abstract/invariant/RuleMaxTotalSupplyRolesStorage.sol";
 
 /**
  * @title RuleIssuanceCap
@@ -13,12 +14,12 @@ import {RuleIssuanceCapBase} from "./abstract/RuleIssuanceCapBase.sol";
  *         `MAX_TOTAL_SUPPLY_ROLE` changes the cap; `COMPLIANCE_MANAGER_ROLE` binds the caller (token or
  *         RuleEngine); `DEFAULT_ADMIN_ROLE` implicitly holds all roles.
  */
-contract RuleIssuanceCap is AccessControlModuleStandalone, RuleIssuanceCapBase, ERC3643ComplianceRolesStorage {
-    /**
-     * @notice Role allowed to change the cap (`setMaxTotalSupply`, `increaseMaxTotalSupply`, `decreaseMaxTotalSupply`).
-     */
-    bytes32 public constant MAX_TOTAL_SUPPLY_ROLE = keccak256("MAX_TOTAL_SUPPLY_ROLE");
-
+contract RuleIssuanceCap is
+    AccessControlModuleStandalone,
+    RuleIssuanceCapBase,
+    ERC3643ComplianceRolesStorage,
+    RuleMaxTotalSupplyRolesStorage
+{
     /*//////////////////////////////////////////////////////////////
                              CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/

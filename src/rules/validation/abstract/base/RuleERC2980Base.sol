@@ -298,7 +298,7 @@ abstract contract RuleERC2980Base is
      * @notice Returns the number of whitelisted addresses.
      * @return The count of addresses currently in the whitelist.
      */
-    function whitelistAddressCount() public view returns (uint256) {
+    function whitelistAddressCount() public view virtual returns (uint256) {
         return _whitelistCount();
     }
 
@@ -307,7 +307,7 @@ abstract contract RuleERC2980Base is
      * @param targetAddress Address to check.
      * @return True if the address is whitelisted.
      */
-    function isWhitelisted(address targetAddress) public view returns (bool) {
+    function isWhitelisted(address targetAddress) public view virtual returns (bool) {
         return _isWhitelisted(targetAddress);
     }
 
@@ -336,7 +336,7 @@ abstract contract RuleERC2980Base is
      * @param targetAddresses Addresses to check.
      * @return results Array of booleans, true where the corresponding address is whitelisted.
      */
-    function areWhitelisted(address[] memory targetAddresses) public view returns (bool[] memory results) {
+    function areWhitelisted(address[] memory targetAddresses) public view virtual returns (bool[] memory results) {
         results = new bool[](targetAddresses.length);
         for (uint256 i = 0; i < targetAddresses.length; ++i) {
             results[i] = _isWhitelisted(targetAddresses[i]);
@@ -347,7 +347,7 @@ abstract contract RuleERC2980Base is
      * @notice Returns the number of frozen addresses.
      * @return The count of addresses currently in the frozenlist.
      */
-    function frozenlistAddressCount() public view returns (uint256) {
+    function frozenlistAddressCount() public view virtual returns (uint256) {
         return _frozenlistCount();
     }
 
@@ -356,7 +356,7 @@ abstract contract RuleERC2980Base is
      * @param targetAddress Address to check.
      * @return True if the address is frozen.
      */
-    function isFrozen(address targetAddress) public view returns (bool) {
+    function isFrozen(address targetAddress) public view virtual returns (bool) {
         return _isFrozen(targetAddress);
     }
 
@@ -374,7 +374,7 @@ abstract contract RuleERC2980Base is
      * @param targetAddresses Addresses to check.
      * @return results Array of booleans, true where the corresponding address is frozen.
      */
-    function areFrozen(address[] memory targetAddresses) public view returns (bool[] memory results) {
+    function areFrozen(address[] memory targetAddresses) public view virtual returns (bool[] memory results) {
         results = new bool[](targetAddresses.length);
         for (uint256 i = 0; i < targetAddresses.length; ++i) {
             results[i] = _isFrozen(targetAddresses[i]);

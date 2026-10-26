@@ -41,7 +41,7 @@ abstract contract RuleSpenderWhitelistBase is RuleAddressSet, RuleNFTAdapter, Ru
      * @param restrictionCode The restriction code to check.
      * @return True if the code is produced by this rule.
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override returns (bool) {
+    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure virtual override returns (bool) {
         return restrictionCode == CODE_ADDRESS_SPENDER_NOT_WHITELISTED;
     }
 
@@ -52,13 +52,13 @@ abstract contract RuleSpenderWhitelistBase is RuleAddressSet, RuleNFTAdapter, Ru
     /**
      * @dev Regular transfers are always accepted by this rule.
      */
-    function transferred(address, address, uint256) public view override(IERC3643IComplianceContract) {}
+    function transferred(address, address, uint256) public view virtual override(IERC3643IComplianceContract) {}
 
     /**
      * @notice Applies the rule to an operation that carries a spender (`transferFrom`, and mint / burn since
      * CMTAT v3.3); reverts if it is not allowed.
      */
-    function transferred(address spender, address from, address to, uint256 value) public view override {
+    function transferred(address spender, address from, address to, uint256 value) public view virtual override {
         _transferredFrom(spender, from, to, value);
     }
 
@@ -68,6 +68,7 @@ abstract contract RuleSpenderWhitelistBase is RuleAddressSet, RuleNFTAdapter, Ru
     function messageForTransferRestriction(uint8 restrictionCode)
         public
         pure
+        virtual
         override(IERC1404)
         returns (string memory)
     {

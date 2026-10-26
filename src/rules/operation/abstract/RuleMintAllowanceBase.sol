@@ -73,7 +73,13 @@ abstract contract RuleMintAllowanceBase is
     /**
      * @inheritdoc IRule
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override(IRule) returns (bool) {
+    function canReturnTransferRestrictionCode(uint8 restrictionCode)
+        external
+        pure
+        virtual
+        override(IRule)
+        returns (bool)
+    {
         return restrictionCode == CODE_MINTER_ALLOWANCE_EXCEEDED;
     }
 
@@ -191,6 +197,7 @@ abstract contract RuleMintAllowanceBase is
     function messageForTransferRestriction(uint8 restrictionCode)
         public
         pure
+        virtual
         override(IERC1404)
         returns (string memory)
     {
