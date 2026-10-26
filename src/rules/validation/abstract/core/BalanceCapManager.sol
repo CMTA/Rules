@@ -140,7 +140,8 @@ abstract contract BalanceCapManager is CapAccounting, RuleAddressSetInternal, Ru
      *
      *      `_addAddress` does not guard the sentinel; the caller must, exactly as the whitelist
      *      rules and `IdentityRegistryWhitelist` do. The batch path is guarded separately, by the
-     *      function pointer `_addAddresses` passes to `AddressSetBatchLib`. Invariant I-12.
+     *      function pointer `_addAddresses` passes to `AddressSetBatchLib`. Either way the zero
+     *      address can never enter the exemption list.
      * @param targetAddress The address to exempt.
      */
     function _addExemptAddress(address targetAddress) internal virtual {

@@ -99,11 +99,14 @@ Commit:
 
 ### Changed
 
+- **Production comments no longer cite AI-assisted review reports** (`CLAUDE_AUDIT.md`, `CLAUDE_ANALYSIS.md`) or their bare finding IDs; each of the seven affected comments now states its conclusion itself. Comments only, no code change.
+  - Files: `RuleConditionalTransferLightApprovalBase`, `RuleConditionalTransferLightMultiTokenBase`, `RuleWhitelistShared`, `AddressSetBatchLib`, `RuleAddressSetInternal`, `BalanceCapManager`, `RuleWhitelistInvariantStorage`.
+  - Why: these reports are rewritten each release and their IDs restart (`CLAUDE_ANALYSIS.md` D-1 names three different findings across v0.5.0–v0.7.0), so a citation in deployed source could not say which one it meant. `CLAUDE.md` now allows citing only official audits by an audit company from production source.
 - **Unbound stateful rules now report restriction code 85 (`CODE_RULE_NOT_BOUND`)** instead of "allowed": `RuleConditionalTransferLight`, `RuleMintAllowance` and `RuleIssuanceCap`.
   - Their `transferred` accepts only a bound caller, so until `bindToken` (or `bindRuleEngine` for `RuleConditionalTransferLight`) is called every operation reverts, while the views said it would succeed. Every view now reports 85 for every operation, the `can*` views return `false`, and `RuleIssuanceCap.remainingMintable()` returns `(85, 0)`.
   - One code and one message for the three rules, declared once in the new `RuleBindingInvariantStorage`. It is the one code shared across unrelated rules.
   - Behaviour change for integrators: a pre-flight on an unbound rule now fails instead of passing. Once bound, every view answers exactly as before. `RuleConditionalTransferLight` counts as bound when either a token or a RuleEngine is bound.
-- **Code-quality review of `v0.7.0`** (`doc/security/audits/tools/v0.7.0/CLAUDE_ANALYSIS.md`, 24 findings): 9 fixed, 9 checked correct, 6 deliberately left. H-1 was decided and implemented as the code-85 change above. Nothing found is a vulnerability.
+- **Code-quality review of `v0.7.0`** (`doc/security/audits/tools/v0.7.0/CLAUDE_ANALYSIS.md`, 24 findings): 10 fixed, 9 checked correct, 5 deliberately left. H-1 was decided and implemented as the code-85 change above. Nothing found is a vulnerability.
   - `RuleIssuanceCapBase._afterMintChecked` reads `totalIssued` and `maxTotalSupply` once into locals instead of re-reading both for `require`'s eagerly evaluated error arguments: **−345 gas per mint**, measured.
   - `MAX_TOTAL_SUPPLY_ROLE` is declared once, in the new `RuleMaxTotalSupplyRolesStorage`, inherited by the two AccessControl deployables only (the `RuleAddressSetRolesStorage` pattern). Role getters unchanged.
   - **63 `public` / `external` functions in 16 production files are now `virtual`** (compliance entrypoints, views, restriction-code functions). Runtime size of every deployable is identical; the convention is now written in `CLAUDE.md`.
@@ -144,6 +147,7 @@ Commit:
 
 ### Documentation
 
+- New `doc/security/audits/CLAUDE_ANALYSIS_SUMMARY.md`: the map between production code and the AI-assisted review findings that production comments no longer cite. One entry per code location: file and line, the code, the comment before and after, the finding with its release, and the change applied. Seeded with the seven relocated citations and the code changes of the v0.7.0 review; `CLAUDE.md` requires an entry whenever such a finding changes code.
 - **Static analysis for `v0.7.0`** (`doc/security/audits/tools/v0.7.0/`): Slither 0.11.6 (latest) and Aderyn 0.6.5 reports, each with a summary table and a per-finding triage file, plus a Slither 0.11.5 run kept for a like-for-like comparison with `v0.6.0`. `AUDIT_OVERVIEW.md` and both READMEs updated.
   - Slither: 46 results, nothing to fix. On 0.11.5 the code delta is nil (identical to `v0.6.0` result for result). The upgrade to 0.11.6 trades six `unused-return` hits for six `dead-code` false positives, one of them on `RuleIssuanceCapBase._afterMintChecked`, which is reached through virtual dispatch.
   - Recorded a pre-existing Slither blind spot: no IR is generated for `_addAddresses` / `_removeAddresses` in `RuleMaxBalance` and `IdentityRegistryWhitelist`, so no detector analyses those two copies (the same inherited code is analysed in the other address-set rules).

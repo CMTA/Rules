@@ -37,7 +37,7 @@ whole of `src/` and `test/`.
 | G-2 | `CLAUDE.md` gave a false reason for `IdentityRegistryWhitelist`'s design ("setters are not `virtual`") | ✅ Fixed — stale since `v0.5.0` |
 | G-3 | `CLAUDE.md` said `RuleIdentityRegistry` screens the minter; the code exempts it, per ERC-3643 | ✅ Fixed |
 | G-4 | NatSpec length: max 19, median 4, p90 9 — within the 20-line ceiling | ✅ Checked; the guide's p90 figure corrected (8 → 9) |
-| G-5 | `CLAUDE_AUDIT.md` / `CLAUDE_ANALYSIS.md` cited from production comments | ⬜ Left — explicitly allowed by this project's guide |
+| G-5 | `CLAUDE_AUDIT.md` / `CLAUDE_ANALYSIS.md` cited from production comments (5 by filename, 2 by bare ID) | ✅ Fixed — the project rule now forbids citing AI-assisted reports from production source; official company audits remain citable |
 | H-1 | An unbound `RuleIssuanceCap` answers "allowed" on every view while every mint reverts | ✅ Fixed (decision: option b) — shared code 85 in all three binding rules |
 | H-2 | `_afterMintChecked` re-checks a condition the CMTAT write path has already checked | ⬜ Left — it is what makes the counter safe on a re-phased write path |
 | H-3 | On `RuleIssuanceCap`, `maxTotalSupply` means cumulative issuance | ⬜ Left — documented; a renamed getter would be a second ABI |
@@ -48,7 +48,7 @@ whole of `src/` and `test/`.
 | L-1 | 5 braceless `if` bodies, all in tests added this release | ✅ Fixed |
 | M-1 | `require` vs `if` / `revert` | ✅ Checked — 3 bare `revert`s are not convertible; the one `require` with storage-read arguments fixed under B-1 |
 
-**9 fixed · 9 checked-and-correct · 6 left · 0 to decide.** (24 rows, counted.)
+**10 fixed · 9 checked-and-correct · 5 left · 0 to decide.** (24 rows, counted.)
 
 ## Outstanding
 
@@ -225,11 +225,48 @@ v3.0.0 token (`RuleIdentityRegistryV300`).
 866 blocks in production `src/`: **median 4 lines, 90th percentile 9, longest 19.** Nothing reaches the 20-line
 ceiling. The guide quoted a p90 of 8; it now quotes the measured 9.
 
-### G-5. Citations of `CLAUDE_AUDIT.md` / `CLAUDE_ANALYSIS.md` in production comments — left
+### G-5. Citations of `CLAUDE_AUDIT.md` / `CLAUDE_ANALYSIS.md` in production comments — left, with one caveat
 
-Five comments cite these by bare filename and finding ID. A strict reading of the review guidelines would remove
-references to agent-written reports, but **this project's `CLAUDE.md` explicitly allows them**, as immutable
-records cited by bare filename. The project's rule wins. Recorded so the next review does not remove them.
+Five production comments cite an agent-written report, always in the same form: the **bare filename in
+backticks, followed by the finding ID**, with no path.
+
+| Site | Cited as | Report it means | What the comment relies on it for |
+|---|---|---|---|
+| `RuleConditionalTransferLightApprovalBase.sol:165` (`_transferHash`) | `` `CLAUDE_AUDIT.md` F-12 `` | v0.4.0 audit, findings table: "`_transferHash` assembly is injective and memory-safe" | why the hand-rolled hashing preimage is safe |
+| `RuleConditionalTransferLightMultiTokenBase.sol:205` (`resetApproval` NatSpec) | `` (see `CLAUDE_AUDIT.md` finding F-4) `` | v0.4.0 audit §3.3: multi-token approvals keyed by `msg.sender` | why approvals can be stranded under a key that is never consumed |
+| `RuleWhitelistShared.sol:183` (`checkSpender` event) | `` (`CLAUDE_ANALYSIS.md` C-2) `` | **v0.5.0** review: "`checkSpender`'s initial value is never announced" | why the event is emitted from the internal setter |
+| `AddressSetBatchLib.sol:10` (library header) | `` (`CLAUDE_ANALYSIS.md` D-1) `` | **v0.5.0** review: "`RuleERC2980Internal` is `RuleAddressSetInternal`, pasted twice" | why the batch loops were extracted |
+| `RuleAddressSetInternal.sol:89` (`_addAddress`) | `` (`CLAUDE_ANALYSIS.md` B-4) `` | **v0.5.0** review: "`contains()` followed by `add()` — double set lookup" | why the set mutation's return value is forwarded |
+
+In each case the comment states its own conclusion and the citation adds the history behind it, so a reader
+without the repository loses context but not the warning. That is what the project rule requires.
+
+**Verdict: leave.** The review guidelines would remove references to agent-written reports, but this project's
+`CLAUDE.md` explicitly allows them ("immutable historical records … cited by bare filename"), and the project's
+rule wins. Recorded so the next review does not remove them.
+
+**Caveat: the bare `CLAUDE_ANALYSIS.md` filename is now ambiguous.** The project's rule assumed one file per
+name. There are now three `CLAUDE_ANALYSIS.md` reports (v0.5.0, v0.6.0, v0.7.0), and their IDs restart at `-1`:
+- **D-1** means the batch-loop extraction in v0.5.0, the notification-seam NatSpec in v0.6.0, and `MAX_TOTAL_SUPPLY_ROLE` in v0.7.0;
+- **C-2** exists in both v0.5.0 and v0.7.0, with different meanings.
+
+All three code citations mean **v0.5.0**, but nothing in the comment says so. `CLAUDE_AUDIT.md` is not affected:
+there is one (v0.4.0).
+
+The cheapest disambiguation keeps the bare filename and adds the release: `` `CLAUDE_ANALYSIS.md` (v0.5.0) D-1 ``.
+The version survives the file moving, as the bare name does. This is the form `CLAUDE.md` already uses for this
+report (`` `CLAUDE_ANALYSIS.md` (v0.7.0) E-1 ``). It means three comment edits and one sentence in `CLAUDE.md`'s
+citation rule. **Not applied: it changes a project convention, so it is left for the maintainer.**
+
+**Maintainer decision: forbid them instead.** The project rule was changed: production source may cite **official
+audits by an audit company** (bare filename and finding ID), but no longer AI-assisted reports, and no longer
+their IDs on their own.
+- The five citations above were rewritten so each comment carries its own conclusion. For example, the `_transferHash` comment now states why the preimage is injective (three fixed-width words) instead of pointing to F-12, and the `resetApproval` comment states how approvals get stranded (looked up under the engine's address behind a RuleEngine) instead of pointing to F-4.
+- The scan also found two IDs cited **without** the filename: "Invariant I-12" in `BalanceCapManager.sol` and "audit F-5" in `RuleWhitelistInvariantStorage.sol`. These were rewritten too.
+- The scan `grep -rnE 'CLAUDE_|audit F-|\bI-[0-9]+\b|\bF-[0-9]+\b|\bINV-[0-9]+' src` (mocks excluded) now returns nothing.
+- `CLAUDE.md` / `AGENTS.md` carry the new rule, and their Security Findings Reference no longer says "source comments cite it".
+- **The link between code and finding moved to `doc/security/audits/CLAUDE_ANALYSIS_SUMMARY.md`.** For each of the seven sites (S-1 to S-7) it records the code line, the comment before and after, the finding with its release, and the change it applied. It also lists the production-code changes of this review (B-1, D-1, E-1, G-1, H-1, G-5), which no comment cites.
+- **Not changed, pending a decision:** five comments cite **Nethermind AuditAgent** findings (`NM-17`, `NM-18`, `NM-20`). AuditAgent is an AI scan run by a company (`AUDIT_OVERVIEW.md` lists it as an "AI automated scan"), so it sits between the two categories.
 
 ## H. Weird behaviour
 

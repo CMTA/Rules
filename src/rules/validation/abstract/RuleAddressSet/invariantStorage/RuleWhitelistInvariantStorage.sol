@@ -75,7 +75,7 @@ abstract contract RuleWhitelistInvariantStorage is RuleSharedInvariantStorage {
      * @dev Raised by `RuleWhitelistWrapper` when a rule is added that does not advertise
      * {AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID} via ERC-165. Without the guard
      * the wrapper accepted it and then reverted on the blind call during a transfer, bricking every
-     * check whose targets were not already resolved. Nethermind AuditAgent NM-18, audit F-5.
+     * check whose targets were not already resolved. Nethermind AuditAgent NM-18.
      * @param rule The rejected candidate.
      */
     error RuleWhitelistWrapper_ChildIsNotAnAddressList(address rule);

@@ -86,7 +86,7 @@ abstract contract RuleAddressSetInternal is RuleAddressSetInvariantStorage {
      * @notice Adds a single address to the set.
      * @dev Forwards {EnumerableSet}'s "did this change anything" result so the caller can reject a
      * duplicate without a second lookup: the membership test the caller would otherwise perform is
-     * the same one `add` already does internally (`CLAUDE_ANALYSIS.md` B-4).
+     * the same one `add` already does internally.
      * @param targetAddress The address to add.
      * @return True when the address was not already listed.
      */

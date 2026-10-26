@@ -202,7 +202,8 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
      * - Deliberately does NOT require the token to be bound, unlike {approveTransfer}: the primary
      *   use is cleaning up approvals that survived an {unbindToken}, at which point the token is by
      *   definition no longer bound. It is also the only way to clear approvals stranded under a key
-     *   that can never be consumed (see `CLAUDE_AUDIT.md` finding F-4).
+     *   that can never be consumed: behind a RuleEngine, approvals recorded for a token are looked
+     *   up under the engine's address, never under the token's.
      * @param token The token whose approvals are cleared.
      * @param from The sender of the transfer whose approvals are cleared.
      * @param to The recipient of the transfer whose approvals are cleared.
