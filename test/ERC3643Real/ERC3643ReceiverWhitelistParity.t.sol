@@ -3,7 +3,7 @@ pragma solidity 0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {Token} from "ERC3643/token/Token.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 import {IdentityRegistryWhitelist} from "src/registry/IdentityRegistryWhitelist.sol";
 import {RuleReceiverWhitelist} from "src/rules/validation/deployment/RuleReceiverWhitelist.sol";
 
@@ -40,7 +40,7 @@ contract ERC3643ReceiverWhitelistParity is Test {
         vm.startPrank(ADMIN);
         registry = new IdentityRegistryWhitelist(ADMIN);
         receiverRule = new RuleReceiverWhitelist(ADMIN, address(0));
-        engine = new RuleEngine(ADMIN, address(0), address(0));
+        engine = new RuleEngine(ADMIN, address(0));
         engine.addRule(receiverRule);
         vm.stopPrank();
 

@@ -6,7 +6,7 @@ import {HelperContract} from "../HelperContract.sol";
 import {CMTATDeployment} from "test/utils/CMTATDeployment.sol";
 import {RuleWhitelist} from "src/rules/validation/deployment/RuleWhitelist.sol";
 import {RuleWhitelistWrapper} from "src/rules/validation/deployment/RuleWhitelistWrapper.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 import {AccessControlModuleStandalone} from "../../src/modules/AccessControlModuleStandalone.sol";
 /**
  * @title Integration test with the CMTAT
@@ -39,7 +39,7 @@ contract CMTATIntegrationWhitelistWrapper is Test, HelperContract {
         cmtatContract = cmtatDeployment.cmtat();
         // specific arrange
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, address(cmtatContract));
+        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, address(cmtatContract));
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         ruleEngineMock.addRule(ruleWhitelistWrapper);
         vm.prank(DEFAULT_ADMIN_ADDRESS);

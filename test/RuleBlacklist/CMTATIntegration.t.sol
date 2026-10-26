@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 import {HelperContract} from "../HelperContract.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 import {CMTATDeployment} from "test/utils/CMTATDeployment.sol";
 import {RuleBlacklist} from "src/rules/validation/deployment/RuleBlacklist.sol";
 
@@ -26,7 +26,7 @@ contract CMTATIntegration is Test, HelperContract {
 
         // specific arrange
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, address(cmtatContract));
+        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, address(cmtatContract));
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         ruleEngineMock.addRule(ruleBlacklist);
         vm.prank(DEFAULT_ADMIN_ADDRESS);

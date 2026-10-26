@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {HelperContract} from "../HelperContract.sol";
 import {CMTATDeployment} from "test/utils/CMTATDeployment.sol";
 
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
 
 import {IdentityRegistryMock} from "src/mocks/IdentityRegistryMock.sol";
@@ -55,7 +55,7 @@ contract ThreatModelTests is Test, HelperContract {
         cmtatContract = cmtatDeployment.cmtat();
 
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, address(cmtatContract));
+        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, address(cmtatContract));
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         ruleIdentityRegistry = new RuleIdentityRegistry(DEFAULT_ADMIN_ADDRESS, address(registry), false, false);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
@@ -83,7 +83,7 @@ contract ThreatModelTests is Test, HelperContract {
         cmtatContract = cmtatDeployment.cmtat();
 
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, address(cmtatContract));
+        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, address(cmtatContract));
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         ruleIdentityRegistry = new RuleIdentityRegistry(DEFAULT_ADMIN_ADDRESS, address(registry), false, false);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
@@ -133,7 +133,7 @@ contract ThreatModelTests is Test, HelperContract {
         cmtatContract = cmtatDeployment.cmtat();
 
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, address(cmtatContract));
+        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, address(cmtatContract));
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         ruleWhitelist = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, FORWARDER, true, true);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
@@ -190,7 +190,7 @@ contract ThreatModelTests is Test, HelperContract {
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         ruleMaxTotalSupply = new RuleMaxTotalSupply(DEFAULT_ADMIN_ADDRESS, address(token), 1000);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         ruleEngineMock.addRule(ruleMaxTotalSupply);
 
@@ -248,7 +248,7 @@ contract ThreatModelTests is Test, HelperContract {
      */
     function test_CTL1_ApproveAndTransferIfAllowedWorksOnceEngineIsBound() public {
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         ruleConditionalTransferLight = new RuleConditionalTransferLight(DEFAULT_ADMIN_ADDRESS);
 
@@ -272,7 +272,7 @@ contract ThreatModelTests is Test, HelperContract {
      */
     function test_CTL1_UnsupportedWiringsStillFail() public {
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
 
         // (a) engine bound as the "token": IERC20(engine).allowance(...) has no such function.
         vm.prank(DEFAULT_ADMIN_ADDRESS);
@@ -313,7 +313,7 @@ contract ThreatModelTests is Test, HelperContract {
      */
     function test_CTL1_ApprovalsAreNotTokenScopedBehindAMultiTenantEngine_CurrentBehaviour() public {
         vm.startPrank(DEFAULT_ADMIN_ADDRESS);
-        RuleEngine engine = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+        RuleEngine engine = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
         RuleConditionalTransferLight rule = new RuleConditionalTransferLight(DEFAULT_ADMIN_ADDRESS);
         rule.bindToken(ADDRESS1); // token A
         rule.bindRuleEngine(address(engine));
@@ -359,7 +359,7 @@ contract ThreatModelTests is Test, HelperContract {
      */
     function test_CTL2_MultiTokenApprovalKeyMismatchLeavesStaleApproval_CurrentBehaviour() public {
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        RuleEngine engine = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+        RuleEngine engine = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         RuleConditionalTransferLightMultiToken rule = new RuleConditionalTransferLightMultiToken(DEFAULT_ADMIN_ADDRESS);
 
@@ -392,7 +392,7 @@ contract ThreatModelTests is Test, HelperContract {
      */
     function test_CTL2_EngineKeyedApprovalIsSharedAcrossTokens_CurrentBehaviour() public {
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        RuleEngine engine = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+        RuleEngine engine = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         RuleConditionalTransferLightMultiToken rule = new RuleConditionalTransferLightMultiToken(DEFAULT_ADMIN_ADDRESS);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
@@ -527,7 +527,7 @@ contract ThreatModelTests is Test, HelperContract {
         cmtatContract = cmtatDeployment.cmtat();
 
         vm.startPrank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, address(cmtatContract));
+        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, address(cmtatContract));
         RuleMintAllowance rule = new RuleMintAllowance(DEFAULT_ADMIN_ADDRESS);
         rule.bindToken(address(ruleEngineMock));
         ruleEngineMock.addRule(rule);

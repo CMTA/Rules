@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {RuleMaxBalanceInvariantStorage} from "../invariant/RuleMaxBalanceInvariantStorage.sol";
 import {IBalanceOf} from "../../../interfaces/IBalanceOf.sol";

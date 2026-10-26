@@ -91,8 +91,8 @@ Rules that implement a standardized interface must match that standard's semanti
 ## Dependencies (lib/)
 - `openzeppelin-contracts` v5.7.0 — `AccessControl`, `Ownable2Step`, `EnumerableSet`, `ERC2771Context`
 - `openzeppelin-contracts-upgradeable` v5.7.0
-- `CMTAT` v3.3.0-rc3 (submodule pin; library supports ≥ v3.0.0) — `IERC1404`, `IERC3643`, `IRuleEngine` interfaces
-- `RuleEngine` v3.0.0-rc6 — `IRule`, `RulesManagementModule`
+- `CMTAT` v3.3.0-rc4 (submodule pin; library supports ≥ v3.0.0) — `IERC1404`, `IERC3643`, `IRuleEngine` interfaces
+- `RuleEngine` v3.0.0-rc7 — `IRule`, `RulesManagementModule`. Since rc7 `IRule` no longer inherits `IRuleEngine` (ERC-165 id `0xb1a69752`); every rule still implements `IRuleEngineERC1404` for the standalone role and advertises **both** `IRULE_INTERFACE_ID` and `IRULE_LEGACY_INTERFACE_ID` (`0x2497d6cb`) so rc6-and-older engines accept it — keep both. The plain `RuleEngine` has no forwarder (`(admin, token)`); ERC-2771 needs `RuleEngine2771`. Deployables live in `RuleEngine/deployment/accessControl/` and `RuleEngine/deployment/ownable/`
 - `forge-std` — Foundry test utilities
 
 Remappings are in `remappings.txt`; aliases used in source: `@openzeppelin/`, `CMTAT/`, `RuleEngine/`.
@@ -110,7 +110,7 @@ Foundry config: `foundry.toml` (solc 0.8.36, EVM prague, optimizer 200 runs).
 **There are two profiles, and `forge test` alone does not run everything.** The vendored ERC-3643
 `Token.sol` pins `pragma solidity 0.8.30` *exactly*, which cannot share a compilation unit with our
 0.8.36. So `test/ERC3643Real/**` is in the default profile's `skip` list and is built by
-`[profile.erc3643]` at solc 0.8.30 instead (our contracts are `^0.8.20`, so they compile there too).
+`[profile.erc3643]` at solc 0.8.30 instead (our contracts are `^0.8.27`, so they compile there too).
 CI must run **both** commands. Gotchas: profiles inherit unspecified keys from `[profile.default]`,
 so that profile has to clear `skip = []` explicitly; and it writes to `out-erc3643/` to avoid
 clobbering the 0.8.36 artifacts.

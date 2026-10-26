@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 /* ==== CMTAT === */
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643ComplianceRead, IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
 import {IERC7551Compliance} from "CMTAT/interfaces/tokenization/draft-IERC7551.sol";
+import {IRuleEngine, IRuleEngineERC1404} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 /* ==== RuleEngine === */
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
 import {RuleInterfaceId} from "RuleEngine/modules/library/RuleInterfaceId.sol";
@@ -24,6 +25,7 @@ abstract contract RuleTransferValidation is
     IERC1404Extend,
     IERC3643ComplianceRead,
     IERC7551Compliance,
+    IRuleEngineERC1404,
     IRule
 {
     /*//////////////////////////////////////////////////////////////
@@ -89,6 +91,16 @@ abstract contract RuleTransferValidation is
     }
 
     /**
+     * @notice Applies the rule to an operation that carries a spender (`transferFrom`, and mint/burn since CMTAT v3.3).
+     * @dev Declared by both `IRule` and CMTAT's `IRuleEngine`, which are unrelated since RuleEngine v3.0.0-rc7.
+     * Implemented by each rule.
+     */
+    function transferred(address spender, address from, address to, uint256 value)
+        public
+        virtual
+        override(IRule, IRuleEngine);
+
+    /**
      * @notice Returns whether this contract implements the given interface.
      * @param interfaceId The ERC-165 interface identifier to query.
      * @return True if the interface is supported.
@@ -96,7 +108,9 @@ abstract contract RuleTransferValidation is
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
         return interfaceId == RuleEngineInterfaceId.RULE_ENGINE_INTERFACE_ID
             || interfaceId == ERC1404ExtendInterfaceId.ERC1404EXTEND_INTERFACE_ID
-            || interfaceId == RuleInterfaceId.IRULE_INTERFACE_ID || interfaceId == type(IERC7551Compliance).interfaceId
+            || interfaceId == RuleInterfaceId.IRULE_INTERFACE_ID
+            || interfaceId == RuleInterfaceId.IRULE_LEGACY_INTERFACE_ID
+            || interfaceId == type(IERC7551Compliance).interfaceId
             || interfaceId == type(IERC3643IComplianceContract).interfaceId;
     }
 

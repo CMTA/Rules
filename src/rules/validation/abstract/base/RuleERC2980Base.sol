@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {MetaTxModuleStandalone, ERC2771Context} from "../../../../modules/MetaTxModuleStandalone.sol";
 import {RuleERC2980Internal} from "../RuleERC2980/RuleERC2980Internal.sol";
@@ -242,12 +242,7 @@ abstract contract RuleERC2980Base is
     /**
      * @inheritdoc IRuleEngine
      */
-    function transferred(address spender, address from, address to, uint256 value)
-        public
-        view
-        virtual
-        override(IRuleEngine)
-    {
+    function transferred(address spender, address from, address to, uint256 value) public view virtual override {
         _transferredFrom(spender, from, to, value);
     }
 

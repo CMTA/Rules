@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 import {HelperContract} from "../HelperContract.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 import {RuleConditionalTransferLightMultiToken} from "src/rules/operation/RuleConditionalTransferLightMultiToken.sol";
 
 contract RuleConditionalTransferLightMultiTokenRuleEngineIntegrationTest is Test, HelperContract {
@@ -12,7 +12,7 @@ contract RuleConditionalTransferLightMultiTokenRuleEngineIntegrationTest is Test
 
     function setUp() public {
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        sharedRuleEngine = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+        sharedRuleEngine = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
 
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         rule = new RuleConditionalTransferLightMultiToken(DEFAULT_ADMIN_ADDRESS);

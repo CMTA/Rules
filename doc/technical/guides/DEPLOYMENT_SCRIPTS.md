@@ -179,6 +179,15 @@ Adds a `RuleEngine` holding `RuleBlacklist` then `RuleSanctionsList` (codes `30`
 only *which* code a rejected transfer reports, since the engine returns the first non-zero one, not whether it
 is rejected. `testBlacklistTakesPriorityOverSanctions` pins that ordering.
 
+**Which engine is deployed depends on `forwarder`.** Since RuleEngine `v3.0.0-rc7`, ERC-2771 is opt-in: the plain
+`RuleEngine(admin, token)` has no trusted forwarder, and `RuleEngine2771(admin, forwarder, token)` is the variant
+that has one. Both engine scripts deploy `RuleEngine` when `forwarder == address(0)` and `RuleEngine2771`
+otherwise, so the engine trusts the same forwarder as the token and the rules. The returned value is typed
+`RuleEngine` in both cases (`RuleEngine2771` extends it). Either way, token callbacks (`transferred`, `created`,
+`destroyed`) are never relayable: rc7 identifies the token by `msg.sender`. The same choice applies to the
+next script; `testRuleEngineHasNoForwarderWhenNoneIsGiven` and `testRuleEngineTrustsTheForwarderWhenOneIsGiven`
+pin it in both.
+
 > ⚠️ **An unset oracle fails open.** With `sanctionsOracle == address(0)` the rule is registered, the engine
 > reports no error, and every transfer passes the sanctions check. The deployment looks complete and screening
 > is off. The oracle address is chain-specific, so there is no safe default.

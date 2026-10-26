@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 /* ==== CMTAT === */
 import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
-import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 /* ==== Abstract contracts === */
 import {RuleWhitelistInvariantStorage} from "../RuleAddressSet/invariantStorage/RuleWhitelistInvariantStorage.sol";
 import {RuleNFTAdapter} from "./RuleNFTAdapter.sol";
@@ -156,7 +155,7 @@ abstract contract RuleWhitelistShared is RuleNFTAdapter, RuleWhitelistInvariantS
      * @param to The recipient address.
      * @param value The token amount being transferred.
      */
-    function transferred(address spender, address from, address to, uint256 value) public view override(IRuleEngine) {
+    function transferred(address spender, address from, address to, uint256 value) public view override {
         _transferredFrom(spender, from, to, value);
     }
 

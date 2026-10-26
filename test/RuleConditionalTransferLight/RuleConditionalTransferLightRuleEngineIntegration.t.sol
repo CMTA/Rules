@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 import {HelperContract} from "../HelperContract.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 import {RuleConditionalTransferLight} from "src/rules/operation/RuleConditionalTransferLight.sol";
 
 /**
@@ -12,7 +12,7 @@ import {RuleConditionalTransferLight} from "src/rules/operation/RuleConditionalT
 contract RuleConditionalTransferLightRuleEngineIntegration is Test, HelperContract {
     function setUp() public {
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
 
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         ruleConditionalTransferLight = new RuleConditionalTransferLight(CONDITIONAL_TRANSFER_OPERATOR_ADDRESS);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {RuleAddressSet} from "../RuleAddressSet/RuleAddressSet.sol";
 import {RuleNFTAdapter} from "../core/RuleNFTAdapter.sol";
@@ -53,12 +53,7 @@ abstract contract RuleBlacklistBase is
      * @inheritdoc IRuleEngine
      * @dev Validation only; does not modify state.
      */
-    function transferred(address spender, address from, address to, uint256 value)
-        public
-        view
-        virtual
-        override(IRuleEngine)
-    {
+    function transferred(address spender, address from, address to, uint256 value) public view virtual override {
         _transferredFrom(spender, from, to, value);
     }
 

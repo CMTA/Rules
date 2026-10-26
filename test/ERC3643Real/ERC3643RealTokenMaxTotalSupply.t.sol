@@ -3,7 +3,7 @@ pragma solidity 0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {ComplianceNotFollowed, Token} from "ERC3643/token/Token.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 import {AggregatorV3Mock} from "src/mocks/AggregatorV3Mock.sol";
 import {IdentityRegistryWhitelist} from "src/registry/IdentityRegistryWhitelist.sol";
 import {AggregatorV3Interface} from "src/rules/interfaces/AggregatorV3Interface.sol";
@@ -55,7 +55,7 @@ contract ERC3643RealTokenMaxTotalSupply is Test, RuleMaxTotalSupplyInvariantStor
 
         vm.startPrank(ADMIN);
         registry = new IdentityRegistryWhitelist(ADMIN);
-        engine = new RuleEngine(ADMIN, address(0), address(0));
+        engine = new RuleEngine(ADMIN, address(0));
         vm.stopPrank();
 
         vm.prank(ADMIN);

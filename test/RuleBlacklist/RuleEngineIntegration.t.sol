@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 import {HelperContract} from "../HelperContract.sol";
 import {RuleBlacklist} from "src/rules/validation/deployment/RuleBlacklist.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 
 /**
  * @title Integration test between RuleEngine and RuleBlacklist
@@ -14,7 +14,7 @@ contract RuleBlacklistRuleEngineIntegration is Test, HelperContract {
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         ruleBlacklist = new RuleBlacklist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         ruleEngineMock.addRule(ruleBlacklist);
     }

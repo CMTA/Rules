@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {AggregatorV3Interface} from "../../../interfaces/AggregatorV3Interface.sol";
@@ -79,7 +79,7 @@ abstract contract RuleChainlinkPoRBase is RuleTransferValidation, ChainlinkPoRFe
     /**
      * @inheritdoc IRuleEngine
      */
-    function transferred(address spender, address from, address to, uint256 value) public view override(IRuleEngine) {
+    function transferred(address spender, address from, address to, uint256 value) public view override {
         _transferredFrom(spender, from, to, value);
     }
 

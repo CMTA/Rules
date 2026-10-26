@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {RuleAddressSet} from "../RuleAddressSet/RuleAddressSet.sol";
 import {RuleNFTAdapter} from "../core/RuleNFTAdapter.sol";
@@ -73,7 +73,7 @@ abstract contract RuleReceiverWhitelistBase is
     /**
      * @inheritdoc IRuleEngine
      */
-    function transferred(address spender, address from, address to, uint256 value) public view override(IRuleEngine) {
+    function transferred(address spender, address from, address to, uint256 value) public view override {
         _transferredFrom(spender, from, to, value);
     }
 

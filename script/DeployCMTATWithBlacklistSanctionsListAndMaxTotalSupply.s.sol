@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {CMTATStandardStandalone} from "CMTAT/deployment/CMTATStandardStandalone.sol";
 import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
+import {RuleEngine2771} from "RuleEngine/deployment/accessControl/RuleEngine2771.sol";
 import {RuleBlacklist} from "src/rules/validation/deployment/RuleBlacklist.sol";
 import {RuleMaxTotalSupply} from "src/rules/validation/deployment/RuleMaxTotalSupply.sol";
 import {RuleSanctionsList} from "src/rules/validation/deployment/RuleSanctionsList.sol";
@@ -92,7 +93,10 @@ contract DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply is CMTATDeployme
 
         // 5. The engine, deployer-owned for now so rules can be added. Binding the token at
         //    construction is what authorises it to call `transferred()` on the engine.
-        ruleEngine = new RuleEngine(deployer, forwarder, address(token));
+        //    ERC-2771 is opt-in since RuleEngine v3.0.0-rc7: only the `2771` variant takes a forwarder.
+        ruleEngine = forwarder == address(0)
+            ? new RuleEngine(deployer, address(token))
+            : new RuleEngine2771(deployer, forwarder, address(token));
 
         ruleEngine.addRule(ruleBlacklist);
         ruleEngine.addRule(ruleSanctionsList);

@@ -46,6 +46,37 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 
 
+## v0.7.0 - Unreleased
+
+### Summary
+
+- Dependency update: CMTAT `v3.3.0-rc4` and RuleEngine `v3.0.0-rc7`. No change to any rule's screening logic, restriction codes or storage layout.
+
+### Dependencies
+
+- **CMTAT `v3.3.0-rc3` → `v3.3.0-rc4`.** No functional change for the rules: rc4 only changes NatSpec in `IRuleEngine` (which `transferred` overload the token calls per operation) and moves CMTAT to OpenZeppelin `v5.7.0`, which this repository already uses.
+- **RuleEngine `v3.0.0-rc6` → `v3.0.0-rc7`.** Four changes reach this repository.
+  - `IRule` no longer inherits CMTAT's `IRuleEngine`: it declares only what the engine calls (ERC-1404 views, both `transferred` overloads, `canReturnTransferRestrictionCode`). `RuleTransferValidation` and the three operation bases (`RuleConditionalTransferLightBase`, `RuleConditionalTransferLightMultiTokenBase`, `RuleMintAllowanceBase`) now also inherit `IRuleEngineERC1404`, so every rule keeps the standalone role (`CMTAT.setRuleEngine(rule)`) and its `IRuleEngine` ERC-165 advertisement. The 4-argument `transferred` overrides `IRule` and `IRuleEngine` together.
+  - The `IRule` ERC-165 id changed from `0x2497d6cb` to `0xb1a69752`. Every rule now advertises **both** `RuleInterfaceId.IRULE_INTERFACE_ID` and `RuleInterfaceId.IRULE_LEGACY_INTERFACE_ID`, so it is accepted by an rc7 engine and by an rc6 or older one. Advertising only the new id would have made a rule compiled against rc7 unusable with an older engine (`RuleEngine_RuleInvalidInterface`).
+  - ERC-2771 is opt-in on the engine: `RuleEngine` is now `constructor(admin, tokenContract)` and the forwarder-aware variant is `RuleEngine2771(admin, forwarder, tokenContract)`. The deployables moved to `RuleEngine/deployment/accessControl/` and `RuleEngine/deployment/ownable/`; all imports updated.
+  - Token callbacks are identified by `msg.sender`, not `_msgSender()`, so a trusted forwarder can no longer act as a bound token. The rules never relied on relayed callbacks: no change needed.
+- `pragma solidity` raised from `^0.8.20` to `^0.8.27` in every `src/` and `script/` file. `require(condition, CustomError())`, used throughout, needs solc 0.8.27 in the legacy pipeline, and RuleEngine rc7 now declares `^0.8.27` on the files every rule imports, so `^0.8.20` was no longer the real floor. Tests keep their pragma.
+
+### Changed
+
+- **Deployment scripts deploy `RuleEngine2771` only when a forwarder is given.** `DeployCMTATWithBlacklistAndSanctionsList` and `DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply` deploy `RuleEngine` when `forwarder == address(0)` and `RuleEngine2771` otherwise, so the engine trusts the same forwarder as the token and the rules, as it did with rc6. The returned engine is still typed `RuleEngine`.
+
+### Testing
+
+- `test/InterfaceId/RuleInterfaceIdCompatibility.t.sol` (3 tests): pins the two `IRule` id literals and checks that each distinct `supportsInterface` implementation advertises the new id, the legacy id and `IRuleEngine`.
+- Deployment-script tests: one test per engine script for each branch of the forwarder choice (4 tests).
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 895 tests pass in the default profile and 53 in the `erc3643` profile.
+
+### Documentation
+
+- `doc/README.md`: `IRule` section rewritten for rc7 (new interface, both ERC-165 ids and which engines accept them), compatibility table with a `v0.7.0` row. Root `README.md`, `doc/FOUNDRY.md`, `CLAUDE.md` / `AGENTS.md`: submodule versions.
+- `doc/technical/guides/DEPLOYMENT_SCRIPTS.md`: which engine the scripts deploy, depending on `forwarder`.
+
 ## v0.6.0 - 2026-08-24
 
 Commit: 

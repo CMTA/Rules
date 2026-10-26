@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 import {HelperContract} from "../HelperContract.sol";
 import {CMTATDeployment} from "test/utils/CMTATDeployment.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 import {RuleMaxBalance} from "src/rules/validation/deployment/RuleMaxBalance.sol";
 import {
     RuleMaxBalanceInvariantStorage
@@ -36,7 +36,7 @@ contract RuleMaxBalanceCMTATIntegration is Test, HelperContract, RuleMaxBalanceI
 
         vm.startPrank(DEFAULT_ADMIN_ADDRESS);
         rule = new RuleMaxBalance(DEFAULT_ADMIN_ADDRESS, address(cmtatContract), CAP);
-        ruleEngine = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, address(cmtatContract));
+        ruleEngine = new RuleEngine(DEFAULT_ADMIN_ADDRESS, address(cmtatContract));
         ruleEngine.addRule(rule);
         cmtatContract.setRuleEngine(ruleEngine);
         vm.stopPrank();

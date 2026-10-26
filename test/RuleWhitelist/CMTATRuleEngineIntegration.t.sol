@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {HelperContract} from "../HelperContract.sol";
 import {CMTATDeployment} from "test/utils/CMTATDeployment.sol";
 import {RuleWhitelist} from "src/rules/validation/deployment/RuleWhitelist.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 
 /**
  * @title Integration test with CMTAT + RuleEngine + RuleWhitelist
@@ -21,7 +21,7 @@ contract CMTATRuleEngineIntegration is Test, HelperContract {
         cmtatContract = cmtatDeployment.cmtat();
 
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, address(cmtatContract));
+        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, address(cmtatContract));
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         ruleEngineMock.addRule(ruleWhitelist);
         // Allow minting: set the explicit flag (the zero address is NEVER whitelisted) and

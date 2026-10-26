@@ -7,7 +7,7 @@ Each rule can be used **standalone**, directly plugged into a CMTAT token, **or*
 The **RuleEngine** is an external smart contract that applies transfer restrictions to security tokens such as **CMTAT** or [ERC-3643](https://eips.ethereum.org/EIPS/eip-3643)-compatible tokens through a RuleEngine.
 Rules are modular validator contracts that the `RuleEngine` or `CMTAT` compatible token can call on every transfer to ensure regulatory and business-logic compliance.
 
-**Current package version:** `v0.6.0` (contracts report `version()` → `"0.6.0"`). Built against CMTAT `v3.3.0-rc3` and RuleEngine `v3.0.0-rc6`; see [Compatibility](#compatibility) for the supported range.
+**Current package version:** `v0.6.0` (contracts report `version()` → `"0.6.0"`). Built against CMTAT `v3.3.0-rc4` and RuleEngine `v3.0.0-rc7`; see [Compatibility](#compatibility) for the supported range.
 
 > This project has not undergone an audit and is provided as-is without any warranties.
 
@@ -87,7 +87,7 @@ A rule can be consumed in three ways. All three call the same rule contract; the
 | Mode | Caller | What the rule must implement | When to use |
 | --- | --- | --- | --- |
 | **Direct CMTAT rule** | A CMTAT token calls the rule directly (no RuleEngine) | `IRuleEngine` (`canTransfer` + `transferred`, including the spender-aware overload) | A single rule is enough; no multi-rule orchestration needed |
-| **RuleEngine-managed rule** | A `RuleEngine` aggregates one or more rules and calls each on every transfer | `IRule` (`IRuleEngine` + `canReturnTransferRestrictionCode`) | Several rules must be combined, ordered, or share restriction codes |
+| **RuleEngine-managed rule** | A `RuleEngine` aggregates one or more rules and calls each on every transfer | `IRule` (ERC-1404 views + both `transferred` overloads + `canReturnTransferRestrictionCode`) | Several rules must be combined, ordered, or share restriction codes |
 | **ERC-3643 through RuleEngine** | An ERC-3643 token drives `created` / `destroyed` / transfer hooks on a RuleEngine, which forwards them to the rules | Rules as above; the **RuleEngine** implements the full ERC-3643 `ICompliance` | The token is ERC-3643 and needs full `ICompliance` — a standalone rule cannot back an ERC-3643 token directly |
 
 Interface details for each mode are documented under [Architecture](#architecture); full signatures live in the [API](#api) reference.
@@ -96,9 +96,10 @@ Interface details for each mode are documented under [Architecture](#architectur
 
 | Component        | Compatible Versions                                        |
 | ---------------- | ---------------------------------------------------------- |
+| **Rules v0.7.0** (unreleased) | CMTAT ≥ v3.0.0 (tested against v3.3.0-rc4)<br />RuleEngine v3.0.0-rc7 (rules are also accepted by v3.0.0-rc6 and older, see [Using Rules via RuleEngine](#using-rules-via-ruleengine)) |
 | **Rules v0.6.0** | CMTAT ≥ v3.0.0 (tested against v3.3.0-rc3)<br />RuleEngine v3.0.0-rc6 |
 
-Spender-aware paths (e.g. `RuleMintAllowance`) rely on the 4-argument `canTransferFrom` / `transferred(spender, from, to, value)` callbacks, which require a CMTAT / RuleEngine that forwards the spender to the rule; this repository is validated against CMTAT `v3.3.0-rc3`. The other rules only use the 3-argument path and work across the full CMTAT ≥ v3.0.0 range.
+Spender-aware paths (e.g. `RuleMintAllowance`) rely on the 4-argument `canTransferFrom` / `transferred(spender, from, to, value)` callbacks, which require a CMTAT / RuleEngine that forwards the spender to the rule; this repository is validated against CMTAT `v3.3.0-rc4`. The other rules only use the 3-argument path and work across the full CMTAT ≥ v3.0.0 range.
 
 Each Rule implements the interface `IRuleEngine` defined in CMTAT.
 
@@ -384,16 +385,27 @@ Both structs are passed to `transferred(MultiTokenTransferContext calldata ctx)`
 
 ### Using Rules via RuleEngine
 
-When used through the RuleEngine, a rule must also implement:
+When used through the RuleEngine, a rule must also implement `IRule` (RuleEngine `v3.0.0-rc7`):
 
 ```solidity
-interface IRule is IRuleEngine {
+interface IRule is IERC1404Extend, IERC3643IComplianceContract, IERC165 {
+    function transferred(address spender, address from, address to, uint256 value) external;
+
     function canReturnTransferRestrictionCode(uint8 restrictionCode)
         external
         view
         returns (bool);
 }
 ```
+
+Since RuleEngine `v3.0.0-rc7`, `IRule` no longer inherits CMTAT's `IRuleEngine`: it declares only what the engine calls on a rule, so `canTransfer` / `canTransferFrom` are not part of it. Its ERC-165 id changed accordingly:
+
+| Id | Value | Accepted by |
+| --- | --- | --- |
+| `RuleInterfaceId.IRULE_INTERFACE_ID` | `0xb1a69752` | RuleEngine `v3.0.0-rc7` and later |
+| `RuleInterfaceId.IRULE_LEGACY_INTERFACE_ID` | `0x2497d6cb` | every RuleEngine v3.x, including `rc6` and older |
+
+Every rule in this repository still implements `IRuleEngine` (it keeps the standalone role) and therefore advertises **both** ids, so it can be added to an `rc7` engine and to an older one.
 
 The RuleEngine can then:
 

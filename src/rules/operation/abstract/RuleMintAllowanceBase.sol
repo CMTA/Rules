@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
-import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
+import {IRuleEngine, IRuleEngineERC1404} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643ComplianceRead, IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
 import {IERC7551Compliance} from "CMTAT/interfaces/tokenization/draft-IERC7551.sol";
@@ -35,6 +35,7 @@ abstract contract RuleMintAllowanceBase is
     VersionModule,
     ERC3643ComplianceModule,
     RuleMintAllowanceInvariantStorage,
+    IRuleEngineERC1404,
     IRule
 {
     /*//////////////////////////////////////////////////////////////
@@ -178,7 +179,7 @@ abstract contract RuleMintAllowanceBase is
     function transferred(address spender, address from, address to, uint256 value)
         public
         virtual
-        override(IRuleEngine)
+        override(IRule, IRuleEngine)
         onlyBoundToken
     {
         _transferredFrom(spender, from, to, value);
