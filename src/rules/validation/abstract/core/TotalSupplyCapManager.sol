@@ -131,4 +131,22 @@ abstract contract TotalSupplyCapManager is CapAccounting, TokenSupplyReader, Rul
         }
         return (true, _capExceededBy(currentSupply, maxTotalSupply, value));
     }
+
+    /**
+     * @notice How much may still be minted before total supply reaches the cap, without ever reverting.
+     * @dev Kept `internal`: the rule wraps it in a public `remainingMintable` that reports an ERC-1404
+     * restriction code, a concern this contract does not carry. Saturates at `0` when the cap has been
+     * lowered below the current supply.
+     * @return supplyAvailable False when `totalSupply()` could not be read; `headroom` is then
+     * meaningless and the caller should treat the query as failed.
+     * @return headroom Remaining mintable amount in token units.
+     */
+    function _remainingMintable() internal view virtual returns (bool supplyAvailable, uint256 headroom) {
+        uint256 currentSupply;
+        (supplyAvailable, currentSupply) = _currentSupply();
+        if (!supplyAvailable) {
+            return (false, 0);
+        }
+        return (true, _capHeadroom(currentSupply, maxTotalSupply));
+    }
 }

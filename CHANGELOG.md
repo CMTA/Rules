@@ -64,6 +64,13 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 - Test-only submodule `lib/CMTATv3.0.0`, pinned to CMTAT tag `v3.0.0`, with the remapping `CMTATv3.0.0/=lib/CMTATv3.0.0/contracts/` (same approach as RuleEngine). It compiles with this repository's solc 0.8.36 and OpenZeppelin `v5.7.0`; nothing in `src/` imports it.
 - `pragma solidity` raised from `^0.8.20` to `^0.8.27` in every `src/` and `script/` file. `require(condition, CustomError())`, used throughout, needs solc 0.8.27 in the legacy pipeline, and RuleEngine rc7 now declares `^0.8.27` on the files every rule imports, so `^0.8.20` was no longer the real floor. Tests keep their pragma.
 
+### Added
+
+- **`RuleMaxTotalSupply.remainingMintable() → (uint8 restrictionCode, uint256 headroom)`**: how much may still be minted before the cap, without simulating a mint.
+  - Saturates at `0` when the cap is at or below the current supply; returns code `51` instead of reverting when `totalSupply()` is unreadable.
+  - Same shape as `RuleMaxBalance.remainingCapacity(to)`: the revert-free internal half `_remainingMintable()` lives in `TotalSupplyCapManager` and reuses the previously unused `CapAccounting._capHeadroom`; the code-returning public half lives in `RuleMaxTotalSupplyBase`.
+  - Inherited unchanged by `RuleMaxTotalSupplyOwnable2Step` and both `…ERC3643` variants. Non-breaking: one new selector, no storage change.
+
 ### Changed
 
 - **Deployment scripts deploy `RuleEngine2771` only when a forwarder is given.** `DeployCMTATWithBlacklistAndSanctionsList` and `DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply` deploy `RuleEngine` when `forwarder == address(0)` and `RuleEngine2771` otherwise, so the engine trusts the same forwarder as the token and the rules, as it did with rc6. The returned engine is still typed `RuleEngine`.
@@ -72,11 +79,12 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 - `test/InterfaceId/RuleInterfaceIdCompatibility.t.sol` (3 tests): pins the two `IRule` id literals and checks that each distinct `supportsInterface` implementation advertises the new id, the legacy id and `IRuleEngine`.
 - Deployment-script tests: one test per engine script for each branch of the forwarder choice (4 tests).
-- **CMTAT v3.0.0 integration suites** (`test/CMTATv3.0.0/`, 280 tests): one suite per rule, each run on the Standard and Debt variants, set directly on the token and behind a `RuleEngine` (`RuleConditionalTransferLightMultiToken`: direct only).
+- **CMTAT v3.0.0 integration suites** (`test/CMTATv3.0.0/`, 284 tests): one suite per rule, each run on the Standard and Debt variants, set directly on the token and behind a `RuleEngine` (`RuleConditionalTransferLightMultiToken`: direct only).
   - Shared harness: `CMTATv300TestBase` (a variant-neutral token interface, wiring, and view assertions that check `canTransfer` and, on Standard, `detectTransferRestriction*`), the four variant/topology mixins in `CMTATv300Variants.sol`, and `test/utils/CMTATDeploymentV300.sol`.
   - Pinned v3.0.0 differences: a blacklisted, sanctioned or frozen **minter** is not screened by `RuleBlacklist`, `RuleSanctionsList` and `RuleERC2980` (v3.0.0 sends mint and burn without a spender); `RuleMintAllowance` is inert (every mint passes, no quota debited).
   - Pinned `RuleMaxTotalSupply` behaviours: `burnAndMint` needs room only for the net increase, a forced burn frees room, and `crosschainMint` / `crosschainBurn` are capped / free room.
-- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,175 tests pass in the default profile and 53 in the `erc3643` profile.
+- `remainingMintable()`: unit tests (headroom, exact fit, cap below supply, unreadable supply), a fuzz property that the headroom is exactly the largest mint the pre-flight check accepts, the ERC-3643 variant, and a real CMTAT v3.0.0 token across mints and burns.
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,185 tests pass in the default profile and 53 in the `erc3643` profile.
 
 ### Documentation
 

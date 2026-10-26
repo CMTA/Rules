@@ -84,6 +84,63 @@ contract RuleMaxTotalSupplyUnit is Test, HelperContract {
         assertEq(rule.detectTransferRestriction(ADDRESS1, ZERO_ADDRESS, 1), TRANSFER_OK);
     }
 
+    /*//////////////////////////////////////////////////////////////
+                          remainingMintable
+    //////////////////////////////////////////////////////////////*/
+
+    function testRemainingMintableIsCapMinusSupply() public {
+        token.setTotalSupply(60);
+        (uint8 code, uint256 headroom) = rule.remainingMintable();
+        assertEq(code, TRANSFER_OK);
+        assertEq(headroom, 40);
+    }
+
+    function testRemainingMintableIsZeroAtTheCap() public {
+        token.setTotalSupply(100);
+        (, uint256 headroom) = rule.remainingMintable();
+        assertEq(headroom, 0);
+    }
+
+    /// @notice A cap lowered below the supply saturates at 0 instead of underflowing.
+    function testRemainingMintableSaturatesWhenTheCapIsBelowTheSupply() public {
+        token.setTotalSupply(60);
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.setMaxTotalSupply(10);
+        (uint8 code, uint256 headroom) = rule.remainingMintable();
+        assertEq(code, TRANSFER_OK);
+        assertEq(headroom, 0);
+    }
+
+    function testRemainingMintableReportsAnUnreadableSupply() public {
+        RevertingTotalSupplyMock breakable = new RevertingTotalSupplyMock();
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.setTokenContract(address(breakable));
+        breakable.setRevertOnTotalSupply(true);
+        (uint8 code, uint256 headroom) = rule.remainingMintable();
+        assertEq(code, CODE_SUPPLY_ORACLE_UNAVAILABLE);
+        assertEq(headroom, 0);
+    }
+
+    /// @notice The headroom is exactly the largest mint the pre-flight check accepts.
+    function testFuzz_RemainingMintableAgreesWithTheMintCheck(uint256 supply, uint256 cap) public {
+        token.setTotalSupply(supply);
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.setMaxTotalSupply(cap);
+        (, uint256 headroom) = rule.remainingMintable();
+        if (supply > cap) {
+            // Already over the line: no headroom, and even a zero mint is rejected.
+            assertEq(headroom, 0);
+            assertEq(rule.detectTransferRestriction(ZERO_ADDRESS, ADDRESS1, 0), CODE_MAX_TOTAL_SUPPLY_EXCEEDED);
+            return;
+        }
+        assertEq(rule.detectTransferRestriction(ZERO_ADDRESS, ADDRESS1, headroom), TRANSFER_OK);
+        if (headroom != type(uint256).max) {
+            assertEq(
+                rule.detectTransferRestriction(ZERO_ADDRESS, ADDRESS1, headroom + 1), CODE_MAX_TOTAL_SUPPLY_EXCEEDED
+            );
+        }
+    }
+
     function testTransferred_RevertsWithTheSupplyOracleCode() public {
         RevertingTotalSupplyMock breakable = new RevertingTotalSupplyMock();
         vm.prank(DEFAULT_ADMIN_ADDRESS);

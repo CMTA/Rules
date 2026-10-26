@@ -43,7 +43,9 @@
 
 These are independent of whether `RuleIssuanceCap` is built. Each is useful to the replenishing use case that `RuleMaxTotalSupply` already serves.
 
-### 3.1 No "remaining mintable" view (R7) — **recommended**
+### 3.1 No "remaining mintable" view (R7) — **done**
+
+> **Update:** implemented as described below (`TotalSupplyCapManager._remainingMintable`, `RuleMaxTotalSupplyBase.remainingMintable`). R7 is now fully covered.
 
 Today a front end must compute `maxTotalSupply() − tokenContract().totalSupply()` itself, with two problems:
 - it must handle a cap lowered below the supply, where the subtraction underflows;
@@ -137,7 +139,7 @@ So R3 needs a separate rule, as proposed in the plan. `RuleMaxTotalSupply` remai
 | Priority | Action | Kind |
 | --- | --- | --- |
 | 1 | Answer #16: R4 (replenishing) is already served by `RuleMaxTotalSupply` on CMTAT v3.0.0. R3 (non-replenishing) needs the new `RuleIssuanceCap` | Issue reply |
-| 2 | Add `remainingMintable()` (§3.1) | Code, non-breaking |
+| 2 | ~~Add `remainingMintable()` (§3.1)~~ **Done** | Code, non-breaking |
 | 3 | Document the §3.5 behaviours in `doc/technical/contracts/RuleMaxTotalSupply.md` | Documentation |
 | 4 | ~~Add the §3.7 tests, starting with real CMTAT v3.0.0~~ **Done** (`test/CMTATv3.0.0/`) | Tests |
 | 5 | Optional: dedicated `MAX_TOTAL_SUPPLY_ROLE` (§3.4), `increase` / `decrease` (§3.2) | Code, non-breaking |

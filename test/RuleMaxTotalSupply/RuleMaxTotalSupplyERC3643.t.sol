@@ -154,4 +154,13 @@ contract RuleMaxTotalSupplyERC3643Unit is Test, HelperContract {
         rule.setMaxTotalSupply(1);
         assertEq(rule.maxTotalSupply(), 1);
     }
+
+    /// @notice The view always runs before the movement, so the ERC-3643 variant reports the same headroom.
+    function testRemainingMintableIsNotRePhased() public {
+        RuleMaxTotalSupplyERC3643 rule = _accessControlVariant();
+        token.setTotalSupply(CAP - 40);
+        (uint8 code, uint256 headroom) = rule.remainingMintable();
+        assertEq(code, TRANSFER_OK);
+        assertEq(headroom, 40);
+    }
 }

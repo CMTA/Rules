@@ -89,6 +89,17 @@ Returns the current maximum total supply.
 
 Returns the current token contract address.
 
+### `remainingMintable() → (uint8 restrictionCode, uint256 headroom)`
+
+How much may still be minted before total supply reaches the cap: `maxTotalSupply − totalSupply()`. It saturates at `0` when the cap is at or below the current supply, which the arithmetic would otherwise underflow on. It never reverts.
+
+| `restrictionCode` | Meaning |
+| --- | --- |
+| `0` | `headroom` is valid: a mint of exactly `headroom` passes, `headroom + 1` is rejected with code `50` |
+| `51` (`CODE_SUPPLY_ORACLE_UNAVAILABLE`) | `totalSupply()` could not be read; `headroom` is `0` and meaningless, and every mint is rejected |
+
+A front end can size a mint from this one call, without computing the subtraction itself or simulating the mint. The ERC-3643 variants inherit it unchanged: a view always runs before the movement, so it needs no re-phasing. Same shape as `RuleMaxBalance.remainingCapacity(to)`.
+
 ## Transfer restriction logic
 
 The rule only acts on mint operations (i.e. `from == address(0)`). It reads `tokenContract.totalSupply()` and rejects the mint if `totalSupply + value > maxTotalSupply`. Transfers and burns always pass.

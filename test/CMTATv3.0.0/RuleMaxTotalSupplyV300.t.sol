@@ -27,6 +27,18 @@ abstract contract RuleMaxTotalSupplyV300Test is CMTATv300TestBase {
         assertEq(token.totalSupply(), CAP);
     }
 
+    function testRemainingMintableTracksMintsAndBurns() public {
+        (uint8 code, uint256 headroom) = rule.remainingMintable();
+        assertEq(code, TRANSFER_OK);
+        assertEq(headroom, 40);
+        _mint(ADDRESS2, 40);
+        (, headroom) = rule.remainingMintable();
+        assertEq(headroom, 0);
+        _burn(ADDRESS1, 15);
+        (, headroom) = rule.remainingMintable();
+        assertEq(headroom, 15);
+    }
+
     function testCannotMintAboveTheCap() public {
         _assertCode(ZERO_ADDRESS, ADDRESS2, 41, CODE_MAX_TOTAL_SUPPLY_EXCEEDED);
         vm.expectPartialRevert(RuleMaxTotalSupply_InvalidTransfer.selector);

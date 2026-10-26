@@ -48,6 +48,23 @@ abstract contract RuleMaxTotalSupplyBase is RuleTransferValidation, TotalSupplyC
     //////////////////////////////////////////////////////////////*/
 
     /**
+     * @notice Returns how much may still be minted before total supply reaches the cap.
+     * @dev Mirrors what {_detectTransferRestriction} computes for a mint, so an integrator can size a
+     * mint without simulating it. Never reverts. `0` when the cap is at or below the current supply.
+     * @return restrictionCode `0` when the headroom is meaningful, otherwise the code a mint would
+     * return ({CODE_SUPPLY_ORACLE_UNAVAILABLE} when `totalSupply()` cannot be read).
+     * @return headroom Remaining mintable amount in token units; meaningless when `restrictionCode`
+     * is non-zero.
+     */
+    function remainingMintable() public view virtual returns (uint8 restrictionCode, uint256 headroom) {
+        (bool supplyAvailable, uint256 headroom_) = _remainingMintable();
+        if (!supplyAvailable) {
+            return (CODE_SUPPLY_ORACLE_UNAVAILABLE, 0);
+        }
+        return (uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK), headroom_);
+    }
+
+    /**
      * @inheritdoc IERC3643IComplianceContract
      */
     function transferred(address from, address to, uint256 value) public view override(IERC3643IComplianceContract) {
