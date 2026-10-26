@@ -52,6 +52,14 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 - Dependency update: CMTAT `v3.3.0-rc4` and RuleEngine `v3.0.0-rc7`. No change to any rule's screening logic, restriction codes or storage layout.
 - Every rule is now tested against a real CMTAT `v3.0.0` token, the last audited CMTAT release, and the documentation states per rule what v3.0.0 supports.
+- One ABI change for off-chain consumers: `RuleMaxTotalSupply`'s `MaxTotalSupplyUpdated` event now carries the previous cap (see Breaking change).
+
+### Breaking change
+
+- **`MaxTotalSupplyUpdated(uint256 newMaxTotalSupply)` → `MaxTotalSupplyUpdated(uint256 previousMaxTotalSupply, uint256 newMaxTotalSupply)`** on `RuleMaxTotalSupply`, its Ownable2Step variant and both `…ERC3643` variants.
+  - Each event is now self-describing: one log shows what the cap was and what it became, so an auditor reading a single transaction no longer has to replay the history. `previousMaxTotalSupply` is `0` for the constructor's initial assignment.
+  - Impact: the event signature and its topic-0 hash change (`MaxTotalSupplyUpdated(uint256)` → `MaxTotalSupplyUpdated(uint256,uint256)`). Indexers, subgraphs and monitoring that filter on the old topic or decode a single `uint256` must be updated. Deployed v0.6.0 contracts keep emitting the old event; a consumer that follows both generations must accept both.
+  - No change to storage, functions, access control or behaviour.
 
 ### Dependencies
 
@@ -87,12 +95,14 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   - Shared harness: `CMTATv300TestBase` (a variant-neutral token interface, wiring, and view assertions that check `canTransfer` and, on Standard, `detectTransferRestriction*`), the four variant/topology mixins in `CMTATv300Variants.sol`, and `test/utils/CMTATDeploymentV300.sol`.
   - Pinned v3.0.0 differences: a blacklisted, sanctioned or frozen **minter** is not screened by `RuleBlacklist`, `RuleSanctionsList` and `RuleERC2980` (v3.0.0 sends mint and burn without a spender); `RuleMintAllowance` is inert (every mint passes, no quota debited).
   - Pinned `RuleMaxTotalSupply` behaviours: `burnAndMint` needs room only for the net increase, a forced burn frees room, `crosschainMint` / `crosschainBurn` are capped / free room, and supply minted while the rule is detached is counted on re-attach.
+- `MaxTotalSupplyUpdated(previous, new)`: the constructor test (`test/Events/ConstructorEvents.t.sol`) checks the new signature and `previous == 0`; a unit test checks the previous/new pair over two successive updates.
 - `MAX_TOTAL_SUPPLY_ROLE`: role hash, a cap operator who can change the cap but not the token (exact `AccessControlUnauthorizedAccount` errors), revocation, implicit admin holding, role enumeration, and inheritance by the ERC-3643 AccessControl variant.
 - **Invariant suite for `RuleMaxTotalSupply`** (`MaxTotalSupplyInvariants`, handler `test/invariant/MaxTotalSupplyHandler.sol`, 5 invariants × 8,192 calls) on a real CMTAT token, driving mints, boundary mints, `burnAndMint`, burns, forced burns, transfers and cap changes.
   - Invariants: no accepted mint exceeds the cap (safety); no fitting mint is rejected (liveness); rejections use only the rule's error; `remainingMintable()` equals the cap minus the live supply; the pre-flight view accepts exactly the headroom.
   - Negative controls: three mutations (off-by-one cap, over-strict cap, wrong headroom view) each fail the suite. A first version missed the off-by-one on the safety invariant, because random amounts never hit `headroom + 1`; the `mintAtBoundary` action fixes that. Recorded in `INVARIANT_TESTS.md` §4.
+  - Documented in `INVARIANT_TESTS.md` §3.3 and in the "Invariant testing" section of `doc/README.md`.
 - `remainingMintable()`: unit tests (headroom, exact fit, cap below supply, unreadable supply), a fuzz property that the headroom is exactly the largest mint the pre-flight check accepts, the ERC-3643 variant, and a real CMTAT v3.0.0 token across mints and burns.
-- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,200 tests pass in the default profile and 53 in the `erc3643` profile.
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,201 tests pass in the default profile and 53 in the `erc3643` profile.
 
 ### Documentation
 

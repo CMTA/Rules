@@ -1077,7 +1077,7 @@ This repository is developed and tested with [Foundry](https://book.getfoundry.s
 
 ### Invariant testing
 
-The two **stateful (operation) rules** — `RuleConditionalTransferLight` and `RuleMintAllowance` — are covered by a handler-driven `StdInvariant` suite in [`test/invariant/`](../test/invariant/), which fuzzes long randomly-ordered call sequences and re-checks four invariants after every step (8 192 calls each, `fail_on_revert = true`):
+The two **stateful (operation) rules**, `RuleConditionalTransferLight` and `RuleMintAllowance`, and `RuleMaxTotalSupply` (on a real CMTAT token) are covered by a handler-driven `StdInvariant` suite in [`test/invariant/`](../test/invariant/). It fuzzes long randomly-ordered call sequences and re-checks nine invariants after every step (8 192 calls each, `fail_on_revert = true`):
 
 | Invariant | Asserts |
 | --- | --- |
@@ -1085,8 +1085,13 @@ The two **stateful (operation) rules** — `RuleConditionalTransferLight` and `R
 | `invariant_noApprovalExceedsTotalRecorded` | `Σ approvalCounts ≤ totalApproved` |
 | `invariant_allowanceMatchesGhost` | the on-chain mint quota exactly matches an independently-computed ghost mirror, after any interleaving |
 | `invariant_mintedNeverExceedsCredited` | `Σ minted ≤ Σ credited` |
+| `invariant_noMintBreachedTheCap` | every accepted mint left `totalSupply ≤ maxTotalSupply` (safety) |
+| `invariant_noFittingMintWasRejected` | every mint that fitted under the cap went through (liveness) |
+| `invariant_mintsFailOnlyWithTheRuleError` | a rejected mint reverts only with the rule's own error |
+| `invariant_remainingMintableMatchesLiveSupply` | `remainingMintable() == max(cap − totalSupply, 0)`, forced burns included |
+| `invariant_preflightAgreesWithHeadroom` | the pre-flight view accepts exactly the headroom and rejects one unit more |
 
-Both suites are **mutation-verified**: injecting an approval double-spend or an off-by-one quota deduction makes them fail. Validation rules are read-only and hold no per-transfer state, so they are covered by unit and fuzz tests instead.
+All three suites are **mutation-verified**: injecting an approval double-spend, an off-by-one quota deduction, an off-by-one or over-strict cap, or a wrong headroom view makes them fail. The other validation rules are read-only and their state does not evolve, so unit and fuzz tests cover them. `RuleMaxTotalSupply` is the exception: the supply it guards changes, sometimes without calling the rule (forced burns).
 
 Full details — handler architecture, ghost variables, the negative controls, the coverage map against the threat-model invariants, and how to add a new one — are in **[doc/technical/guides/INVARIANT_TESTS.md](./technical/guides/INVARIANT_TESTS.md)**.
 

@@ -92,11 +92,18 @@ The split lets an issuer delegate cap changes, for example to a corporate-secret
 `RuleMaxTotalSupplyOwnable2Step` has no roles: the owner may call both setters. The ERC-3643 variants inherit the access control of the contract they extend.
 
 
+## Events
+
+| Event | Emitted by | Notes |
+| --- | --- | --- |
+| `MaxTotalSupplyUpdated(uint256 previousMaxTotalSupply, uint256 newMaxTotalSupply)` | constructor, `setMaxTotalSupply` | Both values in the data, not indexed. `previousMaxTotalSupply` is `0` at construction. Up to v0.6.0 the event carried only the new cap (`MaxTotalSupplyUpdated(uint256)`, a different topic) |
+| `TokenContractUpdated(address indexed newTokenContract)` | constructor, `setTokenContract` | |
+
 ## Methods
 
 ### `setMaxTotalSupply(uint256 newMaxTotalSupply)`
 
-Updates the maximum total supply cap, in token base units (see [Unit of the cap](#unit-of-the-cap)). Restricted to `MAX_TOTAL_SUPPLY_ROLE` (the admin holds it implicitly; the owner on the Ownable2Step variant). Emits `MaxTotalSupplyUpdated`.
+Updates the maximum total supply cap, in token base units (see [Unit of the cap](#unit-of-the-cap)). Restricted to `MAX_TOTAL_SUPPLY_ROLE` (the admin holds it implicitly; the owner on the Ownable2Step variant). Emits `MaxTotalSupplyUpdated(previousMaxTotalSupply, newMaxTotalSupply)`, also at construction, with `previousMaxTotalSupply = 0`.
 
 ### `setTokenContract(address newTokenContract)`
 

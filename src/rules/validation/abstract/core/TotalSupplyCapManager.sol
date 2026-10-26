@@ -79,8 +79,9 @@ abstract contract TotalSupplyCapManager is CapAccounting, TokenSupplyReader, Rul
      * @param newMaxTotalSupply The new maximum total supply.
      */
     function _setMaxTotalSupply(uint256 newMaxTotalSupply) internal virtual {
+        uint256 previousMaxTotalSupply = maxTotalSupply;
         maxTotalSupply = newMaxTotalSupply;
-        emit MaxTotalSupplyUpdated(newMaxTotalSupply);
+        emit MaxTotalSupplyUpdated(previousMaxTotalSupply, newMaxTotalSupply);
     }
 
     /**

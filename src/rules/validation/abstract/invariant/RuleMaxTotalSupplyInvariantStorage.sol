@@ -32,10 +32,11 @@ abstract contract RuleMaxTotalSupplyInvariantStorage is RuleSharedInvariantStora
     uint8 public constant CODE_SUPPLY_ORACLE_UNAVAILABLE = 51;
 
     /**
-     * @notice Emitted when the maximum total supply is updated.
+     * @notice Emitted when the maximum total supply is updated, including the initial assignment.
+     * @param previousMaxTotalSupply Cap before the update; `0` for the constructor's assignment.
      * @param newMaxTotalSupply New maximum total supply cap.
      */
-    event MaxTotalSupplyUpdated(uint256 newMaxTotalSupply);
+    event MaxTotalSupplyUpdated(uint256 previousMaxTotalSupply, uint256 newMaxTotalSupply);
     /**
      * @notice Emitted when the tracked token contract is updated.
      * @param newTokenContract Address of the newly configured token contract.

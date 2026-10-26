@@ -25,7 +25,7 @@ import {RuleWhitelistWrapper} from "src/rules/validation/deployment/RuleWhitelis
  *      regressing from the other direction.
  */
 contract ConstructorEvents is Test, HelperContract {
-    bytes32 private constant MAX_TOTAL_SUPPLY_UPDATED = keccak256("MaxTotalSupplyUpdated(uint256)");
+    bytes32 private constant MAX_TOTAL_SUPPLY_UPDATED = keccak256("MaxTotalSupplyUpdated(uint256,uint256)");
     bytes32 private constant TOKEN_CONTRACT_UPDATED = keccak256("TokenContractUpdated(address)");
     bytes32 private constant CHECK_SPENDER_UPDATED = keccak256("CheckSpenderUpdated(bool)");
     bytes32 private constant ALLOW_MINT_UPDATED = keccak256("AllowMintUpdated(bool)");
@@ -78,7 +78,9 @@ contract ConstructorEvents is Test, HelperContract {
 
         // The token address is indexed; the cap is in the data.
         assertEq(address(uint160(uint256(_only(logs, TOKEN_CONTRACT_UPDATED).topics[1]))), address(token));
-        assertEq(abi.decode(_only(logs, MAX_TOTAL_SUPPLY_UPDATED).data, (uint256)), 4242);
+        (uint256 previous, uint256 current) = abi.decode(_only(logs, MAX_TOTAL_SUPPLY_UPDATED).data, (uint256, uint256));
+        assertEq(previous, 0, "no cap before construction");
+        assertEq(current, 4242);
     }
 
     /*//////////////////////////////////////////////////////////////

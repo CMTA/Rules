@@ -229,6 +229,19 @@ contract RuleMaxTotalSupplyUnit is Test, HelperContract {
         assertEq(rule.maxTotalSupply(), 300);
     }
 
+    /// @notice Each update reports the cap it replaces, so one event is self-describing.
+    function testSetMaxTotalSupplyEmitsPreviousAndNewCap() public {
+        vm.expectEmit(address(rule));
+        emit MaxTotalSupplyUpdated(100, 250);
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.setMaxTotalSupply(250);
+
+        vm.expectEmit(address(rule));
+        emit MaxTotalSupplyUpdated(250, 0);
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.setMaxTotalSupply(0);
+    }
+
     function testSetMaxTotalSupply_OnlyAdmin() public {
         vm.expectRevert();
         vm.prank(ADDRESS1);

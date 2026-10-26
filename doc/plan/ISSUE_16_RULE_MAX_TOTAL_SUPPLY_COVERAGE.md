@@ -74,7 +74,9 @@ function remainingMintable() public view virtual returns (uint8 restrictionCode,
 
 Counter-argument: a corporate resolution usually fixes an **absolute** authorised amount, which `set` expresses directly. Recommend adding them only if the requester's governance issues relative changes.
 
-### 3.3 `MaxTotalSupplyUpdated` carries only the new value — **optional, minor**
+### 3.3 `MaxTotalSupplyUpdated` carries only the new value — **done**
+
+> **Update:** implemented in v0.7.0 as `MaxTotalSupplyUpdated(uint256 previousMaxTotalSupply, uint256 newMaxTotalSupply)` and listed under "Breaking change" in the changelog. The event was replaced, not duplicated by a second one.
 
 `event MaxTotalSupplyUpdated(uint256 newMaxTotalSupply)` lets an indexer rebuild the history only by replaying every event. Emitting `(previous, new)` makes each event self-describing, which an auditor reading a single transaction appreciates.
 
@@ -147,5 +149,5 @@ So R3 needs a separate rule, as proposed in the plan. `RuleMaxTotalSupply` remai
 | 3 | ~~Document the §3.5 behaviours in `doc/technical/contracts/RuleMaxTotalSupply.md`~~ **Done** | Documentation |
 | 4 | ~~Add the §3.7 tests, starting with real CMTAT v3.0.0~~ **Done** (`test/CMTATv3.0.0/`) | Tests |
 | 5 | Optional: ~~dedicated `MAX_TOTAL_SUPPLY_ROLE` (§3.4)~~ **done**; `increase` / `decrease` (§3.2) still open | Code, non-breaking |
-| 6 | Optional: `(previous, new)` event (§3.3), only alongside other breaking changes | Code, ABI change |
+| 6 | ~~Optional: `(previous, new)` event (§3.3)~~ **Done** (breaking: new event topic) | Code, ABI change |
 | 7 | Update the plan document so that `RuleIssuanceCap` reuses `CapAccounting` (§4) | Plan |
