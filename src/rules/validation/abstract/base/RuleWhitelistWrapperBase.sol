@@ -23,7 +23,7 @@ import {IIdentityRegistryVerified} from "../../../interfaces/IIdentityRegistry.s
  * satisfies the same interface and passes every check {addRule} performs, yet its set means the
  * opposite: add one as a child and its blacklisted addresses become whitelisted, and {isVerified}
  * reports them as verified investors. An ERC-165 guard would not catch this -- a blacklist advertises
- * the same interface id, because the interface really is the same. Polarity is configuration
+ * the same interface id, because it implements the same interface. Polarity is configuration
  * discipline enforced by the rules manager, not by this contract. Nethermind AuditAgent NM-20.
  */
 abstract contract RuleWhitelistWrapperBase is

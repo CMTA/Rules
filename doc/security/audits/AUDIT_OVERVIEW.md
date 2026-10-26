@@ -15,6 +15,7 @@
 
 | Date | Type | Tool / Source | Version | Reports |
 |---|---|---|---|---|
+| 2026-10-26 | AI-assisted security review | Claude Code (Anthropic) | v0.7.0 | [**RESULT.md**](./tools/v0.7.0/claude-audit/RESULT.md) · [threat model](./tools/v0.7.0/claude-audit/THREAT_MODEL.md) · [test plan](./tools/v0.7.0/claude-audit/TEST_IMPROVEMENT.md) (delta since v0.6.0: 0 Low/Medium/High, 5 Info, 16 PoCs) |
 | 2026-10-26 | AI-assisted review | Claude Code (Anthropic) | v0.7.0 | [**CLAUDE_ANALYSIS.md**](./tools/v0.7.0/CLAUDE_ANALYSIS.md) (code quality, `src/`: 24 findings, 10 fixed, nothing exploitable) |
 | 2026-10-26 | Static analysis | Slither 0.11.6 | v0.7.0 | [report](./tools/v0.7.0/slither-report.md) · [feedback](./tools/v0.7.0/slither-report-feedback.md) · [0.11.5 comparison run](./tools/v0.7.0/slither-report-0.11.5.md) |
 | 2026-10-26 | Static analysis | Aderyn 0.6.5 | v0.7.0 | [report](./tools/v0.7.0/aderyn-report.md) · [feedback](./tools/v0.7.0/aderyn-report-feedback.md) — second run, after fixing the nine unused imports the first run reported |
@@ -171,36 +172,22 @@ twice, spender-less hooks twice, short ABI return data twice). Every described f
 (over-restriction, a blocked transfer) or inert (a rule that cannot screen an identity it is never given); none
 of the 13 Medium ratings survives verification at Medium.
 
-**NM-11 — fixed in `v0.6.0` for two of the three cap rules.** The three rules assume the token notifies *before*
-moving the value; ERC-3643 / T-REX notifies *after*, so the observation already includes the amount and the stock
-rule counts it twice, reverting mints that are fully within the cap. `v0.6.0` adds a stateless `CapAccounting`
-primitive and a `_detectTransferRestrictionOnNotify` hook on each cap rule — defaulting to today's CMTAT
-behaviour — then ships **`RuleChainlinkPoRERC3643`** and **`RuleMaxTotalSupplyERC3643`** (each with an
-`Ownable2Step` variant) as one-line overrides of it. Only the write path is re-phased: ERC-3643 calls
-`canTransfer` *before* `_mint` and `created` *after*, both in one transaction, so the read views must keep
-projecting the pending amount. 49 tests, including two suites driving the **genuine** vendored T-REX token and
-four that pin the stock rules failing on it. **`RuleMaxBalance` is deliberately excluded** — a post-update
-variant would revert an agent's `forcedTransfer` and, on T-REX ≤ 4.1 where `recoveryAddress` routes through it,
-brick wallet recovery; that is a policy decision, not a hook override. Write-ups:
-`doc/technical/contracts/RuleChainlinkPoRERC3643.md`, `RuleMaxTotalSupplyERC3643.md`, `RULE_SEMANTICS.md` §5.
+**NM-11 — fixed in `v0.6.0` for two of the three cap rules.** The three rules assume the token notifies *before* moving the value; ERC-3643 / T-REX notifies *after*, so the observation already includes the amount and the stock rule counts it twice, reverting mints that are fully within the cap.
+- **Fix:** `v0.6.0` adds a stateless `CapAccounting` primitive and a `_detectTransferRestrictionOnNotify` hook on each cap rule, defaulting to the CMTAT behaviour, then ships **`RuleChainlinkPoRERC3643`** and **`RuleMaxTotalSupplyERC3643`** (each with an `Ownable2Step` variant) as one-line overrides of it.
+- **Only the write path is re-phased:** ERC-3643 calls `canTransfer` *before* `_mint` and `created` *after*, both in one transaction, so the read views must keep projecting the pending amount.
+- **Tests:** 49, including two suites driving the **genuine** vendored T-REX token and four that pin the stock rules failing on it.
+- **`RuleMaxBalance` is deliberately excluded:** a post-update variant would revert an agent's `forcedTransfer` and, on T-REX ≤ 4.1 where `recoveryAddress` routes through it, block wallet recovery. That is a policy decision, not a hook override.
+- **Write-ups:** `doc/technical/contracts/RuleChainlinkPoRERC3643.md`, `RuleMaxTotalSupplyERC3643.md`, `RULE_SEMANTICS.md` §5.
 
 A second ERC-3643 hazard surfaced while testing it and is now pinned: T-REX deploys then initialises, and an
 uninitialised `Token` reports `decimals() == 0`, so a PoR rule built before `init` silently caches the wrong
 decimals and mis-scales the reserves. Remedy is deployment order, documented on the contract page.
 
-**Fixed in `v0.6.0` — NM-6.** `RuleNFTAdapter`'s ERC-7943 spender-aware overloads called the delegated hook
-unconditionally, while the `ITransferContext` entrypoints normalised `sender == from` to the direct hook. The
-three interfaces signal a direct transfer differently — ERC-7943 documents its `spender` as "the address
-performing the transfer (**owner**/operator)" and `ctx.sender` is the token's `msg.sender`, so on both an owner
-arrives as `spender == from`, whereas CMTAT uses `spender == address(0)` and the 3-arg overload. The adapter now
-normalises on a shared `_isDelegated` predicate; the 4-arg CMTAT path is deliberately left alone, so the primary
-integration path and every existing restriction code are unchanged. The one behavioural correction is
-`RuleSpenderWhitelist`, which had been rejecting owner-initiated ERC-721 `transferFrom` with code 66 despite
-documenting that direct transfers are always allowed; the deny-lists blocked such a transfer before and after and
-only relabelled the code. Pinned by
-[`test/TransferContext/OverloadParity.t.sol`](../../../test/TransferContext/OverloadParity.t.sol) — the suite
-already existed for this property but tested only two of the three input shapes, which is why the gap survived;
-reverting the fix now fails 6 of its 10 tests across 5 rules.
+**Fixed in `v0.6.0` — NM-6.** `RuleNFTAdapter`'s ERC-7943 spender-aware overloads called the delegated hook unconditionally, while the `ITransferContext` entrypoints normalised `sender == from` to the direct hook.
+- **Why they differed:** the three interfaces signal a direct transfer differently. ERC-7943 documents its `spender` as "the address performing the transfer (**owner**/operator)", and `ctx.sender` is the token's `msg.sender`, so on both an owner arrives as `spender == from`; CMTAT uses `spender == address(0)` and the 3-arg overload.
+- **Fix:** the adapter normalises on a shared `_isDelegated` predicate. The 4-arg CMTAT path is deliberately left alone, so the primary integration path and every existing restriction code are unchanged.
+- **Behavioural correction:** `RuleSpenderWhitelist` had been rejecting owner-initiated ERC-721 `transferFrom` with code 66, despite documenting that direct transfers are always allowed. The deny-lists blocked such a transfer before and after; only the code they reported changed.
+- **Pinned by** [`test/TransferContext/OverloadParity.t.sol`](../../../test/TransferContext/OverloadParity.t.sol). The suite already existed for this property but tested only two of the three input shapes, which is why the gap survived; reverting the fix now fails 6 of its 10 tests across 5 rules.
 
 **Four findings carry a specified, unimplemented improvement** — NM-5, NM-17, NM-18 and NM-23/24 —
 each with the code, its cost and its limit. The two cheapest and clearest wins: assert in
@@ -230,6 +217,18 @@ Slither's tally is **unchanged** from the pre-remediation run. Aderyn moved 8 �
 
 - **L-7 `Loop Contains require/revert` (new, 3 instances)** — batch adds now revert on `address(0)` instead of skipping it. Aderyn recommends "forgive on fail and continue", which is exactly the behaviour this release removed: a silent skip left the emitted `AddAddresses` event naming the sentinel as a set member when it was not. **The recommendation is deliberately rejected; do not act on it.**
 - **`Unused Import` (2 instances) — found and FIXED during this run.** A dead `RuleTransferValidation` import in the two `RuleSpenderWhitelist` deployment files (pre-existing, not a regression). It was the only actionable item across both tools; both imports were removed, the build is clean, 511 tests pass, and a re-run confirms the finding is gone.
+
+## AI-assisted security review results (v0.7.0)
+
+Scope: the code changed since `v0.6.0`, chiefly `RuleIssuanceCap`, the `RuleMaxTotalSupply` setters and hook, and code 85. **0 Critical · 0 High · 0 Medium · 0 Low · 5 Informational**, plus 20 threats verified safe or by design. An independent judge pass downgraded F-1 from Low. Detail in [`RESULT.md`](./tools/v0.7.0/claude-audit/RESULT.md); PoCs in `test/ThreatModel/ThreatModelV070Tests.t.sol`.
+
+| ID | Severity | Finding | Status |
+|---|---|---|---|
+| F-1 | Info | `RuleIssuanceCap` bound to a RuleEngine serving several tokens records every token's mints in one counter | Open: doc sentence recommended |
+| F-2 | Info | `bindToken` accepts a caller unrelated to `tokenContract`; every write then reverts while the views report OK | Open: optional `_checkBindingTarget` |
+| F-3 | Info | The `_afterMintChecked` NatSpec does not warn that `transferred` is public and ungated in `RuleMaxTotalSupplyBase` | Open: one NatSpec sentence recommended |
+| F-4 | Info | Mints between deployment and attachment are not counted | Open: extend the existing WARNING |
+| F-5 | Info | Code 85 is shared by three rules and does not name the unbound one | By design |
 
 ## AI-assisted review results (v0.4.0)
 

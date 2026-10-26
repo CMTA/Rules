@@ -266,7 +266,7 @@ contract ThreatModelTests is Test, HelperContract {
     }
 
     /**
-     * @notice CTL-1 (regression): the two unsupported wirings still fail loudly.
+     * @notice CTL-1 (regression): the two unsupported wirings still revert.
      *         Binding ONLY the engine leaves `getTokenBound()` a non-ERC-20, so the helper reverts;
      *         binding ONLY the token leaves the engine unauthorized, so it cannot consume approvals.
      */
@@ -386,7 +386,7 @@ contract ThreatModelTests is Test, HelperContract {
     }
 
     /**
-     * @notice CTL-2: engine-keyed approvals ARE consumable, confirming the key really is
+     * @notice CTL-2: engine-keyed approvals ARE consumable, confirming the key is
      *         `msg.sender`. In a RuleEngine bound to several tokens this collapses the
      *         per-token isolation the rule's name and documentation advertise.
      */

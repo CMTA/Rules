@@ -164,12 +164,12 @@ Less than it sounds, because the token barely uses it. Auditing the reference im
 
 Two things follow:
 
-- **The token is genuinely unaffected.** Its single use is a round trip that starts and ends in the registry, so a constant `0` in and a discarded `0` out changes nothing. Recovery works exactly as it does with a full registry.
+- **The token is unaffected.** Its single use is a round trip that starts and ends in the registry, so a constant `0` in and a discarded `0` out changes nothing. Recovery works exactly as it does with a full registry.
 - **The current modular compliance framework has no country module.** `compliance/modular/modules/` contains only `AbstractModule`, `AbstractModuleUpgradeable`, `IModule`, `ModuleProxy` and `TestModule` — none reference country.
 
 So the real exposure is narrow and specific: **a custom compliance module that calls `investorCountry` will see every investor as country 0**, and will therefore apply whatever rule it has for country 0 to everyone. Nothing shipped in ERC-3643 does this, but a jurisdiction-restriction module is a plausible thing to write. If that is on your roadmap, this registry is the wrong base — use the full ERC-3643 registry stack, which stores the country properly.
 
-If you need investor metadata on-chain generally, the same conclusion applies: this is a whitelist wearing the registry interface, nothing more.
+If you need investor metadata on-chain generally, the same conclusion applies: this is a whitelist exposed through the registry interface, and it stores no investor data.
 
 ### 4. No claim topics, no trusted issuers
 

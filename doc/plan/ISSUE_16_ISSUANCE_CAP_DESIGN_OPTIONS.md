@@ -20,7 +20,7 @@ Everything else is already implemented once:
 - the cap and its setters, `MAX_TOTAL_SUPPLY_ROLE`, the `(previous, new)` event, the revert-free `totalSupply()` read and token validation, in `TotalSupplyCapManager`;
 - the cap comparison (`CapAccounting`);
 - the ERC-1404 surface, the mint-only routing, `remainingMintable()` and the ERC-3643 re-phasing seam, in `RuleMaxTotalSupplyBase`;
-- the role and interface wiring, in the deployables.
+- the role constant, the ERC-165 answers and the access-control hooks, in the deployables.
 
 A design that minimises duplication **adds the counter and nothing else**.
 
@@ -54,7 +54,7 @@ The previous version of this analysis recommended this. It leaves `RuleMaxTotalS
 
 | | |
 | --- | --- |
-| Duplication | **High.** The sibling cannot inherit `RuleMaxTotalSupplyBase`, so it re-implements about **60 of its 103 code lines**: <br>• the constructor wiring and the 50 / 51 code-to-message mapping; <br>• both `transferred` overloads and the write-path error mapping; <br>• the mint-only `_detectTransferRestriction` live leg and `_detectTransferRestrictionFrom`; <br>• the `_detectTransferRestrictionOnNotify` seam and the `remainingMintable()` wrapper. <br>It also cannot inherit the `RuleMaxTotalSupply` / `…Ownable2Step` deployables (30 code lines each), so it copies their role constant, ERC-165 merge and authorisation hooks. Every future fix to the stock rule's ERC-1404 or ERC-3643 handling must then be made twice |
+| Duplication | **High.** The sibling cannot inherit `RuleMaxTotalSupplyBase`, so it re-implements about **60 of its 103 code lines**: <br>• the constructor and the 50 / 51 code-to-message mapping; <br>• both `transferred` overloads and the write-path error mapping; <br>• the mint-only `_detectTransferRestriction` live leg and `_detectTransferRestrictionFrom`; <br>• the `_detectTransferRestrictionOnNotify` seam and the `remainingMintable()` wrapper. <br>It also cannot inherit the `RuleMaxTotalSupply` / `…Ownable2Step` deployables (30 code lines each), so it copies their role constant, ERC-165 merge and authorisation hooks. Every future fix to the stock rule's ERC-1404 or ERC-3643 handling must then be made twice |
 | Impact on existing users | None |
 | Verdict | **Rejected under the duplication priority.** Its only advantage, an untouched `RuleMaxTotalSupplyBase`, costs roughly 110 duplicated code lines |
 
@@ -62,7 +62,7 @@ The previous version of this analysis recommended this. It leaves `RuleMaxTotalS
 
 ### 5.1 Shape
 
-Open `RuleMaxTotalSupplyBase` once (K2), then add the counter in a thin subclass that **inherits the existing deployables**, so even the role and interface wiring are reused:
+Open `RuleMaxTotalSupplyBase` once (K2), then add the counter in a thin subclass that **inherits the existing deployables**, so even the role constant, the ERC-165 answers and the access-control hooks are reused:
 
 ```
 TotalSupplyCapManager ── CapAccounting        (unchanged)

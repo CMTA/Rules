@@ -306,7 +306,7 @@ contract ERC3643RealTokenChainlinkPoR is Test, RuleChainlinkPoRInvariantStorage 
      *      it; the reserve answer is simply scaled by `10 ** 18` too little, and every mint is
      *      refused. The same mistake with the decimals reversed would over-mint instead.
      *
-     *      There is no on-chain fix: the constructor probe genuinely succeeded. The remedy is
+     *      There is no on-chain fix: the constructor probe succeeded. The remedy is
      *      ordering (construct after `init`) or calling `setTokenMetadata` afterwards to re-sync.
      */
     function testRuleBuiltBeforeInitCachesTheWrongDecimals() public {

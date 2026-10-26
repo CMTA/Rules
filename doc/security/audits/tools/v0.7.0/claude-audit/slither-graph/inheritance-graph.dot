@@ -1,0 +1,474 @@
+digraph "" {
+c924_ERC3643ComplianceModule -> c1570_TokenBindingModule;
+c924_ERC3643ComplianceModule[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ERC3643ComplianceModule</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _onlyTokenBindingManager()</font></TD></TR><TR><TD align="left">    _onlyComplianceManager()</TD></TR><TR><TD><BR/></TD></TR><TR><TD align="left" border="1"><font color="#777777" point-size="10">'bindToken(address)' collides in inherited contracts ITokenBinding, TokenBindingModule where TokenBindingModule is chosen.<BR/>'unbindToken(address)' collides in inherited contracts ITokenBinding, TokenBindingModule where TokenBindingModule is chosen.<BR/>'isTokenBound(address)' collides in inherited contracts ITokenBinding, TokenBindingModule where TokenBindingModule is chosen.</font></TD></TR></TABLE> >];
+
+c1390_RulesManagementModule -> c1750_RulesManagementModuleInvariantStorage;
+c1390_RulesManagementModule[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RulesManagementModule</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _clearRules()</TD></TR><TR><TD align="left">    _setMaxRules(uint256)</TD></TR><TR><TD align="left">    _addRule(IRule)</TD></TR><TR><TD align="left">    _removeRule(IRule)</TD></TR><TR><TD align="left">    _transferred(address,address,uint256)</TD></TR><TR><TD align="left">    _transferred(address,address,address,uint256)</TD></TR><TR><TD align="left">    _onlyRulesManager()</TD></TR><TR><TD align="left">    _onlyRulesLimitManager()</TD></TR><TR><TD align="left">    _checkRule(address)</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyRulesManager()</TD></TR><TR><TD align="left">    onlyRulesLimitManager()</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    _rules</TD></TR><TR><TD align="left">    _maxRules</TD></TR></TABLE> >];
+
+c1570_TokenBindingModule -> c7742_Context [ label="1" ];
+c1570_TokenBindingModule -> c1776_TokenBindingModuleInvariantStorage [ label="2" ];
+c1570_TokenBindingModule[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>TokenBindingModule</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    bindToken(address)</font></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _bindToken(address)</TD></TR><TR><TD align="left">    _checkBindingTarget(address)</TD></TR><TR><TD align="left">    _unbindToken(address)</TD></TR><TR><TD align="left">    _authorizeTokenBindingChange(address)</TD></TR><TR><TD align="left">    _onlyTokenBindingManager()</TD></TR><TR><TD align="left">    _checkBoundToken()</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyBoundToken()</TD></TR><TR><TD align="left">    onlyTokenBindingManager()</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    _boundTokens</TD></TR></TABLE> >];
+
+c1631_ERC3643ComplianceRolesStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ERC3643ComplianceRolesStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    COMPLIANCE_MANAGER_ROLE</TD></TR></TABLE> >];
+
+c1750_RulesManagementModuleInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RulesManagementModuleInvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    DEFAULT_MAX_RULES</TD></TR></TABLE> >];
+
+c1760_RulesManagementModuleRolesStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RulesManagementModuleRolesStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    RULES_MANAGEMENT_ROLE</TD></TR></TABLE> >];
+
+c1776_TokenBindingModuleInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>TokenBindingModuleInvariantStorage</B></TD></TR></TABLE> >];
+
+c2072_AccessControl -> c7742_Context [ label="1" ];
+c2072_AccessControl -> c9582_ERC165 [ label="2" ];
+c2072_AccessControl[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>AccessControl</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    supportsInterface(bytes4)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    hasRole(bytes32,address)</font></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _checkRole(bytes32)</TD></TR><TR><TD align="left">    _checkRole(bytes32,address)</TD></TR><TR><TD align="left">    _setRoleAdmin(bytes32,bytes32)</TD></TR><TR><TD align="left">    _grantRole(bytes32,address)</TD></TR><TR><TD align="left">    _revokeRole(bytes32,address)</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyRole(bytes32)</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    DEFAULT_ADMIN_ROLE</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    _roles</TD></TR></TABLE> >];
+
+c2303_Ownable -> c7742_Context;
+c2303_Ownable[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>Ownable</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    transferOwnership(address)</TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _checkOwner()</TD></TR><TR><TD align="left">    _transferOwnership(address)</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyOwner()</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    _owner</TD></TR></TABLE> >];
+
+c2389_Ownable2Step -> c2303_Ownable;
+c2389_Ownable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>Ownable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _transferOwnership(address)</font></TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    _pendingOwner</TD></TR></TABLE> >];
+
+c2549_AccessControlEnumerable -> c2575_IAccessControlEnumerable;
+c2549_AccessControlEnumerable[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>AccessControlEnumerable</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    supportsInterface(bytes4)</font></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _grantRole(bytes32,address)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _revokeRole(bytes32,address)</font></TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    _roleMembers</TD></TR><TR><TD><BR/></TD></TR><TR><TD align="left" border="1"><font color="#777777" point-size="10">'hasRole(bytes32,address)' collides in inherited contracts IAccessControl, AccessControl where AccessControl is chosen.<BR/>'getRoleAdmin(bytes32)' collides in inherited contracts IAccessControl, AccessControl where AccessControl is chosen.<BR/>'grantRole(bytes32,address)' collides in inherited contracts IAccessControl, AccessControl where AccessControl is chosen.<BR/>'revokeRole(bytes32,address)' collides in inherited contracts IAccessControl, AccessControl where AccessControl is chosen.<BR/>'renounceRole(bytes32,address)' collides in inherited contracts IAccessControl, AccessControl where AccessControl is chosen.</font></TD></TR></TABLE> >];
+
+c2951_ERC2771Context -> c7742_Context;
+c2951_ERC2771Context[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ERC2771Context</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    _trustedForwarder</TD></TR></TABLE> >];
+
+c3466_ERC20 -> c7742_Context;
+c3466_ERC20[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ERC20</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    transfer(address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    transferFrom(address,address,uint256)</font></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _transfer(address,address,uint256)</TD></TR><TR><TD align="left">    _update(address,address,uint256)</TD></TR><TR><TD align="left">    _mint(address,uint256)</TD></TR><TR><TD align="left">    _burn(address,uint256)</TD></TR><TR><TD align="left">    _approve(address,address,uint256)</TD></TR><TR><TD align="left">    _approve(address,address,uint256,bool)</TD></TR><TR><TD align="left">    _spendAllowance(address,address,uint256)</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    _balances</TD></TR><TR><TD align="left">    _allowances</TD></TR><TR><TD align="left">    _totalSupply</TD></TR><TR><TD align="left">    _name</TD></TR><TR><TD align="left">    _symbol</TD></TR></TABLE> >];
+
+c5018_ERC721 -> c7742_Context [ label="1" ];
+c5018_ERC721 -> c9582_ERC165 [ label="2" ];
+c5018_ERC721[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ERC721</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    transferFrom(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    safeTransferFrom(address,address,uint256)</font></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _baseURI()</TD></TR><TR><TD align="left">    _ownerOf(uint256)</TD></TR><TR><TD align="left">    _getApproved(uint256)</TD></TR><TR><TD align="left">    _isAuthorized(address,address,uint256)</TD></TR><TR><TD align="left">    _checkAuthorized(address,address,uint256)</TD></TR><TR><TD align="left">    _increaseBalance(address,uint128)</TD></TR><TR><TD align="left">    _update(address,uint256,address)</TD></TR><TR><TD align="left">    _mint(address,uint256)</TD></TR><TR><TD align="left">    _safeMint(address,uint256)</TD></TR><TR><TD align="left">    _safeMint(address,uint256,bytes)</TD></TR><TR><TD align="left">    _burn(uint256)</TD></TR><TR><TD align="left">    _transfer(address,address,uint256)</TD></TR><TR><TD align="left">    _safeTransfer(address,address,uint256)</TD></TR><TR><TD align="left">    _safeTransfer(address,address,uint256,bytes)</TD></TR><TR><TD align="left">    _approve(address,uint256,address)</TD></TR><TR><TD align="left">    _approve(address,uint256,address,bool)</TD></TR><TR><TD align="left">    _setApprovalForAll(address,address,bool)</TD></TR><TR><TD align="left">    _requireOwned(uint256)</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    _name</TD></TR><TR><TD align="left">    _symbol</TD></TR><TR><TD align="left">    _owners</TD></TR><TR><TD align="left">    _balances</TD></TR><TR><TD align="left">    _tokenApprovals</TD></TR><TR><TD align="left">    _operatorApprovals</TD></TR></TABLE> >];
+
+c7742_Context[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>Context</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _msgSender()</TD></TR><TR><TD align="left">    _msgData()</TD></TR><TR><TD align="left">    _contextSuffixLength()</TD></TR></TABLE> >];
+
+c9582_ERC165[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ERC165</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    supportsInterface(bytes4)</font></TD></TR></TABLE> >];
+
+c16222_IAddressListInterfaceIdHelper[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>IAddressListInterfaceIdHelper</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    getIAddressListInterfaceId()</TD></TR><TR><TD align="left">    getIAddressListAllFunctionsInterfaceId()</TD></TR><TR><TD align="left">    getAddressListInterfaceIdConstant()</TD></TR><TR><TD align="left">    getIIdentityRegistryContainsInterfaceId()</TD></TR></TABLE> >];
+
+c16972_SanctionListOracle[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>SanctionListOracle</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    addToSanctionsList(address)</TD></TR><TR><TD align="left">    removeFromSanctionsList(address)</TD></TR><TR><TD align="left"><font color="#FFA500">    isSanctioned(address)</font></TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    sanctionedAddresses</TD></TR></TABLE> >];
+
+c17122_RuleBlacklistHarness -> c32000_RuleBlacklist;
+c17122_RuleBlacklistHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleBlacklistHarness</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    exposedMsgDataLength()</TD></TR></TABLE> >];
+
+c17156_RuleWhitelistHarness -> c34007_RuleWhitelist;
+c17156_RuleWhitelistHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleWhitelistHarness</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    exposedMsgDataLength()</TD></TR></TABLE> >];
+
+c17190_RuleWhitelistWrapperHarness -> c34341_RuleWhitelistWrapper;
+c17190_RuleWhitelistWrapperHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleWhitelistWrapperHarness</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    exposedMsgDataLength()</TD></TR></TABLE> >];
+
+c17221_RuleERC2980Harness -> c32517_RuleERC2980;
+c17221_RuleERC2980Harness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleERC2980Harness</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    exposedMsgDataLength()</TD></TR></TABLE> >];
+
+c17253_RuleSanctionsListHarness -> c33519_RuleSanctionsList;
+c17253_RuleSanctionsListHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleSanctionsListHarness</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    exposedMsgDataLength()</TD></TR></TABLE> >];
+
+c17281_RuleBlacklistOwnable2StepHarness -> c32117_RuleBlacklistOwnable2Step;
+c17281_RuleBlacklistOwnable2StepHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleBlacklistOwnable2StepHarness</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    exposedMsgDataLength()</TD></TR></TABLE> >];
+
+c17315_RuleWhitelistOwnable2StepHarness -> c34146_RuleWhitelistOwnable2Step;
+c17315_RuleWhitelistOwnable2StepHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleWhitelistOwnable2StepHarness</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    exposedMsgDataLength()</TD></TR></TABLE> >];
+
+c17349_RuleWhitelistWrapperOwnable2StepHarness -> c34478_RuleWhitelistWrapperOwnable2Step;
+c17349_RuleWhitelistWrapperOwnable2StepHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleWhitelistWrapperOwnable2StepHarness</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    exposedMsgDataLength()</TD></TR></TABLE> >];
+
+c17380_RuleERC2980Ownable2StepHarness -> c32659_RuleERC2980Ownable2Step;
+c17380_RuleERC2980Ownable2StepHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleERC2980Ownable2StepHarness</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    exposedMsgDataLength()</TD></TR></TABLE> >];
+
+c17431_ERC3643MaxTotalSupplyHarness -> c33009_RuleMaxTotalSupply;
+c17431_ERC3643MaxTotalSupplyHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ERC3643MaxTotalSupplyHarness</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionOnNotify(address,address,uint256)</font></TD></TR></TABLE> >];
+
+c17470_ERC3643MaxBalanceHarness -> c32863_RuleMaxBalance;
+c17470_ERC3643MaxBalanceHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ERC3643MaxBalanceHarness</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionOnNotify(address,address,uint256)</font></TD></TR></TABLE> >];
+
+c17516_ERC3643ChainlinkPoRHarness -> c32191_RuleChainlinkPoR;
+c17516_ERC3643ChainlinkPoRHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ERC3643ChainlinkPoRHarness</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionOnNotify(address,address,uint256)</font></TD></TR></TABLE> >];
+
+c17574_TrackedSupplyHarness -> c33009_RuleMaxTotalSupply;
+c17574_TrackedSupplyHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>TrackedSupplyHarness</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    setTrackedSupply(uint256)</TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _currentSupply()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _supplyToken()</font></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    trackedSupply</TD></TR></TABLE> >];
+
+c17668_IdentityRegistryExtraCheckHarness -> c32727_RuleIdentityRegistry;
+c17668_IdentityRegistryExtraCheckHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>IdentityRegistryExtraCheckHarness</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestriction(address,address,uint256)</font></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    CODE_EXTRA_BLOCKED</TD></TR><TR><TD align="left">    BLOCKED</TD></TR></TABLE> >];
+
+c17721_RuleReceiverWhitelistHarness -> c33288_RuleReceiverWhitelist;
+c17721_RuleReceiverWhitelistHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleReceiverWhitelistHarness</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    exposedMsgSender()</TD></TR><TR><TD align="left">    exposedMsgData()</TD></TR><TR><TD align="left">    exposedContextSuffixLength()</TD></TR></TABLE> >];
+
+c17768_RuleReceiverWhitelistOwnable2StepHarness -> c33405_RuleReceiverWhitelistOwnable2Step;
+c17768_RuleReceiverWhitelistOwnable2StepHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleReceiverWhitelistOwnable2StepHarness</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    exposedMsgSender()</TD></TR><TR><TD align="left">    exposedMsgData()</TD></TR><TR><TD align="left">    exposedContextSuffixLength()</TD></TR></TABLE> >];
+
+c17825_RuleSanctionsListOwnable2StepHarness -> c33636_RuleSanctionsListOwnable2Step;
+c17825_RuleSanctionsListOwnable2StepHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleSanctionsListOwnable2StepHarness</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    exposedMsgSender()</TD></TR><TR><TD align="left">    exposedMsgData()</TD></TR><TR><TD align="left">    exposedContextSuffixLength()</TD></TR></TABLE> >];
+
+c17878_RuleSpenderWhitelistHarness -> c33751_RuleSpenderWhitelist;
+c17878_RuleSpenderWhitelistHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleSpenderWhitelistHarness</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    exposedMsgSender()</TD></TR><TR><TD align="left">    exposedMsgData()</TD></TR><TR><TD align="left">    exposedContextSuffixLength()</TD></TR></TABLE> >];
+
+c17925_RuleSpenderWhitelistOwnable2StepHarness -> c33868_RuleSpenderWhitelistOwnable2Step;
+c17925_RuleSpenderWhitelistOwnable2StepHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleSpenderWhitelistOwnable2StepHarness</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    exposedMsgSender()</TD></TR><TR><TD align="left">    exposedMsgData()</TD></TR><TR><TD align="left">    exposedContextSuffixLength()</TD></TR></TABLE> >];
+
+c17972_RuleWhitelistWrapperHarnessInternal -> c34341_RuleWhitelistWrapper;
+c17972_RuleWhitelistWrapperHarnessInternal[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleWhitelistWrapperHarnessInternal</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    exposedTransferredSpenderInternal(address,address,address,uint256)</TD></TR></TABLE> >];
+
+c18066_SanctionsListExtraCheckHarness -> c33519_RuleSanctionsList;
+c18066_SanctionsListExtraCheckHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>SanctionsListExtraCheckHarness</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestriction(address,address,uint256)</font></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    CODE_EXTRA_BLOCKED</TD></TR><TR><TD align="left">    BLOCKED</TD></TR></TABLE> >];
+
+c18176_ConditionalTransferLightCustomExecutorHarness -> c19403_RuleConditionalTransferLight;
+c18176_ConditionalTransferLightCustomExecutorHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ConditionalTransferLightCustomExecutorHarness</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeTransferExecution()</font></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    SOLE_EXECUTOR</TD></TR><TR><TD align="left">    approveTransferOverrideCalls</TD></TR><TR><TD align="left">    transferredOverrideCalls</TD></TR></TABLE> >];
+
+c18227_MaxTotalSupplyCappedSetterHarness -> c33009_RuleMaxTotalSupply;
+c18227_MaxTotalSupplyCappedSetterHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>MaxTotalSupplyCappedSetterHarness</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    HARD_CEILING</TD></TR></TABLE> >];
+
+c18263_IdentityRegistryPinnedHarness -> c32727_RuleIdentityRegistry;
+c18263_IdentityRegistryPinnedHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>IdentityRegistryPinnedHarness</B></TD></TR></TABLE> >];
+
+c18310_ERC2980SelfWhitelistBlockHarness -> c32517_RuleERC2980;
+c18310_ERC2980SelfWhitelistBlockHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ERC2980SelfWhitelistBlockHarness</B></TD></TR></TABLE> >];
+
+c18517_BlacklistQuarantineHarness -> c32000_RuleBlacklist;
+c18517_BlacklistQuarantineHarness[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>BlacklistQuarantineHarness</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestriction(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionFrom(address,address,address,uint256)</font></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    CODE_QUARANTINED</TD></TR><TR><TD align="left">    QUARANTINED</TD></TR></TABLE> >];
+
+c18584_AccessControlModuleStandalone -> c2549_AccessControlEnumerable;
+c18584_AccessControlModuleStandalone[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>AccessControlModuleStandalone</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    hasRole(bytes32,address)</font></TD></TR></TABLE> >];
+
+c18602_MetaTxModuleStandalone -> c2951_ERC2771Context;
+c18602_MetaTxModuleStandalone[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>MetaTxModuleStandalone</B></TD></TR></TABLE> >];
+
+c18639_Ownable2StepERC165Module -> c9582_ERC165;
+c18639_Ownable2StepERC165Module[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>Ownable2StepERC165Module</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    supportsInterface(bytes4)</font></TD></TR></TABLE> >];
+
+c18661_VersionModule[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>VersionModule</B></TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    VERSION</TD></TR></TABLE> >];
+
+c18692_IdentityRegistryWhitelist -> c18584_AccessControlModuleStandalone [ label="1" ];
+c18692_IdentityRegistryWhitelist -> c18819_IdentityRegistryWhitelistBase [ label="2" ];
+c18692_IdentityRegistryWhitelist[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>IdentityRegistryWhitelist</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeIdentityRegistrar()</font></TD></TR></TABLE> >];
+
+c18819_IdentityRegistryWhitelistBase -> c23798_RuleAddressSetInternal [ label="1" ];
+c18819_IdentityRegistryWhitelistBase -> c18661_VersionModule [ label="2" ];
+c18819_IdentityRegistryWhitelistBase -> c18841_IdentityRegistryWhitelistInvariantStorage [ label="3" ];
+c18819_IdentityRegistryWhitelistBase[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>IdentityRegistryWhitelistBase</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _authorizeIdentityRegistrar()</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyIdentityRegistrar()</TD></TR></TABLE> >];
+
+c18841_IdentityRegistryWhitelistInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>IdentityRegistryWhitelistInvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    IDENTITY_REGISTRAR_ROLE</TD></TR></TABLE> >];
+
+c19403_RuleConditionalTransferLight -> c18584_AccessControlModuleStandalone [ label="1" ];
+c19403_RuleConditionalTransferLight -> c21052_RuleConditionalTransferLightBase [ label="2" ];
+c19403_RuleConditionalTransferLight -> c1631_ERC3643ComplianceRolesStorage [ label="3" ];
+c19403_RuleConditionalTransferLight[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleConditionalTransferLight</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _onlyComplianceManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeTransferApproval()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeTokenBindingChange(address)</font></TD></TR></TABLE> >];
+
+c19510_RuleConditionalTransferLightMultiToken -> c18584_AccessControlModuleStandalone [ label="1" ];
+c19510_RuleConditionalTransferLightMultiToken -> c22044_RuleConditionalTransferLightMultiTokenBase [ label="2" ];
+c19510_RuleConditionalTransferLightMultiToken -> c1631_ERC3643ComplianceRolesStorage [ label="3" ];
+c19510_RuleConditionalTransferLightMultiToken[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleConditionalTransferLightMultiToken</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _onlyComplianceManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeTransferApproval()</font></TD></TR></TABLE> >];
+
+c19615_RuleConditionalTransferLightMultiTokenOwnable2Step -> c22044_RuleConditionalTransferLightMultiTokenBase [ label="1" ];
+c19615_RuleConditionalTransferLightMultiTokenOwnable2Step -> c2389_Ownable2Step [ label="2" ];
+c19615_RuleConditionalTransferLightMultiTokenOwnable2Step -> c18639_Ownable2StepERC165Module [ label="3" ];
+c19615_RuleConditionalTransferLightMultiTokenOwnable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleConditionalTransferLightMultiTokenOwnable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _onlyComplianceManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeTransferApproval()</font></TD></TR></TABLE> >];
+
+c19730_RuleConditionalTransferLightOwnable2Step -> c21052_RuleConditionalTransferLightBase [ label="1" ];
+c19730_RuleConditionalTransferLightOwnable2Step -> c2389_Ownable2Step [ label="2" ];
+c19730_RuleConditionalTransferLightOwnable2Step -> c18639_Ownable2StepERC165Module [ label="3" ];
+c19730_RuleConditionalTransferLightOwnable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleConditionalTransferLightOwnable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _onlyComplianceManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeTransferApproval()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeTokenBindingChange(address)</font></TD></TR></TABLE> >];
+
+c19826_RuleIssuanceCap -> c18584_AccessControlModuleStandalone [ label="1" ];
+c19826_RuleIssuanceCap -> c22565_RuleIssuanceCapBase [ label="2" ];
+c19826_RuleIssuanceCap -> c1631_ERC3643ComplianceRolesStorage [ label="3" ];
+c19826_RuleIssuanceCap -> c31731_RuleMaxTotalSupplyRolesStorage [ label="4" ];
+c19826_RuleIssuanceCap[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleIssuanceCap</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeMaxTotalSupplyManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _onlyComplianceManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeTokenBindingChange(address)</font></TD></TR></TABLE> >];
+
+c19915_RuleIssuanceCapOwnable2Step -> c22565_RuleIssuanceCapBase [ label="1" ];
+c19915_RuleIssuanceCapOwnable2Step -> c2389_Ownable2Step [ label="2" ];
+c19915_RuleIssuanceCapOwnable2Step -> c18639_Ownable2StepERC165Module [ label="3" ];
+c19915_RuleIssuanceCapOwnable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleIssuanceCapOwnable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeMaxTotalSupplyManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _onlyComplianceManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeTokenBindingChange(address)</font></TD></TR></TABLE> >];
+
+c20026_RuleMintAllowance -> c18584_AccessControlModuleStandalone [ label="1" ];
+c20026_RuleMintAllowance -> c23186_RuleMintAllowanceBase [ label="2" ];
+c20026_RuleMintAllowance -> c1631_ERC3643ComplianceRolesStorage [ label="3" ];
+c20026_RuleMintAllowance[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleMintAllowance</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _onlyComplianceManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeSetMintAllowance()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeTokenBindingChange(address)</font></TD></TR></TABLE> >];
+
+c20134_RuleMintAllowanceOwnable2Step -> c23186_RuleMintAllowanceBase [ label="1" ];
+c20134_RuleMintAllowanceOwnable2Step -> c2389_Ownable2Step [ label="2" ];
+c20134_RuleMintAllowanceOwnable2Step -> c18639_Ownable2StepERC165Module [ label="3" ];
+c20134_RuleMintAllowanceOwnable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleMintAllowanceOwnable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _onlyComplianceManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeSetMintAllowance()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeTokenBindingChange(address)</font></TD></TR></TABLE> >];
+
+c20146_RuleBindingInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleBindingInvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    CODE_RULE_NOT_BOUND</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TEXT_RULE_NOT_BOUND</TD></TR></TABLE> >];
+
+c20463_RuleConditionalTransferLightApprovalBase -> c21171_RuleConditionalTransferLightInvariantStorage;
+c20463_RuleConditionalTransferLightApprovalBase[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleConditionalTransferLightApprovalBase</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    approveTransfer(address,address,uint256)</TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _transferredFromContext(ITransferContext.FungibleTransferContext)</TD></TR><TR><TD align="left">    _transferred(address,address,uint256)</TD></TR><TR><TD align="left">    _transferHash(address,address,uint256)</TD></TR><TR><TD align="left">    _authorizeTransferApproval()</TD></TR><TR><TD align="left">    _authorizeTransferExecution()</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyTransferApprover()</TD></TR><TR><TD align="left">    onlyTransferExecutor()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    approvalCounts</TD></TR></TABLE> >];
+
+c21052_RuleConditionalTransferLightBase -> c18661_VersionModule [ label="1" ];
+c21052_RuleConditionalTransferLightBase -> c924_ERC3643ComplianceModule [ label="2" ];
+c21052_RuleConditionalTransferLightBase -> c20463_RuleConditionalTransferLightApprovalBase [ label="3" ];
+c21052_RuleConditionalTransferLightBase[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleConditionalTransferLightBase</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    transferred(address,address,uint256)</font></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _ruleNotBound()</TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeTransferExecution()</font></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    ruleEngine</TD></TR></TABLE> >];
+
+c21171_RuleConditionalTransferLightInvariantStorage -> c31855_RuleSharedInvariantStorage [ label="1" ];
+c21171_RuleConditionalTransferLightInvariantStorage -> c20146_RuleBindingInvariantStorage [ label="2" ];
+c21171_RuleConditionalTransferLightInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleConditionalTransferLightInvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    OPERATOR_ROLE</TD></TR><TR><TD align="left">    CODE_TRANSFER_REQUEST_NOT_APPROVED</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TEXT_TRANSFER_REQUEST_NOT_APPROVED</TD></TR></TABLE> >];
+
+c22044_RuleConditionalTransferLightMultiTokenBase -> c18661_VersionModule [ label="1" ];
+c22044_RuleConditionalTransferLightMultiTokenBase -> c924_ERC3643ComplianceModule [ label="2" ];
+c22044_RuleConditionalTransferLightMultiTokenBase -> c22149_RuleConditionalTransferLightMultiTokenInvariantStorage [ label="3" ];
+c22044_RuleConditionalTransferLightMultiTokenBase[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleConditionalTransferLightMultiTokenBase</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _approveTransfer(address,address,address,uint256)</TD></TR><TR><TD align="left">    _cancelTransferApproval(address,address,address,uint256)</TD></TR><TR><TD align="left">    _transferred(address,address,address,uint256)</TD></TR><TR><TD align="left">    _detectTransferRestrictionForToken(address,address,address,uint256)</TD></TR><TR><TD align="left">    _authorizeTransferExecution()</TD></TR><TR><TD align="left">    _authorizeTransferApproval()</TD></TR><TR><TD align="left">    _transferHash(address,address,address,uint256)</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyTransferApprover()</TD></TR><TR><TD align="left">    onlyTransferExecutor()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    approvalCounts</TD></TR></TABLE> >];
+
+c22149_RuleConditionalTransferLightMultiTokenInvariantStorage -> c31855_RuleSharedInvariantStorage;
+c22149_RuleConditionalTransferLightMultiTokenInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleConditionalTransferLightMultiTokenInvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    OPERATOR_ROLE</TD></TR><TR><TD align="left">    CODE_TRANSFER_REQUEST_NOT_APPROVED</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TEXT_TRANSFER_REQUEST_NOT_APPROVED</TD></TR></TABLE> >];
+
+c22565_RuleIssuanceCapBase -> c27213_RuleMaxTotalSupplyBase [ label="1" ];
+c22565_RuleIssuanceCapBase -> c924_ERC3643ComplianceModule [ label="2" ];
+c22565_RuleIssuanceCapBase -> c22613_RuleIssuanceCapInvariantStorage [ label="3" ];
+c22565_RuleIssuanceCapBase[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleIssuanceCapBase</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestriction(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _afterMintChecked(uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _remainingMintable()</font></TD></TR><TR><TD align="left">    _ruleNotBound()</TD></TR><TR><TD align="left">    _issuanceExceededBy(uint256)</TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeTokenContractManager()</font></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    totalIssued</TD></TR><TR><TD><BR/></TD></TR><TR><TD align="left" border="1"><font color="#777777" point-size="10">'canTransfer(address,address,uint256)' collides in inherited contracts IERC3643ComplianceRead, RuleTransferValidation where RuleTransferValidation is chosen.</font></TD></TR></TABLE> >];
+
+c22613_RuleIssuanceCapInvariantStorage -> c20146_RuleBindingInvariantStorage;
+c22613_RuleIssuanceCapInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleIssuanceCapInvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    CODE_ISSUANCE_CAP_EXCEEDED</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TEXT_ISSUANCE_CAP_EXCEEDED</TD></TR></TABLE> >];
+
+c23186_RuleMintAllowanceBase -> c18661_VersionModule [ label="1" ];
+c23186_RuleMintAllowanceBase -> c924_ERC3643ComplianceModule [ label="2" ];
+c23186_RuleMintAllowanceBase -> c23266_RuleMintAllowanceInvariantStorage [ label="3" ];
+c23186_RuleMintAllowanceBase[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleMintAllowanceBase</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _transferred(address,address,uint256)</TD></TR><TR><TD align="left">    _transferredFrom(address,address,address,uint256)</TD></TR><TR><TD align="left">    _setMintAllowance(address,uint256)</TD></TR><TR><TD align="left">    _detectTransferRestrictionFrom(address,address,address,uint256)</TD></TR><TR><TD align="left">    _ruleNotBound()</TD></TR><TR><TD align="left">    _authorizeSetMintAllowance()</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyAllowanceOperator()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    mintAllowance</TD></TR></TABLE> >];
+
+c23266_RuleMintAllowanceInvariantStorage -> c31855_RuleSharedInvariantStorage [ label="1" ];
+c23266_RuleMintAllowanceInvariantStorage -> c20146_RuleBindingInvariantStorage [ label="2" ];
+c23266_RuleMintAllowanceInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleMintAllowanceInvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    ALLOWANCE_OPERATOR_ROLE</TD></TR><TR><TD align="left">    CODE_MINTER_ALLOWANCE_EXCEEDED</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TEXT_MINTER_ALLOWANCE_EXCEEDED</TD></TR></TABLE> >];
+
+c23664_RuleAddressSet -> c18602_MetaTxModuleStandalone [ label="1" ];
+c23664_RuleAddressSet -> c23811_RuleAddressSetInvariantStorage [ label="2" ];
+c23664_RuleAddressSet -> c23827_RuleAddressSetRolesStorage [ label="3" ];
+c23664_RuleAddressSet -> c23798_RuleAddressSetInternal [ label="4" ];
+c23664_RuleAddressSet[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleAddressSet</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    addAddress(address)</font></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _authorizeAddressListAdd()</TD></TR><TR><TD align="left">    _authorizeAddressListRemove()</TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyAddressListAdd()</TD></TR><TR><TD align="left">    onlyAddressListRemove()</TD></TR></TABLE> >];
+
+c23798_RuleAddressSetInternal -> c23811_RuleAddressSetInvariantStorage;
+c23798_RuleAddressSetInternal[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleAddressSetInternal</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _addAddresses(address[])</TD></TR><TR><TD align="left">    _requireNotZeroAddress(address)</TD></TR><TR><TD align="left">    _removeAddresses(address[])</TD></TR><TR><TD align="left">    _addAddress(address)</TD></TR><TR><TD align="left">    _removeAddress(address)</TD></TR><TR><TD align="left">    _listedAddressCount()</TD></TR><TR><TD align="left">    _isAddressListed(address)</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    _listedAddresses</TD></TR></TABLE> >];
+
+c23811_RuleAddressSetInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleAddressSetInvariantStorage</B></TD></TR></TABLE> >];
+
+c23827_RuleAddressSetRolesStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleAddressSetRolesStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    ADDRESS_LIST_REMOVE_ROLE</TD></TR><TR><TD align="left">    ADDRESS_LIST_ADD_ROLE</TD></TR></TABLE> >];
+
+c23885_RuleBlacklistInvariantStorage -> c31855_RuleSharedInvariantStorage;
+c23885_RuleBlacklistInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleBlacklistInvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    CODE_ADDRESS_FROM_IS_BLACKLISTED</TD></TR><TR><TD align="left">    CODE_ADDRESS_TO_IS_BLACKLISTED</TD></TR><TR><TD align="left">    CODE_ADDRESS_SPENDER_IS_BLACKLISTED</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TEXT_ADDRESS_FROM_IS_BLACKLISTED</TD></TR><TR><TD align="left">    TEXT_ADDRESS_TO_IS_BLACKLISTED</TD></TR><TR><TD align="left">    TEXT_ADDRESS_SPENDER_IS_BLACKLISTED</TD></TR></TABLE> >];
+
+c23989_RuleWhitelistInvariantStorage -> c31855_RuleSharedInvariantStorage;
+c23989_RuleWhitelistInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleWhitelistInvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    CODE_ADDRESS_FROM_NOT_WHITELISTED</TD></TR><TR><TD align="left">    CODE_ADDRESS_TO_NOT_WHITELISTED</TD></TR><TR><TD align="left">    CODE_ADDRESS_SPENDER_NOT_WHITELISTED</TD></TR><TR><TD align="left">    CODE_MINT_NOT_ALLOWED</TD></TR><TR><TD align="left">    CODE_BURN_NOT_ALLOWED</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TEXT_ADDRESS_FROM_NOT_WHITELISTED</TD></TR><TR><TD align="left">    TEXT_ADDRESS_TO_NOT_WHITELISTED</TD></TR><TR><TD align="left">    TEXT_ADDRESS_SPENDER_NOT_WHITELISTED</TD></TR><TR><TD align="left">    TEXT_MINT_NOT_ALLOWED</TD></TR><TR><TD align="left">    TEXT_BURN_NOT_ALLOWED</TD></TR></TABLE> >];
+
+c24211_RuleERC2980Internal -> c24402_RuleERC2980InvariantStorage;
+c24211_RuleERC2980Internal[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleERC2980Internal</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _addWhitelistAddresses(address[])</TD></TR><TR><TD align="left">    _removeWhitelistAddresses(address[])</TD></TR><TR><TD align="left">    _addWhitelistAddress(address)</TD></TR><TR><TD align="left">    _removeWhitelistAddress(address)</TD></TR><TR><TD align="left">    _addFrozenlistAddresses(address[])</TD></TR><TR><TD align="left">    _removeFrozenlistAddresses(address[])</TD></TR><TR><TD align="left">    _addFrozenlistAddress(address)</TD></TR><TR><TD align="left">    _removeFrozenlistAddress(address)</TD></TR><TR><TD align="left">    _requireNotZeroAddress(address)</TD></TR><TR><TD align="left">    _isWhitelisted(address)</TD></TR><TR><TD align="left">    _whitelistCount()</TD></TR><TR><TD align="left">    _isFrozen(address)</TD></TR><TR><TD align="left">    _frozenlistCount()</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    _whitelist</TD></TR><TR><TD align="left">    _frozenlist</TD></TR></TABLE> >];
+
+c24402_RuleERC2980InvariantStorage -> c31855_RuleSharedInvariantStorage;
+c24402_RuleERC2980InvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleERC2980InvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    CODE_ADDRESS_FROM_IS_FROZEN</TD></TR><TR><TD align="left">    CODE_ADDRESS_TO_IS_FROZEN</TD></TR><TR><TD align="left">    CODE_ADDRESS_SPENDER_IS_FROZEN</TD></TR><TR><TD align="left">    CODE_ADDRESS_TO_NOT_WHITELISTED</TD></TR><TR><TD align="left">    CODE_MINT_NOT_ALLOWED</TD></TR><TR><TD align="left">    CODE_BURN_NOT_ALLOWED</TD></TR><TR><TD align="left">    WHITELIST_ADD_ROLE</TD></TR><TR><TD align="left">    WHITELIST_REMOVE_ROLE</TD></TR><TR><TD align="left">    FROZENLIST_ADD_ROLE</TD></TR><TR><TD align="left">    FROZENLIST_REMOVE_ROLE</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TEXT_ADDRESS_FROM_IS_FROZEN</TD></TR><TR><TD align="left">    TEXT_ADDRESS_TO_IS_FROZEN</TD></TR><TR><TD align="left">    TEXT_ADDRESS_SPENDER_IS_FROZEN</TD></TR><TR><TD align="left">    TEXT_ADDRESS_TO_NOT_WHITELISTED</TD></TR><TR><TD align="left">    TEXT_MINT_NOT_ALLOWED</TD></TR><TR><TD align="left">    TEXT_BURN_NOT_ALLOWED</TD></TR></TABLE> >];
+
+c24730_RuleBlacklistBase -> c23664_RuleAddressSet [ label="1" ];
+c24730_RuleBlacklistBase -> c30353_RuleNFTAdapter [ label="2" ];
+c24730_RuleBlacklistBase -> c23885_RuleBlacklistInvariantStorage [ label="3" ];
+c24730_RuleBlacklistBase[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleBlacklistBase</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    supportsInterface(bytes4)</font></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestriction(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionFrom(address,address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _transferred(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _transferredFrom(address,address,address,uint256)</font></TD></TR></TABLE> >];
+
+c25095_RuleChainlinkPoRBase -> c30578_RuleTransferValidation [ label="1" ];
+c25095_RuleChainlinkPoRBase -> c29999_ChainlinkPoRFeedManager [ label="2" ];
+c25095_RuleChainlinkPoRBase[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleChainlinkPoRBase</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestriction(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionFrom(address,address,address,uint256)</font></TD></TR><TR><TD align="left">    _detectTransferRestrictionOnNotify(address,address,uint256)</TD></TR><TR><TD align="left">    _transferred(address,address,uint256)</TD></TR><TR><TD align="left">    _transferredFrom(address,address,address,uint256)</TD></TR></TABLE> >];
+
+c26022_RuleERC2980Base -> c18602_MetaTxModuleStandalone [ label="1" ];
+c26022_RuleERC2980Base -> c24402_RuleERC2980InvariantStorage [ label="2" ];
+c26022_RuleERC2980Base -> c24211_RuleERC2980Internal [ label="3" ];
+c26022_RuleERC2980Base -> c30353_RuleNFTAdapter [ label="4" ];
+c26022_RuleERC2980Base[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleERC2980Base</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    addWhitelistAddress(address)</TD></TR><TR><TD align="left"><font color="#FFA500">    supportsInterface(bytes4)</font></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _authorizeMintBurnManager()</TD></TR><TR><TD align="left">    _authorizeWhitelistAdd()</TD></TR><TR><TD align="left">    _authorizeWhitelistRemove()</TD></TR><TR><TD align="left">    _authorizeFrozenlistAdd()</TD></TR><TR><TD align="left">    _authorizeFrozenlistRemove()</TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestriction(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionFrom(address,address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _transferred(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _transferredFrom(address,address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyMintBurnManager()</TD></TR><TR><TD align="left">    onlyWhitelistAdd()</TD></TR><TR><TD align="left">    onlyWhitelistRemove()</TD></TR><TR><TD align="left">    onlyFrozenlistAdd()</TD></TR><TR><TD align="left">    onlyFrozenlistRemove()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    allowMint</TD></TR><TR><TD align="left">    allowBurn</TD></TR></TABLE> >];
+
+c26538_RuleIdentityRegistryBase -> c30353_RuleNFTAdapter [ label="1" ];
+c26538_RuleIdentityRegistryBase -> c31531_RuleIdentityRegistryInvariantStorage [ label="2" ];
+c26538_RuleIdentityRegistryBase[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleIdentityRegistryBase</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    setIdentityRegistry(address)</TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _authorizeIdentityRegistryManager()</TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestriction(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionFrom(address,address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _transferred(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _transferredFrom(address,address,address,uint256)</font></TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyIdentityRegistryManager()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    identityRegistry<font color="blue" POINT-SIZE="10"> (IIdentityRegistryVerified)</font></TD></TR><TR><TD align="left">    checkSender</TD></TR><TR><TD align="left">    checkSpender</TD></TR></TABLE> >];
+
+c26858_RuleMaxBalanceBase -> c30578_RuleTransferValidation [ label="1" ];
+c26858_RuleMaxBalanceBase -> c29448_BalanceCapManager [ label="2" ];
+c26858_RuleMaxBalanceBase[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleMaxBalanceBase</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestriction(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionFrom(address,address,address,uint256)</font></TD></TR><TR><TD align="left">    _detectTransferRestrictionOnNotify(address,address,uint256)</TD></TR><TR><TD align="left">    _transferred(address,address,uint256)</TD></TR><TR><TD align="left">    _transferredFrom(address,address,address,uint256)</TD></TR></TABLE> >];
+
+c27213_RuleMaxTotalSupplyBase -> c30578_RuleTransferValidation [ label="1" ];
+c27213_RuleMaxTotalSupplyBase -> c31321_TotalSupplyCapManager [ label="2" ];
+c27213_RuleMaxTotalSupplyBase[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleMaxTotalSupplyBase</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    canReturnTransferRestrictionCode(uint8)</font></TD></TR><TR><TD align="left">    remainingMintable()</TD></TR><TR><TD align="left"><font color="#FFA500">    transferred(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    transferred(address,address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    messageForTransferRestriction(uint8)</font></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestriction(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionFrom(address,address,address,uint256)</font></TD></TR><TR><TD align="left">    _detectTransferRestrictionOnNotify(address,address,uint256)</TD></TR><TR><TD align="left">    _transferred(address,address,uint256)</TD></TR><TR><TD align="left">    _transferredFrom(address,address,address,uint256)</TD></TR><TR><TD align="left">    _afterMintChecked(uint256)</TD></TR></TABLE> >];
+
+c27511_RuleReceiverWhitelistBase -> c23664_RuleAddressSet [ label="1" ];
+c27511_RuleReceiverWhitelistBase -> c30353_RuleNFTAdapter [ label="2" ];
+c27511_RuleReceiverWhitelistBase -> c31773_RuleReceiverWhitelistInvariantStorage [ label="3" ];
+c27511_RuleReceiverWhitelistBase[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleReceiverWhitelistBase</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    supportsInterface(bytes4)</font></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestriction(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionFrom(address,address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _transferred(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _transferredFrom(address,address,address,uint256)</font></TD></TR></TABLE> >];
+
+c27933_RuleSanctionsListBase -> c18602_MetaTxModuleStandalone [ label="1" ];
+c27933_RuleSanctionsListBase -> c30353_RuleNFTAdapter [ label="2" ];
+c27933_RuleSanctionsListBase -> c31847_RuleSanctionsListInvariantStorage [ label="3" ];
+c27933_RuleSanctionsListBase[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleSanctionsListBase</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _setSanctionListOracle(ISanctionsList)</TD></TR><TR><TD align="left">    _authorizeSanctionListManager()</TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestriction(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionFrom(address,address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _transferred(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _transferredFrom(address,address,address,uint256)</font></TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlySanctionListManager()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    sanctionsList<font color="blue" POINT-SIZE="10"> (ISanctionsList)</font></TD></TR></TABLE> >];
+
+c28185_RuleSpenderWhitelistBase -> c23664_RuleAddressSet [ label="1" ];
+c28185_RuleSpenderWhitelistBase -> c30353_RuleNFTAdapter [ label="2" ];
+c28185_RuleSpenderWhitelistBase -> c31885_RuleSpenderWhitelistInvariantStorage [ label="3" ];
+c28185_RuleSpenderWhitelistBase[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleSpenderWhitelistBase</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    supportsInterface(bytes4)</font></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestriction(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionFrom(address,address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _transferred(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _transferredFrom(address,address,address,uint256)</font></TD></TR></TABLE> >];
+
+c28414_RuleWhitelistBase -> c23664_RuleAddressSet [ label="1" ];
+c28414_RuleWhitelistBase -> c30955_RuleWhitelistShared [ label="2" ];
+c28414_RuleWhitelistBase[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleWhitelistBase</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    supportsInterface(bytes4)</font></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestriction(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionFrom(address,address,address,uint256)</font></TD></TR></TABLE> >];
+
+c29024_RuleWhitelistWrapperBase -> c1390_RulesManagementModule [ label="1" ];
+c29024_RuleWhitelistWrapperBase -> c18602_MetaTxModuleStandalone [ label="2" ];
+c29024_RuleWhitelistWrapperBase -> c30955_RuleWhitelistShared [ label="3" ];
+c29024_RuleWhitelistWrapperBase[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleWhitelistWrapperBase</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    supportsInterface(bytes4)</font></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestriction(address,address,uint256)</font></TD></TR><TR><TD align="left">    _isListedInAnyChild(address)</TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionFrom(address,address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _transferred(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _transferred(address,address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _checkRule(address)</font></TD></TR><TR><TD align="left">    _detectTransferRestrictionForTargets(address[])</TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR></TABLE> >];
+
+c29448_BalanceCapManager -> c29498_CapAccounting [ label="1" ];
+c29448_BalanceCapManager -> c23798_RuleAddressSetInternal [ label="2" ];
+c29448_BalanceCapManager -> c31637_RuleMaxBalanceInvariantStorage [ label="3" ];
+c29448_BalanceCapManager[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>BalanceCapManager</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _addExemptAddress(address)</TD></TR><TR><TD align="left">    _removeExemptAddress(address)</TD></TR><TR><TD align="left">    _setMaxBalance(uint256)</TD></TR><TR><TD align="left">    _setBalanceToken(address)</TD></TR><TR><TD align="left">    _authorizeMaxBalanceManager()</TD></TR><TR><TD align="left">    _remainingCapacity(address)</TD></TR><TR><TD align="left">    _balanceOf(address)</TD></TR><TR><TD align="left">    _capExceeded(address,uint256)</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyMaxBalanceManager()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    balanceToken<font color="blue" POINT-SIZE="10"> (IBalanceOf)</font></TD></TR><TR><TD align="left">    maxBalance</TD></TR></TABLE> >];
+
+c29498_CapAccounting[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>CapAccounting</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _capExceededBy(uint256,uint256,uint256)</TD></TR><TR><TD align="left">    _capHeadroom(uint256,uint256)</TD></TR></TABLE> >];
+
+c29999_ChainlinkPoRFeedManager -> c29498_CapAccounting [ label="1" ];
+c29999_ChainlinkPoRFeedManager -> c31023_TokenSupplyReader [ label="2" ];
+c29999_ChainlinkPoRFeedManager -> c31456_RuleChainlinkPoRInvariantStorage [ label="3" ];
+c29999_ChainlinkPoRFeedManager[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ChainlinkPoRFeedManager</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _setReservesFeed(AggregatorV3Interface)</TD></TR><TR><TD align="left">    _setTokenMetadata(address,uint8)</TD></TR><TR><TD align="left">    _setMaxStalenessSeconds(uint256)</TD></TR><TR><TD align="left">    _authorizeChainlinkPoRManager()</TD></TR><TR><TD align="left">    _maxBackedSupply()</TD></TR><TR><TD align="left"><font color="#FFA500">    _supplyToken()</font></TD></TR><TR><TD align="left">    _scaleReserve(uint256,uint8)</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyChainlinkPoRManager()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    reservesFeed<font color="blue" POINT-SIZE="10"> (AggregatorV3Interface)</font></TD></TR><TR><TD align="left">    tokenContract<font color="blue" POINT-SIZE="10"> (ITotalSupply)</font></TD></TR><TR><TD align="left">    tokenDecimals</TD></TR><TR><TD align="left">    maxStalenessSeconds</TD></TR></TABLE> >];
+
+c30353_RuleNFTAdapter -> c30578_RuleTransferValidation;
+c30353_RuleNFTAdapter[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleNFTAdapter</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    canTransfer(address,address,uint256,uint256)</font></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _isDelegated(address,address)</TD></TR><TR><TD align="left">    _transferred(address,address,uint256)</TD></TR><TR><TD align="left">    _transferredFrom(address,address,address,uint256)</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TRANSFERRED_SELECTOR_ERC3643</TD></TR><TR><TD align="left">    TRANSFERRED_SELECTOR_RULE_ENGINE</TD></TR><TR><TD align="left">    TRANSFERRED_SELECTOR_ERC7943</TD></TR><TR><TD align="left">    TRANSFERRED_SELECTOR_ERC7943_FROM</TD></TR></TABLE> >];
+
+c30578_RuleTransferValidation -> c18661_VersionModule;
+c30578_RuleTransferValidation[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleTransferValidation</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    canTransfer(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    transferred(address,address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    supportsInterface(bytes4)</font></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _detectTransferRestriction(address,address,uint256)</TD></TR><TR><TD align="left">    _detectTransferRestrictionFrom(address,address,address,uint256)</TD></TR></TABLE> >];
+
+c30955_RuleWhitelistShared -> c30353_RuleNFTAdapter [ label="1" ];
+c30955_RuleWhitelistShared -> c23989_RuleWhitelistInvariantStorage [ label="2" ];
+c30955_RuleWhitelistShared[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleWhitelistShared</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _setCheckSpender(bool)</TD></TR><TR><TD align="left">    _setAllowMintBurn(bool,bool)</TD></TR><TR><TD align="left">    _detectMintBurnRestriction(address,address)</TD></TR><TR><TD align="left">    _authorizeMintBurnManager()</TD></TR><TR><TD align="left">    _authorizeCheckSpenderManager()</TD></TR><TR><TD align="left"><font color="#FFA500">    _transferred(address,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _transferredFrom(address,address,address,uint256)</font></TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyMintBurnManager()</TD></TR><TR><TD align="left">    onlyCheckSpenderManager()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    checkSpender</TD></TR><TR><TD align="left">    allowMint</TD></TR><TR><TD align="left">    allowBurn</TD></TR></TABLE> >];
+
+c31023_TokenSupplyReader[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>TokenSupplyReader</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _supplyToken()</TD></TR><TR><TD align="left">    _currentSupply()</TD></TR><TR><TD align="left">    _probeTotalSupplyCallable(address)</TD></TR></TABLE> >];
+
+c31321_TotalSupplyCapManager -> c29498_CapAccounting [ label="1" ];
+c31321_TotalSupplyCapManager -> c31023_TokenSupplyReader [ label="2" ];
+c31321_TotalSupplyCapManager -> c31721_RuleMaxTotalSupplyInvariantStorage [ label="3" ];
+c31321_TotalSupplyCapManager[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>TotalSupplyCapManager</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    setMaxTotalSupply(uint256)</TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left">    _setMaxTotalSupply(uint256)</TD></TR><TR><TD align="left">    _setTokenContract(address)</TD></TR><TR><TD align="left">    _validateTokenContract(address)</TD></TR><TR><TD align="left">    _authorizeMaxTotalSupplyManager()</TD></TR><TR><TD align="left">    _authorizeTokenContractManager()</TD></TR><TR><TD align="left"><font color="#FFA500">    _supplyToken()</font></TD></TR><TR><TD align="left">    _capExceeded(uint256)</TD></TR><TR><TD align="left">    _remainingMintable()</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyMaxTotalSupplyManager()</TD></TR><TR><TD align="left">    onlyTokenContractManager()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    tokenContract<font color="blue" POINT-SIZE="10"> (ITotalSupply)</font></TD></TR><TR><TD align="left">    maxTotalSupply</TD></TR></TABLE> >];
+
+c31456_RuleChainlinkPoRInvariantStorage -> c31855_RuleSharedInvariantStorage;
+c31456_RuleChainlinkPoRInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleChainlinkPoRInvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    MAX_FEED_DECIMALS</TD></TR><TR><TD align="left">    MAX_TOKEN_DECIMALS</TD></TR><TR><TD align="left">    CODE_RESERVES_EXCEEDED</TD></TR><TR><TD align="left">    CODE_RESERVES_FEED_STALE</TD></TR><TR><TD align="left">    CODE_RESERVES_ANSWER_INVALID</TD></TR><TR><TD align="left">    CODE_TOTAL_SUPPLY_UNAVAILABLE</TD></TR><TR><TD align="left">    CODE_RESERVES_FEED_UNAVAILABLE</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TEXT_RESERVES_EXCEEDED</TD></TR><TR><TD align="left">    TEXT_RESERVES_FEED_STALE</TD></TR><TR><TD align="left">    TEXT_RESERVES_ANSWER_INVALID</TD></TR><TR><TD align="left">    TEXT_RESERVES_FEED_UNAVAILABLE</TD></TR><TR><TD align="left">    TEXT_TOTAL_SUPPLY_UNAVAILABLE</TD></TR></TABLE> >];
+
+c31531_RuleIdentityRegistryInvariantStorage -> c31855_RuleSharedInvariantStorage;
+c31531_RuleIdentityRegistryInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleIdentityRegistryInvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    CODE_ADDRESS_FROM_NOT_VERIFIED</TD></TR><TR><TD align="left">    CODE_ADDRESS_TO_NOT_VERIFIED</TD></TR><TR><TD align="left">    CODE_ADDRESS_SPENDER_NOT_VERIFIED</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TEXT_ADDRESS_FROM_NOT_VERIFIED</TD></TR><TR><TD align="left">    TEXT_ADDRESS_TO_NOT_VERIFIED</TD></TR><TR><TD align="left">    TEXT_ADDRESS_SPENDER_NOT_VERIFIED</TD></TR></TABLE> >];
+
+c31637_RuleMaxBalanceInvariantStorage -> c31855_RuleSharedInvariantStorage;
+c31637_RuleMaxBalanceInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleMaxBalanceInvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    MAX_BALANCE_ROLE</TD></TR><TR><TD align="left">    CODE_MAX_BALANCE_EXCEEDED</TD></TR><TR><TD align="left">    CODE_BALANCE_UNAVAILABLE</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TEXT_MAX_BALANCE_EXCEEDED</TD></TR><TR><TD align="left">    TEXT_BALANCE_UNAVAILABLE</TD></TR></TABLE> >];
+
+c31721_RuleMaxTotalSupplyInvariantStorage -> c31855_RuleSharedInvariantStorage;
+c31721_RuleMaxTotalSupplyInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleMaxTotalSupplyInvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    CODE_MAX_TOTAL_SUPPLY_EXCEEDED</TD></TR><TR><TD align="left">    CODE_SUPPLY_ORACLE_UNAVAILABLE</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TEXT_MAX_TOTAL_SUPPLY_EXCEEDED</TD></TR><TR><TD align="left">    TEXT_SUPPLY_ORACLE_UNAVAILABLE</TD></TR></TABLE> >];
+
+c31731_RuleMaxTotalSupplyRolesStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleMaxTotalSupplyRolesStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    MAX_TOTAL_SUPPLY_ROLE</TD></TR></TABLE> >];
+
+c31773_RuleReceiverWhitelistInvariantStorage -> c31855_RuleSharedInvariantStorage;
+c31773_RuleReceiverWhitelistInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleReceiverWhitelistInvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    CODE_ADDRESS_RECEIVER_NOT_WHITELISTED</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TEXT_ADDRESS_RECEIVER_NOT_WHITELISTED</TD></TR></TABLE> >];
+
+c31847_RuleSanctionsListInvariantStorage -> c31855_RuleSharedInvariantStorage;
+c31847_RuleSanctionsListInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleSanctionsListInvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    SANCTIONLIST_ROLE</TD></TR><TR><TD align="left">    CODE_ADDRESS_FROM_IS_SANCTIONED</TD></TR><TR><TD align="left">    CODE_ADDRESS_TO_IS_SANCTIONED</TD></TR><TR><TD align="left">    CODE_ADDRESS_SPENDER_IS_SANCTIONED</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TEXT_ADDRESS_FROM_IS_SANCTIONED</TD></TR><TR><TD align="left">    TEXT_ADDRESS_TO_IS_SANCTIONED</TD></TR><TR><TD align="left">    TEXT_ADDRESS_SPENDER_IS_SANCTIONED</TD></TR></TABLE> >];
+
+c31855_RuleSharedInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleSharedInvariantStorage</B></TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TEXT_CODE_NOT_FOUND</TD></TR></TABLE> >];
+
+c31885_RuleSpenderWhitelistInvariantStorage -> c31855_RuleSharedInvariantStorage;
+c31885_RuleSpenderWhitelistInvariantStorage[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleSpenderWhitelistInvariantStorage</B></TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    CODE_ADDRESS_SPENDER_NOT_WHITELISTED</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    TEXT_ADDRESS_SPENDER_NOT_WHITELISTED</TD></TR></TABLE> >];
+
+c32000_RuleBlacklist -> c24730_RuleBlacklistBase [ label="1" ];
+c32000_RuleBlacklist -> c18584_AccessControlModuleStandalone [ label="2" ];
+c32000_RuleBlacklist[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleBlacklist</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeAddressListAdd()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeAddressListRemove()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR></TABLE> >];
+
+c32117_RuleBlacklistOwnable2Step -> c24730_RuleBlacklistBase [ label="1" ];
+c32117_RuleBlacklistOwnable2Step -> c2389_Ownable2Step [ label="2" ];
+c32117_RuleBlacklistOwnable2Step -> c18639_Ownable2StepERC165Module [ label="3" ];
+c32117_RuleBlacklistOwnable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleBlacklistOwnable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeAddressListAdd()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeAddressListRemove()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR></TABLE> >];
+
+c32191_RuleChainlinkPoR -> c18584_AccessControlModuleStandalone [ label="1" ];
+c32191_RuleChainlinkPoR -> c25095_RuleChainlinkPoRBase [ label="2" ];
+c32191_RuleChainlinkPoR[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleChainlinkPoR</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeChainlinkPoRManager()</font></TD></TR></TABLE> >];
+
+c32244_RuleChainlinkPoRERC3643 -> c32191_RuleChainlinkPoR;
+c32244_RuleChainlinkPoRERC3643[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleChainlinkPoRERC3643</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionOnNotify(address,address,uint256)</font></TD></TR></TABLE> >];
+
+c32297_RuleChainlinkPoRERC3643Ownable2Step -> c32374_RuleChainlinkPoROwnable2Step;
+c32297_RuleChainlinkPoRERC3643Ownable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleChainlinkPoRERC3643Ownable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionOnNotify(address,address,uint256)</font></TD></TR></TABLE> >];
+
+c32374_RuleChainlinkPoROwnable2Step -> c25095_RuleChainlinkPoRBase [ label="1" ];
+c32374_RuleChainlinkPoROwnable2Step -> c2389_Ownable2Step [ label="2" ];
+c32374_RuleChainlinkPoROwnable2Step -> c18639_Ownable2StepERC165Module [ label="3" ];
+c32374_RuleChainlinkPoROwnable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleChainlinkPoROwnable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeChainlinkPoRManager()</font></TD></TR></TABLE> >];
+
+c32517_RuleERC2980 -> c26022_RuleERC2980Base [ label="1" ];
+c32517_RuleERC2980 -> c18584_AccessControlModuleStandalone [ label="2" ];
+c32517_RuleERC2980[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleERC2980</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeMintBurnManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeWhitelistAdd()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeWhitelistRemove()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeFrozenlistAdd()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeFrozenlistRemove()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR></TABLE> >];
+
+c32659_RuleERC2980Ownable2Step -> c26022_RuleERC2980Base [ label="1" ];
+c32659_RuleERC2980Ownable2Step -> c2389_Ownable2Step [ label="2" ];
+c32659_RuleERC2980Ownable2Step -> c18639_Ownable2StepERC165Module [ label="3" ];
+c32659_RuleERC2980Ownable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleERC2980Ownable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeMintBurnManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeWhitelistAdd()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeWhitelistRemove()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeFrozenlistAdd()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeFrozenlistRemove()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR></TABLE> >];
+
+c32727_RuleIdentityRegistry -> c18584_AccessControlModuleStandalone [ label="1" ];
+c32727_RuleIdentityRegistry -> c26538_RuleIdentityRegistryBase [ label="2" ];
+c32727_RuleIdentityRegistry[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleIdentityRegistry</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeIdentityRegistryManager()</font></TD></TR></TABLE> >];
+
+c32798_RuleIdentityRegistryOwnable2Step -> c26538_RuleIdentityRegistryBase [ label="1" ];
+c32798_RuleIdentityRegistryOwnable2Step -> c2389_Ownable2Step [ label="2" ];
+c32798_RuleIdentityRegistryOwnable2Step -> c18639_Ownable2StepERC165Module [ label="3" ];
+c32798_RuleIdentityRegistryOwnable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleIdentityRegistryOwnable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeIdentityRegistryManager()</font></TD></TR></TABLE> >];
+
+c32863_RuleMaxBalance -> c18584_AccessControlModuleStandalone [ label="1" ];
+c32863_RuleMaxBalance -> c26858_RuleMaxBalanceBase [ label="2" ];
+c32863_RuleMaxBalance[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleMaxBalance</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeMaxBalanceManager()</font></TD></TR></TABLE> >];
+
+c32931_RuleMaxBalanceOwnable2Step -> c26858_RuleMaxBalanceBase [ label="1" ];
+c32931_RuleMaxBalanceOwnable2Step -> c2389_Ownable2Step [ label="2" ];
+c32931_RuleMaxBalanceOwnable2Step -> c18639_Ownable2StepERC165Module [ label="3" ];
+c32931_RuleMaxBalanceOwnable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleMaxBalanceOwnable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeMaxBalanceManager()</font></TD></TR></TABLE> >];
+
+c33009_RuleMaxTotalSupply -> c18584_AccessControlModuleStandalone [ label="1" ];
+c33009_RuleMaxTotalSupply -> c27213_RuleMaxTotalSupplyBase [ label="2" ];
+c33009_RuleMaxTotalSupply -> c31731_RuleMaxTotalSupplyRolesStorage [ label="3" ];
+c33009_RuleMaxTotalSupply[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleMaxTotalSupply</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeMaxTotalSupplyManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeTokenContractManager()</font></TD></TR></TABLE> >];
+
+c33053_RuleMaxTotalSupplyERC3643 -> c33009_RuleMaxTotalSupply;
+c33053_RuleMaxTotalSupplyERC3643[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleMaxTotalSupplyERC3643</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionOnNotify(address,address,uint256)</font></TD></TR></TABLE> >];
+
+c33097_RuleMaxTotalSupplyERC3643Ownable2Step -> c33173_RuleMaxTotalSupplyOwnable2Step;
+c33097_RuleMaxTotalSupplyERC3643Ownable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleMaxTotalSupplyERC3643Ownable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _detectTransferRestrictionOnNotify(address,address,uint256)</font></TD></TR></TABLE> >];
+
+c33173_RuleMaxTotalSupplyOwnable2Step -> c27213_RuleMaxTotalSupplyBase [ label="1" ];
+c33173_RuleMaxTotalSupplyOwnable2Step -> c2389_Ownable2Step [ label="2" ];
+c33173_RuleMaxTotalSupplyOwnable2Step -> c18639_Ownable2StepERC165Module [ label="3" ];
+c33173_RuleMaxTotalSupplyOwnable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleMaxTotalSupplyOwnable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeMaxTotalSupplyManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeTokenContractManager()</font></TD></TR></TABLE> >];
+
+c33288_RuleReceiverWhitelist -> c27511_RuleReceiverWhitelistBase [ label="1" ];
+c33288_RuleReceiverWhitelist -> c18584_AccessControlModuleStandalone [ label="2" ];
+c33288_RuleReceiverWhitelist[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleReceiverWhitelist</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeAddressListAdd()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeAddressListRemove()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR></TABLE> >];
+
+c33405_RuleReceiverWhitelistOwnable2Step -> c27511_RuleReceiverWhitelistBase [ label="1" ];
+c33405_RuleReceiverWhitelistOwnable2Step -> c2389_Ownable2Step [ label="2" ];
+c33405_RuleReceiverWhitelistOwnable2Step -> c18639_Ownable2StepERC165Module [ label="3" ];
+c33405_RuleReceiverWhitelistOwnable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleReceiverWhitelistOwnable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeAddressListAdd()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeAddressListRemove()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR></TABLE> >];
+
+c33519_RuleSanctionsList -> c18584_AccessControlModuleStandalone [ label="1" ];
+c33519_RuleSanctionsList -> c27933_RuleSanctionsListBase [ label="2" ];
+c33519_RuleSanctionsList[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleSanctionsList</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeSanctionListManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR></TABLE> >];
+
+c33636_RuleSanctionsListOwnable2Step -> c27933_RuleSanctionsListBase [ label="1" ];
+c33636_RuleSanctionsListOwnable2Step -> c2389_Ownable2Step [ label="2" ];
+c33636_RuleSanctionsListOwnable2Step -> c18639_Ownable2StepERC165Module [ label="3" ];
+c33636_RuleSanctionsListOwnable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleSanctionsListOwnable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeSanctionListManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR></TABLE> >];
+
+c33751_RuleSpenderWhitelist -> c28185_RuleSpenderWhitelistBase [ label="1" ];
+c33751_RuleSpenderWhitelist -> c18584_AccessControlModuleStandalone [ label="2" ];
+c33751_RuleSpenderWhitelist[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleSpenderWhitelist</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeAddressListAdd()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeAddressListRemove()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR></TABLE> >];
+
+c33868_RuleSpenderWhitelistOwnable2Step -> c28185_RuleSpenderWhitelistBase [ label="1" ];
+c33868_RuleSpenderWhitelistOwnable2Step -> c2389_Ownable2Step [ label="2" ];
+c33868_RuleSpenderWhitelistOwnable2Step -> c18639_Ownable2StepERC165Module [ label="3" ];
+c33868_RuleSpenderWhitelistOwnable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleSpenderWhitelistOwnable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeAddressListAdd()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeAddressListRemove()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR></TABLE> >];
+
+c34007_RuleWhitelist -> c28414_RuleWhitelistBase [ label="1" ];
+c34007_RuleWhitelist -> c18584_AccessControlModuleStandalone [ label="2" ];
+c34007_RuleWhitelist[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleWhitelist</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeCheckSpenderManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeMintBurnManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeAddressListAdd()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeAddressListRemove()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR></TABLE> >];
+
+c34146_RuleWhitelistOwnable2Step -> c28414_RuleWhitelistBase [ label="1" ];
+c34146_RuleWhitelistOwnable2Step -> c2389_Ownable2Step [ label="2" ];
+c34146_RuleWhitelistOwnable2Step -> c18639_Ownable2StepERC165Module [ label="3" ];
+c34146_RuleWhitelistOwnable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleWhitelistOwnable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeAddressListAdd()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeAddressListRemove()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeCheckSpenderManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeMintBurnManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR></TABLE> >];
+
+c34341_RuleWhitelistWrapper -> c29024_RuleWhitelistWrapperBase [ label="1" ];
+c34341_RuleWhitelistWrapper -> c18584_AccessControlModuleStandalone [ label="2" ];
+c34341_RuleWhitelistWrapper -> c1760_RulesManagementModuleRolesStorage [ label="3" ];
+c34341_RuleWhitelistWrapper[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleWhitelistWrapper</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _grantRole(bytes32,address)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _revokeRole(bytes32,address)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeCheckSpenderManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeMintBurnManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _onlyRulesManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _onlyRulesLimitManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR></TABLE> >];
+
+c34478_RuleWhitelistWrapperOwnable2Step -> c29024_RuleWhitelistWrapperBase [ label="1" ];
+c34478_RuleWhitelistWrapperOwnable2Step -> c2389_Ownable2Step [ label="2" ];
+c34478_RuleWhitelistWrapperOwnable2Step -> c18639_Ownable2StepERC165Module [ label="3" ];
+c34478_RuleWhitelistWrapperOwnable2Step[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>RuleWhitelistWrapperOwnable2Step</B></TD></TR><TR><TD align="left"><I>Private Functions:</I></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeCheckSpenderManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _authorizeMintBurnManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _onlyRulesManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _onlyRulesLimitManager()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgSender()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _msgData()</font></TD></TR><TR><TD align="left"><font color="#FFA500">    _contextSuffixLength()</font></TD></TR></TABLE> >];
+
+}

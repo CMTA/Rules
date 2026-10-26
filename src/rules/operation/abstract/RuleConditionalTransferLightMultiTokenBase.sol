@@ -16,7 +16,7 @@ import {
 import {ITransferContext} from "../../interfaces/ITransferContext.sol";
 
 /**
- * @title RuleConditionalTransferLightMultiTokenBase — conditional-transfer rule wiring per-token approval state into the compliance interfaces
+ * @title RuleConditionalTransferLightMultiTokenBase — conditional-transfer rule keeping approvals per token and consuming them through the compliance interfaces
  */
 abstract contract RuleConditionalTransferLightMultiTokenBase is
     VersionModule,

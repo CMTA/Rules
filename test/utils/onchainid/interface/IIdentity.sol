@@ -10,7 +10,7 @@ pragma solidity ^0.8.20;
  * `lib/ERC-3643/` only.
  *
  * @dev Same approach as `src/rules/interfaces/AggregatorV3Interface.sol`: redeclare the slice of a
- * third-party interface that is genuinely used rather than vendor the whole package. Everywhere
+ * third-party interface that is actually called rather than vendor the whole package. Everywhere
  * else in ERC-3643, `IIdentity` appears only as a parameter or event type, and a contract type
  * canonicalises to `address` in the ABI, so the declared members do not affect any selector.
  *

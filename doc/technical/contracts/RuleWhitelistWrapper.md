@@ -138,7 +138,7 @@ What each rule declares:
 | `RuleSpenderWhitelist` | *does not implement the interface* | ❌ rejected — see below |
 | `RuleWhitelistWrapper` (nested) | *does not implement `areAddressesListed`* | ❌ rejected at the first check |
 
-`RuleSpenderWhitelist` **deliberately abstains, and must not be "fixed" to declare `true`.** Its set genuinely is
+`RuleSpenderWhitelist` **deliberately abstains, and must not be "fixed" to declare `true`.** Its set is
 an allow-list, so `true` would be honest about polarity and still wrong: the listed addresses are permitted
 *spenders*, not permitted *holders*, and the wrapper would read them as eligible transfer participants. Polarity
 is only half the question; the other half is what the addresses are. Withholding the declaration is what makes

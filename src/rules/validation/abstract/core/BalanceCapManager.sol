@@ -170,8 +170,8 @@ abstract contract BalanceCapManager is CapAccounting, RuleAddressSetInternal, Ru
 
     /**
      * @notice Stores the observed token and emits {MaxBalanceTokenUpdated}.
-     * @dev Probes `balanceOf` at configuration time so a token that cannot serve the check fails
-     * loudly at setup instead of silently blocking every transfer.
+     * @dev Probes `balanceOf` at configuration time so a token that cannot serve the check reverts
+     * at setup instead of silently blocking every transfer.
      * @param newBalanceToken The new token contract.
      */
     function _setBalanceToken(address newBalanceToken) internal virtual {

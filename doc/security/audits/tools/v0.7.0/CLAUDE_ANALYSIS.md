@@ -140,7 +140,7 @@ tests of both rules).
 
 ### D-2. `RuleIssuanceCap` deployables repeat the standard boilerplate — left
 
-About 20 code lines each: constructor wiring, the ERC-165 merge, and the `_authorize*` / `_onlyComplianceManager`
+About 20 code lines each: the constructor passing its arguments to the base, the ERC-165 merge, and the `_authorize*` / `_onlyComplianceManager`
 hooks. This is the B′ decision recorded in `ISSUE_16_ISSUANCE_CAP_DESIGN_OPTIONS.md`. Inheriting the
 `RuleMaxTotalSupply` deployables instead would remove it but create a diamond on top of an already deep chain.
 Every rule in the library repeats this boilerplate.

@@ -14,7 +14,7 @@ This prevents approval reuse across tokens, **provided the rule receives token-s
 >
 > **Do not add this rule to a `RuleEngine`.** Wire it with `CMTAT.setRuleEngine(rule)` on every token, and bind each token with `bindToken(tokenA)`, `bindToken(tokenB)`, …
 >
-> The reason is structural: approvals are **recorded** under the `token` argument you pass to `approveTransfer`, but **consumed** under `msg.sender`. Those two keys agree only when the caller *is* the token. Behind a `RuleEngine` the caller is the engine, and the rule cannot do its job — see [Deployment topology](#deployment-topology--why-a-ruleengine-does-not-work) for the exhaustive case analysis.
+> Approvals are **recorded** under the `token` argument you pass to `approveTransfer`, but **consumed** under `msg.sender`. Those two keys agree only when the caller *is* the token. Behind a `RuleEngine` the caller is the engine, and the rule cannot do its job — see [Deployment topology](#deployment-topology--why-a-ruleengine-does-not-work) for the exhaustive case analysis.
 >
 > "MultiToken" means *several tokens each pointing directly at one shared rule*, not *one RuleEngine serving several tokens*.
 

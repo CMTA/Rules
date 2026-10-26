@@ -100,7 +100,7 @@ makes it an 18-decimals token while the rule still believes 0.
 
 Nothing reverts and no event marks it. The reserve answer is simply scaled by `10 ** 18` too little
 and every mint is refused; the same mistake with the decimals reversed would authorise **unbacked
-minting** instead. The constructor probe cannot catch this — it genuinely succeeded at the time.
+minting** instead. The constructor probe cannot catch this — it succeeded at the time.
 
 - **Construct the rule after `token.init(...)`**, or
 - call `setTokenMetadata(token, decimals)` once the token is initialised to re-sync.

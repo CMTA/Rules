@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 import {IIdentityRegistryContains} from "./IIdentityRegistry.sol";
 
 /**
- * @title IAddressListBatchQuery — the batch membership question, and nothing else.
+ * @title IAddressListBatchQuery — the single batch membership query.
  * @notice The minimum a contract must expose to be usable as a child of `RuleWhitelistWrapper`.
  * @dev Split out of {IAddressList} deliberately. The wrapper calls exactly one function on its
  * children, so demanding the whole of {IAddressList} — which also carries four write functions, two

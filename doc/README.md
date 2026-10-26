@@ -472,7 +472,7 @@ Rules do **not** all treat the spender, mint/burn, or an unset oracle the same w
 
 ### Views that are not authoritative
 
-Two rules answer the standard ERC-1404 / ERC-3643 read views with something other than the real answer. In both cases the reason is structural — the 3-argument signature cannot carry the information the rule needs — and in both cases a correct alternative exists. **The important part is that the misleading answer is not confined to the rule: it propagates through the `RuleEngine` to the token's own public views**, which is the API an integrator actually calls.
+Two rules answer the standard ERC-1404 / ERC-3643 read views with something other than the real answer. In both cases the 3-argument signature cannot carry the information the rule needs, and in both cases a correct alternative exists. **The misleading answer is not confined to the rule: it propagates through the `RuleEngine` to the token's own public views**, which is the API an integrator actually calls.
 
 | Rule | Not authoritative | Why | Use instead |
 | --- | --- | --- | --- |
@@ -627,18 +627,18 @@ detail, including the three distinct failure modes, is in
 [`RULE_SEMANTICS.md` §6](./technical/guides/RULE_SEMANTICS.md).
 
 <sup>a</sup> Works, but **`checkSpender` never fires** — no spender reaches the rule on this path.
-<sup>b</sup> Works on `from` / `to`; the **spender leg is inert**, so a listed/sanctioned/frozen *spender* moving
-someone else's tokens is not caught.
-<sup>c</sup> ⚠️ **Use the ERC-3643 variant** — `RuleMaxTotalSupplyERC3643` / `RuleChainlinkPoRERC3643`. The stock
-rule counts the amount twice and reverts mints that are within the cap.
+
+<sup>b</sup> Works on `from` / `to`; the **spender leg is inert**, so a listed/sanctioned/frozen *spender* moving someone else's tokens is not caught.
+
+<sup>c</sup> ⚠️ **Use the ERC-3643 variant** — `RuleMaxTotalSupplyERC3643` / `RuleChainlinkPoRERC3643`. The stock rule counts the amount twice and reverts mints that are within the cap.
+
 <sup>d</sup> ❌ **Inert** — spender screening exists only on the 4-argument path, which this token never uses.
-<sup>e</sup> ❌ **Not supported** — direct-binding only, and ERC-3643 needs a RuleEngine for `created` /
-`destroyed`.
-<sup>f</sup> ❌ **Inert, and silently permissive** — `created` carries no minter identity, so no quota is
-debited and every mint passes. `RuleMaxBalance` is likewise **not supported**: same double-count as <sup>c</sup>,
-with no variant available.
-<sup>g</sup> ❌ **Not supported in v1** — the counter itself is correct on ERC-3643, but the inherited live-supply check
-double-counts, as in <sup>c</sup>; no `…ERC3643` variant is shipped yet.
+
+<sup>e</sup> ❌ **Not supported** — direct-binding only, and ERC-3643 needs a RuleEngine for `created` / `destroyed`.
+
+<sup>f</sup> ❌ **Inert, and silently permissive** — `created` carries no minter identity, so no quota is debited and every mint passes. `RuleMaxBalance` is likewise **not supported**: same double-count as <sup>c</sup>, with no variant available.
+
+<sup>g</sup> ❌ **Not supported in v1** — the counter itself is correct on ERC-3643, but the inherited live-supply check double-counts, as in <sup>c</sup>; no `…ERC3643` variant is shipped yet.
 
 <sup>&#x2020;</sup> `RuleMintAllowance` is **Partial**: it does not advertise the full ERC-3643 `ICompliance` interface via ERC-165 because its per-minter mint quota requires the spender-aware mint callback to identify the minter, which the 3-argument ERC-3643 mint callback cannot provide.
 
@@ -2034,6 +2034,10 @@ function approvedCount(address from, address to, uint256 value)
 Returns the number of approvals for the transfer hash.
 
 ## Security
+
+### Security review (v0.7.0)
+
+[`RESULT.md`](./security/audits/tools/v0.7.0/claude-audit/RESULT.md), with its [threat model](./security/audits/tools/v0.7.0/claude-audit/THREAT_MODEL.md) and [test plan](./security/audits/tools/v0.7.0/claude-audit/TEST_IMPROVEMENT.md), covers the code changed since v0.6.0. **Outcome: 0 Critical, 0 High, 0 Medium, 0 Low, 5 Informational.** The findings are deployment shapes `RuleIssuanceCap` cannot detect (an engine serving several tokens, a wrong binding, mints before attachment), a missing warning on the `_afterMintChecked` extension point, and the shared code 85. Proofs: [`test/ThreatModel/ThreatModelV070Tests.t.sol`](../test/ThreatModel/ThreatModelV070Tests.t.sol) (16 tests, 4 fuzz).
 
 ### Manual Threat Model & Review (v0.4.0)
 

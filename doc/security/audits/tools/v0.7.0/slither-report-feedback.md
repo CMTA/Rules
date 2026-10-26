@@ -58,7 +58,7 @@ output, which therefore adds up to 44. Both results are in the body and on stder
   - `RuleIssuanceCapBase._afterMintChecked` (1, **new this release**): the counter. `RuleMaxTotalSupplyBase._transferred` / `_transferredFrom` call it on every accepted mint. Coverage of `RuleIssuanceCapBase` is 100%, and deleting its write fails four invariants (mutation M4 in `INVARIANT_TESTS.md`). Acting on this finding would turn the rule back into a replenishing cap.
   - `RuleERC2980Internal._requireNotZeroAddress` and `RuleAddressSetInternal._requireNotZeroAddress` (2): passed as a function pointer to `AddressSetBatchLib.addBatch`, which Slither does not follow.
 - **`naming-convention` (6)** — spec-aligned parameter names.
-- **`unused-state` (4)** — the `TRANSFERRED_SELECTOR_*` constants in `RuleNFTAdapter`. Genuinely unreferenced, `internal constant`, nil impact. Kept rather than removed because they are `internal` API of a library meant to be subclassed.
+- **`unused-state` (4)** — the `TRANSFERRED_SELECTOR_*` constants in `RuleNFTAdapter`. Unreferenced anywhere, `internal constant`, nil impact. Kept rather than removed because they are `internal` API of a library meant to be subclassed.
 
 ## Two runs, two questions
 
