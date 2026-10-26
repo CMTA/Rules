@@ -13,7 +13,7 @@
 
 | Date | Type | Tool / Source | Version | Reports |
 |---|---|---|---|---|
-| 2026-10-26 | AI-assisted review | Claude Code (Anthropic) | v0.7.0 | [**CLAUDE_ANALYSIS.md**](./tools/v0.7.0/CLAUDE_ANALYSIS.md) (code quality, `src/`: 24 findings, 8 fixed, nothing exploitable) |
+| 2026-10-26 | AI-assisted review | Claude Code (Anthropic) | v0.7.0 | [**CLAUDE_ANALYSIS.md**](./tools/v0.7.0/CLAUDE_ANALYSIS.md) (code quality, `src/`: 24 findings, 9 fixed, nothing exploitable) |
 | 2026-10-26 | Static analysis | Slither 0.11.6 | v0.7.0 | [report](./tools/v0.7.0/slither-report.md) · [feedback](./tools/v0.7.0/slither-report-feedback.md) · [0.11.5 comparison run](./tools/v0.7.0/slither-report-0.11.5.md) |
 | 2026-10-26 | Static analysis | Aderyn 0.6.5 | v0.7.0 | [report](./tools/v0.7.0/aderyn-report.md) · [feedback](./tools/v0.7.0/aderyn-report-feedback.md) — second run, after fixing the nine unused imports the first run reported |
 | 2026-08-18 | AI-assisted review | Claude Code (Anthropic) | v0.6.0 | [**CLAUDE_ANALYSIS.md**](./tools/v0.6.0/CLAUDE_ANALYSIS.md) (code quality, `src/`) |

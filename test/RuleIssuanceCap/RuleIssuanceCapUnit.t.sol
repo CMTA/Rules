@@ -97,6 +97,8 @@ contract RuleIssuanceCapUnit is Test, HelperContract, RuleIssuanceCapInvariantSt
     function testConstructorAcceptsInitialIssuedEqualToSupply() public {
         token.setTotalSupply(30);
         RuleIssuanceCap fresh = new RuleIssuanceCap(DEFAULT_ADMIN_ADDRESS, address(token), CAP, 30);
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        fresh.bindToken(CALLER);
         assertEq(fresh.totalIssued(), 30);
         (, uint256 headroom) = fresh.remainingMintable();
         assertEq(headroom, CAP - 30);
@@ -228,6 +230,8 @@ contract RuleIssuanceCapUnit is Test, HelperContract, RuleIssuanceCapInvariantSt
     function testUnreadableSupplyIsReportedNotReverted() public {
         BreakableSupplyToken breakable = new BreakableSupplyToken();
         RuleIssuanceCap fresh = new RuleIssuanceCap(DEFAULT_ADMIN_ADDRESS, address(breakable), CAP, 0);
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        fresh.bindToken(CALLER);
         breakable.breakIt();
         (uint8 code, uint256 headroom) = fresh.remainingMintable();
         assertEq(code, CODE_SUPPLY_ORACLE_UNAVAILABLE);

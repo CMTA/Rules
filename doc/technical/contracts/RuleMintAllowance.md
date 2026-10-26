@@ -10,7 +10,7 @@ Regular transfers and burns are **not restricted** by this rule — it only acts
 
 `detectTransferRestriction(from, to, value)` (the 3-arg form without a spender) always returns `TRANSFER_OK` because the minter's identity is not available in that call path. Use `detectTransferRestrictionFrom(minter, address(0), to, amount)` to query a minter's allowance.
 
-> ⚠️ **`canTransfer` and `detectTransferRestriction` are NOT authoritative for this rule.** They are hardcoded to "allowed" (`true` / `TRANSFER_OK`) because the 3-arg signature carries no minter identity, so a pre-flight that gates on them will disagree with enforcement: the mint still reverts with `RuleMintAllowance_AllowanceExceeded` if the quota is insufficient. **For a mint pre-flight, always use the spender-aware view** `canTransferFrom(minter, address(0), to, value)` (or `detectTransferRestrictionFrom(minter, address(0), to, value)`), which returns the real answer.
+> ⚠️ **`canTransfer` and `detectTransferRestriction` are NOT authoritative for this rule.** Once the rule is bound they always answer "allowed" (`true` / `TRANSFER_OK`; before binding they report code 85), because the 3-arg signature carries no minter identity, so a pre-flight that gates on them will disagree with enforcement: the mint still reverts with `RuleMintAllowance_AllowanceExceeded` if the quota is insufficient. **For a mint pre-flight, always use the spender-aware view** `canTransferFrom(minter, address(0), to, value)` (or `detectTransferRestrictionFrom(minter, address(0), to, value)`), which returns the real answer.
 
 > Compatibility warning: this rule does **not** enforce mint allowances for a token that only calls the standard ERC-3643 3-arg compliance functions. It requires the spender-aware RuleEngine/CMTAT v3.3+ path (`detectTransferRestrictionFrom` and `transferred(spender, from, to, value)`) so the minter address is available.
 
@@ -39,6 +39,9 @@ _Diagram source: doc/img/rule-mint-allowance-flow.puml._
 | Constant | Code | Meaning |
 | --- | --- | --- |
 | `CODE_MINTER_ALLOWANCE_EXCEEDED` | 70 | Minter's remaining allowance is less than the requested mint amount |
+| `CODE_RULE_NOT_BOUND` | 85 | No caller is bound yet (`bindToken`), so every operation would revert. Shared, with the same message, by `RuleConditionalTransferLight`, `RuleMintAllowance` and `RuleIssuanceCap` |
+
+While the rule is unbound, every view reports code 85, including `canTransfer` / `detectTransferRestriction`. They return "allowed" only once a caller is bound.
 
 ## Access Control
 
@@ -113,8 +116,8 @@ Burns (`to == address(0)`) are not tracked by this rule. Minters do not recover 
 
 | View | Signature | Authoritative for mint quota? |
 | --- | --- | --- |
-| `canTransfer` | `(from, to, value)` | ❌ No — hardcoded `true` (no minter identity) |
-| `detectTransferRestriction` | `(from, to, value)` | ❌ No — hardcoded `TRANSFER_OK` |
+| `canTransfer` | `(from, to, value)` | ❌ No — `true` once bound (no minter identity); `false` while unbound |
+| `detectTransferRestriction` | `(from, to, value)` | ❌ No — `TRANSFER_OK` once bound; code 85 while unbound |
 | `canTransferFrom` | `(minter, address(0), to, value)` | ✅ **Yes** — returns `false` when the quota is insufficient |
 | `detectTransferRestrictionFrom` | `(minter, address(0), to, value)` | ✅ **Yes** — returns `70` when the quota is insufficient |
 
@@ -122,7 +125,7 @@ An integrator that pre-flights a mint with `canTransfer` will see "allowed" even
 
 #### The blind spot propagates to the RuleEngine and to the token
 
-The table above describes calls made **directly on the rule**. In a normal deployment nobody does that: the rule sits inside a `RuleEngine`, which sits in the token's compliance slot, and an integrator holds only the **token** address. Every level in that chain forwards the 3-argument call unchanged, so every level inherits the hardcoded `true`:
+The table above describes calls made **directly on the rule**. In a normal deployment nobody does that: the rule sits inside a `RuleEngine`, which sits in the token's compliance slot, and an integrator holds only the **token** address. Every level in that chain forwards the 3-argument call unchanged, so every level inherits the rule's unconditional `true` (once bound):
 
 | You call | Which reaches | Quota checked? |
 | --- | --- | --- |

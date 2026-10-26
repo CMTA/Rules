@@ -31,6 +31,9 @@ _Diagram source: doc/img/rule-conditional-transfer-light-flow.puml._
 | Constant | Code | Meaning |
 | --- | --- | --- |
 | `CODE_TRANSFER_REQUEST_NOT_APPROVED` | 46 | No approval exists for this `(from, to, value)` tuple |
+| `CODE_RULE_NOT_BOUND` | 85 | No caller is bound yet: neither a token (`bindToken`) nor a RuleEngine (`bindRuleEngine`), so every operation would revert. Shared, with the same message, by `RuleConditionalTransferLight`, `RuleMintAllowance` and `RuleIssuanceCap` |
+
+Code 85 detects only the fully unbound state. A rule bound to a token but used behind a RuleEngine that was never bound with `bindRuleEngine` still reverts every transfer from the engine, and no view can see it, because a view does not know who will call `transferred`.
 
 ## Access Control
 

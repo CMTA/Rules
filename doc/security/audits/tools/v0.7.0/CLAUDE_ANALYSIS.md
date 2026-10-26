@@ -38,7 +38,7 @@ whole of `src/` and `test/`.
 | G-3 | `CLAUDE.md` said `RuleIdentityRegistry` screens the minter; the code exempts it, per ERC-3643 | ✅ Fixed |
 | G-4 | NatSpec length: max 19, median 4, p90 9 — within the 20-line ceiling | ✅ Checked; the guide's p90 figure corrected (8 → 9) |
 | G-5 | `CLAUDE_AUDIT.md` / `CLAUDE_ANALYSIS.md` cited from production comments | ⬜ Left — explicitly allowed by this project's guide |
-| H-1 | An unbound `RuleIssuanceCap` answers "allowed" on every view while every mint reverts | ⬜ **Decide** |
+| H-1 | An unbound `RuleIssuanceCap` answers "allowed" on every view while every mint reverts | ✅ Fixed (decision: option b) — shared code 85 in all three binding rules |
 | H-2 | `_afterMintChecked` re-checks a condition the CMTAT write path has already checked | ⬜ Left — it is what makes the counter safe on a re-phased write path |
 | H-3 | On `RuleIssuanceCap`, `maxTotalSupply` means cumulative issuance | ⬜ Left — documented; a renamed getter would be a second ABI |
 | I-1 | No new cross-contract interface requirement | ✅ Checked |
@@ -48,13 +48,11 @@ whole of `src/` and `test/`.
 | L-1 | 5 braceless `if` bodies, all in tests added this release | ✅ Fixed |
 | M-1 | `require` vs `if` / `revert` | ✅ Checked — 3 bare `revert`s are not convertible; the one `require` with storage-read arguments fixed under B-1 |
 
-**8 fixed · 9 checked-and-correct · 6 left · 1 to decide.** (24 rows, counted.)
+**9 fixed · 9 checked-and-correct · 6 left · 0 to decide.** (24 rows, counted.)
 
 ## Outstanding
 
-| ID | Item | Why it is still open |
-|---|---|---|
-| H-1 | Make an unbound `RuleIssuanceCap` report a restriction code on mints | Needs a decision: it adds a code and changes a view's answer for a misconfiguration, and the same shape exists in `RuleMintAllowance` and `RuleConditionalTransferLight` |
+Nothing. H-1, the only item left for decision, was decided (option b) and implemented; see the entry.
 
 ---
 
@@ -248,7 +246,13 @@ Options:
 - **(b)** Return a new restriction code from the read path when `getTokenBound() == address(0)`.
 
 (b) is cheap but adds a code to a rule that has three, and it should then be applied to the other two rules for
-consistency. Not done without a decision.
+consistency.
+
+**Decision: (b), implemented for all three rules.**
+- **Code:** `CODE_RULE_NOT_BOUND = 85`, declared once in the new `RuleBindingInvariantStorage` and inherited by the three rules' invariant storage. One code with one message, as `IRule` requires of a code shared across rules. `HelperContract` inherits two of the three storages without a clash, because the declaration has a single source.
+- **Scope:** every operation, not only mints. Each rule's `transferred` rejects an unbound caller for transfers and burns too, so every view reports 85 while unbound, the `can*` views return `false`, and `RuleIssuanceCap.remainingMintable()` returns `(85, 0)`.
+- **What counts as bound:** a token for `RuleMintAllowance` / `RuleIssuanceCap`; a token **or** a RuleEngine for `RuleConditionalTransferLight`, since either may call it. Only the fully unbound state is visible. A view cannot know which caller will notify, so "bound to a token, but used behind an engine that was never bound" still looks fine. This is documented on the contract page.
+- **Tests:** `test/Binding/UnboundRuleViews.t.sol`: unbound, then bound, then unbound again, per rule. Forcing each rule's `_ruleNotBound()` to `false` (the old behaviour) fails the test for that rule. Two existing `RuleIssuanceCap` unit tests built a fresh, unbound rule to check something else and now bind it first. No existing `RuleConditionalTransferLight` or `RuleMintAllowance` test queried a view while unbound, so the old behaviour had never been pinned.
 
 ### H-2. `_afterMintChecked` repeats a check the CMTAT path already made — leave
 

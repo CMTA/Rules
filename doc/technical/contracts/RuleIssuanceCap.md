@@ -63,7 +63,7 @@ The rule writes storage on every mint, so `transferred` only accepts its bound c
 
 `bindToken` reverts with `RuleIssuanceCap_TokenAlreadyBound` while a caller is bound; call `unbindToken` first to migrate. An unbound caller is rejected with `TokenBinding_UnauthorizedCaller`.
 
-WARNING: until `bindToken` is called, every mint reverts.
+WARNING: until `bindToken` is called, every operation reverts (the write path rejects the unbound caller). The views say so: every operation reports code **85** (`CODE_RULE_NOT_BOUND`), and `remainingMintable()` returns `(85, 0)`.
 
 ### Post-deployment configuration
 
@@ -77,6 +77,7 @@ WARNING: until `bindToken` is called, every mint reverts.
 | `CODE_ISSUANCE_CAP_EXCEEDED` | 71 | Cumulative issuance would exceed the cap |
 | `CODE_MAX_TOTAL_SUPPLY_EXCEEDED` | 50 | Live supply would exceed the cap (shared with `RuleMaxTotalSupply`, same message) |
 | `CODE_SUPPLY_ORACLE_UNAVAILABLE` | 51 | `totalSupply()` could not be read |
+| `CODE_RULE_NOT_BOUND` | 85 | No caller is bound yet (`bindToken`), so every operation would revert. Shared, with the same message, by `RuleConditionalTransferLight`, `RuleMintAllowance` and `RuleIssuanceCap` |
 
 A rejected mint reverts with `RuleMaxTotalSupply_InvalidTransfer` (3-argument path, CMTAT v3.0.0) or `RuleMaxTotalSupply_InvalidTransferFrom` (4-argument path, CMTAT ≥ v3.3), carrying one of these codes.
 
@@ -95,7 +96,7 @@ On `RuleIssuanceCapOwnable2Step` the owner may call all of them.
 | Member | Notes |
 | --- | --- |
 | `totalIssued() → uint256` | Cumulative issuance; never decreases |
-| `remainingMintable() → (uint8 code, uint256 headroom)` | The smaller of the counter room and the live-supply room; code 51 if the supply is unreadable |
+| `remainingMintable() → (uint8 code, uint256 headroom)` | The smaller of the counter room and the live-supply room; code 51 if the supply is unreadable, code 85 while no caller is bound |
 | `maxTotalSupply() → uint256` | The cap. Here it bounds cumulative **issuance**, not outstanding supply |
 | `TotalIssuedInitialized(uint256 initialIssued)` | Once, at deployment |
 | `IssuanceRecorded(uint256 value, uint256 totalIssued)` | On every accepted non-zero mint |

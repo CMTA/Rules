@@ -82,7 +82,7 @@ abstract contract RuleConditionalTransferLightBase is
         override(IRule)
         returns (bool)
     {
-        return restrictionCode == CODE_TRANSFER_REQUEST_NOT_APPROVED;
+        return restrictionCode == CODE_TRANSFER_REQUEST_NOT_APPROVED || restrictionCode == CODE_RULE_NOT_BOUND;
     }
 
     /**
@@ -97,6 +97,8 @@ abstract contract RuleConditionalTransferLightBase is
     {
         if (restrictionCode == CODE_TRANSFER_REQUEST_NOT_APPROVED) {
             return TEXT_TRANSFER_REQUEST_NOT_APPROVED;
+        } else if (restrictionCode == CODE_RULE_NOT_BOUND) {
+            return TEXT_RULE_NOT_BOUND;
         }
         return TEXT_CODE_NOT_FOUND;
     }
@@ -260,6 +262,9 @@ abstract contract RuleConditionalTransferLightBase is
         override(IERC1404)
         returns (uint8)
     {
+        if (_ruleNotBound()) {
+            return CODE_RULE_NOT_BOUND;
+        }
         if (from == address(0) || to == address(0)) {
             return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
         }
@@ -314,6 +319,13 @@ abstract contract RuleConditionalTransferLightBase is
     {
         return detectTransferRestrictionFrom(spender, from, to, value)
             == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
+    }
+
+    /**
+     * @notice True while neither a token nor a RuleEngine is bound, so no caller can execute a transfer.
+     */
+    function _ruleNotBound() internal view virtual returns (bool) {
+        return getTokenBound() == address(0) && ruleEngine == address(0);
     }
 
     /*//////////////////////////////////////////////////////////////

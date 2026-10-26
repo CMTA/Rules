@@ -2,11 +2,15 @@
 pragma solidity ^0.8.27;
 
 import {RuleSharedInvariantStorage} from "../../validation/abstract/invariant/RuleSharedInvariantStorage.sol";
+import {RuleBindingInvariantStorage} from "./RuleBindingInvariantStorage.sol";
 
 /**
  * @title RuleConditionalTransferLightInvariantStorage — constants, events and errors for the conditional-transfer rule
  */
-abstract contract RuleConditionalTransferLightInvariantStorage is RuleSharedInvariantStorage {
+abstract contract RuleConditionalTransferLightInvariantStorage is
+    RuleSharedInvariantStorage,
+    RuleBindingInvariantStorage
+{
     /* ============ Role ============ */
     /**
      * @notice Role allowed to approve, cancel and execute conditional transfers

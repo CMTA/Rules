@@ -118,7 +118,8 @@ abstract contract RuleIssuanceCapBase is
      * @notice Returns whether this rule can produce the given restriction code (71, 50 or 51).
      */
     function canReturnTransferRestrictionCode(uint8 restrictionCode) public pure virtual override returns (bool) {
-        return restrictionCode == CODE_ISSUANCE_CAP_EXCEEDED || super.canReturnTransferRestrictionCode(restrictionCode);
+        return restrictionCode == CODE_ISSUANCE_CAP_EXCEEDED || restrictionCode == CODE_RULE_NOT_BOUND
+            || super.canReturnTransferRestrictionCode(restrictionCode);
     }
 
     /**
@@ -127,6 +128,8 @@ abstract contract RuleIssuanceCapBase is
     function messageForTransferRestriction(uint8 restrictionCode) public pure virtual override returns (string memory) {
         if (restrictionCode == CODE_ISSUANCE_CAP_EXCEEDED) {
             return TEXT_ISSUANCE_CAP_EXCEEDED;
+        } else if (restrictionCode == CODE_RULE_NOT_BOUND) {
+            return TEXT_RULE_NOT_BOUND;
         }
         return super.messageForTransferRestriction(restrictionCode);
     }
@@ -145,6 +148,9 @@ abstract contract RuleIssuanceCapBase is
         override
         returns (uint8)
     {
+        if (_ruleNotBound()) {
+            return CODE_RULE_NOT_BOUND;
+        }
         if (from == address(0) && _issuanceExceededBy(value)) {
             return CODE_ISSUANCE_CAP_EXCEEDED;
         }
@@ -183,6 +189,23 @@ abstract contract RuleIssuanceCapBase is
         if (counterRoom < headroom) {
             headroom = counterRoom;
         }
+    }
+
+    /**
+     * @notice Remaining mintable amount, or {CODE_RULE_NOT_BOUND} while no caller is bound (every mint reverts).
+     */
+    function remainingMintable() public view virtual override returns (uint8 restrictionCode, uint256 headroom) {
+        if (_ruleNotBound()) {
+            return (CODE_RULE_NOT_BOUND, 0);
+        }
+        return super.remainingMintable();
+    }
+
+    /**
+     * @notice True while no token or RuleEngine is bound, so every `transferred` call reverts.
+     */
+    function _ruleNotBound() internal view virtual returns (bool) {
+        return getTokenBound() == address(0);
     }
 
     /**

@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity ^0.8.27;
 
+import {RuleBindingInvariantStorage} from "./RuleBindingInvariantStorage.sol";
+
 /**
  * @title RuleIssuanceCapInvariantStorage — constants, events and errors for the issuance-cap rule
  * @dev Only what `RuleIssuanceCap` adds. Codes 50 / 51, the cap events and the cap errors are inherited
  * from `RuleMaxTotalSupplyInvariantStorage`.
  */
-abstract contract RuleIssuanceCapInvariantStorage {
+abstract contract RuleIssuanceCapInvariantStorage is RuleBindingInvariantStorage {
     /**
      * @notice Restriction message returned when cumulative issuance would exceed the cap.
      */

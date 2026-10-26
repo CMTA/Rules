@@ -103,11 +103,11 @@ access-control policy, in either an `AccessControl` or an `Ownable2Step` flavour
 | `RuleMaxBalance` | Caps how many tokens one address may hold | 82, 83 |
 | `RuleChainlinkPoR` | Caps minting at Chainlink Proof of Reserve reserves | 75–79 |
 | `RuleChainlinkPoRERC3643` | Caps minting at reported reserves, for tokens that mint *first* and call the rule after | 75–79 |
-| `RuleConditionalTransferLight` | Requires operator approval per transfer | 46 |
-| `RuleMintAllowance` | Per-minter mint quota | 70 |
-| `RuleIssuanceCap` | Caps cumulative issuance on mint; burns do **not** restore room (fixed issue volume) | 71, and 50, 51 shared with `RuleMaxTotalSupply` |
+| `RuleConditionalTransferLight` | Requires operator approval per transfer | 46, 85 (not bound) |
+| `RuleMintAllowance` | Per-minter mint quota | 70, 85 (not bound) |
+| `RuleIssuanceCap` | Caps cumulative issuance on mint; burns do **not** restore room (fixed issue volume) | 71, 85 (not bound), and 50, 51 shared with `RuleMaxTotalSupply` |
 
-Codes must stay unique across rules, since a RuleEngine returns the first non-zero one. The one deliberate exception is `RuleIssuanceCap`, which extends `RuleMaxTotalSupply` and reuses 50 and 51 with the same meaning and message.
+Codes must stay unique across rules, since a RuleEngine returns the first non-zero one. Two deliberate exceptions, each with one meaning and one message: `RuleIssuanceCap` reuses 50 and 51 from `RuleMaxTotalSupply`, which it extends, and 85 ("rule not bound") is shared by the three stateful rules that need binding.
 
 **The two `…ERC3643` variants differ only in *when* they expect to be called**, and that is what to pick them by. CMTAT asks the rule before it moves the value, so the stock rule adds the pending amount to the supply it reads; ERC-3643 / T-REX mints first, so the variant must not add it again. Both mismatches are silent: the stock rule on an ERC-3643 token counts the amount twice and rejects mints that are inside the cap, and a variant on a CMTAT token stops enforcing the ceiling on the write path.
 

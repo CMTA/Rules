@@ -137,6 +137,7 @@ sees stay context-free. Hardhat compiles only `src/` (Foundry's `src`), so it ne
 | RuleSanctionsList | 30–32 |
 | RuleBlacklist | 36–38 |
 | RuleConditionalTransferLight / …MultiToken | 46 |
+| RuleConditionalTransferLight, RuleMintAllowance, RuleIssuanceCap | 85 (`CODE_RULE_NOT_BOUND`, shared from `RuleBindingInvariantStorage`: no caller bound, every view reports it) |
 | RuleMaxTotalSupply | 50, 51 (total supply unavailable) |
 | RuleIdentityRegistry | 55–57 |
 | RuleERC2980 | 60–63, 64 (mint not allowed), 65 (burn not allowed) |

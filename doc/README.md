@@ -345,7 +345,8 @@ Here is the list of codes used by the different rules
 | RuleReceiverWhitelist        | CODE_ADDRESS_RECEIVER_NOT_WHITELISTED | 81   |
 | RuleMaxBalance               | CODE_MAX_BALANCE_EXCEEDED             | 82   |
 |                              | CODE_BALANCE_UNAVAILABLE              | 83   |
-|                              | Reserved slot                        | 82-84 |
+|                              | Reserved slot                        | 84    |
+| RuleConditionalTransferLight, RuleMintAllowance, RuleIssuanceCap | CODE_RULE_NOT_BOUND (shared, same message) | 85 |
 
 Note: 
 
@@ -475,7 +476,7 @@ Two rules answer the standard ERC-1404 / ERC-3643 read views with something othe
 
 | Rule | Not authoritative | Why | Use instead |
 | --- | --- | --- | --- |
-| `RuleMintAllowance` | `canTransfer` / `detectTransferRestriction` — hardcoded to allowed | The 3-arg signature carries no minter identity, and the quota is keyed on the minter | `canTransferFrom(minter, address(0), to, value)` or `detectTransferRestrictionFrom(...)` |
+| `RuleMintAllowance` | `canTransfer` / `detectTransferRestriction` — always allowed once bound (code 85 before) | The 3-arg signature carries no minter identity, and the quota is keyed on the minter | `canTransferFrom(minter, address(0), to, value)` or `detectTransferRestrictionFrom(...)` |
 | `RuleConditionalTransferLightMultiToken` | `canTransfer` / `detectTransferRestriction` — caller-dependent | The token key is derived from `msg.sender`, so any off-chain `eth_call` reads "not approved" even for an approved transfer | `canTransferForToken(token, from, to, value)` or `detectTransferRestrictionForToken(...)` |
 
 **Propagation.** `RuleEngineBase._detectTransferRestriction` aggregates by calling each rule's **3-argument** view and returning the first non-zero code, and CMTAT's `ValidationModuleERC1404` forwards the token's ERC-1404 views to the engine. So a `RuleMintAllowance` that returns `0` makes `ruleEngine.canTransfer(...)` **and** `cmtat.canTransfer(...)` report every mint as allowed, regardless of quota. The 4-argument chain (`detectTransferRestrictionFrom`) is unaffected at every level and carries the real answer.
@@ -992,7 +993,7 @@ Compatibility warning: `RuleMintAllowance` does not enforce quotas for a token t
 
 For the same reason, it does not advertise the full ERC-3643 `ICompliance` interface through ERC-165; the 3-arg callbacks alone cannot enforce the mint quota.
 
-> ⚠️ **`canTransfer` / `detectTransferRestriction` are not authoritative for this rule** — they are hardcoded to "allowed" because the 3-arg signature has no minter identity, so they disagree with enforcement. Pre-flight a mint with the spender-aware view `canTransferFrom(minter, address(0), to, value)` (or `detectTransferRestrictionFrom`). See [RuleMintAllowance.md](./technical/contracts/RuleMintAllowance.md#eligibility-views-which-one-is-authoritative).
+> ⚠️ **`canTransfer` / `detectTransferRestriction` are not authoritative for this rule** — once the rule is bound they always answer "allowed" (code 85 before binding), because the 3-arg signature has no minter identity, so they disagree with enforcement. Pre-flight a mint with the spender-aware view `canTransferFrom(minter, address(0), to, value)` (or `detectTransferRestrictionFrom`). See [RuleMintAllowance.md](./technical/contracts/RuleMintAllowance.md#eligibility-views-which-one-is-authoritative).
 
 **Usage scenario**
 
