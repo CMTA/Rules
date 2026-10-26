@@ -32,8 +32,8 @@ Each rule enforces one transfer restriction. A rule can be plugged **directly** 
 
 | Rules | Contracts report `version()` | CMTAT | RuleEngine | OpenZeppelin |
 | --- | --- | --- | --- | --- |
-| **v0.7.0** (unreleased, `dev`) | `"0.6.0"` until the release bump | **≥ v3.0.0**, validated against `v3.3.0-rc4` and `v3.0.0` | `v3.0.0-rc7` (rules also accepted by `rc6` and older) | `v5.7.0` |
-| **v0.6.0** (current) | `"0.6.0"` | **≥ v3.0.0**, validated against `v3.3.0-rc3` | `v3.0.0-rc6` | `v5.7.0` |
+| **v0.7.0** (current) | `"0.7.0"` | **≥ v3.0.0**, validated against `v3.3.0-rc4` and `v3.0.0` | `v3.0.0-rc7` (rules also accepted by `rc6` and older) | `v5.7.0` |
+| **v0.6.0** | `"0.6.0"` | **≥ v3.0.0**, validated against `v3.3.0-rc3` | `v3.0.0-rc6` | `v5.7.0` |
 
 CMTAT v3.0.0, the last audited release, sends mint and burn to the rules **without a spender** (v3.3 forwards the minter / burner). Every rule is tested against a real v3.0.0 token, Standard and Debt variants, directly and behind a `RuleEngine` (`test/CMTATv3.0.0/`):
 

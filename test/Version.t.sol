@@ -37,7 +37,7 @@ import {AggregatorV3Mock} from "src/mocks/AggregatorV3Mock.sol";
 import {TotalSupplyDecimalsMock} from "src/mocks/TotalSupplyDecimalsMock.sol";
 
 contract VersionTest is Test, HelperContract {
-    string constant EXPECTED_VERSION = "0.6.0";
+    string constant EXPECTED_VERSION = "0.7.0";
 
     function testVersionRuleWhitelist() public {
         RuleWhitelist rule = new RuleWhitelist(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, true, false);

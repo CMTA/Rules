@@ -46,11 +46,14 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 
 
-## v0.7.0 - Unreleased
+## v0.7.0 - 2026-10-26
+
+Commit: 
 
 ### Summary
 
-- Dependency update: CMTAT `v3.3.0-rc4` and RuleEngine `v3.0.0-rc7`. No change to any rule's screening logic, restriction codes or storage layout.
+- Contracts now report `version()` → `"0.7.0"`.
+- Dependency update: CMTAT `v3.3.0-rc4` and RuleEngine `v3.0.0-rc7`. The update itself changes no rule's screening logic, restriction codes or storage layout.
 - Every rule is now tested against a real CMTAT `v3.0.0` token, the last audited CMTAT release, and the documentation states per rule what v3.0.0 supports.
 - **New rule `RuleIssuanceCap`** ([CMTA/Rules#16](https://github.com/CMTA/Rules/issues/16)): a per-token cap on cumulative issuance that burns do not restore, working on CMTAT v3.0.0. Built as an extension of `RuleMaxTotalSupply`, so no cap logic is duplicated.
 - One ABI change for off-chain consumers: `RuleMaxTotalSupply`'s `MaxTotalSupplyUpdated` event now carries the previous cap (see Breaking change).
@@ -126,6 +129,9 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 ### Documentation
 
+- Version references updated to `0.7.0`: `VersionModule.VERSION`, `test/Version.t.sol`, both READMEs and `CLAUDE.md` / `AGENTS.md`.
+- Root `README.md`: a generated table of contents, and a statement of what the ERC-3643 cap-rule variants enforce and how to choose between them and the stock rules.
+- PDF generation: `doc/script/convert_links_for_pdf.sh` resolves relative links from the input file's location rather than from the form of the URL, and the new `doc/script/convert_links_for_pdf_root.sh` converts the links of the root `README.md`.
 - `doc/README.md`: `IRule` section rewritten for rc7 (new interface, both ERC-165 ids and which engines accept them), compatibility table with a `v0.7.0` row. Root `README.md`, `doc/FOUNDRY.md`, `CLAUDE.md` / `AGENTS.md`: submodule versions.
 - `doc/technical/guides/DEPLOYMENT_SCRIPTS.md`: which engine the scripts deploy, depending on `forwarder`.
 - CMTAT v3.0.0 support documented:
@@ -142,7 +148,7 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 ## v0.6.0 - 2026-08-24
 
-Commit: 
+Commit: `283efe723225c89729fd618852a9c2705a47180b`
 
 ### Summary
 
