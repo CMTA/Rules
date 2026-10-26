@@ -40,6 +40,11 @@ abstract contract TotalSupplyCapManager is CapAccounting, TokenSupplyReader, Rul
         _;
     }
 
+    modifier onlyTokenContractManager() {
+        _authorizeTokenContractManager();
+        _;
+    }
+
     /*//////////////////////////////////////////////////////////////
                         PUBLIC FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -56,7 +61,7 @@ abstract contract TotalSupplyCapManager is CapAccounting, TokenSupplyReader, Rul
      * @notice Updates the token contract whose total supply is checked.
      * @param newTokenContract New token contract address; must not be the zero address.
      */
-    function setTokenContract(address newTokenContract) public virtual onlyMaxTotalSupplyManager {
+    function setTokenContract(address newTokenContract) public virtual onlyTokenContractManager {
         _setTokenContract(newTokenContract);
     }
 
@@ -101,10 +106,18 @@ abstract contract TotalSupplyCapManager is CapAccounting, TokenSupplyReader, Rul
     }
 
     /**
-     * @notice Authorization hook invoked before updating the max total supply or token contract.
+     * @notice Authorization hook invoked before updating the max total supply.
      * @dev Implemented by concrete subclasses with the desired access-control policy.
      */
     function _authorizeMaxTotalSupplyManager() internal view virtual;
+
+    /**
+     * @notice Authorization hook invoked before repointing the observed token.
+     * @dev Separate from {_authorizeMaxTotalSupplyManager} on purpose: repointing the token changes the
+     * protected supply as thoroughly as changing the cap, so it can stay with a stricter authority than
+     * the one allowed to adjust the cap.
+     */
+    function _authorizeTokenContractManager() internal view virtual;
 
     /**
      * @inheritdoc TokenSupplyReader

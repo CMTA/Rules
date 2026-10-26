@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {HelperContract} from "../HelperContract.sol";
 import {RuleMaxTotalSupply} from "src/rules/validation/deployment/RuleMaxTotalSupply.sol";
 import {TotalSupplyMock} from "src/mocks/TotalSupplyMock.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract RuleMaxTotalSupplyUnit is Test, HelperContract {
     TotalSupplyMock private token;
@@ -170,6 +171,62 @@ contract RuleMaxTotalSupplyUnit is Test, HelperContract {
         vm.expectRevert();
         vm.prank(ADDRESS1);
         rule.setTokenContract(address(token));
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                         MAX_TOTAL_SUPPLY_ROLE
+    //////////////////////////////////////////////////////////////*/
+
+    function testMaxTotalSupplyRoleHash() public view {
+        assertEq(rule.MAX_TOTAL_SUPPLY_ROLE(), keccak256("MAX_TOTAL_SUPPLY_ROLE"));
+    }
+
+    function testCapOperatorCanSetTheCapButNotTheToken() public {
+        bytes32 role = rule.MAX_TOTAL_SUPPLY_ROLE();
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.grantRole(role, ADDRESS2);
+
+        vm.prank(ADDRESS2);
+        rule.setMaxTotalSupply(200);
+        assertEq(rule.maxTotalSupply(), 200);
+
+        TotalSupplyMock other = new TotalSupplyMock();
+        vm.expectRevert(
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, ADDRESS2, bytes32(0))
+        );
+        vm.prank(ADDRESS2);
+        rule.setTokenContract(address(other));
+    }
+
+    function testSetMaxTotalSupplyRequiresTheRole() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, ADDRESS1, rule.MAX_TOTAL_SUPPLY_ROLE()
+            )
+        );
+        vm.prank(ADDRESS1);
+        rule.setMaxTotalSupply(200);
+    }
+
+    function testRevokedCapOperatorLosesAccess() public {
+        bytes32 role = rule.MAX_TOTAL_SUPPLY_ROLE();
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        rule.grantRole(role, ADDRESS2);
+        rule.revokeRole(role, ADDRESS2);
+        vm.stopPrank();
+        vm.expectRevert(
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, ADDRESS2, role)
+        );
+        vm.prank(ADDRESS2);
+        rule.setMaxTotalSupply(200);
+    }
+
+    /// @notice Existing deployments are unaffected: the admin holds the new role implicitly.
+    function testAdminHoldsTheRoleImplicitly() public {
+        assertTrue(rule.hasRole(rule.MAX_TOTAL_SUPPLY_ROLE(), DEFAULT_ADMIN_ADDRESS));
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.setMaxTotalSupply(300);
+        assertEq(rule.maxTotalSupply(), 300);
     }
 
     function testSetMaxTotalSupply_OnlyAdmin() public {

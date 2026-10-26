@@ -55,4 +55,9 @@ contract RuleMaxTotalSupplyOwnable2Step is RuleMaxTotalSupplyBase, Ownable2Step,
      * @notice Restricts maximum total supply management to the contract owner.
      */
     function _authorizeMaxTotalSupplyManager() internal view virtual override onlyOwner {}
+
+    /**
+     * @notice Restricts repointing the observed token to the contract owner.
+     */
+    function _authorizeTokenContractManager() internal view virtual override onlyOwner {}
 }

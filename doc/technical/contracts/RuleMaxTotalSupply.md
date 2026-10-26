@@ -64,22 +64,31 @@ _Diagram source: doc/img/rule-max-total-supply-flow.puml._
 
 ## Access Control
 
-The default admin is the address passed as `admin` in the constructor. It is granted `DEFAULT_ADMIN_ROLE`, which implicitly holds all roles. All privileged operations are gated on `DEFAULT_ADMIN_ROLE`.
+The default admin is the address passed as `admin` in the constructor. It is granted `DEFAULT_ADMIN_ROLE`, which implicitly holds all roles.
 
-| Role | Description |
-| --- | --- |
-| `DEFAULT_ADMIN_ROLE` | May update the supply cap and token contract address |
+| Role | Hash | May call |
+| --- | --- | --- |
+| `MAX_TOTAL_SUPPLY_ROLE` | `0xff56c44a0b63a2f9b3aaada52f4982ecb1bd4eefdb286a7832ff51e8bc4e49f1` | `setMaxTotalSupply` |
+| `DEFAULT_ADMIN_ROLE` | `0x00…00` | `setTokenContract`, role management, and (implicitly) everything `MAX_TOTAL_SUPPLY_ROLE` may call |
+
+The split lets an issuer delegate cap changes, for example to a corporate-secretary key that records each capital increase, without granting full admin.
+
+- Repointing the observed token stays with the admin. It changes the protected supply as thoroughly as changing the cap, and can switch the cap off for the real token.
+- The admin holds `MAX_TOTAL_SUPPLY_ROLE` implicitly but is not listed by `getRoleMember`. Grant the role explicitly if an off-chain tool enumerates role members.
+- Deployments made before the role existed keep working unchanged: the admin could change the cap before and still can.
+
+`RuleMaxTotalSupplyOwnable2Step` has no roles: the owner may call both setters. The ERC-3643 variants inherit the access control of the contract they extend.
 
 
 ## Methods
 
 ### `setMaxTotalSupply(uint256 newMaxTotalSupply)`
 
-Updates the maximum total supply cap. Restricted to `DEFAULT_ADMIN_ROLE`. Emits `MaxTotalSupplyUpdated`.
+Updates the maximum total supply cap. Restricted to `MAX_TOTAL_SUPPLY_ROLE` (the admin holds it implicitly; the owner on the Ownable2Step variant). Emits `MaxTotalSupplyUpdated`.
 
 ### `setTokenContract(address newTokenContract)`
 
-Updates the reference to the token contract. Reverts if the address is zero, has no code, or its `totalSupply()` is not callable. Restricted to `DEFAULT_ADMIN_ROLE`. Emits `TokenContractUpdated`.
+Updates the reference to the token contract. Reverts if the address is zero, has no code, or its `totalSupply()` is not callable. Restricted to `DEFAULT_ADMIN_ROLE` (the owner on the Ownable2Step variant), deliberately **not** to `MAX_TOTAL_SUPPLY_ROLE`. Emits `TokenContractUpdated`.
 
 ### `maxTotalSupply() → uint256`
 
@@ -129,7 +138,7 @@ Each row was checked in the CMTAT source for v3.0.0 and v3.3.0-rc4, where these 
 | Supply that existed before the rule was installed | Counted | The cap is absolute, not "new issuance from now on". After a capital increase of N, set `maxTotalSupply = existing supply + N` | `testSupplyMintedWhileDetachedIsCountedOnReattach` |
 | Rule detached (`setRuleEngine(address(0))`, or `removeRule` on the engine), then re-attached | Cap lifted while detached; on re-attach it is evaluated against the **real** supply | No drift. Supply minted meanwhile is counted, and if it pushed supply above the cap, minting stays frozen until burns bring it back under | `testSupplyMintedWhileDetachedIsCountedOnReattach` |
 
-WARNING: detaching the rule is the one way to exceed the cap, and nothing on-chain records it. Whoever holds `DEFAULT_ADMIN_ROLE` on the token (`setRuleEngine`), or the rule-management role on the engine (`removeRule`), can lift the cap. Revoke `MINTER_ROLE` before any planned detachment.
+WARNING: detaching the rule is the one way to exceed the cap, and nothing on-chain records it. Whoever holds `DEFAULT_ADMIN_ROLE` on the token (`setRuleEngine`), or the rule-management role on the engine (`removeRule`), can lift the cap. So can a `MAX_TOTAL_SUPPLY_ROLE` holder, by raising it: grant that role only to a key trusted to change the authorised amount. Revoke `MINTER_ROLE` before any planned detachment.
 
 ### One instance per token
 

@@ -80,7 +80,9 @@ Counter-argument: a corporate resolution usually fixes an **absolute** authorise
 
 **This is an ABI change:** the event signature and topic change, and `test/Events/ConstructorEvents.t.sol` hashes the current signature. Do it only in a release that already lists breaking changes, or add it as a second event. Low value; listed for completeness.
 
-### 3.4 Cap management is tied to `DEFAULT_ADMIN_ROLE` — **optional**
+### 3.4 Cap management is tied to `DEFAULT_ADMIN_ROLE` — **done**
+
+> **Update:** implemented. `setMaxTotalSupply` requires `MAX_TOTAL_SUPPLY_ROLE` and `setTokenContract` stays admin-only, through a second hook `_authorizeTokenContractManager`. The constant lives in the AccessControl deployable only.
 
 `_authorizeMaxTotalSupplyManager` uses `onlyRole(DEFAULT_ADMIN_ROLE)`. Comparable rules use a dedicated role:
 - `RuleMaxBalance`: `MAX_BALANCE_ROLE`;
@@ -144,6 +146,6 @@ So R3 needs a separate rule, as proposed in the plan. `RuleMaxTotalSupply` remai
 | 2 | ~~Add `remainingMintable()` (§3.1)~~ **Done** | Code, non-breaking |
 | 3 | ~~Document the §3.5 behaviours in `doc/technical/contracts/RuleMaxTotalSupply.md`~~ **Done** | Documentation |
 | 4 | ~~Add the §3.7 tests, starting with real CMTAT v3.0.0~~ **Done** (`test/CMTATv3.0.0/`) | Tests |
-| 5 | Optional: dedicated `MAX_TOTAL_SUPPLY_ROLE` (§3.4), `increase` / `decrease` (§3.2) | Code, non-breaking |
+| 5 | Optional: ~~dedicated `MAX_TOTAL_SUPPLY_ROLE` (§3.4)~~ **done**; `increase` / `decrease` (§3.2) still open | Code, non-breaking |
 | 6 | Optional: `(previous, new)` event (§3.3), only alongside other breaking changes | Code, ABI change |
 | 7 | Update the plan document so that `RuleIssuanceCap` reuses `CapAccounting` (§4) | Plan |

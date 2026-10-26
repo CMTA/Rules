@@ -11,6 +11,14 @@ import {RuleTransferValidation} from "../abstract/core/RuleTransferValidation.so
  * @notice Restricts minting so that total supply never exceeds a maximum value.
  */
 contract RuleMaxTotalSupply is AccessControlModuleStandalone, RuleMaxTotalSupplyBase {
+    /**
+     * @notice Role allowed to change the cap (`setMaxTotalSupply`). Repointing the token stays with
+     * `DEFAULT_ADMIN_ROLE`, which also implicitly holds this role.
+     * @dev Declared here, not in the invariant storage, so the Ownable2Step variant does not publish a
+     * role it never checks.
+     */
+    bytes32 public constant MAX_TOTAL_SUPPLY_ROLE = keccak256("MAX_TOTAL_SUPPLY_ROLE");
+
     /*//////////////////////////////////////////////////////////////
                              CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
@@ -50,7 +58,12 @@ contract RuleMaxTotalSupply is AccessControlModuleStandalone, RuleMaxTotalSupply
     //////////////////////////////////////////////////////////////*/
 
     /**
-     * @notice Restricts maximum total supply management to holders of DEFAULT_ADMIN_ROLE.
+     * @notice Restricts cap management to MAX_TOTAL_SUPPLY_ROLE (the admin holds it implicitly).
      */
-    function _authorizeMaxTotalSupplyManager() internal view virtual override onlyRole(DEFAULT_ADMIN_ROLE) {}
+    function _authorizeMaxTotalSupplyManager() internal view virtual override onlyRole(MAX_TOTAL_SUPPLY_ROLE) {}
+
+    /**
+     * @notice Restricts repointing the observed token to DEFAULT_ADMIN_ROLE.
+     */
+    function _authorizeTokenContractManager() internal view virtual override onlyRole(DEFAULT_ADMIN_ROLE) {}
 }

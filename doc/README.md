@@ -1013,7 +1013,8 @@ See also [docs.openzeppelin.com - AccessControl](https://docs.openzeppelin.com/c
 
 | Role | Hash | Functions (by rule) |
 | --- | --- | --- |
-| `DEFAULT_ADMIN_ROLE` | `0x0000000000000000000000000000000000000000000000000000000000000000` | `grantRole`, `revokeRole`, `renounceRole` (all AccessControl rules); `setCheckSpender` (RuleWhitelist, RuleWhitelistWrapper); `setMaxTotalSupply`, `setTokenContract` (RuleMaxTotalSupply); `setReservesFeed`, `setTokenMetadata`, `setMaxStalenessSeconds` (RuleChainlinkPoR); `setIdentityRegistry`, `clearIdentityRegistry` (RuleIdentityRegistry) |
+| `DEFAULT_ADMIN_ROLE` | `0x0000000000000000000000000000000000000000000000000000000000000000` | `grantRole`, `revokeRole`, `renounceRole` (all AccessControl rules); `setCheckSpender` (RuleWhitelist, RuleWhitelistWrapper); `setTokenContract` (RuleMaxTotalSupply); `setReservesFeed`, `setTokenMetadata`, `setMaxStalenessSeconds` (RuleChainlinkPoR); `setIdentityRegistry`, `clearIdentityRegistry` (RuleIdentityRegistry) |
+| `MAX_TOTAL_SUPPLY_ROLE` | `0xff56c44a0b63a2f9b3aaada52f4982ecb1bd4eefdb286a7832ff51e8bc4e49f1` | `setMaxTotalSupply` (RuleMaxTotalSupply, RuleMaxTotalSupplyERC3643) |
 | `ADDRESS_LIST_ADD_ROLE` | `0x1b03c849816e077359373cf0a8d6d8f741d643bc1e95273ffe11515f83bebf61` | `addAddress`, `addAddresses` (RuleWhitelist, RuleBlacklist) |
 | `ADDRESS_LIST_REMOVE_ROLE` | `0x1b94c92b564251ed6b49246d9a82eb7a486b6490f3b3a3bf3b28d2e99801f3ec` | `removeAddress`, `removeAddresses` (RuleWhitelist, RuleBlacklist) |
 | `SANCTIONLIST_ROLE` | `0x30842281ac34bdc7d568c7ab276f84ba6fc1a1de1ae858b0afd35e716fb0650d` | `setSanctionListOracle`, `clearSanctionListOracle` (RuleSanctionsList) |
@@ -1825,10 +1826,10 @@ Initializes access control, the token contract, and the max supply.
 function setMaxTotalSupply(uint256 newMaxTotalSupply)
     public
     virtual
-    onlyRole(DEFAULT_ADMIN_ROLE)
+    onlyRole(MAX_TOTAL_SUPPLY_ROLE)
 ```
 
-Updates the configured maximum supply.
+Updates the configured maximum supply. The admin holds `MAX_TOTAL_SUPPLY_ROLE` implicitly.
 
 #### setTokenContract
 
@@ -1839,7 +1840,7 @@ function setTokenContract(address tokenContract_)
     onlyRole(DEFAULT_ADMIN_ROLE)
 ```
 
-Sets the token contract used to read `totalSupply()`.
+Sets the token contract used to read `totalSupply()`. Stays admin-only: `MAX_TOTAL_SUPPLY_ROLE` does not grant it.
 
 ### RuleChainlinkPoR
 

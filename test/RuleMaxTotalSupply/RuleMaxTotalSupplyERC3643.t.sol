@@ -163,4 +163,18 @@ contract RuleMaxTotalSupplyERC3643Unit is Test, HelperContract {
         assertEq(code, TRANSFER_OK);
         assertEq(headroom, 40);
     }
+
+    /// @notice The AccessControl ERC-3643 variant inherits the role split.
+    function testCapOperatorRoleIsInherited() public {
+        RuleMaxTotalSupplyERC3643 rule = _accessControlVariant();
+        bytes32 role = rule.MAX_TOTAL_SUPPLY_ROLE();
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.grantRole(role, ADDRESS2);
+        vm.prank(ADDRESS2);
+        rule.setMaxTotalSupply(1);
+        assertEq(rule.maxTotalSupply(), 1);
+        vm.expectRevert();
+        vm.prank(ADDRESS2);
+        rule.setTokenContract(address(token));
+    }
 }
