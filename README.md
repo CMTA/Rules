@@ -196,7 +196,7 @@ FOUNDRY_PROFILE=erc3643 forge test   # the real-ERC-3643-token suite
 ```
 
 Both commands are required: the vendored ERC-3643 `Token.sol` pins solc `0.8.30` exactly and cannot share a
-compilation unit with our `0.8.36`, so `test/ERC3643Real/**` builds under its own profile.
+compilation unit with our `0.8.38`, so `test/ERC3643Real/**` builds under its own profile.
 
 Deploying a token with rules attached:
 

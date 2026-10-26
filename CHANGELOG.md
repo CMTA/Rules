@@ -67,6 +67,9 @@ Commit:
 
 ### Dependencies
 
+- **Solidity compiler `0.8.36` → `0.8.38`** in `foundry.toml` (default profile) and `hardhat.config.js`. The `erc3643` profile stays at `0.8.30`, which the vendored ERC-3643 token pins exactly.
+  - The production sources compile with no warning of their own, checked with solc directly, since forge stops listing after 256 warnings. The new deprecation warnings (`memory-safe-assembly` NatSpec, `ABIEncoderV2`) all come from `lib/forge-std`.
+  - All Foundry tests (both profiles) and the Hardhat compile and smoke test pass on `0.8.38`. The `v0.7.0` static-analysis reports were produced at `0.8.36`.
 - **CMTAT `v3.3.0-rc3` → `v3.3.0-rc4`.** No functional change for the rules: rc4 only changes NatSpec in `IRuleEngine` (which `transferred` overload the token calls per operation) and moves CMTAT to OpenZeppelin `v5.7.0`, which this repository already uses.
 - **RuleEngine `v3.0.0-rc6` → `v3.0.0-rc7`.** Four changes reach this repository.
   - `IRule` no longer inherits CMTAT's `IRuleEngine`: it declares only what the engine calls (ERC-1404 views, both `transferred` overloads, `canReturnTransferRestrictionCode`). `RuleTransferValidation` and the three operation bases (`RuleConditionalTransferLightBase`, `RuleConditionalTransferLightMultiTokenBase`, `RuleMintAllowanceBase`) now also inherit `IRuleEngineERC1404`, so every rule keeps the standalone role (`CMTAT.setRuleEngine(rule)`) and its `IRuleEngine` ERC-165 advertisement. The 4-argument `transferred` overrides `IRule` and `IRuleEngine` together.
@@ -99,6 +102,7 @@ Commit:
 
 ### Changed
 
+- `RuleIssuanceCapBase._authorizeTokenContractManager` locks `setTokenContract` with `require(false, RuleIssuanceCap_TokenContractLocked())` instead of a bare `revert`. Solc (0.8.36 and 0.8.38) reported the bare `revert` as making the inherited setter body unreachable; that was the only compiler warning in production code, previously hidden by forge's 256-warning cap. Same error, same behaviour.
 - **Production comments no longer cite AI-assisted review reports** (`CLAUDE_AUDIT.md`, `CLAUDE_ANALYSIS.md`) or their bare finding IDs; each of the seven affected comments now states its conclusion itself. Comments only, no code change.
   - Files: `RuleConditionalTransferLightApprovalBase`, `RuleConditionalTransferLightMultiTokenBase`, `RuleWhitelistShared`, `AddressSetBatchLib`, `RuleAddressSetInternal`, `BalanceCapManager`, `RuleWhitelistInvariantStorage`.
   - Why: these reports are rewritten each release and their IDs restart (`CLAUDE_ANALYSIS.md` D-1 names three different findings across v0.5.0–v0.7.0), so a citation in deployed source could not say which one it meant. `CLAUDE.md` now allows citing only official audits by an audit company from production source.

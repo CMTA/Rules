@@ -41,7 +41,7 @@ jobs:
         id: test
 
       # The vendored ERC-3643 `Token.sol` pins `pragma solidity 0.8.30` exactly, so it cannot share
-      # a compilation unit with our 0.8.36. `test/ERC3643Real/**` is in the default profile's `skip`
+      # a compilation unit with our 0.8.38. `test/ERC3643Real/**` is in the default profile's `skip`
       # list and is built by `[profile.erc3643]` instead, which means the step above does NOT run it.
       # Both commands are required — see the Toolchain section of AGENTS.md / CLAUDE.md.
       - name: Run Forge tests (ERC-3643 profile)

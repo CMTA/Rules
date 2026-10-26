@@ -216,9 +216,11 @@ abstract contract RuleIssuanceCapBase is
     }
 
     /**
-     * @notice The observed token is fixed: the counter describes its history only.
+     * @notice The observed token is fixed: the counter describes its history only, so `setTokenContract` always
+     * reverts. `require(false, …)` rather than a bare `revert`, which solc reports as making the inherited setter
+     * body unreachable.
      */
     function _authorizeTokenContractManager() internal view virtual override {
-        revert RuleIssuanceCap_TokenContractLocked();
+        require(false, RuleIssuanceCap_TokenContractLocked());
     }
 }
