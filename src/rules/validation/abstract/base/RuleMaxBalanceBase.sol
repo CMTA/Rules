@@ -3,7 +3,6 @@ pragma solidity ^0.8.27;
 
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
-import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {RuleTransferValidation} from "../core/RuleTransferValidation.sol";
 import {BalanceCapManager} from "../core/BalanceCapManager.sol";
 
@@ -89,7 +88,7 @@ abstract contract RuleMaxBalanceBase is RuleTransferValidation, BalanceCapManage
     }
 
     /**
-     * @inheritdoc IRuleEngine
+     * @inheritdoc RuleTransferValidation
      */
     function transferred(address spender, address from, address to, uint256 value) public view override {
         _transferredFrom(spender, from, to, value);

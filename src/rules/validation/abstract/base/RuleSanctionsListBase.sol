@@ -7,7 +7,6 @@ import {RuleNFTAdapter} from "../core/RuleNFTAdapter.sol";
 import {ISanctionsList} from "../../../interfaces/ISanctionsList.sol";
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
-import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
 
 /**
@@ -79,7 +78,7 @@ abstract contract RuleSanctionsListBase is MetaTxModuleStandalone, RuleNFTAdapte
     }
 
     /**
-     * @inheritdoc IRuleEngine
+     * @inheritdoc IRule
      */
     function transferred(address spender, address from, address to, uint256 value) public view override {
         _transferredFrom(spender, from, to, value);

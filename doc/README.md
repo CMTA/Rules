@@ -2052,6 +2052,32 @@ Proofs live in [`test/ThreatModel/ThreatModelTests.t.sol`](../test/ThreatModel/T
 
 See the consolidated [Audit & Security-Analysis Overview](./security/audits/AUDIT_OVERVIEW.md) for the full index and triage. Latest tool outputs (including feedback documents) are in [`doc/security/audits/tools/v0.4.0/`](./security/audits/tools/v0.4.0/).
 
+#### Static analysis (v0.7.0)
+
+Run **2026-10-26** for the v0.7.0 release, at solc `0.8.36`, with Slither **0.11.6** (latest) and Aderyn 0.6.5; a
+Slither 0.11.5 run is kept for a like-for-like comparison with v0.6.0. Full reports and
+per-finding triage in [`doc/security/audits/tools/v0.7.0/`](./security/audits/tools/v0.7.0/).
+
+| Tool | High | Medium | Low | Info | Anything to fix? |
+|---|---|---|---|---|---|
+| [Slither](https://github.com/crytic/slither) 0.11.6 | 2 | 5 | 18 | 21 | **No** — [feedback](./security/audits/tools/v0.7.0/slither-report-feedback.md) |
+| [Aderyn](https://github.com/Cyfrin/aderyn) 0.6.5 | 0 | 0 | 10 categories (377 instances) | 0 | **No** — [feedback](./security/audits/tools/v0.7.0/aderyn-report-feedback.md) |
+
+**Nothing to fix.**
+- Slither: on 0.11.5 the code delta is nil, identical to v0.6.0 result for result, although this release added `RuleIssuanceCap`. The upgrade to 0.11.6 keeps 46 results but trades six `unused-return` hits for six `dead-code` false positives.
+- Slither cannot analyse `_addAddresses` / `_removeAddresses` in `RuleMaxBalance` and `IdentityRegistryWhitelist` (no IR, both versions). The same inherited code is analysed elsewhere; see the feedback.
+- Aderyn's +31 is fully attributed to the new rule and the `RuleMaxTotalSupply` hooks.
+- Its one new category, `State Change Without Event` on the now non-`view` `RuleMaxTotalSupplyBase.transferred`, is a false positive pinned by a no-write test.
+- The first Aderyn run also found nine unused `IRuleEngine` imports left by the RuleEngine rc7 migration; they were removed before the committed run.
+
+Commands used for `v0.7.0` (mocks excluded):
+
+```bash
+slither . --checklist --filter-paths "node_modules,lib,test,forge-std,mocks" \
+  > doc/security/audits/tools/v0.7.0/slither-report.md
+aderyn -x mocks --output doc/security/audits/tools/v0.7.0/aderyn-report.md
+```
+
 #### Static analysis (v0.6.0)
 
 Re-run **2026-08-21** for the v0.6.0 release, at solc `0.8.36`, with the same tool versions as v0.5.0 so the

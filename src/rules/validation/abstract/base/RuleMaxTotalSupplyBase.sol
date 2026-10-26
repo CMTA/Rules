@@ -3,7 +3,6 @@ pragma solidity ^0.8.27;
 
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
-import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {RuleTransferValidation} from "../core/RuleTransferValidation.sol";
 import {TotalSupplyCapManager} from "../core/TotalSupplyCapManager.sol";
 
@@ -74,7 +73,7 @@ abstract contract RuleMaxTotalSupplyBase is RuleTransferValidation, TotalSupplyC
     }
 
     /**
-     * @inheritdoc IRuleEngine
+     * @inheritdoc RuleTransferValidation
      * @dev Not `view`; see the 3-argument overload.
      */
     function transferred(address spender, address from, address to, uint256 value) public virtual override {

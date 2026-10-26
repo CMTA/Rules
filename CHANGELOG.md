@@ -99,6 +99,9 @@ Commit:
 
 ### Changed
 
+- **Nine unused imports removed** from the validation bases (`RuleBlacklistBase`, `RuleChainlinkPoRBase`, `RuleERC2980Base`, `RuleIdentityRegistryBase`, `RuleMaxBalanceBase`, `RuleMaxTotalSupplyBase`, `RuleReceiverWhitelistBase`, `RuleSanctionsListBase`, `RuleSpenderWhitelistBase`), reported by Aderyn.
+  - The RuleEngine `v3.0.0-rc7` migration had left `IRuleEngine` referenced only by an `@inheritdoc IRuleEngine` NatSpec tag, which `forge lint` counts as a use and Aderyn does not.
+  - The tags now name a contract each file already uses (`RuleTransferValidation` or `IRule`), or carry a one-line `@notice` where neither is imported. `RuleTransferValidation`'s NatSpec on the 4-argument `transferred` was rewritten to read well when inherited. No code or ABI change.
 - `RuleMaxTotalSupplyBase`: the public `transferred` overloads, `canReturnTransferRestrictionCode` and `messageForTransferRestriction` are now `virtual`, so a subclass can extend them. No bytecode, ABI or behaviour change.
 - **`RuleMaxTotalSupplyBase.transferred` is no longer `view`**, and the write path calls a new empty hook `_afterMintChecked(value)` after a mint passes, which is the seam `RuleIssuanceCap` uses. `canReturnTransferRestrictionCode` is now `public` instead of `external` so a subclass can call `super`.
   - Selectors and behaviour are unchanged; the ABI `stateMutability` of `transferred` changes from `view` to `nonpayable`, which is what `IRule` / `IRuleEngine` already declare.
@@ -129,6 +132,10 @@ Commit:
 
 ### Documentation
 
+- **Static analysis for `v0.7.0`** (`doc/security/audits/tools/v0.7.0/`): Slither 0.11.6 (latest) and Aderyn 0.6.5 reports, each with a summary table and a per-finding triage file, plus a Slither 0.11.5 run kept for a like-for-like comparison with `v0.6.0`. `AUDIT_OVERVIEW.md` and both READMEs updated.
+  - Slither: 46 results, nothing to fix. On 0.11.5 the code delta is nil (identical to `v0.6.0` result for result). The upgrade to 0.11.6 trades six `unused-return` hits for six `dead-code` false positives, one of them on `RuleIssuanceCapBase._afterMintChecked`, which is reached through virtual dispatch.
+  - Recorded a pre-existing Slither blind spot: no IR is generated for `_addAddresses` / `_removeAddresses` in `RuleMaxBalance` and `IdentityRegistryWhitelist`, so no detector analyses those two copies (the same inherited code is analysed in the other address-set rules).
+  - Aderyn: 10 Low categories, 377 instances (+31), fully attributed to `RuleIssuanceCap` and the `RuleMaxTotalSupply` hooks. Its one new category, `State Change Without Event` on the now non-`view` `RuleMaxTotalSupplyBase.transferred`, is a false positive pinned by `testTransferredNeverWritesStorage`. Nothing to fix after the unused-import cleanup.
 - Version references updated to `0.7.0`: `VersionModule.VERSION`, `test/Version.t.sol`, both READMEs and `CLAUDE.md` / `AGENTS.md`.
 - Root `README.md`: a generated table of contents, and a statement of what the ERC-3643 cap-rule variants enforce and how to choose between them and the stock rules.
 - PDF generation: `doc/script/convert_links_for_pdf.sh` resolves relative links from the input file's location rather than from the form of the URL, and the new `doc/script/convert_links_for_pdf_root.sh` converts the links of the root `README.md`.

@@ -90,10 +90,15 @@ abstract contract RuleTransferValidation is
             == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
     }
 
+    // Declared here because `IRule` and CMTAT's `IRuleEngine` both declare it and are unrelated since
+    // RuleEngine v3.0.0-rc7; each rule implements it.
     /**
-     * @notice Applies the rule to an operation that carries a spender (`transferFrom`, and mint/burn since CMTAT v3.3).
-     * @dev Declared by both `IRule` and CMTAT's `IRuleEngine`, which are unrelated since RuleEngine v3.0.0-rc7.
-     * Implemented by each rule.
+     * @notice Applies the rule to an operation that carries a spender: `transferFrom`, and mint / burn since
+     * CMTAT v3.3, with the operator as `spender`. Reverts if the operation is not allowed.
+     * @param spender The account that initiated the operation.
+     * @param from The origin address, zero on a mint.
+     * @param to The destination address, zero on a burn.
+     * @param value The number of tokens involved.
      */
     function transferred(address spender, address from, address to, uint256 value)
         public

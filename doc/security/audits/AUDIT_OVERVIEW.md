@@ -3,7 +3,7 @@
 > This is a security **overview** (analyses index + triage). It is **not** the vulnerability-reporting policy
 > (that belongs in a root `SECURITY.md`).
 
-**Current package version:** `v0.6.0`
+**Current package version:** `v0.7.0`
 **Scope:** production contracts under `src/` — mocks/tests (`src/mocks`, `test/`) and dependencies (`lib/`) are excluded from static-analysis runs unless a run is explicitly marked *mocks included*.
 
 > ⚠️ This project has **not** undergone a formal third-party security audit. The analyses below are automated
@@ -13,6 +13,8 @@
 
 | Date | Type | Tool / Source | Version | Reports |
 |---|---|---|---|---|
+| 2026-10-26 | Static analysis | Slither 0.11.6 | v0.7.0 | [report](./tools/v0.7.0/slither-report.md) · [feedback](./tools/v0.7.0/slither-report-feedback.md) · [0.11.5 comparison run](./tools/v0.7.0/slither-report-0.11.5.md) |
+| 2026-10-26 | Static analysis | Aderyn 0.6.5 | v0.7.0 | [report](./tools/v0.7.0/aderyn-report.md) · [feedback](./tools/v0.7.0/aderyn-report-feedback.md) — second run, after fixing the nine unused imports the first run reported |
 | 2026-08-18 | AI-assisted review | Claude Code (Anthropic) | v0.6.0 | [**CLAUDE_ANALYSIS.md**](./tools/v0.6.0/CLAUDE_ANALYSIS.md) (code quality, `src/`) |
 | 2026-08-21 | Static analysis | Slither 0.11.5 | v0.6.0 | [report](./tools/v0.6.0/slither-report.md) · [feedback](./tools/v0.6.0/slither-report-feedback.md) — re-run after the RuleEngine `v3.0.0-rc6` bump, supersedes 2026-08-18 |
 | 2026-08-21 | Static analysis | Aderyn 0.6.5 | v0.6.0 | [report](./tools/v0.6.0/aderyn-report.md) · [feedback](./tools/v0.6.0/aderyn-report-feedback.md) — re-run after the RuleEngine `v3.0.0-rc6` bump, supersedes 2026-08-18 |
@@ -25,6 +27,31 @@
 | 2026-07-14 | Static analysis | Aderyn 0.6.5 | v0.4.0 | [report](./tools/v0.4.0/aderyn-report.md) · [feedback](./tools/v0.4.0/aderyn-report-feedback.md) |
 | 2026-04-16 | Static analysis | Slither / Aderyn | v0.3.0 | [slither](./tools/v0.3.0/slither-report.md) · [aderyn](./tools/v0.3.0/aderyn-report.md) |
 | 2026-03-16 | AI-assisted review | Wake Arena (Ackee) | v0.2.0 | [tools/v0.2.0](./tools/v0.2.0/) |
+
+## Static-analysis results (v0.7.0)
+
+Run **2026-10-26** for the `v0.7.0` release, at solc `0.8.36`. Slither moves to its latest release, **0.11.6**; a
+second run with 0.11.5, the version of `v0.4.0`–`v0.6.0`, isolates the code delta from the tool change. Aderyn
+stays at 0.6.5. Scope: production contracts only — mocks excluded, vendored dependencies
+(including the test-only `lib/CMTATv3.0.0`) excluded via the `lib` filter.
+
+| Tool | High | Medium | Low | Info | Relevant to fix? |
+|---|---|---|---|---|---|
+| Slither 0.11.6 | 2 | 5 | 18 | 21 | **No** — same 46 results as 0.11.5, redistributed by the tool upgrade; see [feedback](./tools/v0.7.0/slither-report-feedback.md) |
+| Aderyn 0.6.5 | 0 | 0 | 10 categories (377 instances) | 0 | **No** — every Low is by design, environmental, cosmetic or a verified false positive; see [feedback](./tools/v0.7.0/aderyn-report-feedback.md) |
+
+**Nothing to fix in `v0.7.0`; one cosmetic defect was fixed before the committed run.**
+
+- **Slither, code delta (0.11.5 on both releases): 46 → 46, no result changed.** The release added `RuleIssuanceCap`, made `RuleMaxTotalSupplyBase.transferred` non-`view` with a new hook, and migrated to RuleEngine `v3.0.0-rc7`. None of it produced a new result.
+- **Slither, tool delta (0.11.5 → 0.11.6 on `v0.7.0`): still 46**, redistributed: `unused-return` 9 → 3 and `dead-code` 3 → 9. All six new `dead-code` hits are reached through virtual dispatch. That includes `RuleIssuanceCapBase._afterMintChecked`, the counter itself, which deleting would make the cap replenishing.
+- **Slither blind spot (both versions, pre-existing):** no IR is generated for `_addAddresses` / `_removeAddresses` in `RuleMaxBalance` and `IdentityRegistryWhitelist`, a function pointer passed to `AddressSetBatchLib`, so no detector analyses those two copies. The same inherited code is analysed in the other address-set rules. Check stderr for `Impossible to generate IR` on every run.
+- **Aderyn 346 → 377 (+31), one new category**, all attributed file by file:
+  - `RuleIssuanceCap`'s four files in `L-2` / `L-5` (+4 each);
+  - its privileged functions in `L-1` (+9);
+  - its no-op and role-check hooks in `L-7` (+11);
+  - the new `onlyTokenContractManager` in `L-6` (+1).
+- **New category: `State Change Without Event` (2)**, on `RuleMaxTotalSupplyBase.transferred`. A false positive: the function is no longer `view` but writes nothing, which `testTransferredNeverWritesStorage` asserts with `vm.accesses`.
+- **Fixed:** the first Aderyn run also reported **Unused Import (9)**. The RuleEngine rc7 migration had left `IRuleEngine` imported only for an `@inheritdoc` tag in each validation base. The imports were removed and the tags repointed, with no code or ABI change.
 
 ## Static-analysis results (v0.6.0)
 

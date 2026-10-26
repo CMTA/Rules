@@ -9,7 +9,6 @@ import {IAddressListPolarity} from "../../../interfaces/IAddressList.sol";
 import {AddressListInterfaceId} from "../../../interfaces/library/AddressListInterfaceId.sol";
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
-import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
 
 /**
@@ -50,7 +49,7 @@ abstract contract RuleBlacklistBase is
     }
 
     /**
-     * @inheritdoc IRuleEngine
+     * @inheritdoc IRule
      * @dev Validation only; does not modify state.
      */
     function transferred(address spender, address from, address to, uint256 value) public view virtual override {

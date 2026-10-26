@@ -5,7 +5,6 @@ import {RuleNFTAdapter} from "../core/RuleNFTAdapter.sol";
 import {RuleIdentityRegistryInvariantStorage} from "../invariant/RuleIdentityRegistryInvariantStorage.sol";
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
-import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {IIdentityRegistryVerified} from "../../../interfaces/IIdentityRegistry.sol";
 
 /**
@@ -141,7 +140,8 @@ abstract contract RuleIdentityRegistryBase is RuleNFTAdapter, RuleIdentityRegist
     }
 
     /**
-     * @inheritdoc IRuleEngine
+     * @notice Applies the rule to an operation that carries a spender (`transferFrom`, and mint / burn since
+     * CMTAT v3.3); reverts if it is not allowed.
      */
     function transferred(address spender, address from, address to, uint256 value) public view override {
         _transferredFrom(spender, from, to, value);
