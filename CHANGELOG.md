@@ -52,6 +52,7 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 - Dependency update: CMTAT `v3.3.0-rc4` and RuleEngine `v3.0.0-rc7`. No change to any rule's screening logic, restriction codes or storage layout.
 - Every rule is now tested against a real CMTAT `v3.0.0` token, the last audited CMTAT release, and the documentation states per rule what v3.0.0 supports.
+- **New rule `RuleIssuanceCap`** ([CMTA/Rules#16](https://github.com/CMTA/Rules/issues/16)): a per-token cap on cumulative issuance that burns do not restore, working on CMTAT v3.0.0. Built as an extension of `RuleMaxTotalSupply`, so no cap logic is duplicated.
 - One ABI change for off-chain consumers: `RuleMaxTotalSupply`'s `MaxTotalSupplyUpdated` event now carries the previous cap (see Breaking change).
 
 ### Breaking change
@@ -74,6 +75,12 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 
 ### Added
 
+- **`RuleIssuanceCap` / `RuleIssuanceCapOwnable2Step`**: non-replenishing issuance cap. The total ever minted cannot exceed `maxTotalSupply`; burns, forced burns and `crosschainBurn` never restore room. Code `71`.
+  - Design: extends `RuleMaxTotalSupplyBase` through the new `_afterMintChecked` hook, adding only a `totalIssued` counter and caller binding (~45 code lines). The cap setters, `MAX_TOTAL_SUPPLY_ROLE`, `MaxTotalSupplyUpdated(previous, new)`, `remainingMintable()`, the safe `totalSupply()` read and the ERC-1404 surface are inherited. The options considered and why this one won are in `doc/plan/ISSUE_16_ISSUANCE_CAP_DESIGN_OPTIONS.md`.
+  - The inherited live-supply check (code `50`) stays active against the same cap. It never rejects a mint the counter accepts while every mint is counted, and it stops minting if the counter was bypassed (rule detached).
+  - Stateful: `transferred` is restricted to the single bound caller (`bindToken`: the token directly, or the RuleEngine); `COMPLIANCE_MANAGER_ROLE` binds. The observed token is locked (`setTokenContract` reverts with `RuleIssuanceCap_TokenContractLocked`), and `initialIssued` must be at least the token's current supply.
+  - The counter is enforced with the real amount in `_afterMintChecked`, so a write path re-phased to `value = 0` (the ERC-3643 shape) cannot skip it. ERC-3643 is nevertheless **not supported in v1**: the inherited live-supply check double-counts there, and no `…ERC3643` variant ships.
+  - No replenishing mode flag: for a cap that burns restore, deploy `RuleMaxTotalSupply`. The choice is fixed at deployment by the contract chosen.
 - **`RuleMaxTotalSupply.remainingMintable() → (uint8 restrictionCode, uint256 headroom)`**: how much may still be minted before the cap, without simulating a mint.
   - Saturates at `0` when the cap is at or below the current supply; returns code `51` instead of reverting when `totalSupply()` is unreadable.
   - Same shape as `RuleMaxBalance.remainingCapacity(to)`: the revert-free internal half `_remainingMintable()` lives in `TotalSupplyCapManager` and reuses the previously unused `CapAccounting._capHeadroom`; the code-returning public half lives in `RuleMaxTotalSupplyBase`.
@@ -90,16 +97,23 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 ### Changed
 
 - `RuleMaxTotalSupplyBase`: the public `transferred` overloads, `canReturnTransferRestrictionCode` and `messageForTransferRestriction` are now `virtual`, so a subclass can extend them. No bytecode, ABI or behaviour change.
+- **`RuleMaxTotalSupplyBase.transferred` is no longer `view`**, and the write path calls a new empty hook `_afterMintChecked(value)` after a mint passes, which is the seam `RuleIssuanceCap` uses. `canReturnTransferRestrictionCode` is now `public` instead of `external` so a subclass can call `super`.
+  - Selectors and behaviour are unchanged; the ABI `stateMutability` of `transferred` changes from `view` to `nonpayable`, which is what `IRule` / `IRuleEngine` already declare.
+  - The compiler no longer proves that `RuleMaxTotalSupply` never writes storage; `testTransferredNeverWritesStorage` now asserts it with `vm.accesses`. All existing `RuleMaxTotalSupply` suites (unit, CMTAT v3.0.0, invariants) pass unchanged.
 - **Deployment scripts deploy `RuleEngine2771` only when a forwarder is given.** `DeployCMTATWithBlacklistAndSanctionsList` and `DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply` deploy `RuleEngine` when `forwarder == address(0)` and `RuleEngine2771` otherwise, so the engine trusts the same forwarder as the token and the rules, as it did with rc6. The returned engine is still typed `RuleEngine`.
 
 ### Testing
 
 - `test/InterfaceId/RuleInterfaceIdCompatibility.t.sol` (3 tests): pins the two `IRule` id literals and checks that each distinct `supportsInterface` implementation advertises the new id, the legacy id and `IRuleEngine`.
 - Deployment-script tests: one test per engine script for each branch of the forwarder choice (4 tests).
-- **CMTAT v3.0.0 integration suites** (`test/CMTATv3.0.0/`, 288 tests): one suite per rule, each run on the Standard and Debt variants, set directly on the token and behind a `RuleEngine` (`RuleConditionalTransferLightMultiToken`: direct only).
+- **CMTAT v3.0.0 integration suites** (`test/CMTATv3.0.0/`, 320 tests): one suite per rule, each run on the Standard and Debt variants, set directly on the token and behind a `RuleEngine` (`RuleConditionalTransferLightMultiToken`: direct only).
   - Shared harness: `CMTATv300TestBase` (a variant-neutral token interface, wiring, and view assertions that check `canTransfer` and, on Standard, `detectTransferRestriction*`), the four variant/topology mixins in `CMTATv300Variants.sol`, and `test/utils/CMTATDeploymentV300.sol`.
   - Pinned v3.0.0 differences: a blacklisted, sanctioned or frozen **minter** is not screened by `RuleBlacklist`, `RuleSanctionsList` and `RuleERC2980` (v3.0.0 sends mint and burn without a spender); `RuleMintAllowance` is inert (every mint passes, no quota debited).
   - Pinned `RuleMaxTotalSupply` behaviours: `burnAndMint` needs room only for the net increase, a forced burn frees room, `crosschainMint` / `crosschainBurn` are capped / free room, and supply minted while the rule is detached is counted on re-attach.
+- `RuleIssuanceCap`:
+  - Unit tests (`test/RuleIssuanceCap/`): counter, burns not restoring, the live-supply backstop, zero-value mints, `remainingMintable()` as the smaller room, binding, the locked token, roles and the Ownable2Step variant. A test-only harness re-phases the write path to `value = 0` to prove the counter is still enforced. 100% coverage of `RuleIssuanceCapBase`.
+  - CMTAT v3.0.0 suite (`test/CMTATv3.0.0/RuleIssuanceCapV300.t.sol`, four variant/topology combinations): the requester's exact setup, including forced burns, `burnAndMint`, a bridge round trip and detach / re-attach. Integration with the current CMTAT, directly and behind a RuleEngine.
+  - Invariants: the five supply-cap invariants were moved into an abstract `SupplyCapInvariantsBase` and now run for both rules. `IssuanceCapInvariants` adds exact counter accounting and issuance ≥ supply. `MaxTotalSupplyHandler` gained a virtual `_fits`, which `IssuanceCapHandler` overrides rather than copying the handler. Two new mutations (counter never recorded, off-by-one issuance cap) are caught.
 - `increase/decreaseMaxTotalSupply`: events, decrease to exactly zero and below zero, increase up to and past `uint256` max, two increases composing, decrease below supply freezing mints only, role and owner gating. The invariant handler gains `increaseCap` / `decreaseCap` actions.
 - `MaxTotalSupplyUpdated(previous, new)`: the constructor test (`test/Events/ConstructorEvents.t.sol`) checks the new signature and `previous == 0`; a unit test checks the previous/new pair over two successive updates.
 - `MAX_TOTAL_SUPPLY_ROLE`: role hash, a cap operator who can change the cap but not the token (exact `AccessControlUnauthorizedAccount` errors), revocation, implicit admin holding, role enumeration, and inheritance by the ERC-3643 AccessControl variant.
@@ -108,7 +122,7 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   - Negative controls: three mutations (off-by-one cap, over-strict cap, wrong headroom view) each fail the suite. A first version missed the off-by-one on the safety invariant, because random amounts never hit `headroom + 1`; the `mintAtBoundary` action fixes that. Recorded in `INVARIANT_TESTS.md` §4.
   - Documented in `INVARIANT_TESTS.md` §3.3 and in the "Invariant testing" section of `doc/README.md`.
 - `remainingMintable()`: unit tests (headroom, exact fit, cap below supply, unreadable supply), a fuzz property that the headroom is exactly the largest mint the pre-flight check accepts, the ERC-3643 variant, and a real CMTAT v3.0.0 token across mints and burns.
-- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,213 tests pass in the default profile and 53 in the `erc3643` profile.
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,285 tests pass in the default profile and 53 in the `erc3643` profile.
 
 ### Documentation
 
@@ -120,6 +134,7 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   - `doc/README.md` (new "CMTAT v3.0.0" compatibility subsection), root `README.md` (compatibility table), `doc/FOUNDRY.md`, `CLAUDE.md` / `AGENTS.md`.
   - `RuleBlacklist.md`: stray characters after the usage scenario removed.
 - `RuleMaxTotalSupply`: the cap is in token **base units**, now stated in the NatSpec of the state variable, the setter and every constructor, and in a "Unit of the cap" section with a per-decimals table. Passing whole tokens on an 18-decimal token sets a cap 10^18 times too small and freezes minting (fail-closed).
+- `RuleIssuanceCap`: new contract page `doc/technical/contracts/RuleIssuanceCap.md` (which cap rule to use, how it decides, binding per topology, behaviour per token operation, ERC-3643 status, migration). Rows added to `RULE_SEMANTICS.md` §1, §2, §3, §6 and §7 and a new note [13], to both READMEs (rule table, code ranges, use cases, roles, API, invariants), `INVARIANT_TESTS.md` (§3.4, the handler table, two mutations) and `CLAUDE.md` / `AGENTS.md`. `RuleMaxTotalSupply.md` points to it and documents that `transferred` is no longer `view`.
 - `RuleMaxTotalSupply.md` documents what the cap measures and how each token operation affects it.
   - "What the cap measures": the cap bounds outstanding supply, not cumulative issuance, so burns free room.
   - "Behaviour by token operation": one row per operation, each with the test that pins it. Covers mint, burn, transfers, `burnAndMint` (net increase only), cross-chain mint/burn, forced burn, a cap at or below supply (including the zero-value-mint case), supply that existed before installation, and detach / re-attach.

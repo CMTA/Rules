@@ -39,7 +39,7 @@ abstract contract RuleMaxTotalSupplyBase is RuleTransferValidation, TotalSupplyC
      * @param restrictionCode Restriction code to test.
      * @return True if `restrictionCode` is the max-total-supply-exceeded code.
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure virtual override returns (bool) {
+    function canReturnTransferRestrictionCode(uint8 restrictionCode) public pure virtual override returns (bool) {
         return restrictionCode == CODE_MAX_TOTAL_SUPPLY_EXCEEDED || restrictionCode == CODE_SUPPLY_ORACLE_UNAVAILABLE;
     }
 
@@ -66,20 +66,18 @@ abstract contract RuleMaxTotalSupplyBase is RuleTransferValidation, TotalSupplyC
 
     /**
      * @inheritdoc IERC3643IComplianceContract
+     * @dev Not `view` so that a subclass may record a mint through {_afterMintChecked}. This rule itself
+     * never writes storage; a test asserts it.
      */
-    function transferred(address from, address to, uint256 value)
-        public
-        view
-        virtual
-        override(IERC3643IComplianceContract)
-    {
+    function transferred(address from, address to, uint256 value) public virtual override(IERC3643IComplianceContract) {
         _transferred(from, to, value);
     }
 
     /**
      * @inheritdoc IRuleEngine
+     * @dev Not `view`; see the 3-argument overload.
      */
-    function transferred(address spender, address from, address to, uint256 value) public view virtual override {
+    function transferred(address spender, address from, address to, uint256 value) public virtual override {
         _transferredFrom(spender, from, to, value);
     }
 
@@ -174,12 +172,15 @@ abstract contract RuleMaxTotalSupplyBase is RuleTransferValidation, TotalSupplyC
      * @param to Recipient address.
      * @param value Transfer amount.
      */
-    function _transferred(address from, address to, uint256 value) internal view virtual {
+    function _transferred(address from, address to, uint256 value) internal virtual {
         uint8 code = _detectTransferRestrictionOnNotify(from, to, value);
         require(
             code == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK),
             RuleMaxTotalSupply_InvalidTransfer(address(this), from, to, value, code)
         );
+        if (from == address(0)) {
+            _afterMintChecked(value);
+        }
     }
 
     /**
@@ -189,11 +190,23 @@ abstract contract RuleMaxTotalSupplyBase is RuleTransferValidation, TotalSupplyC
      * @param to Recipient address.
      * @param value Transfer amount.
      */
-    function _transferredFrom(address spender, address from, address to, uint256 value) internal view virtual {
+    function _transferredFrom(address spender, address from, address to, uint256 value) internal virtual {
         uint8 code = _detectTransferRestrictionOnNotify(from, to, value);
         require(
             code == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK),
             RuleMaxTotalSupply_InvalidTransferFrom(address(this), spender, from, to, value, code)
         );
+        if (from == address(0)) {
+            _afterMintChecked(value);
+        }
     }
+
+    /**
+     * @notice Called on the write path after a mint has passed every check; a no-op here.
+     * @dev The extension point for a subclass that must record accepted mints (`RuleIssuanceCap`). It
+     * receives the REAL minted amount even where {_detectTransferRestrictionOnNotify} is re-phased to
+     * `value = 0` (ERC-3643 variants), so a check placed here cannot be skipped by the re-phasing.
+     * @param value The amount minted.
+     */
+    function _afterMintChecked(uint256 value) internal virtual {}
 }

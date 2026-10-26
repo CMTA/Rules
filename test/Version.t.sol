@@ -21,6 +21,8 @@ import {RuleERC2980} from "src/rules/validation/deployment/RuleERC2980.sol";
 import {RuleConditionalTransferLight} from "src/rules/operation/RuleConditionalTransferLight.sol";
 import {RuleConditionalTransferLightMultiToken} from "src/rules/operation/RuleConditionalTransferLightMultiToken.sol";
 import {RuleMintAllowance} from "src/rules/operation/RuleMintAllowance.sol";
+import {RuleIssuanceCap} from "src/rules/operation/RuleIssuanceCap.sol";
+import {RuleIssuanceCapOwnable2Step} from "src/rules/operation/RuleIssuanceCapOwnable2Step.sol";
 import {RuleSpenderWhitelist} from "src/rules/validation/deployment/RuleSpenderWhitelist.sol";
 import {RuleReceiverWhitelist} from "src/rules/validation/deployment/RuleReceiverWhitelist.sol";
 import {RuleIdentityRegistry} from "src/rules/validation/deployment/RuleIdentityRegistry.sol";
@@ -146,6 +148,17 @@ contract VersionTest is Test, HelperContract {
 
     function testVersionRuleMintAllowance() public {
         RuleMintAllowance rule = new RuleMintAllowance(DEFAULT_ADMIN_ADDRESS);
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleIssuanceCap() public {
+        RuleIssuanceCap rule = new RuleIssuanceCap(DEFAULT_ADMIN_ADDRESS, address(new TotalSupplyMock()), 100, 0);
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleIssuanceCapOwnable2Step() public {
+        RuleIssuanceCapOwnable2Step rule =
+            new RuleIssuanceCapOwnable2Step(DEFAULT_ADMIN_ADDRESS, address(new TotalSupplyMock()), 100, 0);
         assertEq(rule.version(), EXPECTED_VERSION);
     }
 

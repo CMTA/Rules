@@ -7,6 +7,9 @@ import {RuleMintAllowance} from "src/rules/operation/RuleMintAllowance.sol";
 import {ConditionalTransferHandler} from "./ConditionalTransferHandler.sol";
 import {MintAllowanceHandler} from "./MintAllowanceHandler.sol";
 import {MaxTotalSupplyHandler} from "./MaxTotalSupplyHandler.sol";
+import {IssuanceCapHandler} from "./IssuanceCapHandler.sol";
+import {RuleMaxTotalSupplyBase} from "src/rules/validation/abstract/base/RuleMaxTotalSupplyBase.sol";
+import {RuleIssuanceCap} from "src/rules/operation/RuleIssuanceCap.sol";
 import {RuleMaxTotalSupply} from "src/rules/validation/deployment/RuleMaxTotalSupply.sol";
 import {CMTATStandardStandalone} from "CMTAT/deployment/CMTATStandardStandalone.sol";
 import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
@@ -125,30 +128,22 @@ contract MintAllowanceInvariants is Test {
 }
 
 /**
- * @title MaxTotalSupplyInvariants
- * @notice Stateful invariant suite over {RuleMaxTotalSupply} on a real CMTAT token.
- * @dev The rule is stateless, but the supply it guards is not: these invariants hold across any
- * interleaving of mints, burns, `burnAndMint`, forced burns, transfers and cap changes (including caps
- * below the current supply). The rule is set directly on the token (`setRuleEngine(rule)`).
+ * @title SupplyCapInvariantsBase
+ * @notice The invariants shared by every supply-cap rule, on a real CMTAT token with the rule set directly
+ * on it (`setRuleEngine(rule)`). The concrete suites differ only in the rule, the handler and the expected
+ * remaining room ({_expectedHeadroom}).
  */
-contract MaxTotalSupplyInvariants is Test {
-    address private constant ADMIN = address(1);
-    uint256 private constant INITIAL_CAP = 1000;
-    uint8 private constant TRANSFER_OK = 0;
-    uint8 private constant CODE_MAX_TOTAL_SUPPLY_EXCEEDED = 50;
+abstract contract SupplyCapInvariantsBase is Test {
+    address internal constant ADMIN = address(1);
+    uint256 internal constant INITIAL_CAP = 1000;
+    uint8 internal constant TRANSFER_OK = 0;
 
-    CMTATStandardStandalone private token;
-    RuleMaxTotalSupply private rule;
-    MaxTotalSupplyHandler private handler;
+    CMTATStandardStandalone internal token;
+    RuleMaxTotalSupplyBase internal rule;
+    MaxTotalSupplyHandler internal handler;
 
-    function setUp() public {
-        token = new CMTATDeployment().cmtat();
-        rule = new RuleMaxTotalSupply(ADMIN, address(token), INITIAL_CAP);
-        vm.prank(ADMIN);
-        token.setRuleEngine(IRuleEngine(address(rule)));
-        // The handler pranks ADMIN for every privileged call, so it needs no role of its own.
-        handler = new MaxTotalSupplyHandler(token, rule);
-
+    /// @dev Restrict fuzzing to the handler's own actions.
+    function _targetHandler() internal {
         bytes4[] memory selectors = new bytes4[](9);
         selectors[0] = MaxTotalSupplyHandler.mint.selector;
         selectors[1] = MaxTotalSupplyHandler.burnAndMint.selector;
@@ -163,8 +158,15 @@ contract MaxTotalSupplyInvariants is Test {
         targetContract(address(handler));
     }
 
+    /// @dev What `remainingMintable()` must report, computed independently of the rule.
+    function _expectedHeadroom() internal view virtual returns (uint256) {
+        uint256 supply = token.totalSupply();
+        uint256 cap = rule.maxTotalSupply();
+        return supply >= cap ? 0 : cap - supply;
+    }
+
     /**
-     * @notice Safety: no mint that went through pushed the supply above the cap in force at that moment.
+     * @notice Safety: no mint that went through exceeded the cap in force at that moment.
      */
     function invariant_noMintBreachedTheCap() public view {
         assertEq(handler.ghostBreaches(), 0, "a mint went through above the cap");
@@ -186,32 +188,85 @@ contract MaxTotalSupplyInvariants is Test {
     }
 
     /**
-     * @notice `remainingMintable()` always equals the cap minus the live supply, saturating at 0. Forced
-     * burns bypass the engine, so this also proves the rule has no stale view of the supply.
+     * @notice `remainingMintable()` always equals the independently computed room. Forced burns bypass the
+     * engine, so this also proves the rule never holds a stale view of the supply.
      */
     function invariant_remainingMintableMatchesLiveSupply() public view {
-        uint256 supply = token.totalSupply();
-        uint256 cap = rule.maxTotalSupply();
         (uint8 code, uint256 headroom) = rule.remainingMintable();
         assertEq(code, TRANSFER_OK, "supply unexpectedly unreadable");
-        assertEq(headroom, supply >= cap ? 0 : cap - supply, "headroom drifted from the live supply");
+        assertEq(headroom, _expectedHeadroom(), "headroom drifted from the expected room");
     }
 
     /**
-     * @notice The pre-flight view accepts a mint of exactly the headroom and rejects one unit more, both
-     * on the rule and through the token's own view.
+     * @notice The pre-flight view accepts a mint of exactly the headroom (when there is any) and rejects one
+     * unit more, both on the rule and through the token's own view.
      */
     function invariant_preflightAgreesWithHeadroom() public view {
         (, uint256 headroom) = rule.remainingMintable();
         address to = handler.actor(0);
-        if (token.totalSupply() <= rule.maxTotalSupply()) {
+        if (headroom > 0) {
             assertEq(rule.detectTransferRestriction(address(0), to, headroom), TRANSFER_OK, "headroom rejected");
             assertEq(token.detectTransferRestriction(address(0), to, headroom), TRANSFER_OK, "token: headroom rejected");
         }
-        assertEq(
-            rule.detectTransferRestriction(address(0), to, headroom + 1),
-            CODE_MAX_TOTAL_SUPPLY_EXCEEDED,
-            "headroom + 1 accepted"
-        );
+        assertTrue(rule.detectTransferRestriction(address(0), to, headroom + 1) != TRANSFER_OK, "headroom + 1 accepted");
+    }
+}
+
+/**
+ * @title MaxTotalSupplyInvariants
+ * @notice {SupplyCapInvariantsBase} over {RuleMaxTotalSupply}: the cap bounds the live supply.
+ */
+contract MaxTotalSupplyInvariants is SupplyCapInvariantsBase {
+    function setUp() public {
+        token = new CMTATDeployment().cmtat();
+        rule = new RuleMaxTotalSupply(ADMIN, address(token), INITIAL_CAP);
+        vm.prank(ADMIN);
+        token.setRuleEngine(IRuleEngine(address(rule)));
+        // The handler pranks ADMIN for every privileged call, so it needs no role of its own.
+        handler = new MaxTotalSupplyHandler(token, rule);
+        _targetHandler();
+    }
+}
+
+/**
+ * @title IssuanceCapInvariants
+ * @notice {SupplyCapInvariantsBase} over {RuleIssuanceCap}, plus the counter's own accounting.
+ */
+contract IssuanceCapInvariants is SupplyCapInvariantsBase {
+    RuleIssuanceCap private issuanceRule;
+
+    function setUp() public {
+        token = new CMTATDeployment().cmtat();
+        issuanceRule = new RuleIssuanceCap(ADMIN, address(token), INITIAL_CAP, 0);
+        rule = issuanceRule;
+        vm.startPrank(ADMIN);
+        token.setRuleEngine(IRuleEngine(address(issuanceRule)));
+        issuanceRule.bindToken(address(token));
+        vm.stopPrank();
+        handler = new IssuanceCapHandler(token, issuanceRule);
+        _targetHandler();
+    }
+
+    function _expectedHeadroom() internal view override returns (uint256) {
+        uint256 cap = rule.maxTotalSupply();
+        uint256 issued = IssuanceCapHandler(address(handler)).ghostIssued();
+        uint256 counterRoom = issued >= cap ? 0 : cap - issued;
+        uint256 liveRoom = super._expectedHeadroom();
+        return counterRoom < liveRoom ? counterRoom : liveRoom;
+    }
+
+    /**
+     * @notice The counter is exact: it equals the independently tracked sum of accepted mints, so burns,
+     * forced burns, transfers and cap changes never move it.
+     */
+    function invariant_totalIssuedMatchesGhost() public view {
+        assertEq(issuanceRule.totalIssued(), IssuanceCapHandler(address(handler)).ghostIssued(), "counter drifted");
+    }
+
+    /**
+     * @notice Cumulative issuance covers the outstanding supply, since every mint was counted.
+     */
+    function invariant_issuedCoversSupply() public view {
+        assertGe(issuanceRule.totalIssued(), token.totalSupply(), "supply exceeds counted issuance");
     }
 }

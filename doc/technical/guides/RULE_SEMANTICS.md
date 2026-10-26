@@ -29,6 +29,7 @@ Legend: ✅ screened / can block · ❌ not screened · ⚙️ conditional (see 
 | `RuleConditionalTransferLight` | ❌ per-tuple approval [5] | ❌ per-tuple approval [5] | ❌ spender ignored | ❌ exempt | ❌ exempt |
 | `RuleConditionalTransferLightMultiToken` | ❌ per-tuple approval [5] | ❌ per-tuple approval [5] | ❌ spender ignored | ❌ exempt | ❌ exempt |
 | `RuleMintAllowance` | ❌ not tracked | ❌ not tracked | ❌ not tracked | ✅ **debits minter quota** [6] | ❌ not tracked |
+| `RuleIssuanceCap` | ⚙️ mint only [13] | ❌ | ❌ ignored | ❌ caps issuance, not minter | ❌ (burns never restore room) |
 
 ## 2. Operational characteristics
 
@@ -47,6 +48,7 @@ Legend: ✅ screened / can block · ❌ not screened · ⚙️ conditional (see 
 | `RuleConditionalTransferLight` | n/a (needs `bindToken`) | ✅ consumes an approval | `canTransfer` / `canTransferFrom` | 46 |
 | `RuleConditionalTransferLightMultiToken` | n/a (needs `bindToken`) | ✅ consumes an approval | `canTransferForToken` / `detectTransferRestrictionForToken` [10] | 46 |
 | `RuleMintAllowance` | n/a (needs `bindToken`) | ✅ debits quota | ⚠️ `canTransferFrom` **only** [11] | 70 |
+| `RuleIssuanceCap` | token contract required, as `RuleMaxTotalSupply`; unreadable supply ⇒ **mints rejected** (code 51) | ✅ records issuance (needs `bindToken`) | `canTransfer` / `canTransferFrom` | 50, 51, 71 |
 
 ---
 
@@ -69,6 +71,7 @@ Not every rule exposes the same entrypoints. The ERC-7943 `tokenId` overloads an
 | `RuleConditionalTransferLight` | ❌ | ✅ | ❌ |
 | `RuleConditionalTransferLightMultiToken` | ❌ | ✅ | ❌ |
 | `RuleMintAllowance` | ❌ | ❌ | ❌ |
+| `RuleIssuanceCap` | ❌ | ❌ | ❌ |
 
 The `tokenId` parameter is **always ignored** by the rules that accept it — `RuleNFTAdapter` exists purely to re-expose the same restriction logic under the ERC-7943 signatures. Entrypoints describing the same transfer therefore return the same answer, asserted for every rule above in `test/TransferContext/OverloadParity.t.sol`.
 
@@ -116,6 +119,7 @@ Every adapter entrypoint normalises `spender == from` to the **direct** hook. Th
 11. **`RuleMintAllowance.canTransfer` / `detectTransferRestriction` are NOT authoritative** (finding **F-7**): they are hardcoded to "allowed" because the 3-arg signature has no minter identity. Pre-flight a mint with `canTransferFrom(minter, address(0), to, value)`. See [RuleMintAllowance.md](../contracts/RuleMintAllowance.md#eligibility-views-which-one-is-authoritative).
 
 12b. **`RuleWhitelistWrapper` children must be ALLOW-lists, and this is now enforced.** `IAddressList` carries *membership*, not polarity: the wrapper ORs its children's `areAddressesListed` answers and reads `true` as **eligible**. A `RuleBlacklist` implements that interface identically and advertises the same ids, so ERC-165 alone could not tell them apart — adding one made its blacklisted addresses whitelisted and `isVerified` returned `true` for them (`NM-20`). Polarity is now declared rather than inferred: **`IAddressListPolarity`** (`0xdc4efe10`) adds a single `isAllowList()`, and `addRule` requires the interface *and* a `true` answer, on top of the `IAddressListBatchQuery` check from `NM-18`. **Absence of the polarity declaration is a refusal, never an assumed allow-list** — the only reading that fails closed. `RuleWhitelist` and `RuleReceiverWhitelist` declare `true`; `RuleBlacklist` declares `false`; `RuleSpenderWhitelist` deliberately declines, because its set is permitted *spenders* rather than permitted *holders* and polarity alone would mislead. A nested wrapper is refused at the first check, since it does not implement `areAddressesListed` — **deliberately**: an OR nested in an OR is algebraically flat (`OR(OR(a,b),OR(c,d))` ≡ `OR(a,b,c,d)`), so nesting adds no expressive power, while costing multiplicatively (~8.8k gas per child, and the rejected path never early-exits) and opening an `A → B → A` cycle class with no cheap on-chain defence. AND-of-ORs is available by putting several wrappers in the `RuleEngine`, which returns the first non-zero code. `NM-19`, declined.
+13. **`RuleIssuanceCap` caps cumulative issuance: burns never restore room.** It extends `RuleMaxTotalSupply` with a counter, `totalIssued`, raised on every accepted mint and never lowered. A mint is rejected with code `71` if the counter would pass the cap, or `50` if the live supply would, since the inherited live-supply check stays active against the same cap and catches mints the counter missed (rule detached). Stateful, so `transferred` is restricted to the bound caller (`bindToken`: the token, or the RuleEngine in front of it). The observed token is locked after deployment. For a cap that burns DO restore, use `RuleMaxTotalSupply`. See [RuleIssuanceCap.md](../contracts/RuleIssuanceCap.md).
 
 12. **The ERC-7943 `tokenId` overloads** are `detectTransferRestriction(from,to,tokenId,value)`, `detectTransferRestrictionFrom(spender,from,to,tokenId,value)`, `canTransfer(from,to,tokenId,amount)`, `canTransferFrom(spender,from,to,tokenId,value)`, `transferred(from,to,tokenId,value)` and `transferred(spender,from,to,tokenId,value)` — all supplied by `RuleNFTAdapter`. Per ERC-7943, `amount`/`value` MUST be `1` for ERC-721. The rules ignore `tokenId` entirely; it exists so an ERC-721/ERC-1155 token can call the same compliance rule without a shim.
 
@@ -193,6 +197,7 @@ difference and must always project the pending amount.
 | `RuleConditionalTransferLight` | ✅ works | approvals are keyed `(from, to, value)`; ordering is irrelevant to consuming one. Requires `bindRuleEngine` |
 | `RuleConditionalTransferLightMultiToken` | ❌ **not supported** | direct-binding only, and ERC-3643 needs the engine for `created` / `destroyed` |
 | `RuleMintAllowance` | ❌ **inert** | the quota is debited only on the 4-arg path; `created` arrives with no minter identity, so nothing is debited and every mint passes |
+| `RuleIssuanceCap` | ❌ **not supported in v1** | the counter itself is correct (enforced with the real amount), but the inherited live-supply leg double-counts on the post-update notification; an ERC-3643 variant (one-line re-phasing override) is not shipped |
 
 ### Reading the three failure modes
 
@@ -266,6 +271,7 @@ Every row is tested against a real CMTAT v3.0.0 token (submodule `lib/CMTATv3.0.
 | `RuleConditionalTransferLight` | ✅ works | none; `approveAndTransferIfAllowed` works in both topologies |
 | `RuleConditionalTransferLightMultiToken` | ✅ works, **direct binding only** | none; tested on Topology B only, as on every version |
 | `RuleMintAllowance` | ❌ **inert** | the quota is debited only on the 4-arg mint path, which v3.0.0 never uses: every mint passes and nothing is debited, while the rule's own `canTransferFrom` still reports the quota. Requires CMTAT ≥ v3.3 |
+| `RuleIssuanceCap` | ✅ works | none; the spender is ignored, so the 3-arg mint path counts every mint |
 | `…ERC3643` variants | n/a | ERC-3643 only; never use them with CMTAT (§6) |
 
 "Minter leg inert" is the same failure mode as the inert spender leg on ERC-3643 (§6): the rule still works for holders, but one check it advertises does not fire. If the minter or burner must be screened on v3.0.0, control who holds `MINTER_ROLE` / `BURNER_ROLE` on the token.

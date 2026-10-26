@@ -33,6 +33,8 @@ import {
 } from "src/rules/operation/RuleConditionalTransferLightMultiTokenOwnable2Step.sol";
 import {RuleMintAllowance} from "src/rules/operation/RuleMintAllowance.sol";
 import {RuleMintAllowanceOwnable2Step} from "src/rules/operation/RuleMintAllowanceOwnable2Step.sol";
+import {RuleIssuanceCap} from "src/rules/operation/RuleIssuanceCap.sol";
+import {RuleIssuanceCapOwnable2Step} from "src/rules/operation/RuleIssuanceCapOwnable2Step.sol";
 
 /**
  * @notice RuleEngine v3.0.0-rc7 narrowed `IRule` (no `canTransfer` / `canTransferFrom`), changing its
@@ -95,6 +97,14 @@ contract RuleInterfaceIdCompatibilityTest is Test, HelperContract {
         );
         _assertRuleIds(address(new RuleMintAllowance(DEFAULT_ADMIN_ADDRESS)), "RuleMintAllowance");
         _assertRuleIds(address(new RuleMintAllowanceOwnable2Step(DEFAULT_ADMIN_ADDRESS)), "RuleMintAllowance 2Step");
+        _assertRuleIds(
+            address(new RuleIssuanceCap(DEFAULT_ADMIN_ADDRESS, address(new TotalSupplyMock()), 100, 0)),
+            "RuleIssuanceCap"
+        );
+        _assertRuleIds(
+            address(new RuleIssuanceCapOwnable2Step(DEFAULT_ADMIN_ADDRESS, address(new TotalSupplyMock()), 100, 0)),
+            "RuleIssuanceCap 2Step"
+        );
     }
 
     function _assertRuleIds(address rule, string memory name) internal view {

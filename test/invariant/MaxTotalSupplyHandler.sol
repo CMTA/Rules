@@ -3,14 +3,15 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 import {CMTATStandardStandalone} from "CMTAT/deployment/CMTATStandardStandalone.sol";
-import {RuleMaxTotalSupply} from "src/rules/validation/deployment/RuleMaxTotalSupply.sol";
+import {RuleMaxTotalSupplyBase} from "src/rules/validation/abstract/base/RuleMaxTotalSupplyBase.sol";
 import {
     RuleMaxTotalSupplyInvariantStorage
 } from "src/rules/validation/abstract/invariant/RuleMaxTotalSupplyInvariantStorage.sol";
 
 /**
  * @title MaxTotalSupplyHandler
- * @notice Invariant-test handler driving a real CMTAT token guarded by {RuleMaxTotalSupply}.
+ * @notice Invariant-test handler driving a real CMTAT token guarded by a supply-cap rule: `RuleMaxTotalSupply`,
+ * or `RuleIssuanceCap` through {IssuanceCapHandler}, which only redefines when a mint fits ({_fits}).
  * @dev The rule keeps no state of its own: its "state" is the token's supply. So the handler drives the
  * token through every operation that changes the supply (mint, burn, `burnAndMint`, forced burn), plus
  * transfers and cap changes, and records, for each mint, whether the rule's decision was the right one:
@@ -24,7 +25,7 @@ contract MaxTotalSupplyHandler is Test {
     address internal constant ADMIN = address(1);
 
     CMTATStandardStandalone public immutable token;
-    RuleMaxTotalSupply public immutable rule;
+    RuleMaxTotalSupplyBase public immutable rule;
 
     uint256 public ghostBreaches;
     uint256 public ghostFalseRejections;
@@ -38,7 +39,7 @@ contract MaxTotalSupplyHandler is Test {
     /// @dev Values stay around the cap so the fuzzer keeps crossing it in both directions.
     uint256 internal constant MAX_AMOUNT = 1000;
 
-    constructor(CMTATStandardStandalone token_, RuleMaxTotalSupply rule_) {
+    constructor(CMTATStandardStandalone token_, RuleMaxTotalSupplyBase rule_) {
         token = token_;
         rule = rule_;
     }
@@ -140,9 +141,14 @@ contract MaxTotalSupplyHandler is Test {
                                INTERNAL
     //////////////////////////////////////////////////////////////*/
 
-    function _recordAccepted(uint256 supplyBefore, uint256 value, uint256 cap) internal {
+    /// @dev Whether a mint of `value` should be accepted. Live-supply cap here; extended by {IssuanceCapHandler}.
+    function _fits(uint256 supplyBefore, uint256 value, uint256 cap) internal view virtual returns (bool) {
+        return supplyBefore + value <= cap;
+    }
+
+    function _recordAccepted(uint256 supplyBefore, uint256 value, uint256 cap) internal virtual {
         ++mintsAccepted;
-        if (supplyBefore + value > cap) ++ghostBreaches;
+        if (!_fits(supplyBefore, value, cap)) ++ghostBreaches;
     }
 
     function _recordRejected(uint256 supplyBefore, uint256 value, uint256 cap, bytes memory reason) internal {
@@ -156,7 +162,7 @@ contract MaxTotalSupplyHandler is Test {
                 && selector != RuleMaxTotalSupplyInvariantStorage.RuleMaxTotalSupply_InvalidTransferFrom.selector
         ) {
             ++ghostUnexpectedReverts;
-        } else if (supplyBefore + value <= cap) {
+        } else if (_fits(supplyBefore, value, cap)) {
             ++ghostFalseRejections;
         }
     }

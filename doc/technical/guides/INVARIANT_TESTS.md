@@ -17,6 +17,7 @@ forge test --match-path "test/invariant/*"          # the invariant suite only
 forge test --match-contract ConditionalTransferInvariants
 forge test --match-contract MintAllowanceInvariants
 forge test --match-contract MaxTotalSupplyInvariants
+forge test --match-contract IssuanceCapInvariants
 forge test                                          # everything, invariants included
 ```
 
@@ -61,8 +62,9 @@ Foundry cannot usefully fuzz a rule directly: `approveTransfer` needs `OPERATOR_
 |---|---|
 | [`test/invariant/ConditionalTransferHandler.sol`](../../../test/invariant/ConditionalTransferHandler.sol) | Drives `RuleConditionalTransferLight`'s approval state machine |
 | [`test/invariant/MintAllowanceHandler.sol`](../../../test/invariant/MintAllowanceHandler.sol) | Drives `RuleMintAllowance`'s quota accounting |
-| [`test/invariant/MaxTotalSupplyHandler.sol`](../../../test/invariant/MaxTotalSupplyHandler.sol) | Drives a real CMTAT token guarded by `RuleMaxTotalSupply` |
-| [`test/invariant/RuleInvariants.t.sol`](../../../test/invariant/RuleInvariants.t.sol) | The three invariant test contracts and their `setUp` |
+| [`test/invariant/MaxTotalSupplyHandler.sol`](../../../test/invariant/MaxTotalSupplyHandler.sol) | Drives a real CMTAT token guarded by a supply-cap rule; `_fits` says when a mint should pass |
+| [`test/invariant/IssuanceCapHandler.sol`](../../../test/invariant/IssuanceCapHandler.sol) | Extends it for `RuleIssuanceCap`: redefines `_fits` and mirrors the counter in `ghostIssued` |
+| [`test/invariant/RuleInvariants.t.sol`](../../../test/invariant/RuleInvariants.t.sol) | The invariant test contracts and their `setUp`. The supply-cap invariants live once in the abstract `SupplyCapInvariantsBase`, shared by `MaxTotalSupplyInvariants` and `IssuanceCapInvariants` |
 
 ---
 
@@ -166,6 +168,30 @@ Forced burns change the supply without calling the rule, so this also proves the
 
 A pre-flight check of exactly `headroom` returns `TRANSFER_OK`, both on the rule and through the token's own `detectTransferRestriction`; `headroom + 1` returns code `50`. When the supply is above the cap there is no room at all, and only the second half applies.
 
+### 3.4 `RuleIssuanceCap` — the counter is exact and never restored
+
+`IssuanceCapInvariants` reuses the five invariants of §3.3 unchanged (they are declared once, in `SupplyCapInvariantsBase`), with two differences:
+- `IssuanceCapHandler` redefines when a mint should fit: **both** the live supply and the cumulative issuance stay within the cap.
+- The expected headroom is the smaller of the two rooms.
+
+The rule is set directly on the token and bound to it. It adds two invariants:
+
+#### `invariant_totalIssuedMatchesGhost`
+
+```
+rule.totalIssued()  ==  ghostIssued   (Σ accepted mints, never lowered)
+```
+
+Burns, forced burns, transfers and cap changes are all in the action set and never touch the ghost, so this proves none of them move the counter: the rule is non-replenishing.
+
+#### `invariant_issuedCoversSupply`
+
+```
+totalIssued  ≥  totalSupply
+```
+
+Cumulative issuance can never be below the outstanding supply while every mint is counted. This is the property that makes the inherited live-supply check a pure backstop.
+
 ---
 
 ## 4. Negative controls — proving the suite can fail
@@ -178,6 +204,8 @@ An invariant suite that cannot fail is worthless. Both invariants were **mutatio
 | `RuleMintAllowanceBase._transferredFrom` — `current - value` → `current - value + 1` | **Off-by-one** quota deduction: minters slowly gain free quota | ❌ `invariant_allowanceMatchesGhost` fails: `mint allowance drifted from expected: 1938542 != 1938541` |
 | `CapAccounting._capExceededBy` — `value > cap - observed` → `value > cap - observed + 1` | **Off-by-one** cap: one unit above the cap gets through | ❌ `invariant_noMintBreachedTheCap` fails: `a mint went through above the cap: 1 != 0` (and `invariant_preflightAgreesWithHeadroom`). Before `mintAtBoundary` was added, only the pre-flight invariant caught it |
 | `CapAccounting._capExceededBy` — `>` → `>=` | **Over-strict** cap: a mint landing exactly on the cap is rejected | ❌ `invariant_noFittingMintWasRejected` fails: `a mint that fitted was rejected: 1 != 0` (and `invariant_preflightAgreesWithHeadroom`) |
+| `RuleIssuanceCapBase._afterMintChecked` — drop `totalIssued = issued` | **Counter never recorded**: the rule silently becomes replenishing | ❌ `invariant_totalIssuedMatchesGhost` (`counter drifted: 0 != 296`), `invariant_noMintBreachedTheCap`, `invariant_issuedCoversSupply` and `invariant_remainingMintableMatchesLiveSupply` all fail |
+| `RuleIssuanceCapBase._issuanceExceededBy` — cap → `cap + 1` | **Off-by-one** issuance cap | ❌ `invariant_noMintBreachedTheCap` fails (`a mint went through above the cap: 1 != 0`), and `invariant_preflightAgreesWithHeadroom` |
 | `TotalSupplyCapManager._remainingMintable` — `currentSupply` → `currentSupply + 1` | **Wrong headroom view** while enforcement stays correct | ❌ `invariant_remainingMintableMatchesLiveSupply` fails: `headroom drifted from the live supply: 999 != 1000` |
 
 Re-run these yourself before trusting a change to any of these rules: if you mutate the accounting and the suite still passes, the suite has regressed.
@@ -193,6 +221,7 @@ Invariant IDs and their verification status are recorded in [`CLAUDE_AUDIT.md`](
 | `INV-5` | `approvalCounts` never underflows; one approval ⇒ one transfer | `invariant_approvalConservation`, `invariant_noApprovalExceedsTotalRecorded` |
 | `INV-7` | `mintAllowance` non-increasing across mints, never underflows, `Σ minted ≤ Σ granted` | `invariant_allowanceMatchesGhost`, `invariant_mintedNeverExceedsCredited` |
 | `INV-12` (partial) | Mint/burn handled explicitly, never falling into the transfer path | Emergent from both suites (see §3.1, §3.2) |
+| — (`RuleIssuanceCap`) | The counter equals Σ accepted mints and is never restored; issuance covers supply; plus every `RuleMaxTotalSupply` property against the combined cap | `invariant_totalIssuedMatchesGhost`, `invariant_issuedCoversSupply`, and the five shared invariants |
 | — (`RuleMaxTotalSupply`) | Accepted mints never exceed the cap; fitting mints are never rejected; `remainingMintable()` tracks the live supply, forced burns included | `invariant_noMintBreachedTheCap`, `invariant_noFittingMintWasRejected`, `invariant_mintsFailOnlyWithTheRuleError`, `invariant_remainingMintableMatchesLiveSupply`, `invariant_preflightAgreesWithHeadroom` |
 
 **Not covered by invariants (by design):**

@@ -85,6 +85,23 @@ contract RuleMaxTotalSupplyUnit is Test, HelperContract {
         assertEq(rule.detectTransferRestriction(ADDRESS1, ZERO_ADDRESS, 1), TRANSFER_OK);
     }
 
+    /**
+     * @notice `transferred` is no longer `view` (so `RuleIssuanceCap` can record mints through
+     * `_afterMintChecked`), so the compiler no longer proves this rule never writes. This test does:
+     * no storage write on either overload, for a mint, a transfer or a burn.
+     */
+    function testTransferredNeverWritesStorage() public {
+        token.setTotalSupply(10);
+        vm.record();
+        rule.transferred(ZERO_ADDRESS, ADDRESS1, 5);
+        rule.transferred(ADDRESS1, ADDRESS2, 5);
+        rule.transferred(ADDRESS1, ZERO_ADDRESS, 5);
+        rule.transferred(ADDRESS3, ZERO_ADDRESS, ADDRESS1, 5);
+        rule.transferred(ADDRESS3, ADDRESS1, ADDRESS2, 5);
+        (, bytes32[] memory writes) = vm.accesses(address(rule));
+        assertEq(writes.length, 0, "RuleMaxTotalSupply wrote storage");
+    }
+
     /*//////////////////////////////////////////////////////////////
                           remainingMintable
     //////////////////////////////////////////////////////////////*/

@@ -70,7 +70,7 @@ _Diagram source: [`doc/schema/architecture-topologies.puml`](./doc/schema/archit
 Behind a RuleEngine the engine returns the **first non-zero** restriction code, so rule order decides which
 code a rejection reports. In direct mode the rule is installed with `token.setRuleEngine(rule)`.
 
-**Operation rules** keep state keyed on the caller, so the two are not interchangeable for them: `RuleConditionalTransferLightMultiToken` is direct-binding only, and `RuleMintAllowance` requires the engine path. Validation rules work under either.
+**Operation rules** keep state keyed on the caller, so the two are not interchangeable for them: `RuleConditionalTransferLightMultiToken` is direct-binding only, `RuleMintAllowance` requires the engine path, and `RuleIssuanceCap` works under either but must be bound to its caller (the token directly, or the engine). Validation rules work under either.
 
 ### Layout
 
@@ -105,8 +105,9 @@ access-control policy, in either an `AccessControl` or an `Ownable2Step` flavour
 | `RuleChainlinkPoRERC3643` | Caps minting at reported reserves, for tokens that mint *first* and call the rule after | 75–79 |
 | `RuleConditionalTransferLight` | Requires operator approval per transfer | 46 |
 | `RuleMintAllowance` | Per-minter mint quota | 70 |
+| `RuleIssuanceCap` | Caps cumulative issuance on mint; burns do **not** restore room (fixed issue volume) | 71, and 50, 51 shared with `RuleMaxTotalSupply` |
 
-Codes must stay unique across rules, since a RuleEngine returns the first non-zero one.
+Codes must stay unique across rules, since a RuleEngine returns the first non-zero one. The one deliberate exception is `RuleIssuanceCap`, which extends `RuleMaxTotalSupply` and reuses 50 and 51 with the same meaning and message.
 
 **The two `…ERC3643` variants differ only in *when* they expect to be called**, and that is what to pick them by. CMTAT asks the rule before it moves the value, so the stock rule adds the pending amount to the supply it reads; ERC-3643 / T-REX mints first, so the variant must not add it again. Both mismatches are silent: the stock rule on an ERC-3643 token counts the amount twice and rejects mints that are inside the cap, and a variant on a CMTAT token stops enforcing the ceiling on the write path.
 

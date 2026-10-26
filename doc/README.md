@@ -110,6 +110,7 @@ CMTAT v3.0.0 is the last audited CMTAT release. It calls the rules with the same
 | `RuleWhitelist`, `RuleWhitelistWrapper`, `RuleReceiverWhitelist`, `RuleSpenderWhitelist`, `RuleIdentityRegistry` | ✅ same behaviour as on v3.3 |
 | `RuleMaxTotalSupply`, `RuleMaxBalance`, `RuleChainlinkPoR` | ✅ same behaviour as on v3.3 (pre-update notification, so no variant is needed) |
 | `RuleConditionalTransferLight` | ✅ same behaviour as on v3.3 |
+| `RuleIssuanceCap` | ✅ same behaviour as on v3.3: the cap is per token, so the missing mint spender changes nothing |
 | `RuleConditionalTransferLightMultiToken` | ✅ same behaviour, direct binding only (as on every version) |
 | `RuleBlacklist`, `RuleSanctionsList`, `RuleERC2980` | ✅ work, but a listed / sanctioned / frozen **minter or burner is not screened** |
 | `RuleMintAllowance` | ❌ **inert**: every mint passes and no quota is debited. Requires CMTAT ≥ v3.3 |
@@ -131,7 +132,7 @@ function canTransfer(address _from, address _to, uint256 _amount) external view 
 function transferred(address _from, address _to, uint256 _amount) external;
 ```
 
-However, contrary to the RuleEngine, the whole interface is not implemented: the **validation rules** do not declare `created` and `destroyed`, so a validation rule cannot back an ERC-3643 token on its own. (The operation rules — `RuleConditionalTransferLight`, `…MultiToken` and `RuleMintAllowance` — do implement both, but each is bound to a single token and is not a general compliance contract.)
+However, contrary to the RuleEngine, the whole interface is not implemented: the **validation rules** do not declare `created` and `destroyed`, so a validation rule cannot back an ERC-3643 token on its own. (The operation rules — `RuleConditionalTransferLight`, `…MultiToken`, `RuleMintAllowance` and `RuleIssuanceCap` — do implement both, but each is bound to a single token and is not a general compliance contract.)
 
 The alternative to use a Rule with an ERC-3643 token is through the RuleEngine, which implements the whole `ICompliance` interface.
 
@@ -332,7 +333,9 @@ Here is the list of codes used by the different rules
 | RuleSpenderWhitelist         | CODE_ADDRESS_SPENDER_NOT_WHITELISTED | 66    |
 |                              | Reserved slot                        | 67-69 |
 | RuleMintAllowance            | CODE_MINTER_ALLOWANCE_EXCEEDED       | 70    |
-|                              | Reserved slot                        | 71-74 |
+| RuleIssuanceCap              | CODE_ISSUANCE_CAP_EXCEEDED           | 71    |
+|                              | (also 50, 51, shared with RuleMaxTotalSupply) |       |
+|                              | Reserved slot                        | 72-74 |
 | RuleChainlinkPoR             | CODE_RESERVES_EXCEEDED               | 75    |
 |                              | CODE_RESERVES_FEED_STALE             | 76    |
 |                              | CODE_RESERVES_ANSWER_INVALID         | 77    |
@@ -447,7 +450,8 @@ Separately, `src/registry/` holds [`IdentityRegistryWhitelist`](./technical/cont
 | Restrict `transferFrom` operators (spenders) | `RuleSpenderWhitelist` |
 | Block known bad addresses | `RuleBlacklist` |
 | Block sanctioned addresses (Chainalysis oracle) | `RuleSanctionsList` |
-| Cap total token supply | `RuleMaxTotalSupply` |
+| Cap total token supply (burns restore room) | `RuleMaxTotalSupply` |
+| Cap cumulative issuance, e.g. an authorised share amount or a fixed issue volume (burns do **not** restore room) | `RuleIssuanceCap` |
 | Cap total supply at the reserves reported by a Chainlink Proof of Reserve feed | `RuleChainlinkPoR` |
 | Require identity-registry verification (ERC-3643) | `RuleIdentityRegistry` |
 | ERC-2980 Swiss compliance (whitelist + frozenlist) | `RuleERC2980` |
@@ -492,7 +496,7 @@ Available validation rules: `RuleWhitelist`, `RuleReceiverWhitelist`, `RuleWhite
 
 Operation rules modify blockchain state during transfer execution. Their `transferred()` function is state-mutating: it consumes or updates stored data as part of the transfer flow.
 
-Available operation rules: `RuleConditionalTransferLight`, `RuleConditionalTransferLightMultiToken`, `RuleMintAllowance`.
+Available operation rules: `RuleConditionalTransferLight`, `RuleConditionalTransferLightMultiToken`, `RuleMintAllowance`, `RuleIssuanceCap`.
 
 A full-featured variant, `RuleConditionalTransfer`, is maintained as a separate experimental repository at [CMTA/RuleConditionalTransfer](https://github.com/CMTA/RuleConditionalTransfer).
 
@@ -608,6 +612,7 @@ Several rules are available in multiple access-control variants. Use the simples
 | RuleConditionalTransferLight                                | Read-Write                          | <strong><span style="color: #b00020;">&#x2718;</span></strong> | <strong><span style="color: #1e7e34;">&#x2714;</span></strong> | <strong><span style="color: #1e7e34;">&#x2714;</span></strong> | This rule requires that transfers have to be approved by an operator before being executed. Each approval is consumed once and the same transfer can be approved multiple times. |
 | RuleConditionalTransferLightMultiToken                      | Read-Write                          | <strong><span style="color: #b00020;">&#x2718;</span></strong> | <strong><span style="color: #b00020;">&#x2718;</span></strong> <sup>e</sup> | <strong><span style="color: #1e7e34;">&#x2714;</span></strong> | Multi-token variant of ConditionalTransferLight. Approvals are token-scoped with key `(token, from, to, value)` so one token cannot consume another token's approvals. |
 | RuleMintAllowance                                           | Read-Write                          | <strong><span style="color: #b00020;">&#x2718;</span></strong> | <strong><span style="color: #b00020;">&#x2718;</span></strong> <sup>f</sup> | <strong><span style="color: #1e7e34;">&#x2714;</span></strong> | Enforces a per-minter mint quota managed by an operator; each mint reduces the minter's allowance. Regular transfers and burns are not restricted. |
+| RuleIssuanceCap                                             | Read-Write                          | <strong><span style="color: #b00020;">&#x2718;</span></strong> | <strong><span style="color: #b00020;">&#x2718;</span></strong> <sup>g</sup> | <strong><span style="color: #1e7e34;">&#x2714;</span></strong> | Caps cumulative issuance: the total ever minted cannot exceed the cap, and burns do not restore room. Extends `RuleMaxTotalSupply`, whose live-supply check stays active against the same cap. |
 | [RuleConditionalTransfer](https://github.com/CMTA/RuleConditionalTransfer) (external) | Read-Write | <strong><span style="color: #b00020;">&#x2718;</span></strong> | <strong><span style="color: #1e7e34;">&#x2714;</span></strong> | <strong><span style="color: #b00020;">&#x2718;</span></strong><br /> (experimental rule) | Full-featured approval-based transfer rule implementing Swiss law *Vinkulierung*. Supports automatic approval after three months, automatic transfer execution, and a conditional whitelist for address pairs that bypass approval. Maintained in a separate repository. |
 | [RuleSelf](https://github.com/rya-sge/ruleself) (community) | — | <strong><span style="color: #b00020;">&#x2718;</span></strong> | — | <strong><span style="color: #b00020;">&#x2718;</span></strong><br /> (community project) | Use [Self](https://self.xyz), a zero-knowledge identity  solution to determine which is allowed to interact with the token.<br />Community-maintained rule project. Not developed or maintained by CMTA. |
 
@@ -631,6 +636,8 @@ rule counts the amount twice and reverts mints that are within the cap.
 <sup>f</sup> ❌ **Inert, and silently permissive** — `created` carries no minter identity, so no quota is
 debited and every mint passes. `RuleMaxBalance` is likewise **not supported**: same double-count as <sup>c</sup>,
 with no variant available.
+<sup>g</sup> ❌ **Not supported in v1** — the counter itself is correct on ERC-3643, but the inherited live-supply check
+double-counts, as in <sup>c</sup>; no `…ERC3643` variant is shipped yet.
 
 <sup>&#x2020;</sup> `RuleMintAllowance` is **Partial**: it does not advertise the full ERC-3643 `ICompliance` interface via ERC-165 because its per-minter mint quota requires the spender-aware mint callback to identify the minter, which the 3-argument ERC-3643 mint callback cannot provide.
 
@@ -662,6 +669,7 @@ Per-contract pages:
 | RuleConditionalTransferLight | [RuleConditionalTransferLight.md](./technical/contracts/RuleConditionalTransferLight.md) |
 | RuleConditionalTransferLightMultiToken | [RuleConditionalTransferLightMultiToken.md](./technical/contracts/RuleConditionalTransferLightMultiToken.md) |
 | RuleMintAllowance | [RuleMintAllowance.md](./technical/contracts/RuleMintAllowance.md) |
+| RuleIssuanceCap | [RuleIssuanceCap.md](./technical/contracts/RuleIssuanceCap.md) |
 | RuleConditionalTransfer | [RuleConditionalTransfer.md](./technical/contracts/RuleConditionalTransfer.md) — **maintained in a separate repository**, kept here for reference |
 | Deployment scripts | [DEPLOYMENT_SCRIPTS.md](./technical/guides/DEPLOYMENT_SCRIPTS.md) |
 
@@ -745,6 +753,13 @@ Validation (read-only) rules have no binding requirement: they hold no per-trans
 - `RuleConditionalTransferLightMultiToken`: mints (`from == address(0)`) and burns (`to == address(0)`) are exempt from approval checks; `created` and `destroyed` delegate to `_transferred`.
 - `RuleConditionalTransferLightMultiToken`: with a shared `RuleEngine`, the caller seen by the rule is the engine address (not the underlying token). In that topology, token-scoped approvals are not visible unless approvals are keyed to the engine address, which is not per-token scoping.
 - **Warning**: `RuleConditionalTransferLightMultiToken` supports several tokens when integrated directly with each token contract. It must not be used for per-token approval isolation through a shared `RuleEngine`.
+
+#### RuleIssuanceCap
+
+- `RuleIssuanceCap`: burns, forced burns and `crosschainBurn` never restore room; the mint leg of `burnAndMint` and every `crosschainMint` count as new issuance. Do not use it for a bridged token.
+- `RuleIssuanceCap`: `transferred()` is restricted to the single caller bound via `bindToken` (the token, or the RuleEngine in front of it); until bound, every mint reverts.
+- `RuleIssuanceCap`: the observed token is fixed at deployment (`setTokenContract` reverts), and `initialIssued` must be at least the token's current supply.
+- `RuleIssuanceCap`: the inherited live-supply check stays active, so mints made while the rule was detached still stop minting at the cap once it is re-attached.
 
 #### General notes
 
@@ -957,7 +972,7 @@ The operator calls `setIdentityRegistry(registry)`. The issuer attempts a transf
 
 ### Read-Write (Operation) rule
 
-There are three operation rules available: `RuleConditionalTransferLight`, `RuleConditionalTransferLightMultiToken`, and `RuleMintAllowance`.
+There are four operation rules available: `RuleConditionalTransferLight`, `RuleConditionalTransferLightMultiToken`, `RuleMintAllowance` and `RuleIssuanceCap`.
 
 #### Conditional transfer (light)
 
@@ -982,6 +997,14 @@ For the same reason, it does not advertise the full ERC-3643 `ICompliance` inter
 **Usage scenario**
 
 The compliance manager binds the rule to the RuleEngine with `bindToken(ruleEngine)`. Attempting to bind a second RuleEngine/token reverts until the current binding is removed with `unbindToken`. The operator assigns `setMintAllowance(alice, 100_000e18)`. Alice's mints deduct from her quota through `transferred(alice, address(0), recipient, amount)`; once exhausted, further mints revert with code 70 until the operator increases the quota.
+
+#### Issuance cap
+
+This rule caps the **cumulative issuance** of one token: the total ever minted cannot exceed `maxTotalSupply`, and burns do not restore room. It extends `RuleMaxTotalSupply` with a `totalIssued` counter raised on every accepted mint (code `71` when it would pass the cap), while the inherited live-supply check (code `50`) stays active against the same cap. It works on CMTAT v3.0.0, whose mints carry no minter, because the cap is per token. For a cap that burns do restore, use `RuleMaxTotalSupply`. See [RuleIssuanceCap.md](./technical/contracts/RuleIssuanceCap.md).
+
+**Usage scenario**
+
+A company's shareholders authorise the issue of 1,000,000 shares. The operator deploys `RuleIssuanceCap(admin, token, 1_000_000, currentIssued)`, binds it to the RuleEngine with `bindToken(ruleEngine)`, and adds it to the engine. Shares that are later redeemed and burned do not free authorised volume: issuing beyond 1,000,000 in total requires a new authorisation, recorded on-chain with `increaseMaxTotalSupply`.
 
 #### Conditional transfer (light, multi-token)
 
@@ -1014,13 +1037,13 @@ See also [docs.openzeppelin.com - AccessControl](https://docs.openzeppelin.com/c
 | Role | Hash | Functions (by rule) |
 | --- | --- | --- |
 | `DEFAULT_ADMIN_ROLE` | `0x0000000000000000000000000000000000000000000000000000000000000000` | `grantRole`, `revokeRole`, `renounceRole` (all AccessControl rules); `setCheckSpender` (RuleWhitelist, RuleWhitelistWrapper); `setTokenContract` (RuleMaxTotalSupply); `setReservesFeed`, `setTokenMetadata`, `setMaxStalenessSeconds` (RuleChainlinkPoR); `setIdentityRegistry`, `clearIdentityRegistry` (RuleIdentityRegistry) |
-| `MAX_TOTAL_SUPPLY_ROLE` | `0xff56c44a0b63a2f9b3aaada52f4982ecb1bd4eefdb286a7832ff51e8bc4e49f1` | `setMaxTotalSupply`, `increaseMaxTotalSupply`, `decreaseMaxTotalSupply` (RuleMaxTotalSupply, RuleMaxTotalSupplyERC3643) |
+| `MAX_TOTAL_SUPPLY_ROLE` | `0xff56c44a0b63a2f9b3aaada52f4982ecb1bd4eefdb286a7832ff51e8bc4e49f1` | `setMaxTotalSupply`, `increaseMaxTotalSupply`, `decreaseMaxTotalSupply` (RuleMaxTotalSupply, RuleMaxTotalSupplyERC3643, RuleIssuanceCap) |
 | `ADDRESS_LIST_ADD_ROLE` | `0x1b03c849816e077359373cf0a8d6d8f741d643bc1e95273ffe11515f83bebf61` | `addAddress`, `addAddresses` (RuleWhitelist, RuleBlacklist) |
 | `ADDRESS_LIST_REMOVE_ROLE` | `0x1b94c92b564251ed6b49246d9a82eb7a486b6490f3b3a3bf3b28d2e99801f3ec` | `removeAddress`, `removeAddresses` (RuleWhitelist, RuleBlacklist) |
 | `SANCTIONLIST_ROLE` | `0x30842281ac34bdc7d568c7ab276f84ba6fc1a1de1ae858b0afd35e716fb0650d` | `setSanctionListOracle`, `clearSanctionListOracle` (RuleSanctionsList) |
 | `RULES_MANAGEMENT_ROLE` | `0xea5f4eb72290e50c32abd6c23e45de3d8300b3286e1cbc2e293114b92e034e5e` | `setRules`, `clearRules`, `addRule`, `removeRule` (RuleWhitelistWrapper) |
 | `OPERATOR_ROLE` | `0x97667070c54ef182b0f5858b034beac1b6f3089aa2d3188bb1e8929f4fa9b929` | `approveTransfer`, `cancelTransferApproval` (RuleConditionalTransferLight / RuleConditionalTransferLightMultiToken) |
-| `COMPLIANCE_MANAGER_ROLE` | `0xe5c50d0927e06141e032cb9a67e1d7092dc85c0b0825191f7e1cede600028568` | `bindToken`, `unbindToken` (RuleConditionalTransferLight / RuleConditionalTransferLightMultiToken / RuleMintAllowance) |
+| `COMPLIANCE_MANAGER_ROLE` | `0xe5c50d0927e06141e032cb9a67e1d7092dc85c0b0825191f7e1cede600028568` | `bindToken`, `unbindToken` (RuleConditionalTransferLight / RuleConditionalTransferLightMultiToken / RuleMintAllowance / RuleIssuanceCap) |
 | `ALLOWANCE_OPERATOR_ROLE` | `0x86a2482724302deea267bc1ca14032806c318aeaf8d1e0d445a6fb7e7c997beb` | `setMintAllowance`, `increaseMintAllowance`, `decreaseMintAllowance` (RuleMintAllowance) |
 | `WHITELIST_ADD_ROLE` | `0x77c0b4c0975a0b0417d8ce295502737b95fee8923755fed0cce952907a1861ed` | `addWhitelistAddress`, `addWhitelistAddresses` (RuleERC2980) |
 | `WHITELIST_REMOVE_ROLE` | `0xf4d11a530c5b90f459c6ab1e335d3d77156b8ff3093308e4fca6d100ee87ade9` | `removeWhitelistAddress`, `removeWhitelistAddresses` (RuleERC2980) |
@@ -1043,6 +1066,7 @@ For simpler ownership-based control, `Ownable2Step` variants (two-step ownership
 - `RuleConditionalTransferLightOwnable2Step`
 - `RuleConditionalTransferLightMultiTokenOwnable2Step`
 - `RuleMintAllowanceOwnable2Step`
+- `RuleIssuanceCapOwnable2Step`
 
 `RuleConditionalTransferLightOwnable2Step` now grants approval and execution permissions exclusively to the owner.
 All `Ownable2Step` variants enforce access using OpenZeppelin's `onlyOwner` modifier.
@@ -1077,7 +1101,7 @@ This repository is developed and tested with [Foundry](https://book.getfoundry.s
 
 ### Invariant testing
 
-The two **stateful (operation) rules**, `RuleConditionalTransferLight` and `RuleMintAllowance`, and `RuleMaxTotalSupply` (on a real CMTAT token) are covered by a handler-driven `StdInvariant` suite in [`test/invariant/`](../test/invariant/). It fuzzes long randomly-ordered call sequences and re-checks nine invariants after every step (8 192 calls each, `fail_on_revert = true`):
+The **stateful (operation) rules** `RuleConditionalTransferLight`, `RuleMintAllowance` and `RuleIssuanceCap`, and `RuleMaxTotalSupply` (the last two on a real CMTAT token) are covered by a handler-driven `StdInvariant` suite in [`test/invariant/`](../test/invariant/). It fuzzes long randomly-ordered call sequences and re-checks eleven invariants after every step (the five supply-cap invariants run for both cap rules) (8 192 calls each, `fail_on_revert = true`):
 
 | Invariant | Asserts |
 | --- | --- |
@@ -1090,8 +1114,10 @@ The two **stateful (operation) rules**, `RuleConditionalTransferLight` and `Rule
 | `invariant_mintsFailOnlyWithTheRuleError` | a rejected mint reverts only with the rule's own error |
 | `invariant_remainingMintableMatchesLiveSupply` | `remainingMintable() == max(cap − totalSupply, 0)`, forced burns included |
 | `invariant_preflightAgreesWithHeadroom` | the pre-flight view accepts exactly the headroom and rejects one unit more |
+| `invariant_totalIssuedMatchesGhost` | `RuleIssuanceCap.totalIssued` equals the sum of accepted mints: burns never restore it |
+| `invariant_issuedCoversSupply` | cumulative issuance is never below the outstanding supply |
 
-All three suites are **mutation-verified**: injecting an approval double-spend, an off-by-one quota deduction, an off-by-one or over-strict cap, or a wrong headroom view makes them fail. The other validation rules are read-only and their state does not evolve, so unit and fuzz tests cover them. `RuleMaxTotalSupply` is the exception: the supply it guards changes, sometimes without calling the rule (forced burns).
+All suites are **mutation-verified**: injecting an approval double-spend, an off-by-one quota deduction, an off-by-one or over-strict cap, a wrong headroom view, an unrecorded issuance counter or an off-by-one issuance cap makes them fail. The other validation rules are read-only and their state does not evolve, so unit and fuzz tests cover them. `RuleMaxTotalSupply` is the exception: the supply it guards changes, sometimes without calling the rule (forced burns).
 
 Full details — handler architecture, ghost variables, the negative controls, the coverage map against the threat-model invariants, and how to add a new one — are in **[doc/technical/guides/INVARIANT_TESTS.md](./technical/guides/INVARIANT_TESTS.md)**.
 
@@ -1855,6 +1881,19 @@ function setTokenContract(address tokenContract_)
 ```
 
 Sets the token contract used to read `totalSupply()`. Stays admin-only: `MAX_TOTAL_SUPPLY_ROLE` does not grant it.
+
+### RuleIssuanceCap
+
+Extends `RuleMaxTotalSupply` (all of its functions above apply) with a non-replenishing counter. Only the additions:
+
+```solidity
+constructor(address admin, address tokenContract_, uint256 issuanceCap_, uint256 initialIssued_)
+function totalIssued() public view returns (uint256)
+function bindToken(address token) public virtual onlyRole(COMPLIANCE_MANAGER_ROLE) // single binding
+function unbindToken(address token) public virtual onlyRole(COMPLIANCE_MANAGER_ROLE)
+```
+
+`setTokenContract` always reverts (`RuleIssuanceCap_TokenContractLocked`). `transferred` is restricted to the bound caller. Events: `TotalIssuedInitialized(initialIssued)`, `IssuanceRecorded(value, totalIssued)`.
 
 ### RuleChainlinkPoR
 

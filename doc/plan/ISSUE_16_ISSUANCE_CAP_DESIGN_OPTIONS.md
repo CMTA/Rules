@@ -1,6 +1,6 @@
 # Analysis — where to implement the non-replenishing issuance cap (CMTA/Rules#16)
 
-> Status: **design analysis, not implemented.** It refines [`ISSUE_16_RULE_ISSUANCE_CAP.md`](./ISSUE_16_RULE_ISSUANCE_CAP.md), which proposed a standalone rule with no replenishing mode, now that `RuleMaxTotalSupply` has gained `remainingMintable()`, `MAX_TOTAL_SUPPLY_ROLE`, `increase` / `decrease` and the `(previous, new)` event ([`ISSUE_16_RULE_MAX_TOTAL_SUPPLY_COVERAGE.md`](./ISSUE_16_RULE_MAX_TOTAL_SUPPLY_COVERAGE.md)).
+> Status: **implemented in v0.7.0 as Option B′** (inherit `RuleMaxTotalSupplyBase`, own deployables; see the B′ note below §5). Contracts: `RuleIssuanceCapBase`, `RuleIssuanceCap`, `RuleIssuanceCapOwnable2Step`; documentation: `doc/technical/contracts/RuleIssuanceCap.md`. Earlier status: design analysis. It refines [`ISSUE_16_RULE_ISSUANCE_CAP.md`](./ISSUE_16_RULE_ISSUANCE_CAP.md), which proposed a standalone rule with no replenishing mode, now that `RuleMaxTotalSupply` has gained `remainingMintable()`, `MAX_TOTAL_SUPPLY_ROLE`, `increase` / `decrease` and the `(previous, new)` event ([`ISSUE_16_RULE_MAX_TOTAL_SUPPLY_COVERAGE.md`](./ISSUE_16_RULE_MAX_TOTAL_SUPPLY_COVERAGE.md)).
 >
 > **Design priority: minimise code duplication.** Every option is scored on how much existing code it copies, not only on correctness and impact.
 
@@ -173,6 +173,12 @@ The counter stays correct there because it is enforced in `_afterMintChecked` wi
 | Bridge round trip | Uses up the cap (unsuitable for bridged tokens) | Net zero |
 | Mints while the rule is detached | Not counted, but caught by the inherited live leg | Caught |
 | Zero-value mint | No-op | No-op |
+
+### 5.8 Refinement adopted: B′ (own deployables)
+
+After weighing complexity against duplication, the implementation inherits `RuleMaxTotalSupplyBase` (all logic reused) but **not** the `RuleMaxTotalSupply` deployables. Each new deployable repeats roughly 20 lines of standard role and ERC-165 boilerplate. That removes the diamond inheritance of §5.5 and the long override lists it requires, at the cost of boilerplate that every rule in the library already repeats. As implemented:
+- `canReturnTransferRestrictionCode` became `public` so the subclass can call `super`.
+- The observed token is locked through the `_authorizeTokenContractManager` hook rather than by overriding `setTokenContract`.
 
 ## 6. The replenishing mode: a flag or a contract choice?
 

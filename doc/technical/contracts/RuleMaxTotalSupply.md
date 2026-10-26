@@ -4,6 +4,8 @@
 
 This rule restricts minting so that the token's total supply never exceeds a configured maximum. Only mint operations (`from == address(0)`) are checked. Regular transfers between holders and burns are not affected.
 
+It caps the **outstanding** supply, so burns free room. To cap **cumulative issuance** instead (burns do not free room), deploy [`RuleIssuanceCap`](./RuleIssuanceCap.md), which extends this rule.
+
 ## Contract layout
 
 The rule is split in two, so cap management does not drag the rest of the rule along with it.
@@ -19,6 +21,8 @@ same ones from an initializer, with no change to the manager. Nothing in the man
 restriction-code interface either — it answers in booleans and token units — so a contract that only wants a
 revert-free view of remaining headroom can inherit it without implementing an ERC-1404 surface it does not
 need.
+
+`RuleMaxTotalSupplyBase.transferred` is deliberately **not `view`**. A subclass records accepted mints through the `_afterMintChecked(value)` hook, which the write path calls after a mint passes; here it is empty. This rule itself never writes storage, which `testTransferredNeverWritesStorage` asserts with `vm.accesses`, so a future change that adds a write fails CI. (Up to v0.6.0 the function was `view`; the selector and behaviour are unchanged.)
 
 Storage layout and the deployed ABI are **unchanged** by the split, verified per-slot from the compiled
 artifacts for both `RuleMaxTotalSupply` and `RuleMaxTotalSupplyOwnable2Step`.

@@ -1,6 +1,6 @@
 # Plan — per-token issuance cap (CMTA/Rules#16)
 
-> Status: **proposal, not implemented.** Target: v0.7.0 or later.
+> Status: **implemented in v0.7.0**, with the design of `ISSUE_16_ISSUANCE_CAP_DESIGN_OPTIONS.md` (Option B′), not the standalone design below. Kept as the record of the original proposal.
 > **Superseded in part by [`ISSUE_16_ISSUANCE_CAP_DESIGN_OPTIONS.md`](./ISSUE_16_ISSUANCE_CAP_DESIGN_OPTIONS.md):** build `RuleIssuanceCap` as a thin subclass of `RuleMaxTotalSupply` through one new hook, inheriting its cap setters, role, events, live-supply check and deployables, so no code is duplicated. The replenishing option is met by deploying `RuleMaxTotalSupply`, not by a flag. The standalone design below would duplicate most of `RuleMaxTotalSupply`.
 >
 > Issue: [CMTA/Rules#16](https://github.com/CMTA/Rules/issues/16). Background: [CMTA/CMTAT#405](https://github.com/CMTA/CMTAT/issues/405).
