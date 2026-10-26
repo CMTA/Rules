@@ -6,7 +6,7 @@ This document describes the **stateful invariant suite** in [`test/invariant/`](
 
 Invariant tests differ from the unit and fuzz tests elsewhere in `test/`: instead of exercising a fixed call sequence, Foundry drives a **handler** contract with long, randomly-ordered sequences of calls and re-checks every `invariant_*` function after each step. They are the right tool for the two **stateful (operation) rules**, whose storage evolves across calls.
 
-Validation rules are read-only and hold no per-transfer state, so they have nothing to conserve across a call sequence, so unit and fuzz tests cover them instead.
+Validation rules are read-only and hold no per-transfer state, so most have nothing to conserve across a call sequence, and unit and fuzz tests cover them instead. **`RuleMaxTotalSupply` is the exception.** It holds no state, but the supply it guards does, and that supply is changed by operations the rule never sees (forced burns). Its suite therefore drives a **real CMTAT token** rather than calling the rule directly (§3.3).
 
 ---
 
@@ -16,6 +16,7 @@ Validation rules are read-only and hold no per-transfer state, so they have noth
 forge test --match-path "test/invariant/*"          # the invariant suite only
 forge test --match-contract ConditionalTransferInvariants
 forge test --match-contract MintAllowanceInvariants
+forge test --match-contract MaxTotalSupplyInvariants
 forge test                                          # everything, invariants included
 ```
 
@@ -60,7 +61,8 @@ Foundry cannot usefully fuzz a rule directly: `approveTransfer` needs `OPERATOR_
 |---|---|
 | [`test/invariant/ConditionalTransferHandler.sol`](../../../test/invariant/ConditionalTransferHandler.sol) | Drives `RuleConditionalTransferLight`'s approval state machine |
 | [`test/invariant/MintAllowanceHandler.sol`](../../../test/invariant/MintAllowanceHandler.sol) | Drives `RuleMintAllowance`'s quota accounting |
-| [`test/invariant/RuleInvariants.t.sol`](../../../test/invariant/RuleInvariants.t.sol) | The two invariant test contracts and their `setUp` |
+| [`test/invariant/MaxTotalSupplyHandler.sol`](../../../test/invariant/MaxTotalSupplyHandler.sol) | Drives a real CMTAT token guarded by `RuleMaxTotalSupply` |
+| [`test/invariant/RuleInvariants.t.sol`](../../../test/invariant/RuleInvariants.t.sol) | The three invariant test contracts and their `setUp` |
 
 ---
 
@@ -120,6 +122,49 @@ A cumulative safety bound independent of the mirror: across the whole run, minte
 
 The handler calls `regularTransfer` (a `transferred(spender, from ≠ 0, to, v)` call) and **deliberately leaves the ghost unchanged**. If the rule ever deducted quota on a non-mint path, the mirror would diverge and `invariant_allowanceMatchesGhost` would fail.
 
+### 3.3 `RuleMaxTotalSupply` — the cap holds across any sequence
+
+The handler differs from the other two in two ways:
+- It drives a **real CMTAT token** (`CMTATStandardStandalone`, with the rule set directly via `setRuleEngine(rule)`) and pranks the token admin for privileged calls. It is not bound to the rule.
+- Mints are **attempted with `try`**, because rejection is an expected outcome. Every other action is bounded so it cannot revert.
+
+Handler actions: `mint` · `mintAtBoundary` · `burnAndMint` · `burn` · `forcedBurn` · `transfer` · `setCap`.
+- `setCap` ranges from `0` to `4 000`, including caps below the current supply.
+- `forcedBurn` (`forcedTransfer(from, address(0), v)`) bypasses the engine.
+- `mintAtBoundary` mints exactly the remaining room −1, +0 or +1. Random amounts almost never land on `headroom + 1`, the only value an off-by-one would let through. Without this action the safety invariant missed such a mutation (§4).
+
+Ghosts: for every attempted mint, whether the rule's decision was right, judged against the supply before the mint (after the burn leg for `burnAndMint`) and the cap in force.
+
+#### `invariant_noMintBreachedTheCap` (safety)
+
+```
+every accepted mint:   supplyBefore + value  ≤  cap
+```
+
+#### `invariant_noFittingMintWasRejected` (liveness)
+
+```
+every rejected mint:   supplyBefore + value  >  cap
+```
+
+Without this, a rule that rejected every mint would satisfy the safety invariant trivially.
+
+#### `invariant_mintsFailOnlyWithTheRuleError`
+
+A rejected mint reverts with `RuleMaxTotalSupply_InvalidTransfer` or `…_InvalidTransferFrom` (CMTAT ≥ v3.3 sends mints on the 4-argument path), never with an unrelated error.
+
+#### `invariant_remainingMintableMatchesLiveSupply`
+
+```
+remainingMintable()  ==  max(cap − totalSupply(), 0),   code 0
+```
+
+Forced burns change the supply without calling the rule, so this also proves the rule never holds a stale view of the supply.
+
+#### `invariant_preflightAgreesWithHeadroom`
+
+A pre-flight check of exactly `headroom` returns `TRANSFER_OK`, both on the rule and through the token's own `detectTransferRestriction`; `headroom + 1` returns code `50`. When the supply is above the cap there is no room at all, and only the second half applies.
+
 ---
 
 ## 4. Negative controls — proving the suite can fail
@@ -130,8 +175,11 @@ An invariant suite that cannot fail is worthless. Both invariants were **mutatio
 |---|---|---|
 | `RuleConditionalTransferLightApprovalBase._transferred` — remove `approvalCounts[hash] = count - 1` | Approval **double-spend**: one approval can be consumed forever | ❌ `invariant_approvalConservation` fails: `approval accounting drifted: 0 != 1` |
 | `RuleMintAllowanceBase._transferredFrom` — `current - value` → `current - value + 1` | **Off-by-one** quota deduction: minters slowly gain free quota | ❌ `invariant_allowanceMatchesGhost` fails: `mint allowance drifted from expected: 1938542 != 1938541` |
+| `CapAccounting._capExceededBy` — `value > cap - observed` → `value > cap - observed + 1` | **Off-by-one** cap: one unit above the cap gets through | ❌ `invariant_noMintBreachedTheCap` fails: `a mint went through above the cap: 1 != 0` (and `invariant_preflightAgreesWithHeadroom`). Before `mintAtBoundary` was added, only the pre-flight invariant caught it |
+| `CapAccounting._capExceededBy` — `>` → `>=` | **Over-strict** cap: a mint landing exactly on the cap is rejected | ❌ `invariant_noFittingMintWasRejected` fails: `a mint that fitted was rejected: 1 != 0` (and `invariant_preflightAgreesWithHeadroom`) |
+| `TotalSupplyCapManager._remainingMintable` — `currentSupply` → `currentSupply + 1` | **Wrong headroom view** while enforcement stays correct | ❌ `invariant_remainingMintableMatchesLiveSupply` fails: `headroom drifted from the live supply: 999 != 1000` |
 
-Re-run these yourself before trusting a change to either rule: if you mutate the accounting and the suite still passes, the suite has regressed.
+Re-run these yourself before trusting a change to any of these rules: if you mutate the accounting and the suite still passes, the suite has regressed.
 
 ---
 
@@ -144,6 +192,7 @@ Invariant IDs and their verification status are recorded in [`CLAUDE_AUDIT.md`](
 | `INV-5` | `approvalCounts` never underflows; one approval ⇒ one transfer | `invariant_approvalConservation`, `invariant_noApprovalExceedsTotalRecorded` |
 | `INV-7` | `mintAllowance` non-increasing across mints, never underflows, `Σ minted ≤ Σ granted` | `invariant_allowanceMatchesGhost`, `invariant_mintedNeverExceedsCredited` |
 | `INV-12` (partial) | Mint/burn handled explicitly, never falling into the transfer path | Emergent from both suites (see §3.1, §3.2) |
+| — (`RuleMaxTotalSupply`) | Accepted mints never exceed the cap; fitting mints are never rejected; `remainingMintable()` tracks the live supply, forced burns included | `invariant_noMintBreachedTheCap`, `invariant_noFittingMintWasRejected`, `invariant_mintsFailOnlyWithTheRuleError`, `invariant_remainingMintableMatchesLiveSupply`, `invariant_preflightAgreesWithHeadroom` |
 
 **Not covered by invariants (by design):**
 

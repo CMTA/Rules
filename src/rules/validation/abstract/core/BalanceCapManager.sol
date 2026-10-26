@@ -178,7 +178,9 @@ abstract contract BalanceCapManager is CapAccounting, RuleAddressSetInternal, Ru
         // Explicit, rather than relying on the uncatchable extcodesize revert the probe below happens
         // to produce for a codeless address: that is compiler behaviour, not a check.
         require(newBalanceToken.code.length != 0, RuleMaxBalance_TokenIsNotAContract(newBalanceToken));
-        try IBalanceOf(newBalanceToken).balanceOf(address(this)) returns (uint256) {
+        try IBalanceOf(newBalanceToken).balanceOf(address(this)) returns (
+            uint256
+        ) {
         // callable
         }
         catch {

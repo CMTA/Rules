@@ -6,6 +6,11 @@ import {RuleConditionalTransferLight} from "src/rules/operation/RuleConditionalT
 import {RuleMintAllowance} from "src/rules/operation/RuleMintAllowance.sol";
 import {ConditionalTransferHandler} from "./ConditionalTransferHandler.sol";
 import {MintAllowanceHandler} from "./MintAllowanceHandler.sol";
+import {MaxTotalSupplyHandler} from "./MaxTotalSupplyHandler.sol";
+import {RuleMaxTotalSupply} from "src/rules/validation/deployment/RuleMaxTotalSupply.sol";
+import {CMTATStandardStandalone} from "CMTAT/deployment/CMTATStandardStandalone.sol";
+import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
+import {CMTATDeployment} from "test/utils/CMTATDeployment.sol";
 
 /**
  * @title ConditionalTransferInvariants
@@ -116,5 +121,95 @@ contract MintAllowanceInvariants is Test {
      */
     function invariant_mintedNeverExceedsCredited() public view {
         assertLe(handler.totalMinted(), handler.totalCredited(), "minted more than was ever granted");
+    }
+}
+
+/**
+ * @title MaxTotalSupplyInvariants
+ * @notice Stateful invariant suite over {RuleMaxTotalSupply} on a real CMTAT token.
+ * @dev The rule is stateless, but the supply it guards is not: these invariants hold across any
+ * interleaving of mints, burns, `burnAndMint`, forced burns, transfers and cap changes (including caps
+ * below the current supply). The rule is set directly on the token (`setRuleEngine(rule)`).
+ */
+contract MaxTotalSupplyInvariants is Test {
+    address private constant ADMIN = address(1);
+    uint256 private constant INITIAL_CAP = 1000;
+    uint8 private constant TRANSFER_OK = 0;
+    uint8 private constant CODE_MAX_TOTAL_SUPPLY_EXCEEDED = 50;
+
+    CMTATStandardStandalone private token;
+    RuleMaxTotalSupply private rule;
+    MaxTotalSupplyHandler private handler;
+
+    function setUp() public {
+        token = new CMTATDeployment().cmtat();
+        rule = new RuleMaxTotalSupply(ADMIN, address(token), INITIAL_CAP);
+        vm.prank(ADMIN);
+        token.setRuleEngine(IRuleEngine(address(rule)));
+        // The handler pranks ADMIN for every privileged call, so it needs no role of its own.
+        handler = new MaxTotalSupplyHandler(token, rule);
+
+        bytes4[] memory selectors = new bytes4[](7);
+        selectors[0] = MaxTotalSupplyHandler.mint.selector;
+        selectors[1] = MaxTotalSupplyHandler.burnAndMint.selector;
+        selectors[2] = MaxTotalSupplyHandler.burn.selector;
+        selectors[3] = MaxTotalSupplyHandler.forcedBurn.selector;
+        selectors[4] = MaxTotalSupplyHandler.transfer.selector;
+        selectors[5] = MaxTotalSupplyHandler.setCap.selector;
+        selectors[6] = MaxTotalSupplyHandler.mintAtBoundary.selector;
+        targetSelector(FuzzSelector({addr: address(handler), selectors: selectors}));
+        targetContract(address(handler));
+    }
+
+    /**
+     * @notice Safety: no mint that went through pushed the supply above the cap in force at that moment.
+     */
+    function invariant_noMintBreachedTheCap() public view {
+        assertEq(handler.ghostBreaches(), 0, "a mint went through above the cap");
+    }
+
+    /**
+     * @notice Liveness: every mint that fitted under the cap went through. A rule that rejected too much
+     * would satisfy the safety invariant trivially; this one rules that out.
+     */
+    function invariant_noFittingMintWasRejected() public view {
+        assertEq(handler.ghostFalseRejections(), 0, "a mint that fitted was rejected");
+    }
+
+    /**
+     * @notice A rejected mint fails with the rule's own error, never with an unrelated revert.
+     */
+    function invariant_mintsFailOnlyWithTheRuleError() public view {
+        assertEq(handler.ghostUnexpectedReverts(), 0, "a mint failed for an unexpected reason");
+    }
+
+    /**
+     * @notice `remainingMintable()` always equals the cap minus the live supply, saturating at 0. Forced
+     * burns bypass the engine, so this also proves the rule has no stale view of the supply.
+     */
+    function invariant_remainingMintableMatchesLiveSupply() public view {
+        uint256 supply = token.totalSupply();
+        uint256 cap = rule.maxTotalSupply();
+        (uint8 code, uint256 headroom) = rule.remainingMintable();
+        assertEq(code, TRANSFER_OK, "supply unexpectedly unreadable");
+        assertEq(headroom, supply >= cap ? 0 : cap - supply, "headroom drifted from the live supply");
+    }
+
+    /**
+     * @notice The pre-flight view accepts a mint of exactly the headroom and rejects one unit more, both
+     * on the rule and through the token's own view.
+     */
+    function invariant_preflightAgreesWithHeadroom() public view {
+        (, uint256 headroom) = rule.remainingMintable();
+        address to = handler.actor(0);
+        if (token.totalSupply() <= rule.maxTotalSupply()) {
+            assertEq(rule.detectTransferRestriction(address(0), to, headroom), TRANSFER_OK, "headroom rejected");
+            assertEq(token.detectTransferRestriction(address(0), to, headroom), TRANSFER_OK, "token: headroom rejected");
+        }
+        assertEq(
+            rule.detectTransferRestriction(address(0), to, headroom + 1),
+            CODE_MAX_TOTAL_SUPPLY_EXCEEDED,
+            "headroom + 1 accepted"
+        );
     }
 }

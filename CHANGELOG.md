@@ -88,8 +88,11 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   - Pinned v3.0.0 differences: a blacklisted, sanctioned or frozen **minter** is not screened by `RuleBlacklist`, `RuleSanctionsList` and `RuleERC2980` (v3.0.0 sends mint and burn without a spender); `RuleMintAllowance` is inert (every mint passes, no quota debited).
   - Pinned `RuleMaxTotalSupply` behaviours: `burnAndMint` needs room only for the net increase, a forced burn frees room, `crosschainMint` / `crosschainBurn` are capped / free room, and supply minted while the rule is detached is counted on re-attach.
 - `MAX_TOTAL_SUPPLY_ROLE`: role hash, a cap operator who can change the cap but not the token (exact `AccessControlUnauthorizedAccount` errors), revocation, implicit admin holding, role enumeration, and inheritance by the ERC-3643 AccessControl variant.
+- **Invariant suite for `RuleMaxTotalSupply`** (`MaxTotalSupplyInvariants`, handler `test/invariant/MaxTotalSupplyHandler.sol`, 5 invariants × 8,192 calls) on a real CMTAT token, driving mints, boundary mints, `burnAndMint`, burns, forced burns, transfers and cap changes.
+  - Invariants: no accepted mint exceeds the cap (safety); no fitting mint is rejected (liveness); rejections use only the rule's error; `remainingMintable()` equals the cap minus the live supply; the pre-flight view accepts exactly the headroom.
+  - Negative controls: three mutations (off-by-one cap, over-strict cap, wrong headroom view) each fail the suite. A first version missed the off-by-one on the safety invariant, because random amounts never hit `headroom + 1`; the `mintAtBoundary` action fixes that. Recorded in `INVARIANT_TESTS.md` §4.
 - `remainingMintable()`: unit tests (headroom, exact fit, cap below supply, unreadable supply), a fuzz property that the headroom is exactly the largest mint the pre-flight check accepts, the ERC-3643 variant, and a real CMTAT v3.0.0 token across mints and burns.
-- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,195 tests pass in the default profile and 53 in the `erc3643` profile.
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,200 tests pass in the default profile and 53 in the `erc3643` profile.
 
 ### Documentation
 
@@ -100,6 +103,7 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
   - Every rule page in `doc/technical/contracts/` gets a "CMTAT v3.0.0" section with its status and test file.
   - `doc/README.md` (new "CMTAT v3.0.0" compatibility subsection), root `README.md` (compatibility table), `doc/FOUNDRY.md`, `CLAUDE.md` / `AGENTS.md`.
   - `RuleBlacklist.md`: stray characters after the usage scenario removed.
+- `RuleMaxTotalSupply`: the cap is in token **base units**, now stated in the NatSpec of the state variable, the setter and every constructor, and in a "Unit of the cap" section with a per-decimals table. Passing whole tokens on an 18-decimal token sets a cap 10^18 times too small and freezes minting (fail-closed).
 - `RuleMaxTotalSupply.md` documents what the cap measures and how each token operation affects it.
   - "What the cap measures": the cap bounds outstanding supply, not cumulative issuance, so burns free room.
   - "Behaviour by token operation": one row per operation, each with the test that pins it. Covers mint, burn, transfers, `burnAndMint` (net increase only), cross-chain mint/burn, forced burn, a cap at or below supply (including the zero-value-mint case), supply that existed before installation, and detach / re-attach.

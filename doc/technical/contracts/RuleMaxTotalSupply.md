@@ -31,7 +31,19 @@ artifacts for both `RuleMaxTotalSupply` and `RuleMaxTotalSupplyOwnable2Step`.
 | --- | --- |
 | `admin` | Address granted `DEFAULT_ADMIN_ROLE` (implicitly holds all roles) |
 | `tokenContract_` | Address of the token contract; must be non-zero, must have code, and its `totalSupply()` must be callable |
-| `maxTotalSupply_` | Initial maximum total supply cap |
+| `maxTotalSupply_` | Initial maximum total supply cap, in token **base units** (see below) |
+
+### Unit of the cap
+
+`maxTotalSupply` is compared as-is with `tokenContract.totalSupply()`, so it is in the token's **base units**. The rule applies no `decimals()` scaling.
+
+| Token `decimals()` | Intended cap | Value to pass |
+| --- | --- | --- |
+| `0` (typical CMTAT equity token) | 1,000,000 shares | `1_000_000` |
+| `6` | 1,000,000 tokens | `1_000_000 * 10**6` |
+| `18` | 1,000,000 tokens | `1_000_000 * 10**18` |
+
+WARNING: passing whole tokens on a token with decimals sets a cap `10**decimals` times too small. On an 18-decimal token, `1_000_000` allows 0.000000000001 tokens, so every mint is rejected (code `50`). This fails closed, never over-mints, and shows up at the first mint. Check `remainingMintable()` after deployment.
 
 ### Post-deployment configuration
 
@@ -84,7 +96,7 @@ The split lets an issuer delegate cap changes, for example to a corporate-secret
 
 ### `setMaxTotalSupply(uint256 newMaxTotalSupply)`
 
-Updates the maximum total supply cap. Restricted to `MAX_TOTAL_SUPPLY_ROLE` (the admin holds it implicitly; the owner on the Ownable2Step variant). Emits `MaxTotalSupplyUpdated`.
+Updates the maximum total supply cap, in token base units (see [Unit of the cap](#unit-of-the-cap)). Restricted to `MAX_TOTAL_SUPPLY_ROLE` (the admin holds it implicitly; the owner on the Ownable2Step variant). Emits `MaxTotalSupplyUpdated`.
 
 ### `setTokenContract(address newTokenContract)`
 
@@ -138,6 +150,8 @@ Each row was checked in the CMTAT source for v3.0.0 and v3.3.0-rc4, where these 
 | Supply that existed before the rule was installed | Counted | The cap is absolute, not "new issuance from now on". After a capital increase of N, set `maxTotalSupply = existing supply + N` | `testSupplyMintedWhileDetachedIsCountedOnReattach` |
 | Rule detached (`setRuleEngine(address(0))`, or `removeRule` on the engine), then re-attached | Cap lifted while detached; on re-attach it is evaluated against the **real** supply | No drift. Supply minted meanwhile is counted, and if it pushed supply above the cap, minting stays frozen until burns bring it back under | `testSupplyMintedWhileDetachedIsCountedOnReattach` |
 
+These rows are also checked together, across random sequences of mints, burns, `burnAndMint`, forced burns, transfers and cap changes, by the invariant suite `MaxTotalSupplyInvariants` (`test/invariant/`). See `INVARIANT_TESTS.md` §3.3.
+
 WARNING: detaching the rule is the one way to exceed the cap, and nothing on-chain records it. Whoever holds `DEFAULT_ADMIN_ROLE` on the token (`setRuleEngine`), or the rule-management role on the engine (`removeRule`), can lift the cap. So can a `MAX_TOTAL_SUPPLY_ROLE` holder, by raising it: grant that role only to a key trusted to change the authorised amount. Revoke `MINTER_ROLE` before any planned detachment.
 
 ### One instance per token
@@ -190,7 +204,7 @@ Two consequences follow:
 
 ## Usage scenario
 
-The operator deploys `RuleMaxTotalSupply` with `tokenContract = CMTAT_address` and `maxTotalSupply = 1_000_000`. The rule is registered in the `RuleEngine`. When the issuer mints 100,000 tokens and total supply is already 950,000, the mint is rejected with code 50. Transfers between existing holders continue unaffected.
+The operator deploys `RuleMaxTotalSupply` with `tokenContract = CMTAT_address` (0 decimals, so base units are whole tokens) and `maxTotalSupply = 1_000_000`. The rule is registered in the `RuleEngine`. When the issuer mints 100,000 tokens and total supply is already 950,000, the mint is rejected with code 50. Transfers between existing holders continue unaffected.
 
 ## CMTAT v3.0.0
 

@@ -23,7 +23,7 @@ abstract contract RuleMaxTotalSupplyBase is RuleTransferValidation, TotalSupplyC
      * every later change. A cap that is set once at deployment and never touched would otherwise
      * have no on-chain event trail at all.
      * @param tokenContract_ Address of the token whose `totalSupply` is checked; must not be the zero address.
-     * @param maxTotalSupply_ Maximum total supply allowed.
+     * @param maxTotalSupply_ Maximum total supply allowed, in token base units (scaled by `10 ** decimals()`).
      */
     constructor(address tokenContract_, uint256 maxTotalSupply_) {
         _setTokenContract(tokenContract_);

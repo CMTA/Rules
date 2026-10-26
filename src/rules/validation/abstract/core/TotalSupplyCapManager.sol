@@ -28,6 +28,9 @@ abstract contract TotalSupplyCapManager is CapAccounting, TokenSupplyReader, Rul
     ITotalSupply public tokenContract;
     /**
      * @notice Maximum total supply; minting that would exceed this value is rejected.
+     * @dev In token BASE UNITS, compared as-is with `totalSupply()`: no decimals scaling is applied.
+     * WARNING: on an 18-decimal token, `1_000_000` caps the supply at 10^-12 tokens and freezes minting;
+     * one million whole tokens is `1_000_000 * 10 ** 18`.
      */
     uint256 public maxTotalSupply;
 
@@ -51,7 +54,7 @@ abstract contract TotalSupplyCapManager is CapAccounting, TokenSupplyReader, Rul
 
     /**
      * @notice Updates the maximum total supply.
-     * @param newMaxTotalSupply New maximum total supply value.
+     * @param newMaxTotalSupply New maximum total supply, in token base units (see {maxTotalSupply}).
      */
     function setMaxTotalSupply(uint256 newMaxTotalSupply) public virtual onlyMaxTotalSupplyManager {
         _setMaxTotalSupply(newMaxTotalSupply);

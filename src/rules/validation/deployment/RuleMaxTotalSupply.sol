@@ -26,7 +26,7 @@ contract RuleMaxTotalSupply is AccessControlModuleStandalone, RuleMaxTotalSupply
     /**
      * @param admin Address that receives the default admin role.
      * @param tokenContract_ Token contract that exposes totalSupply (must be non-zero).
-     * @param maxTotalSupply_ Initial maximum supply.
+     * @param maxTotalSupply_ Initial maximum supply, in token base units (scaled by `10 ** decimals()`).
      */
     constructor(address admin, address tokenContract_, uint256 maxTotalSupply_)
         AccessControlModuleStandalone(admin)

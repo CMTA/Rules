@@ -20,7 +20,7 @@ contract RuleMaxTotalSupplyOwnable2Step is RuleMaxTotalSupplyBase, Ownable2Step,
      * @notice Deploys the rule, sets the owner, the token contract and the initial maximum supply.
      * @param owner Contract owner.
      * @param tokenContract_ Token contract that exposes totalSupply (must be non-zero).
-     * @param maxTotalSupply_ Initial maximum supply.
+     * @param maxTotalSupply_ Initial maximum supply, in token base units (scaled by `10 ** decimals()`).
      */
     constructor(address owner, address tokenContract_, uint256 maxTotalSupply_)
         RuleMaxTotalSupplyBase(tokenContract_, maxTotalSupply_)
