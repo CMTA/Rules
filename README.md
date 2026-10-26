@@ -32,17 +32,20 @@ Each rule enforces one transfer restriction. A rule can be plugged **directly** 
 
 | Rules | Contracts report `version()` | CMTAT | RuleEngine | OpenZeppelin |
 | --- | --- | --- | --- | --- |
-| **v0.7.0** (unreleased, `dev`) | `"0.6.0"` until the release bump | **≥ v3.0.0**, validated against `v3.3.0-rc4` | `v3.0.0-rc7` (rules also accepted by `rc6` and older) | `v5.7.0` |
+| **v0.7.0** (unreleased, `dev`) | `"0.6.0"` until the release bump | **≥ v3.0.0**, validated against `v3.3.0-rc4` and `v3.0.0` | `v3.0.0-rc7` (rules also accepted by `rc6` and older) | `v5.7.0` |
 | **v0.6.0** (current) | `"0.6.0"` | **≥ v3.0.0**, validated against `v3.3.0-rc3` | `v3.0.0-rc6` | `v5.7.0` |
 
-One rule needs more than the baseline, because it reads the **spender** the token forwards on mint:
+CMTAT v3.0.0, the last audited release, sends mint and burn to the rules **without a spender** (v3.3 forwards the minter / burner). Every rule is tested against a real v3.0.0 token, Standard and Debt variants, directly and behind a `RuleEngine` (`test/CMTATv3.0.0/`):
 
-| Rule | Minimum CMTAT | Why |
+| Rule | Minimum CMTAT | On v3.0.0 |
 | --- | --- | --- |
-| `RuleMintAllowance` | **v3.3** | Debits the minter's quota from the 4-argument `transferred(spender, from, to, value)` / `canTransferFrom`. A token that does not forward the spender cannot drive it. |
-| Every other rule | v3.0.0 | Uses the 3-argument path only. |
+| `RuleMintAllowance` | **v3.3** | **Inert**: the quota is debited only on the 4-argument mint path, so every mint passes |
+| `RuleBlacklist`, `RuleSanctionsList`, `RuleERC2980` | v3.0.0 | Work, but a listed / sanctioned / frozen **minter or burner** is not screened |
+| Every other rule | v3.0.0 | Same behaviour as on v3.3 |
 
-The submodules in `lib/` are pinned to the validated versions (CMTAT `v3.3.0-rc4`, RuleEngine `v3.0.0-rc7`), so
+Per-rule detail: [`RULE_SEMANTICS.md` §7](./doc/technical/guides/RULE_SEMANTICS.md#7-cmtat-version-compatibility--v300-vs-v33).
+
+The submodules in `lib/` are pinned to the validated versions (CMTAT `v3.3.0-rc4` and, for tests only, `v3.0.0`; RuleEngine `v3.0.0-rc7`), so
 a `git submodule update --init --recursive` checkout builds and tests against exactly what this release was verified with.
 
 📖 **[Full documentation →](./doc/README.md)** — the complete reference: every rule in detail, the API, access-control model, restriction codes, deployment guide, and security findings. This page is a summary.

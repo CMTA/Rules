@@ -277,3 +277,11 @@ With `checkSpender = true` (3 target addresses instead of 2), the same 10-child 
 ### Usage scenario
 
 Three operators (A, B, C) each manage their own `RuleWhitelist`. The `RuleWhitelistWrapper` is configured with all three as child rules. A transfer between any two addresses whitelisted by any one of the operators will pass. The wrapper admin grants `RULES_MANAGEMENT_ROLE` to a coordinator who adds and removes child rules as operators join or leave.
+
+## CMTAT v3.0.0
+
+✅ Supported.
+
+- Same behaviour as `RuleWhitelist`: OR over the child whitelists, `checkSpender` on `transferFrom`, mint and burn gated by the flags.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleWhitelistWrapperV300.t.sol`.

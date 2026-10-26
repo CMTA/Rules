@@ -121,3 +121,12 @@ behaviour is pinned by `test/RuleIdentityRegistry/RuleIdentityRegistryDelegation
 ## Usage scenario
 
 The operator deploys `RuleIdentityRegistry` and calls `setIdentityRegistry(registry)`. The registry is maintained by a compliance provider who verifies investor identities. When Alice (unverified) attempts to receive tokens, `isVerified(alice)` returns `false` and the transfer is rejected with code 56. After the registry marks Alice as verified, the transfer succeeds. Calling `clearIdentityRegistry()` disables checks entirely.
+
+## CMTAT v3.0.0
+
+✅ Supported, identical to v3.3.
+
+- The receiver must be verified, as ERC-3643 requires; a de-listed sender can still exit; burns bypass eligibility; `checkSpender` screens `transferFrom` spenders.
+- The minter is exempt on every CMTAT version, even with `checkSpender = true`, so the missing mint spender on v3.0.0 changes nothing.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleIdentityRegistryV300.t.sol`.

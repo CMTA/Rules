@@ -119,3 +119,12 @@ Single-item operations (`addAddress`, `removeAddress`) revert on duplicate/missi
 ### Usage scenario
 
 The operator deploys `RuleWhitelist`, grants `ADDRESS_LIST_ADD_ROLE` to a compliance manager, and registers the rule in the `RuleEngine`. The compliance manager calls `addAddresses([alice, bob])`. Transfers between whitelisted addresses pass; any transfer from or to an unlisted address is rejected with codes 21 or 22.
+
+## CMTAT v3.0.0
+
+✅ Supported.
+
+- Mint and burn are gated by `allowMint` / `allowBurn` exactly as on v3.3: the minter never matters to this rule, so the missing mint spender changes nothing.
+- `checkSpender` screens `transferFrom` spenders, which v3.0.0 forwards on the 4-argument path.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleWhitelistV300.t.sol`.

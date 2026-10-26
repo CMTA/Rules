@@ -71,3 +71,11 @@ Owner can manage the spender list and transfer ownership with two-step acceptanc
 - The rule does not validate `from` or `to` addresses.
 - The rule also supports ERC-7943 tokenId/context overloads through `RuleNFTAdapter`.
 - Batch add/remove follows the project convention: skips duplicates/missing entries without reverting.
+
+## CMTAT v3.0.0
+
+✅ Supported, identical to v3.3.
+
+- v3.0.0 forwards the `transferFrom` caller as spender on the 4-argument path. Direct transfers, mints and burns are not screened on either version.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleSpenderWhitelistV300.t.sol`.

@@ -325,3 +325,11 @@ Y's own supply and Y's own reserves never enter the calculation. Both failure di
 **Why there is no guard.** Adding one would mean giving a validation rule a binding and a stateful install/uninstall lifecycle, which is how the *operation* rules (`RuleConditionalTransferLight`, `RuleMintAllowance`) work but not the validation rules — those are deliberately stateless and shareable. `RuleMaxTotalSupply` has the identical exposure for the same reason. Changing that is a library-wide decision about whether supply-capping validation rules should be bindable, not something to special-case here.
 
 **Operational rule.** One `RuleChainlinkPoR` instance per protected token, and re-verify `tokenContract` whenever an instance is added to an additional RuleEngine or bound to an additional token. If a token is backed by several reserve sources, deploying one instance per feed (as described under [Proof of Reserve feed](#proof-of-reserve-feed)) is safe — those instances all share the same `tokenContract`, which is the intended configuration.
+
+## CMTAT v3.0.0
+
+✅ Supported, identical to v3.3.
+
+- v3.0.0 notifies before `_mint`, and its tokens report 0 decimals (`tokenDecimals = 0` is accepted). A stale or exceeded feed blocks mints only; transfers and burns keep working.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleChainlinkPoRV300.t.sol`.

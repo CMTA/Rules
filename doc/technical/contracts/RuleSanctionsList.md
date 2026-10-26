@@ -121,3 +121,12 @@ Returns the current oracle address. Returns `address(0)` if no oracle is set.
 ## Usage scenario
 
 The operator deploys `RuleSanctionsList` with the Chainalysis oracle address and registers it in the `RuleEngine`. When the CMTAT token triggers a transfer, the rule calls `isSanctioned(from)` and `isSanctioned(to)` on the oracle. If either returns `true`, the transfer is rejected. The operator can later point to an updated oracle by calling `setSanctionListOracle`.
+
+## CMTAT v3.0.0
+
+✅ Supported, with one difference.
+
+- `from`, `to` and the `transferFrom` spender are screened.
+- WARNING: as for `RuleBlacklist`, a sanctioned **minter or burner is not screened** on v3.0.0, which forwards no spender on mint and burn.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleSanctionsListV300.t.sol`.

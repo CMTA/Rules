@@ -148,3 +148,11 @@ updated with it.
 ## Usage scenario
 
 An issuer deploys `RuleMintAllowance` and grants `ALLOWANCE_OPERATOR_ROLE` to a compliance officer. The officer assigns `setMintAllowance(alice, 100_000e18)` — Alice may mint up to 100 000 tokens. Each `cmtat.mint(recipient, amount)` call by Alice reduces her quota. Once exhausted, further mints by Alice revert. The officer can call `increaseMintAllowance(alice, 50_000e18)` to extend Alice's quota or `setMintAllowance(alice, 0)` to revoke it entirely.
+
+## CMTAT v3.0.0
+
+❌ **Not supported (inert).**
+
+- The quota is debited only on the 4-argument `transferred(minter, address(0), to, value)`. v3.0.0 sends every mint on the 3-argument path with no minter, so the rule blocks nothing and debits nothing, while its own `canTransferFrom` still reports the quota as exceeded. Requires CMTAT >= v3.3. The test pins this so that the limitation stays visible.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleMintAllowanceV300.t.sol`.

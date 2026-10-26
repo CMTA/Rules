@@ -110,3 +110,11 @@ Because the rule's semantics match the token's own, it composes with the identit
 The parity suite is the one that matters for the conformance claim. It runs the rule in the compliance slot of the genuine `Token.sol` over the *same address set* the identity registry holds, and asserts the rule never changes the outcome — a de-listed holder still exits, an unlisted spender is not blocked, burn still works. A rule that screened the sender would break those while every unit test still passed. A final test confirms the rule is genuinely consulted (it blocks when its list is narrower than the registry's), so the parity results are not vacuous.
 
 Run it with `FOUNDRY_PROFILE=erc3643 forge test`; see `foundry.toml` for why that suite needs its own profile.
+
+## CMTAT v3.0.0
+
+✅ Supported, identical to v3.3.
+
+- Only the receiver is screened, on transfers and mints; burns are exempt. The rule never reads a spender, so the v3.0.0 mint path makes no difference.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleReceiverWhitelistV300.t.sol`.

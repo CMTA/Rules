@@ -12,7 +12,7 @@ Legend: ✅ screened / can block · ❌ not screened · ⚙️ conditional (see 
 
 ## 1. Who each rule screens
 
-"Direct" = a plain `transfer` (`transferred(from, to, value)`). The spender columns apply to the 4-arg `transferred(spender, from, to, value)` path; **mint** is that path with `from == address(0)` and `spender == minter`, **burn** with `to == address(0)` and `spender == burner` (CMTAT v3.3+).
+"Direct" = a plain `transfer` (`transferred(from, to, value)`). The spender columns apply to the 4-arg `transferred(spender, from, to, value)` path; **mint** is that path with `from == address(0)` and `spender == minter`, **burn** with `to == address(0)` and `spender == burner` (CMTAT v3.3+). On CMTAT v3.0.0 mint and burn carry no spender, so the two right-hand columns never fire there — see §7.
 
 | Rule | `from` (direct) | `to` (direct) | spender on `transferFrom` | spender on **mint** | spender on **burn** |
 |---|---|---|---|---|---|
@@ -231,6 +231,44 @@ And build a `RuleChainlinkPoRERC3643` **after** `Token.init` — an uninitialise
 which the rule's constructor accepts and caches.
 
 ---
+
+## 7. CMTAT version compatibility — v3.0.0 vs v3.3+
+
+The library supports CMTAT **≥ v3.0.0**. v3.0.0 is the last audited CMTAT release, and it calls the rules differently from v3.3:
+
+| | CMTAT v3.0.0 | CMTAT ≥ v3.3 |
+|---|---|---|
+| **Mint / burn** | 3-arg `transferred(address(0), to, value)` / `transferred(from, address(0), value)`, **no spender** | 4-arg, with the minter / burner as `spender` |
+| **`transfer`** | 3-arg | 3-arg |
+| **`transferFrom`** | 4-arg, caller as `spender` | 4-arg, caller as `spender` |
+| **Ordering** | rule called **before** the value moves | same |
+| **`forcedTransfer`** | does not call the engine | same |
+
+The ordering is the same on both versions, so the cap rules need no variant. Only the missing mint/burn spender matters, and it matters only to rules that read it.
+
+### Per-rule status on v3.0.0
+
+Every row is tested against a real CMTAT v3.0.0 token (submodule `lib/CMTATv3.0.0`, tag `v3.0.0`), in `test/CMTATv3.0.0/<Rule>V300.t.sol`. Each suite runs on the **Standard** and **Debt** variants, both set directly on the token (Topology B) and behind a `RuleEngine` (Topology A), unless stated otherwise.
+
+| Rule | On v3.0.0 | Difference from v3.3 |
+|---|---|---|
+| `RuleWhitelist` | ✅ works | none; mint and burn are gated by `allowMint` / `allowBurn`, never by a spender |
+| `RuleWhitelistWrapper` | ✅ works | none |
+| `RuleReceiverWhitelist` | ✅ works | none |
+| `RuleSpenderWhitelist` | ✅ works | none; the `transferFrom` spender is forwarded on both versions |
+| `RuleIdentityRegistry` | ✅ works | none; the minter is exempt on both versions [3] |
+| `RuleBlacklist` | ✅ works, minter leg inert | a listed **minter / burner** is not screened (no spender forwarded) |
+| `RuleSanctionsList` | ✅ works, minter leg inert | same |
+| `RuleERC2980` | ✅ works, minter leg inert | a frozen **minter / burner** is not screened |
+| `RuleMaxTotalSupply` | ✅ works | none (pre-update notification). Also pinned: `burnAndMint` needs room only for the net increase, a forced burn frees room, `crosschainMint` / `crosschainBurn` are capped / free room |
+| `RuleMaxBalance` | ✅ works | none |
+| `RuleChainlinkPoR` | ✅ works | none; v3.0.0 tokens report 0 decimals, which the rule accepts |
+| `RuleConditionalTransferLight` | ✅ works | none; `approveAndTransferIfAllowed` works in both topologies |
+| `RuleConditionalTransferLightMultiToken` | ✅ works, **direct binding only** | none; tested on Topology B only, as on every version |
+| `RuleMintAllowance` | ❌ **inert** | the quota is debited only on the 4-arg mint path, which v3.0.0 never uses: every mint passes and nothing is debited, while the rule's own `canTransferFrom` still reports the quota. Requires CMTAT ≥ v3.3 |
+| `…ERC3643` variants | n/a | ERC-3643 only; never use them with CMTAT (§6) |
+
+"Minter leg inert" is the same failure mode as the inert spender leg on ERC-3643 (§6): the rule still works for holders, but one check it advertises does not fire. If the minter or burner must be screened on v3.0.0, control who holds `MINTER_ROLE` / `BURNER_ROLE` on the token.
 
 ---
 

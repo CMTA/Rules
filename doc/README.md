@@ -96,10 +96,25 @@ Interface details for each mode are documented under [Architecture](#architectur
 
 | Component        | Compatible Versions                                        |
 | ---------------- | ---------------------------------------------------------- |
-| **Rules v0.7.0** (unreleased) | CMTAT ≥ v3.0.0 (tested against v3.3.0-rc4)<br />RuleEngine v3.0.0-rc7 (rules are also accepted by v3.0.0-rc6 and older, see [Using Rules via RuleEngine](#using-rules-via-ruleengine)) |
+| **Rules v0.7.0** (unreleased) | CMTAT ≥ v3.0.0 (tested against v3.3.0-rc4 and v3.0.0)<br />RuleEngine v3.0.0-rc7 (rules are also accepted by v3.0.0-rc6 and older, see [Using Rules via RuleEngine](#using-rules-via-ruleengine)) |
 | **Rules v0.6.0** | CMTAT ≥ v3.0.0 (tested against v3.3.0-rc3)<br />RuleEngine v3.0.0-rc6 |
 
-Spender-aware paths (e.g. `RuleMintAllowance`) rely on the 4-argument `canTransferFrom` / `transferred(spender, from, to, value)` callbacks, which require a CMTAT / RuleEngine that forwards the spender to the rule; this repository is validated against CMTAT `v3.3.0-rc4`. The other rules only use the 3-argument path and work across the full CMTAT ≥ v3.0.0 range.
+Spender-aware paths (e.g. `RuleMintAllowance`) rely on the 4-argument `canTransferFrom` / `transferred(spender, from, to, value)` callbacks, which require a CMTAT / RuleEngine that forwards the spender to the rule; this repository is validated against CMTAT `v3.3.0-rc4`.
+
+### CMTAT v3.0.0
+
+CMTAT v3.0.0 is the last audited CMTAT release. It calls the rules with the same ordering as v3.3 (before the value moves) and forwards the `transferFrom` spender, but sends **mint and burn on the 3-argument `transferred`, without a spender**. Every rule is tested against a real v3.0.0 token, pinned as the test-only submodule `lib/CMTATv3.0.0` (remapping `CMTATv3.0.0/`). Each suite in `test/CMTATv3.0.0/` runs on the Standard and Debt variants, set directly on the token and behind a `RuleEngine`.
+
+| Rule | On CMTAT v3.0.0 |
+| --- | --- |
+| `RuleWhitelist`, `RuleWhitelistWrapper`, `RuleReceiverWhitelist`, `RuleSpenderWhitelist`, `RuleIdentityRegistry` | ✅ same behaviour as on v3.3 |
+| `RuleMaxTotalSupply`, `RuleMaxBalance`, `RuleChainlinkPoR` | ✅ same behaviour as on v3.3 (pre-update notification, so no variant is needed) |
+| `RuleConditionalTransferLight` | ✅ same behaviour as on v3.3 |
+| `RuleConditionalTransferLightMultiToken` | ✅ same behaviour, direct binding only (as on every version) |
+| `RuleBlacklist`, `RuleSanctionsList`, `RuleERC2980` | ✅ work, but a listed / sanctioned / frozen **minter or burner is not screened** |
+| `RuleMintAllowance` | ❌ **inert**: every mint passes and no quota is debited. Requires CMTAT ≥ v3.3 |
+
+The per-rule detail is in [`RULE_SEMANTICS.md` §7](./technical/guides/RULE_SEMANTICS.md#7-cmtat-version-compatibility--v300-vs-v33), and each rule's page has a "CMTAT v3.0.0" section.
 
 Each Rule implements the interface `IRuleEngine` defined in CMTAT.
 

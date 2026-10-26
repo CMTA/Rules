@@ -172,3 +172,11 @@ An issuer must keep any single investor below 5% of a 1,000,000-token issue. The
 `RuleMaxBalance(admin, cmtat, 50_000)` in the same RuleEngine, admit exactly one address per onboarded
 investor, and exempt the treasury address that holds the unsold allocation. An investor at 50,000 tokens can
 still sell, and can buy again once below the cap; a mint that would push them over is rejected with code `82`.
+
+## CMTAT v3.0.0
+
+✅ Supported, identical to v3.3.
+
+- v3.0.0 notifies before moving the value, so `balanceOf(to)` excludes the amount in flight, as the rule assumes. Transfers, `transferFrom` and mints are capped on the receiver; burns are not.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleMaxBalanceV300.t.sol`.

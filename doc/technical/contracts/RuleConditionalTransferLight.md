@@ -228,3 +228,11 @@ Multiple approvals for the same `(from, to, value)` tuple are allowed and stack.
 ## Usage scenario
 
 The issuer deploys `RuleConditionalTransferLight`, grants `OPERATOR_ROLE` to a compliance officer, and calls `bindToken(cmtat)` with `COMPLIANCE_MANAGER_ROLE`. Investor Alice wants to transfer 1,000 tokens to Bob. The compliance officer reviews the request off-chain and calls `approveTransfer(alice, bob, 1000)`. Alice's transfer then succeeds, and the approval is consumed. A subsequent transfer of the same amount requires a new approval.
+
+## CMTAT v3.0.0
+
+✅ Supported, identical to v3.3.
+
+- Approvals are keyed `(from, to, value)` and consumed on transfers and `transferFrom`; mint and burn need none. `approveAndTransferIfAllowed` works in both topologies (behind an engine, also call `bindRuleEngine(engine)`).
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleConditionalTransferLightV300.t.sol`.

@@ -136,3 +136,12 @@ Two consequences follow:
 ## Usage scenario
 
 The operator deploys `RuleMaxTotalSupply` with `tokenContract = CMTAT_address` and `maxTotalSupply = 1_000_000`. The rule is registered in the `RuleEngine`. When the issuer mints 100,000 tokens and total supply is already 950,000, the mint is rejected with code 50. Transfers between existing holders continue unaffected.
+
+## CMTAT v3.0.0
+
+✅ Supported, identical to v3.3.
+
+- v3.0.0 notifies the engine **before** `_mint` / `_burn`, the accounting the rule assumes, so no variant is needed.
+- Pinned behaviours: the burn leg of `burnAndMint` runs first, so a correction needs room only for the net increase; a forced burn (`forcedTransfer(from, address(0), v)`) bypasses the engine but still frees room; `crosschainMint` is capped and `crosschainBurn` frees room (Standard only); a cap below the supply freezes mints while transfers and burns continue.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleMaxTotalSupplyV300.t.sol`.

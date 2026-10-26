@@ -30,6 +30,8 @@ Here are the settings for [Hardhat](https://hardhat.org) and [Foundry](https://g
 
   - CMTAT [v3.3.0-rc4](https://github.com/CMTA/CMTAT/releases/tag/v3.3.0-rc4)
 
+  - CMTAT [v3.0.0](https://github.com/CMTA/CMTAT/releases/tag/v3.0.0) (tests only, `lib/CMTATv3.0.0`, remapping `CMTATv3.0.0/`): the last audited CMTAT release, used by `test/CMTATv3.0.0/`
+
   - RuleEngine [v3.0.0-rc7](https://github.com/CMTA/RuleEngine/releases/tag/v3.0.0-rc7)
 
 ## Toolchain installation

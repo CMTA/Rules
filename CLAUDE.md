@@ -23,7 +23,7 @@ Topology B — "direct mode" (CMTAT.setRuleEngine(rule))
 Operation rules that treat `msg.sender` or `getTokenBound()` as a *token identity* behave differently in the two topologies. `approveAndTransferIfAllowed` only works in Topology B.
 
 ### The mint/burn `spender` convention (CMTAT v3.3+)
-`CMTAT._mintOverride` calls `_checkTransferred(_msgSender(), address(0), to, value)`, so **on every mint the minter's address arrives at each rule as `spender`** via the 4-arg `transferred` overload. Plain `transfer()` passes `spender == address(0)` and takes the 3-arg path.
+`CMTAT._mintOverride` calls `_checkTransferred(_msgSender(), address(0), to, value)`, so **on every mint the minter's address arrives at each rule as `spender`** via the 4-arg `transferred` overload. Plain `transfer()` passes `spender == address(0)` and takes the 3-arg path. **On CMTAT v3.0.0 mint and burn carry no spender** (3-arg path): the minter-screening legs of `RuleBlacklist` / `RuleSanctionsList` / `RuleERC2980` are inert there and `RuleMintAllowance` blocks nothing — pinned by `test/CMTATv3.0.0/`.
 
 - `RuleWhitelist`, `RuleSpenderWhitelist`, `RuleWhitelistWrapper` explicitly exempt mint/burn from the spender check.
 - `RuleIdentityRegistry`, `RuleBlacklist`, `RuleSanctionsList`, `RuleERC2980` do **not** — they screen the minter. For the deny-lists this is intended; for `RuleIdentityRegistry` it means the minter must itself be identity-verified (see `CLAUDE_AUDIT.md` F-1).
@@ -92,6 +92,7 @@ Rules that implement a standardized interface must match that standard's semanti
 - `openzeppelin-contracts` v5.7.0 — `AccessControl`, `Ownable2Step`, `EnumerableSet`, `ERC2771Context`
 - `openzeppelin-contracts-upgradeable` v5.7.0
 - `CMTAT` v3.3.0-rc4 (submodule pin; library supports ≥ v3.0.0) — `IERC1404`, `IERC3643`, `IRuleEngine` interfaces
+- `CMTATv3.0.0` — **test-only** second CMTAT submodule pinned to tag `v3.0.0` (the last audited release), remapping `CMTATv3.0.0/`. Used by `test/CMTATv3.0.0/`: one suite per rule, each run on the Standard and Debt variants, directly and behind a `RuleEngine` (mixins in `CMTATv300Variants.sol`). Never import it from `src/`. Per-rule v3.0.0 status: `RULE_SEMANTICS.md` §7
 - `RuleEngine` v3.0.0-rc7 — `IRule`, `RulesManagementModule`. Since rc7 `IRule` no longer inherits `IRuleEngine` (ERC-165 id `0xb1a69752`); every rule still implements `IRuleEngineERC1404` for the standalone role and advertises **both** `IRULE_INTERFACE_ID` and `IRULE_LEGACY_INTERFACE_ID` (`0x2497d6cb`) so rc6-and-older engines accept it — keep both. The plain `RuleEngine` has no forwarder (`(admin, token)`); ERC-2771 needs `RuleEngine2771`. Deployables live in `RuleEngine/deployment/accessControl/` and `RuleEngine/deployment/ownable/`
 - `forge-std` — Foundry test utilities
 

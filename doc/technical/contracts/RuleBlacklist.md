@@ -77,4 +77,13 @@ Single-item operations (`addAddress`, `removeAddress`) revert on duplicate/missi
 
 ### Usage scenario
 
-The operator deploys `RuleBlacklist`, grants `ADDRESS_LIST_ADD_ROLE` to a compliance manager, and registers the rule in the `RuleEngine`. The compliance manager calls `addAddresses([badActor])`. Any transfer from, to, or by the blacklisted address is rejected with codes 36, 37, or 38.rea
+The operator deploys `RuleBlacklist`, grants `ADDRESS_LIST_ADD_ROLE` to a compliance manager, and registers the rule in the `RuleEngine`. The compliance manager calls `addAddresses([badActor])`. Any transfer from, to, or by the blacklisted address is rejected with codes 36, 37, or 38.
+
+## CMTAT v3.0.0
+
+✅ Supported, with one difference.
+
+- `from`, `to` and the `transferFrom` spender are screened.
+- WARNING: on v3.0.0 a blacklisted **minter or burner is not screened**. v3.0.0 sends mint and burn on the 3-argument `transferred`, with no spender, so there is nothing to check. On CMTAT >= v3.3 the operator arrives as `spender` and is blocked. Control who holds `MINTER_ROLE` / `BURNER_ROLE` on the token instead.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleBlacklistV300.t.sol`.

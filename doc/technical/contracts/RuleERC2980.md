@@ -151,3 +151,12 @@ The ERC-2980 example `Whitelistable` and `Freezable` interfaces return `false` o
 ## Usage scenario
 
 The compliance manager deploys `RuleERC2980` and grants separate roles for whitelist and frozenlist management. Investor Alice is added to the whitelist. Bob, a sanctioned actor, is added to the frozenlist. When Bob tries to send tokens, the frozenlist check fires first and rejects with code 60. When an unlisted address tries to receive tokens, the whitelist check rejects with code 63.
+
+## CMTAT v3.0.0
+
+✅ Supported, with one difference.
+
+- Recipient whitelist, frozen `from` / `to` and frozen `transferFrom` spender all apply.
+- WARNING: a **frozen minter or burner is not screened** on v3.0.0, which forwards no spender on mint and burn.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleERC2980V300.t.sol`.
