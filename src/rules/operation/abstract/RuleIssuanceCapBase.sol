@@ -76,7 +76,9 @@ abstract contract RuleIssuanceCapBase is
     /**
      * @notice Binds the single caller allowed to notify mints (the token, or the RuleEngine in front of it).
      * @dev Reverts while a caller is bound; call `unbindToken` first to migrate.
-     * @param token The token or RuleEngine to bind.
+     * WARNING: a bound RuleEngine MUST serve only `tokenContract`. The counter does not know which token
+     * minted, so every token the engine serves would consume this token's issuance budget.
+     * @param token The token or RuleEngine to bind. A RuleEngine MUST serve only `tokenContract`.
      */
     function bindToken(address token)
         public

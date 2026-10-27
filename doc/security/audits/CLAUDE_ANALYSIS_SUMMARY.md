@@ -115,3 +115,18 @@ No production comment cites these; this is their only link to the code.
 | `RuleConditionalTransferLightApprovalBase.sol`, `RuleMaxBalanceBase.sol`, `AddressListInterfaceId.sol` | NatSpec | **G-1**, comments named test functions, a test file and a mock file | References removed; each comment states what the test proved |
 | `src/rules/operation/abstract/RuleBindingInvariantStorage.sol`; `_ruleNotBound()` in `RuleConditionalTransferLightBase`, `RuleMintAllowanceBase`, `RuleIssuanceCapBase` | `uint8 public constant CODE_RULE_NOT_BOUND = 85;` | **H-1**, unbound rules answered "allowed" while every operation reverted | Every view reports code 85 while no caller is bound |
 | the seven comments of S-1 to S-7 | NatSpec | **G-5**, AI-assisted reports cited from production source | Citations moved into this file |
+
+## v0.7.0 security audit — code changed by `CLAUDE_AUDIT.md` (v0.7.0)
+
+Not the v0.4.0 `CLAUDE_AUDIT.md`, whose F-1 is an unrelated `RuleIdentityRegistry` finding.
+
+### A-1. `bindToken` — a bound RuleEngine must serve only `tokenContract`
+
+| | |
+|---|---|
+| Location | `src/rules/operation/abstract/RuleIssuanceCapBase.sol:79`, `bindToken` |
+| Code | `function bindToken(address token)` |
+| Comment before | `@dev Reverts while a caller is bound; call `unbindToken` first to migrate.` / `@param token The token or RuleEngine to bind.` |
+| Comment now | adds `WARNING: a bound RuleEngine MUST serve only `tokenContract`. The counter does not know which token minted, so every token the engine serves would consume this token's issuance budget.` and, on `@param token`, `A RuleEngine MUST serve only `tokenContract`.` |
+| Finding | `CLAUDE_AUDIT.md` (**v0.7.0**) **F-1** (Info, downgraded from Low), "A RuleEngine serving several tokens shares one issuance counter" |
+| Change applied | NatSpec and `RuleIssuanceCap.md` § Binding only; behaviour unchanged, so the `testIC1_*_CurrentBehaviour` PoCs still pass |

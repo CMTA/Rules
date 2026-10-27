@@ -224,7 +224,7 @@ Scope: the code changed since `v0.6.0`, chiefly `RuleIssuanceCap`, the `RuleMaxT
 
 | ID | Severity | Finding | Status |
 |---|---|---|---|
-| F-1 | Info | `RuleIssuanceCap` bound to a RuleEngine serving several tokens records every token's mints in one counter | Open: doc sentence recommended |
+| F-1 | Info | `RuleIssuanceCap` bound to a RuleEngine serving several tokens records every token's mints in one counter | ⚠️ Documented: WARNING in the `bindToken` NatSpec and `RuleIssuanceCap.md` § Binding; behaviour unchanged |
 | F-2 | Info | `bindToken` accepts a caller unrelated to `tokenContract`; every write then reverts while the views report OK | Open: optional `_checkBindingTarget` |
 | F-3 | Info | The `_afterMintChecked` NatSpec does not warn that `transferred` is public and ungated in `RuleMaxTotalSupplyBase` | Open: one NatSpec sentence recommended |
 | F-4 | Info | Mints between deployment and attachment are not counted | Open: extend the existing WARNING |

@@ -81,7 +81,7 @@ are a missing warning on an extension point of `RuleMaxTotalSupplyBase` and the 
 
 | ID | Severity | Status | Finding | Component | PoC |
 |---|---|---|---|---|---|
-| F-1 | Info (downgraded from Low) | Open | A RuleEngine serving several tokens shares one issuance counter | `RuleIssuanceCapBase.sol` (`bindToken`, `_afterMintChecked`) | `testIC1_SharedEngineCountsOtherTokensMints_CurrentBehaviour`, `testIC1_SharedEngineCapsTokenBByTokenAsCounter_CurrentBehaviour` |
+| F-1 | Info (downgraded from Low) | ⚠️ Documented | A RuleEngine serving several tokens shares one issuance counter | `RuleIssuanceCapBase.sol` (`bindToken`, `_afterMintChecked`) | `testIC1_SharedEngineCountsOtherTokensMints_CurrentBehaviour`, `testIC1_SharedEngineCapsTokenBByTokenAsCounter_CurrentBehaviour` |
 | F-2 | Info | Open | The bound caller is not checked against `tokenContract`; the views report OK | `RuleIssuanceCapBase.sol`, `bindToken` | `testIC2_BindingUnrelatedCallerIsAccepted_CurrentBehaviour` |
 | F-3 | Info | Open | `_afterMintChecked` does not warn that `transferred` is ungated | `RuleMaxTotalSupplyBase.sol`, `_afterMintChecked` | `testMTS1_UngatedSubclassIsDrivableByAnyone_CurrentBehaviour` |
 | F-4 | Info | Open (documented in part) | Mints before attachment are not counted | `RuleIssuanceCapBase.sol` | `testIC3_IssuanceBeforeAttachIsNotCounted_CurrentBehaviour` |
@@ -118,6 +118,9 @@ missing is one explicit sentence: the **engine** bound to this rule must serve o
 `RuleConditionalTransferLight.bindRuleEngine` already says.
 
 **Recommendation.** Add that sentence to `RuleIssuanceCap.md` § Binding and to the `bindToken` NatSpec.
+
+**Status: documented, behaviour unchanged** (see §6). The PoCs still pass, as they should: the configuration is now
+warned against, not prevented.
 
 ### 3.3 F-2 — The bound caller is not checked against `tokenContract`; the views report OK (Info)
 
@@ -189,13 +192,19 @@ will: non-replenishment holds relative to the cap the issuer sets. This is inher
 
 ## 6. Remediation — what was implemented
 
-**Nothing yet.** The review changed no production code. All five findings are Info and none changes behaviour for
-a correctly configured deployment. The proposed remediations are listed in §7; when one lands, update its
-`_CurrentBehaviour` test and record the change in `CLAUDE_ANALYSIS_SUMMARY.md`.
+| Finding | Status | What changed | Verified by |
+|---|---|---|---|
+| F-1 | ⚠️ Documented, behaviour unchanged | `bindToken` NatSpec (`RuleIssuanceCapBase.sol`) gains a WARNING and an `@param` note that a bound RuleEngine must serve only `tokenContract`; `RuleIssuanceCap.md` § Binding gains a WARNING explaining what a multi-token engine does to the counter | Doc change only; the two `testIC1_*_CurrentBehaviour` PoCs still pass, since the behaviour they pin is unchanged |
+| F-2, F-3, F-4 | Open | — | — |
+| F-5 | By design, not changed | — | — |
+
+No runtime code changed. The NatSpec change is recorded in `CLAUDE_ANALYSIS_SUMMARY.md`, as production comments do
+not cite this report.
 
 What the review added: 16 tests in `test/ThreatModel/ThreatModelV070Tests.t.sol` (12 unit and integration tests, the
-integration ones on a real CMTAT `v3.3` token and RuleEngine `rc7`; 4 fuzz tests). After adding them: `forge test` 1308 passed, 0 failed;
-`FOUNDRY_PROFILE=erc3643 forge test` 53 passed, 0 failed; `forge fmt --check` clean.
+integration ones on a real CMTAT `v3.3` token and RuleEngine `rc7`; 4 fuzz tests). After adding them and after the
+F-1 documentation change: `forge test` 1308 passed, 0 failed; `FOUNDRY_PROFILE=erc3643 forge test` 53 passed,
+0 failed; `forge fmt --check` clean.
 
 ---
 
@@ -203,12 +212,11 @@ integration ones on a real CMTAT `v3.3` token and RuleEngine `rc7`; 4 fuzz tests
 
 | # | Improvement | Addresses | Effort | Breaking? | Priority |
 |---|---|---|---|---|---|
-| 1 | State in `RuleIssuanceCap.md` § Binding and the `bindToken` NatSpec that a bound RuleEngine must serve only `tokenContract` | F-1 | Trivial (docs) | No | High |
-| 2 | One NatSpec sentence on `_afterMintChecked`: a recording subclass must restrict both `transferred` overloads | F-3 | Trivial (NatSpec) | No | High |
-| 3 | Extend the detach warning to the window between deployment and first attachment | F-4 | Trivial (docs) | No | Medium |
-| 4 | `_checkBindingTarget` accepting only `tokenContract` or an engine bound to it | F-1, F-2 | Small (code + tests) | No for the standard setup (a RuleEngine binds its token at construction), but the setup order becomes fixed | Low; a design decision |
+| 1 | One NatSpec sentence on `_afterMintChecked`: a recording subclass must restrict both `transferred` overloads | F-3 | Trivial (NatSpec) | No | High |
+| 2 | Extend the detach warning to the window between deployment and first attachment | F-4 | Trivial (docs) | No | Medium |
+| 3 | `_checkBindingTarget` accepting only `tokenContract` or an engine bound to it | F-1, F-2 | Small (code + tests) | No for the standard setup (a RuleEngine binds its token at construction), but the setup order becomes fixed | Low; a design decision |
 
-Items 1–3 close the gap between what the rule needs and what a deployer reads. Item 4 moves part of F-1 and F-2
+Items 1 and 2 close the gap between what the rule needs and what a deployer reads (the F-1 warning is done, §6). Item 3 moves part of F-1 and F-2
 from documentation into a configuration-time check, at the cost of a fixed setup order (the engine must serve the token before
 the rule binds the engine); the maintainers should decide whether that is acceptable.
 
@@ -242,4 +250,4 @@ documented for `RuleMaxTotalSupply` and `RuleChainlinkPoR`, applied to a statefu
 
 The `v0.7.0` changes introduce no vulnerability. `RuleIssuanceCap` is correct for its documented deployment (one
 instance per token, bound to that token or to an engine serving only it), and its counter is closed to every
-caller but the bound one. The remaining work is three sentences of documentation and an optional binding check.
+caller but the bound one. The remaining work is two sentences of documentation and an optional binding check.

@@ -61,6 +61,8 @@ The rule writes storage on every mint, so `transferred` only accepts its bound c
 | Rule set directly on the token (`setRuleEngine(rule)`) | the **token** |
 | Rule inside a `RuleEngine` | the **RuleEngine** |
 
+WARNING: a bound RuleEngine **must serve only `tokenContract`**. A RuleEngine can bind several tokens, and the rule cannot tell which one minted: every mint of every token the engine serves is recorded in this rule's `totalIssued`, while the live-supply check still reads `tokenContract` only. A second token's mints would use up the first token's issuance budget, and the second token would be capped by a counter that is not its own. Use one RuleEngine per token with this rule, or one rule instance per token set directly on the token.
+
 `bindToken` reverts with `RuleIssuanceCap_TokenAlreadyBound` while a caller is bound; call `unbindToken` first to migrate. An unbound caller is rejected with `TokenBinding_UnauthorizedCaller`.
 
 WARNING: until `bindToken` is called, every operation reverts (the write path rejects the unbound caller). The views say so: every operation reports code **85** (`CODE_RULE_NOT_BOUND`), and `remainingMintable()` returns `(85, 0)`.
