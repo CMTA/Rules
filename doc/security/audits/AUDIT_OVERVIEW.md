@@ -227,7 +227,7 @@ Scope: the code changed since `v0.6.0`, chiefly `RuleIssuanceCap`, the `RuleMaxT
 | F-1 | Info | `RuleIssuanceCap` bound to a RuleEngine serving several tokens records every token's mints in one counter | ⚠️ Documented: WARNING in the `bindToken` NatSpec and `RuleIssuanceCap.md` § Binding; behaviour unchanged |
 | F-2 | Info | `bindToken` accepts a caller unrelated to `tokenContract`; every write then reverts while the views report OK | Open: optional `_checkBindingTarget` |
 | F-3 | Info | The `_afterMintChecked` NatSpec does not warn that `transferred` is public and ungated in `RuleMaxTotalSupplyBase` | ⚠️ Documented: WARNING in the `_afterMintChecked` NatSpec; behaviour unchanged |
-| F-4 | Info | Mints between deployment and attachment are not counted | Open: extend the existing WARNING |
+| F-4 | Info | Mints between deployment and attachment are not counted | ⚠️ Documented: "Deployment order" in `RuleIssuanceCap.md`, including a gap-free order with the RuleEngine set in the CMTAT constructor; behaviour unchanged |
 | F-5 | Info | Code 85 is shared by three rules and does not name the unbound one | By design |
 
 ## AI-assisted review results (v0.4.0)

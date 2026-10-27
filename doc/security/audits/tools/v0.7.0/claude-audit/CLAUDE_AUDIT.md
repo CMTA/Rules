@@ -84,7 +84,7 @@ are a missing warning on an extension point of `RuleMaxTotalSupplyBase` and the 
 | F-1 | Info (downgraded from Low) | ⚠️ Documented | A RuleEngine serving several tokens shares one issuance counter | `RuleIssuanceCapBase.sol` (`bindToken`, `_afterMintChecked`) | `testIC1_SharedEngineCountsOtherTokensMints_CurrentBehaviour`, `testIC1_SharedEngineCapsTokenBByTokenAsCounter_CurrentBehaviour` |
 | F-2 | Info | Open | The bound caller is not checked against `tokenContract`; the views report OK | `RuleIssuanceCapBase.sol`, `bindToken` | `testIC2_BindingUnrelatedCallerIsAccepted_CurrentBehaviour` |
 | F-3 | Info | ⚠️ Documented | `_afterMintChecked` does not warn that `transferred` is ungated | `RuleMaxTotalSupplyBase.sol`, `_afterMintChecked` | `testMTS1_UngatedSubclassIsDrivableByAnyone_CurrentBehaviour` |
-| F-4 | Info | Open (documented in part) | Mints before attachment are not counted | `RuleIssuanceCapBase.sol` | `testIC3_IssuanceBeforeAttachIsNotCounted_CurrentBehaviour` |
+| F-4 | Info | ⚠️ Documented | Mints before attachment are not counted | `RuleIssuanceCapBase.sol` | `testIC3_IssuanceBeforeAttachIsNotCounted_CurrentBehaviour` |
 | F-5 | Info | By design | Code 85 does not say which rule is unbound | `RuleBindingInvariantStorage.sol` | `testB85_EngineSurfacesSharedCode` |
 
 All PoCs are in `test/ThreatModel/ThreatModelV070Tests.t.sol`. Tests suffixed `_CurrentBehaviour` assert the
@@ -197,6 +197,13 @@ installation, and pass as `initialIssued` the issuance at the moment of installa
 A code fix is not proposed: the rule cannot observe mints it is not told about, and the live-supply check already
 bounds the supply.
 
+**Status: documented** (see §6). The documentation also gives a stronger order than the one above, for the
+RuleEngine topology: set the engine in the CMTAT constructor and bind the token to the engine last. A RuleEngine
+rejects every call from a token it has not bound, so every mint, the admin's included, reverts until the cap rule is
+installed, and the window disappears instead of being kept empty by procedure. The rule itself cannot be passed to
+the token's constructor, since it reads the token's supply at construction, so the direct topology keeps the
+procedural order.
+
 ### 3.6 F-5 — Code 85 does not name the unbound rule (Info)
 
 Three rules share `CODE_RULE_NOT_BOUND = 85` and one message. This is the stated design; each rule's
@@ -244,7 +251,8 @@ will: non-replenishment holds relative to the cap the issuer sets. This is inher
 |---|---|---|---|
 | F-1 | ⚠️ Documented, behaviour unchanged | `bindToken` NatSpec (`RuleIssuanceCapBase.sol`) gains a WARNING and an `@param` note that a bound RuleEngine must serve only `tokenContract`; `RuleIssuanceCap.md` § Binding gains a WARNING explaining what a multi-token engine does to the counter | Doc change only; the two `testIC1_*_CurrentBehaviour` PoCs still pass, since the behaviour they pin is unchanged |
 | F-3 | ⚠️ Documented, behaviour unchanged | `_afterMintChecked` NatSpec (`RuleMaxTotalSupplyBase.sol`) gains a WARNING: both `transferred` overloads are ungated, and a subclass that writes in the hook must restrict them to its bound caller | Doc change only; `testMTS1_UngatedSubclassIsDrivableByAnyone_CurrentBehaviour` still passes, as the base is unchanged |
-| F-2, F-4 | Open | — | — |
+| F-4 | ⚠️ Documented, behaviour unchanged | `RuleIssuanceCap.md` gains a "Deployment order" section: the window before first installation, the setup order for each topology, the admin caveat, and the `initialIssued` rule for a live token. It adds a gap-free order not in the original recommendation: set the RuleEngine in the CMTAT constructor and bind the token to the engine **last**, so every mint, the admin's included, reverts until the cap rule is in place | New test `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow` (real CMTAT `v3.3` + RuleEngine `rc7`); `testIC3_IssuanceBeforeAttachIsNotCounted_CurrentBehaviour` still passes, as the rule is unchanged |
+| F-2 | Open | — | — |
 | F-5 | By design, not changed | — | — |
 
 No runtime code changed. The NatSpec change is recorded in `CLAUDE_ANALYSIS_SUMMARY.md`, as production comments do
@@ -252,7 +260,7 @@ not cite this report.
 
 What the review added: 16 tests in `test/ThreatModel/ThreatModelV070Tests.t.sol` (12 unit and integration tests, the
 integration ones on a real CMTAT `v3.3` token and RuleEngine `rc7`; 4 fuzz tests). After adding them and after the
-F-1 documentation change: `forge test` 1308 passed, 0 failed; `FOUNDRY_PROFILE=erc3643 forge test` 53 passed,
+documentation changes for F-1, F-3 and F-4 (plus one integration test for F-4): `forge test` 1309 passed, 0 failed; `FOUNDRY_PROFILE=erc3643 forge test` 53 passed,
 0 failed; `forge fmt --check` clean.
 
 ---
@@ -261,10 +269,9 @@ F-1 documentation change: `forge test` 1308 passed, 0 failed; `FOUNDRY_PROFILE=e
 
 | # | Improvement | Addresses | Effort | Breaking? | Priority |
 |---|---|---|---|---|---|
-| 1 | Extend the detach warning to the window between deployment and first attachment, with the setup order and the admin caveat (§3.5) | F-4 | Trivial (docs) | No | Medium |
-| 2 | `_checkBindingTarget` accepting only `tokenContract` or an engine bound to it | F-1, F-2 | Small (code + tests) | No for the standard setup (a RuleEngine binds its token at construction), but the setup order becomes fixed | Low; a design decision |
+| 1 | `_checkBindingTarget` accepting only `tokenContract` or an engine bound to it | F-1, F-2 | Small (code + tests) | No for the standard setup (a RuleEngine binds its token at construction), but the setup order becomes fixed | Low; a design decision |
 
-Item 1 closes the last gap between what the rule needs and what a deployer reads (the F-1 and F-3 warnings are done, §6). Item 2 moves part of F-1 and F-2
+The documentation items are done (F-1, F-3, F-4; §6). The remaining item moves part of F-1 and F-2
 from documentation into a configuration-time check, at the cost of a fixed setup order (the engine must serve the token before
 the rule binds the engine); the maintainers should decide whether that is acceptable.
 
@@ -298,4 +305,4 @@ documented for `RuleMaxTotalSupply` and `RuleChainlinkPoR`, applied to a statefu
 
 The `v0.7.0` changes introduce no vulnerability. `RuleIssuanceCap` is correct for its documented deployment (one
 instance per token, bound to that token or to an engine serving only it), and its counter is closed to every
-caller but the bound one. The remaining work is one documentation change (F-4) and an optional binding check.
+caller but the bound one. The remaining work is an optional binding check (F-2).

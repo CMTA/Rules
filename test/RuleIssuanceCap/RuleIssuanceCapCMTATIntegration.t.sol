@@ -7,6 +7,9 @@ import {CMTATDeployment} from "test/utils/CMTATDeployment.sol";
 import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 import {RuleIssuanceCap} from "src/rules/operation/RuleIssuanceCap.sol";
+import {ICMTATConstructor, CMTATStandardStandalone} from "CMTAT/deployment/CMTATStandardStandalone.sol";
+import {IERC1643CMTAT} from "CMTAT/interfaces/tokenization/draft-IERC1643CMTAT.sol";
+import {TokenBindingModuleInvariantStorage} from "RuleEngine/modules/library/TokenBindingModuleInvariantStorage.sol";
 
 /**
  * @title RuleIssuanceCap on the current CMTAT (>= v3.3)
@@ -63,5 +66,45 @@ contract RuleIssuanceCapCMTATIntegration is Test, HelperContract {
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         cmtatContract.burn(ADDRESS1, 30);
         assertEq(cmtatContract.detectTransferRestriction(ZERO_ADDRESS, ADDRESS2, 41), 71);
+    }
+
+    /// @dev A CMTAT whose RuleEngine is set in the constructor, as `CMTATDeployment` does with `address(0)`.
+    function _deployTokenWithEngine(address engine) private returns (CMTATStandardStandalone) {
+        return new CMTATStandardStandalone(
+            ZERO_ADDRESS,
+            DEFAULT_ADMIN_ADDRESS,
+            ICMTATConstructor.ERC20Attributes("CMTA Token", "CMTAT", 0),
+            ICMTATConstructor.ExtraInformationAttributes(
+                "CMTAT_ISIN", IERC1643CMTAT.DocumentInfo("Terms", "https://cmta.ch", bytes32(0)), "CMTAT_info"
+            ),
+            ICMTATConstructor.Engine(IRuleEngine(engine))
+        );
+    }
+
+    /// @notice The documented gap-free setup: the engine is set at token deployment and binds the token last,
+    /// so every mint, even the admin's, reverts until the cap rule is in place. No mint can escape the counter.
+    function testDeploymentWithEngineInConstructorLeavesNoUncountedWindow() public {
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        RuleEngine engine = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
+        CMTATStandardStandalone token = _deployTokenWithEngine(address(engine));
+
+        // Engine set, token not yet bound to it: the admin cannot mint.
+        vm.expectRevert(TokenBindingModuleInvariantStorage.TokenBinding_UnauthorizedCaller.selector);
+        token.mint(ADDRESS1, 1);
+
+        rule = new RuleIssuanceCap(DEFAULT_ADMIN_ADDRESS, address(token), CAP, 0);
+        rule.bindToken(address(engine));
+        engine.addRule(rule);
+        vm.expectRevert(TokenBindingModuleInvariantStorage.TokenBinding_UnauthorizedCaller.selector);
+        token.mint(ADDRESS1, 1);
+
+        // Last step: the engine accepts the token. From the first possible mint, the rule counts.
+        engine.bindToken(address(token));
+        token.mint(ADDRESS1, CAP);
+        token.burn(ADDRESS1, CAP);
+        vm.expectPartialRevert(RuleMaxTotalSupply_InvalidTransferFrom.selector);
+        token.mint(ADDRESS1, 1);
+        vm.stopPrank();
+        assertEq(rule.totalIssued(), CAP);
     }
 }

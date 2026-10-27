@@ -67,6 +67,36 @@ WARNING: a bound RuleEngine **must serve only `tokenContract`**. A RuleEngine ca
 
 WARNING: until `bindToken` is called, every operation reverts (the write path rejects the unbound caller). The views say so: every operation reports code **85** (`CODE_RULE_NOT_BOUND`), and `remainingMintable()` returns `(85, 0)`.
 
+### Deployment order: no uncounted mint
+
+The rule only sees the mints the token notifies it of. Any mint made before the rule is installed, or while it is
+detached, is neither checked nor counted, so a mint-and-burn in that window would let lifetime issuance exceed the
+cap. The live-supply check still keeps the **supply** under the cap; what is lost is the "burns do not restore
+room" guarantee for that period. Install the rule before anyone can mint.
+
+**With a RuleEngine, set at token deployment (recommended, no window at all).** CMTAT accepts its rule engine in
+the constructor (`ICMTATConstructor.Engine`), and a RuleEngine rejects every call from a token it has not bound. So
+bind the token to the engine **last**:
+
+1. Deploy the RuleEngine with no token: `new RuleEngine(admin, address(0))`.
+2. Deploy the CMTAT token with that engine in its constructor. Every mint, the admin's included, now reverts with
+   `TokenBinding_UnauthorizedCaller`.
+3. Deploy `RuleIssuanceCap(admin, token, cap, 0)`; it needs the token's address, so it comes after the token.
+4. `rule.bindToken(engine)`, then `engine.addRule(rule)`, plus any other rules.
+5. `engine.bindToken(token)`. From the first mint that can succeed, the rule counts it.
+6. Grant `MINTER_ROLE`.
+
+Pinned by `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow`.
+
+**With the rule set directly on the token, or an engine set after deployment.** The rule cannot be passed to the
+token's constructor (its own constructor reads the token's `totalSupply()`), so there is a window between token
+deployment and `setRuleEngine`. Keep it empty: deploy the token, deploy the rule, `bindToken`, `setRuleEngine`, and
+only then grant `MINTER_ROLE`. A freshly deployed CMTAT has no minter except its default admin, who must not mint
+before the rule is installed (CMTAT gives the default admin every role, so it can always mint).
+
+**For a token that is already live,** pass as `initialIssued` the issuance at the moment the rule is installed, not
+at deployment, and do not mint between the two.
+
 ### Post-deployment configuration
 
 - The cap: `setMaxTotalSupply`, `increaseMaxTotalSupply`, `decreaseMaxTotalSupply`.
