@@ -130,3 +130,14 @@ Not the v0.4.0 `CLAUDE_AUDIT.md`, whose F-1 is an unrelated `RuleIdentityRegistr
 | Comment now | adds `WARNING: a bound RuleEngine MUST serve only `tokenContract`. The counter does not know which token minted, so every token the engine serves would consume this token's issuance budget.` and, on `@param token`, `A RuleEngine MUST serve only `tokenContract`.` |
 | Finding | `CLAUDE_AUDIT.md` (**v0.7.0**) **F-1** (Info, downgraded from Low), "A RuleEngine serving several tokens shares one issuance counter" |
 | Change applied | NatSpec and `RuleIssuanceCap.md` § Binding only; behaviour unchanged, so the `testIC1_*_CurrentBehaviour` PoCs still pass |
+
+### A-2. `_afterMintChecked` — a recording subclass must gate `transferred`
+
+| | |
+|---|---|
+| Location | `src/rules/validation/abstract/base/RuleMaxTotalSupplyBase.sol:208`, `_afterMintChecked` |
+| Code | `function _afterMintChecked(uint256 value) internal virtual {}` |
+| Comment before | `@dev The extension point for a subclass that must record accepted mints (`RuleIssuanceCap`). … cannot be skipped by the re-phasing.` |
+| Comment now | adds `WARNING: both `transferred` overloads are public and ungated here, which is safe only because this contract writes nothing. A subclass that writes state in this hook MUST restrict both overloads to its bound caller (as `RuleIssuanceCap` does with `onlyBoundToken`), or anyone can record mints.` |
+| Finding | `CLAUDE_AUDIT.md` (**v0.7.0**) **F-3** (Info), "`_afterMintChecked` does not warn that `transferred` is ungated" |
+| Change applied | NatSpec only; behaviour unchanged, so `testMTS1_UngatedSubclassIsDrivableByAnyone_CurrentBehaviour` still passes |

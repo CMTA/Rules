@@ -83,7 +83,7 @@ are a missing warning on an extension point of `RuleMaxTotalSupplyBase` and the 
 |---|---|---|---|---|---|
 | F-1 | Info (downgraded from Low) | ⚠️ Documented | A RuleEngine serving several tokens shares one issuance counter | `RuleIssuanceCapBase.sol` (`bindToken`, `_afterMintChecked`) | `testIC1_SharedEngineCountsOtherTokensMints_CurrentBehaviour`, `testIC1_SharedEngineCapsTokenBByTokenAsCounter_CurrentBehaviour` |
 | F-2 | Info | Open | The bound caller is not checked against `tokenContract`; the views report OK | `RuleIssuanceCapBase.sol`, `bindToken` | `testIC2_BindingUnrelatedCallerIsAccepted_CurrentBehaviour` |
-| F-3 | Info | Open | `_afterMintChecked` does not warn that `transferred` is ungated | `RuleMaxTotalSupplyBase.sol`, `_afterMintChecked` | `testMTS1_UngatedSubclassIsDrivableByAnyone_CurrentBehaviour` |
+| F-3 | Info | ⚠️ Documented | `_afterMintChecked` does not warn that `transferred` is ungated | `RuleMaxTotalSupplyBase.sol`, `_afterMintChecked` | `testMTS1_UngatedSubclassIsDrivableByAnyone_CurrentBehaviour` |
 | F-4 | Info | Open (documented in part) | Mints before attachment are not counted | `RuleIssuanceCapBase.sol` | `testIC3_IssuanceBeforeAttachIsNotCounted_CurrentBehaviour` |
 | F-5 | Info | By design | Code 85 does not say which rule is unbound | `RuleBindingInvariantStorage.sol` | `testB85_EngineSurfacesSharedCode` |
 
@@ -145,15 +145,63 @@ account record arbitrary mints.
 **Impact.** None in shipped contracts; a hazard for library users. **Recommendation.** Add one sentence to the
 hook's `@dev`: a subclass that writes in this hook must restrict both `transferred` overloads to its bound caller.
 
-### 3.5 Info findings (condensed)
+### 3.5 F-4 — Mints made while the rule is not attached are not counted (Info)
 
-- **F-4 — mints before attachment are not counted.** The counter starts at `initialIssued` and sees only mints that
-  reach the rule. A mint and burn between deployment and attachment is invisible, so lifetime issuance can exceed
-  the cap; the live-supply check still keeps the **supply** under it. The detach case is documented ("revoke
-  `MINTER_ROLE` first"); the window before first attachment is not. **Recommendation:** extend that warning to it.
-- **F-5 — code 85 does not name the unbound rule.** Three rules share `CODE_RULE_NOT_BOUND = 85` and one message.
-  This is the stated design; each rule's `detectTransferRestriction` can be queried. No change recommended; the
-  adversarial pass considered the finding dismissible.
+**Context: what the counter can see.** `RuleIssuanceCap` is not part of the token. It learns about a mint only
+when the token notifies it, and the token notifies only the rule engine it is currently configured with
+(`CMTAT.setRuleEngine`). So `totalIssued` counts exactly the mints made while **both** hold:
+
+1. the rule is attached: set on the token directly, or added to the RuleEngine set on the token;
+2. the rule is bound to the caller that notifies it (`bindToken`), otherwise the notification reverts.
+
+Any mint outside those periods never reaches the rule, so it is never counted and never checked against the
+counter. There are two such periods:
+
+| Window | When it happens | Already documented? |
+|---|---|---|
+| **Before first attachment** | Between deploying the rule (`initialIssued` is fixed in the constructor) and the `setRuleEngine` / `addRule` call that installs it | **No** |
+| **While detached** | After `setRuleEngine(address(0))`, a switch to another engine, or `removeRule`, until the rule is installed again | Yes: the WARNING in `RuleIssuanceCap.md` |
+
+**Example.** Cap 100, `initialIssued = 0`. Before the rule is installed, the issuer mints 100 and burns 100. The
+rule is then attached with `totalIssued = 0`, and 100 more can be minted. Lifetime issuance is 200 against a cap of
+100 (`testIC3_IssuanceBeforeAttachIsNotCounted_CurrentBehaviour`).
+
+**What still holds.** The inherited live-supply check reads `totalSupply()` on every mint, so after re-attachment
+the **supply** can never exceed the cap; if the unnoticed mints pushed it over, minting stays blocked
+(`testIC3_LiveLegCatchesDetachedOverMint`). What is lost is only the non-replenishing property for the uncounted
+period: a mint-and-burn inside the window leaves no trace.
+
+**Why it is Info.** Only accounts allowed to mint on the token can create the gap, and the issuer controls who
+they are and when the rule is installed. It is an operational precondition, not something an outsider can trigger.
+
+**What "revoke `MINTER_ROLE` first" means.** In CMTAT, `mint` requires `MINTER_ROLE`. The documented detach
+procedure is: remove the role from every minter, then detach, then re-attach, then grant the role back. With no
+minter during the window, no uncounted mint can happen. Two points the current wording does not make, and should:
+
+- **The token's default admin can always mint.** CMTAT's `AccessControlModule.hasRole` returns `true` for every
+  role when the account holds `DEFAULT_ADMIN_ROLE`, so revoking `MINTER_ROLE` from the minters does not stop the
+  admin. The admin, who is also the one detaching the rule, must simply not mint during the window.
+- **Pausing the token does not help.** CMTAT's pause stops transfers, not mint and burn.
+
+**Recommendation (documentation only).** In `RuleIssuanceCap.md`, extend the warning to the first-attachment
+window and make the setup order explicit:
+
+1. deploy the rule with `initialIssued` equal to the issuance so far;
+2. `bindToken` (the token, or the RuleEngine);
+3. install it (`setRuleEngine` on the token, or `addRule` on the engine);
+4. only then grant `MINTER_ROLE`, or start minting.
+
+For a token that is already live, apply the same "no minting during the window" rule between deployment and
+installation, and pass as `initialIssued` the issuance at the moment of installation, not at deployment.
+
+A code fix is not proposed: the rule cannot observe mints it is not told about, and the live-supply check already
+bounds the supply.
+
+### 3.6 F-5 — Code 85 does not name the unbound rule (Info)
+
+Three rules share `CODE_RULE_NOT_BOUND = 85` and one message. This is the stated design; each rule's
+`detectTransferRestriction` can be queried. No change recommended; the adversarial pass considered the finding
+dismissible.
 
 ---
 
@@ -195,7 +243,8 @@ will: non-replenishment holds relative to the cap the issuer sets. This is inher
 | Finding | Status | What changed | Verified by |
 |---|---|---|---|
 | F-1 | ⚠️ Documented, behaviour unchanged | `bindToken` NatSpec (`RuleIssuanceCapBase.sol`) gains a WARNING and an `@param` note that a bound RuleEngine must serve only `tokenContract`; `RuleIssuanceCap.md` § Binding gains a WARNING explaining what a multi-token engine does to the counter | Doc change only; the two `testIC1_*_CurrentBehaviour` PoCs still pass, since the behaviour they pin is unchanged |
-| F-2, F-3, F-4 | Open | — | — |
+| F-3 | ⚠️ Documented, behaviour unchanged | `_afterMintChecked` NatSpec (`RuleMaxTotalSupplyBase.sol`) gains a WARNING: both `transferred` overloads are ungated, and a subclass that writes in the hook must restrict them to its bound caller | Doc change only; `testMTS1_UngatedSubclassIsDrivableByAnyone_CurrentBehaviour` still passes, as the base is unchanged |
+| F-2, F-4 | Open | — | — |
 | F-5 | By design, not changed | — | — |
 
 No runtime code changed. The NatSpec change is recorded in `CLAUDE_ANALYSIS_SUMMARY.md`, as production comments do
@@ -212,11 +261,10 @@ F-1 documentation change: `forge test` 1308 passed, 0 failed; `FOUNDRY_PROFILE=e
 
 | # | Improvement | Addresses | Effort | Breaking? | Priority |
 |---|---|---|---|---|---|
-| 1 | One NatSpec sentence on `_afterMintChecked`: a recording subclass must restrict both `transferred` overloads | F-3 | Trivial (NatSpec) | No | High |
-| 2 | Extend the detach warning to the window between deployment and first attachment | F-4 | Trivial (docs) | No | Medium |
-| 3 | `_checkBindingTarget` accepting only `tokenContract` or an engine bound to it | F-1, F-2 | Small (code + tests) | No for the standard setup (a RuleEngine binds its token at construction), but the setup order becomes fixed | Low; a design decision |
+| 1 | Extend the detach warning to the window between deployment and first attachment, with the setup order and the admin caveat (§3.5) | F-4 | Trivial (docs) | No | Medium |
+| 2 | `_checkBindingTarget` accepting only `tokenContract` or an engine bound to it | F-1, F-2 | Small (code + tests) | No for the standard setup (a RuleEngine binds its token at construction), but the setup order becomes fixed | Low; a design decision |
 
-Items 1 and 2 close the gap between what the rule needs and what a deployer reads (the F-1 warning is done, §6). Item 3 moves part of F-1 and F-2
+Item 1 closes the last gap between what the rule needs and what a deployer reads (the F-1 and F-3 warnings are done, §6). Item 2 moves part of F-1 and F-2
 from documentation into a configuration-time check, at the cost of a fixed setup order (the engine must serve the token before
 the rule binds the engine); the maintainers should decide whether that is acceptable.
 
@@ -250,4 +298,4 @@ documented for `RuleMaxTotalSupply` and `RuleChainlinkPoR`, applied to a statefu
 
 The `v0.7.0` changes introduce no vulnerability. `RuleIssuanceCap` is correct for its documented deployment (one
 instance per token, bound to that token or to an engine serving only it), and its counter is closed to every
-caller but the bound one. The remaining work is two sentences of documentation and an optional binding check.
+caller but the bound one. The remaining work is one documentation change (F-4) and an optional binding check.

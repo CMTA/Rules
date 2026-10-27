@@ -118,7 +118,7 @@ Pinned on a real CMTAT v3.0.0 token (`test/CMTATv3.0.0/RuleIssuanceCapV300.t.sol
 | Cap lowered to `totalIssued` or below | — | Minting stops (`remainingMintable() = 0`); transfers and burns continue |
 | Rule detached, then re-attached | Mints while detached are not counted | The live-supply check catches them: if they pushed the supply above the cap, minting stays stopped |
 
-WARNING: detaching the rule (`setRuleEngine(address(0))`, or `removeRule` on the engine) lifts the cap while detached. Revoke `MINTER_ROLE` first.
+WARNING: detaching the rule (`setRuleEngine(address(0))`, or `removeRule` on the engine) lifts the cap while detached: the token no longer notifies the rule, so mints are neither checked nor counted. Before detaching, revoke `MINTER_ROLE` from every minter so nobody can mint during the gap, and grant it back after re-attaching. The token's default admin keeps the ability to mint (CMTAT gives it every role), so the admin must not mint during the gap either. Pausing does not help: CMTAT's pause stops transfers, not mints.
 
 ## ERC-3643
 

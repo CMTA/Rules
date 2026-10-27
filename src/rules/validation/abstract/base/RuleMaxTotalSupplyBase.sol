@@ -205,6 +205,9 @@ abstract contract RuleMaxTotalSupplyBase is RuleTransferValidation, TotalSupplyC
      * @dev The extension point for a subclass that must record accepted mints (`RuleIssuanceCap`). It
      * receives the REAL minted amount even where {_detectTransferRestrictionOnNotify} is re-phased to
      * `value = 0` (ERC-3643 variants), so a check placed here cannot be skipped by the re-phasing.
+     * WARNING: both `transferred` overloads are public and ungated here, which is safe only because this
+     * contract writes nothing. A subclass that writes state in this hook MUST restrict both overloads to
+     * its bound caller (as `RuleIssuanceCap` does with `onlyBoundToken`), or anyone can record mints.
      * @param value The amount minted.
      */
     function _afterMintChecked(uint256 value) internal virtual {}
