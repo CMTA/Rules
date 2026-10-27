@@ -30,7 +30,7 @@ contract UngatedMintRecorder is RuleMaxTotalSupply {
 
 /**
  * @title ThreatModelV070Tests
- * @notice Proof-of-concept tests for the v0.7.0 audit (`RESULT.md` in the v0.7.0 audit folder). Scope: the
+ * @notice Proof-of-concept tests for the v0.7.0 audit (`CLAUDE_AUDIT.md`, v0.7.0). Scope: the
  * code added or changed since v0.6.0 (`RuleIssuanceCap`, `RuleMaxTotalSupply` setters and hook, code 85).
  * @dev Each test names the threat ID it exercises. Tests suffixed `_CurrentBehaviour` assert behaviour the
  * audit considers a hazard; a fix must make them fail.

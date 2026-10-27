@@ -2037,7 +2037,7 @@ Returns the number of approvals for the transfer hash.
 
 ### Security review (v0.7.0)
 
-[`RESULT.md`](./security/audits/tools/v0.7.0/claude-audit/RESULT.md), with its [threat model](./security/audits/tools/v0.7.0/claude-audit/THREAT_MODEL.md) and [test plan](./security/audits/tools/v0.7.0/claude-audit/TEST_IMPROVEMENT.md), covers the code changed since v0.6.0. **Outcome: 0 Critical, 0 High, 0 Medium, 0 Low, 5 Informational.** The findings are deployment shapes `RuleIssuanceCap` cannot detect (an engine serving several tokens, a wrong binding, mints before attachment), a missing warning on the `_afterMintChecked` extension point, and the shared code 85. Proofs: [`test/ThreatModel/ThreatModelV070Tests.t.sol`](../test/ThreatModel/ThreatModelV070Tests.t.sol) (16 tests, 4 fuzz).
+The published report, [**`CLAUDE_AUDIT.md`**](./security/audits/tools/v0.7.0/claude-audit/CLAUDE_AUDIT.md), covers the code changed since v0.6.0. **Outcome: 0 Critical, 0 High, 0 Medium, 0 Low, 5 Informational.** The findings are deployment shapes `RuleIssuanceCap` cannot detect (an engine serving several tokens, a wrong binding, mints before attachment), a missing warning on the `_afterMintChecked` extension point, and the shared code 85. Proofs: [`test/ThreatModel/ThreatModelV070Tests.t.sol`](../test/ThreatModel/ThreatModelV070Tests.t.sol) (16 tests, 4 fuzz).
 
 ### Manual Threat Model & Review (v0.4.0)
 
