@@ -180,10 +180,14 @@ Commit:
 - New guide `doc/technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md`: step-by-step deployment of `RuleWhitelist` with a CMTAT `v3.0.0` token.
   - Four setups: rule set directly or behind a RuleEngine, installed in the token constructor or later with `setRuleEngine`, with the roles and checks for each.
   - Mermaid sequence diagrams of a mint and of a transfer with the rule active.
+- New guide `doc/technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md`: the same deployment with a CMTAT `v3.3.0` token (validated against `v3.3.0-rc4`), with its own mint and transfer diagrams.
+  - On `v3.3.0` the minter reaches the rule as `spender`; `RuleWhitelist` does not screen it, even with `checkSpender`.
+  - A table lists the differences from `v3.0.0`: constructor `Engine` struct, mint path and error, token-side errors, reentrancy guard.
 - `RuleWhitelist` / `RuleWhitelistOwnable2Step` NatSpec: the `allowMintBurn` constructor parameter said it pre-lists `address(0)`; it sets the `allowMint` and `allowBurn` flags, and the zero address is never listed.
 
 ### Testing
 
+- `RuleWhitelistCMTATConstructor.t.sol` (CMTAT `v3.3.0-rc4`): `RuleWhitelist`, or a RuleEngine holding it, passed in the token constructor; a non-whitelisted minter can still issue to a whitelisted receiver with `checkSpender` on, a non-whitelisted `transferFrom` spender cannot, and with a RuleEngine nothing moves until the engine binds the token.
 - `RuleWhitelistV300Deployment.t.sol` (CMTAT `v3.0.0`): `RuleWhitelist`, or a RuleEngine holding it, passed in the token constructor; the first mint is screened, and with a RuleEngine nothing moves until the engine binds the token.
 - `test/InterfaceId/RuleInterfaceIdCompatibility.t.sol` (3 tests): pins the two `IRule` id literals and checks that each distinct `supportsInterface` implementation advertises the new id, the legacy id and `IRuleEngine`.
 - Deployment-script tests: one test per engine script for each branch of the forwarder choice (4 tests).
@@ -205,7 +209,7 @@ Commit:
   - Negative controls: three mutations (off-by-one cap, over-strict cap, wrong headroom view) each fail the suite. A first version missed the off-by-one on the safety invariant, because random amounts never hit `headroom + 1`; the `mintAtBoundary` action fixes that. Recorded in `INVARIANT_TESTS.md` §4.
   - Documented in `INVARIANT_TESTS.md` §3.3 and in the "Invariant testing" section of `doc/README.md`.
 - `remainingMintable()`: unit tests (headroom, exact fit, cap below supply, unreadable supply), a fuzz property that the headroom is exactly the largest mint the pre-flight check accepts, the ERC-3643 variant, and a real CMTAT v3.0.0 token across mints and burns.
-- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,312 tests pass in the default profile and 53 in the `erc3643` profile.
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,314 tests pass in the default profile and 53 in the `erc3643` profile.
 - **Security-review tests** (`CLAUDE_AUDIT.md` v0.7.0):
   - 16 proof-of-concept tests in `test/ThreatModel/ThreatModelV070Tests.t.sol` (4 fuzz). Tests suffixed `_CurrentBehaviour` must fail once a finding is fixed.
   - `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow` (`RuleIssuanceCapCMTATIntegration`): the gap-free deployment order of F-4 on a real CMTAT `v3.3` token and RuleEngine `rc7`; every mint, the admin's included, reverts until the cap rule is installed.

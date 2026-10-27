@@ -7,7 +7,8 @@ This guide deploys a CMTAT **v3.0.0** token whose transfers and mints are restri
 moments it can be installed (in the token constructor, or later with `setRuleEngine`), and what happens on a mint and
 on a transfer once it is active.
 
-CMTAT v3.0.0 is the last audited CMTAT release. Every step below is exercised against a real v3.0.0 token in
+CMTAT v3.0.0 is the last audited CMTAT release. For CMTAT v3.3.0 (validated against `v3.3.0-rc4`), see the
+[v3.3.0 guide](./DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md), which also lists the differences between the two versions. Every step below is exercised against a real v3.0.0 token in
 `test/CMTATv3.0.0/RuleWhitelistV300.t.sol` (rule installed after deployment, Standard and Debt, both topologies)
 and `test/CMTATv3.0.0/RuleWhitelistV300Deployment.t.sol` (rule or RuleEngine passed in the constructor).
 

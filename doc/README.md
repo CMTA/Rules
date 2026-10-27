@@ -530,7 +530,7 @@ forge test
 3. Add rules to the RuleEngine, or set the rule directly on the CMTAT token.
 4. Verify the transfer flow end-to-end with a small test transfer before enabling production flows.
 
-Full technical documentation for these scripts, including limitations, is in [`doc/technical/guides/DEPLOYMENT_SCRIPTS.md`](./technical/guides/DEPLOYMENT_SCRIPTS.md). For a step-by-step deployment of `RuleWhitelist` with a CMTAT **v3.0.0** token (rule set at deployment or after, directly or behind a RuleEngine), see [`DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md`](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md).
+Full technical documentation for these scripts, including limitations, is in [`doc/technical/guides/DEPLOYMENT_SCRIPTS.md`](./technical/guides/DEPLOYMENT_SCRIPTS.md). For a step-by-step deployment of `RuleWhitelist` with a CMTAT **v3.0.0** token (rule set at deployment or after, directly or behind a RuleEngine), see [`DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md`](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md); for CMTAT **v3.3.0**, [`DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md`](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md).
 
 Deployment scripts:
 - `script/DeployCMTATWithWhitelist.s.sol` — CMTAT + whitelist rule, bound directly to the token
@@ -649,7 +649,7 @@ Technical documentation lives in [`doc/technical/`](./technical/), split in two:
 | Directory | Contents |
 | --- | --- |
 | [`technical/contracts/`](./technical/contracts/) | One page per deployable contract: what it enforces, its restriction codes, roles, methods and caveats |
-| [`technical/guides/`](./technical/guides/) | Cross-cutting material that spans several contracts: [`RULE_SEMANTICS.md`](./technical/guides/RULE_SEMANTICS.md) (how the rules differ from one another), [`INVARIANT_TESTS.md`](./technical/guides/INVARIANT_TESTS.md) (the stateful invariant suite), [`DEPLOYMENT_SCRIPTS.md`](./technical/guides/DEPLOYMENT_SCRIPTS.md) (the `script/` deployment scripts), [`DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md`](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md) (step-by-step `RuleWhitelist` deployment with a CMTAT v3.0.0 token, with mint and transfer workflows) |
+| [`technical/guides/`](./technical/guides/) | Cross-cutting material that spans several contracts: [`RULE_SEMANTICS.md`](./technical/guides/RULE_SEMANTICS.md) (how the rules differ from one another), [`INVARIANT_TESTS.md`](./technical/guides/INVARIANT_TESTS.md) (the stateful invariant suite), [`DEPLOYMENT_SCRIPTS.md`](./technical/guides/DEPLOYMENT_SCRIPTS.md) (the `script/` deployment scripts), [`DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md`](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md) and [`DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md`](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md) (step-by-step `RuleWhitelist` deployment with a CMTAT v3.0.0 or v3.3.0 token, with mint and transfer workflows) |
 
 Per-contract pages:
 
@@ -674,6 +674,7 @@ Per-contract pages:
 | RuleConditionalTransfer | [RuleConditionalTransfer.md](./technical/contracts/RuleConditionalTransfer.md) — **maintained in a separate repository**, kept here for reference |
 | Deployment scripts | [DEPLOYMENT_SCRIPTS.md](./technical/guides/DEPLOYMENT_SCRIPTS.md) |
 | Deploy `RuleWhitelist` with CMTAT v3.0.0 | [DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md) |
+| Deploy `RuleWhitelist` with CMTAT v3.3.0 | [DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md) |
 
 ### Operational Notes
 
