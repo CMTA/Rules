@@ -86,7 +86,7 @@ bind the token to the engine **last**:
 5. `engine.bindToken(token)`. From the first mint that can succeed, the rule counts it.
 6. Grant `MINTER_ROLE`.
 
-Pinned by `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow`.
+Pinned by `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow`, and by `testDeploymentWithEngineInConstructorBlocksGrantedMinter` for a minter granted `MINTER_ROLE` before the token is bound.
 
 **With the rule set directly on the token, or an engine set after deployment.** The rule cannot be passed to the
 token's constructor (its own constructor reads the token's `totalSupply()`), so there is a window between token

@@ -107,4 +107,32 @@ contract RuleIssuanceCapCMTATIntegration is Test, HelperContract {
         vm.stopPrank();
         assertEq(rule.totalIssued(), CAP);
     }
+
+    /// @notice Same order with a dedicated minter granted `MINTER_ROLE` before the engine binds the token:
+    /// the role alone is not enough, its mint reverts until the token is bound, then the rule counts it.
+    function testDeploymentWithEngineInConstructorBlocksGrantedMinter() public {
+        address minter = address(0x4D1);
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        RuleEngine engine = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
+        CMTATStandardStandalone token = _deployTokenWithEngine(address(engine));
+        rule = new RuleIssuanceCap(DEFAULT_ADMIN_ADDRESS, address(token), CAP, 0);
+        rule.bindToken(address(engine));
+        engine.addRule(rule);
+        token.grantRole(keccak256("MINTER_ROLE"), minter);
+        vm.stopPrank();
+
+        vm.prank(minter);
+        vm.expectRevert(TokenBindingModuleInvariantStorage.TokenBinding_UnauthorizedCaller.selector);
+        token.mint(ADDRESS1, 1);
+        assertEq(token.totalSupply(), 0);
+
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        engine.bindToken(address(token));
+        vm.prank(minter);
+        token.mint(ADDRESS1, CAP);
+        vm.prank(minter);
+        vm.expectPartialRevert(RuleMaxTotalSupply_InvalidTransferFrom.selector);
+        token.mint(ADDRESS1, 1);
+        assertEq(rule.totalIssued(), CAP);
+    }
 }

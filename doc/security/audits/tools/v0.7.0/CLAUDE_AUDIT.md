@@ -35,7 +35,7 @@ This is an AI-assisted review, not an audit by an audit company. Production sour
 | Convention changes | 63 functions marked `virtual`; comment changes. No runtime effect: runtime sizes identical |
 
 **Out of scope:** `lib/` and `src/mocks/`; the code unchanged since `v0.6.0`, which the `v0.4.0` audit
-([`CLAUDE_AUDIT.md`](../../v0.4.0/claude-audit/CLAUDE_AUDIT.md)) and later reviews cover. Dependencies are trusted,
+([`CLAUDE_AUDIT.md`](../v0.4.0/claude-audit/CLAUDE_AUDIT.md)) and later reviews cover. Dependencies are trusted,
 but two of their properties decide in-scope behaviour: RuleEngine `v3.0.0-rc7` can bind **several** tokens, and
 its `_checkBoundToken` compares the raw `msg.sender`.
 
@@ -362,7 +362,7 @@ will: non-replenishment holds relative to the cap the issuer sets. This is inher
 |---|---|---|---|
 | F-1 | ⚠️ Documented, behaviour unchanged | `bindToken` NatSpec (`RuleIssuanceCapBase.sol`) gains a WARNING and an `@param` note that a bound RuleEngine must serve only `tokenContract`; `RuleIssuanceCap.md` § Binding gains a WARNING explaining what a multi-token engine does to the counter | Doc change only; the two `testIC1_*_CurrentBehaviour` PoCs still pass, since the behaviour they pin is unchanged |
 | F-3 | ⚠️ Documented, behaviour unchanged | `_afterMintChecked` NatSpec (`RuleMaxTotalSupplyBase.sol`) gains a WARNING: both `transferred` overloads are ungated, and a subclass that writes in the hook must restrict them to its bound caller | Doc change only; `testMTS1_UngatedSubclassIsDrivableByAnyone_CurrentBehaviour` still passes, as the base is unchanged |
-| F-4 | ⚠️ Documented, behaviour unchanged | `RuleIssuanceCap.md` gains a "Deployment order" section: the window before first installation, the setup order for each topology, the admin caveat, and the `initialIssued` rule for a live token. It adds a gap-free order not in the original recommendation: set the RuleEngine in the CMTAT constructor and bind the token to the engine **last**, so every mint, the admin's included, reverts until the cap rule is in place | New test `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow` (real CMTAT `v3.3` + RuleEngine `rc7`); `testIC3_IssuanceBeforeAttachIsNotCounted_CurrentBehaviour` still passes, as the rule is unchanged |
+| F-4 | ⚠️ Documented, behaviour unchanged | `RuleIssuanceCap.md` gains a "Deployment order" section: the window before first installation, the setup order for each topology, the admin caveat, and the `initialIssued` rule for a live token. It adds a gap-free order not in the original recommendation: set the RuleEngine in the CMTAT constructor and bind the token to the engine **last**, so every mint, the admin's included, reverts until the cap rule is in place | New tests `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow` and `testDeploymentWithEngineInConstructorBlocksGrantedMinter` (real CMTAT `v3.3` + RuleEngine `rc7`); `testIC3_IssuanceBeforeAttachIsNotCounted_CurrentBehaviour` still passes, as the rule is unchanged |
 | F-2 | ⛔ Declined | None: a binding check misses the likely mistakes (stale engine, topology mix-up) and, in its strict form, rejects both documented setup orders (§3.3) | `testIC2_BindingUnrelatedCallerIsAccepted_CurrentBehaviour` pins the accepted behaviour |
 | F-5 | By design, not changed | — | — |
 
@@ -371,7 +371,7 @@ not cite this report.
 
 What the review added: 16 tests in `test/ThreatModel/ThreatModelV070Tests.t.sol` (12 unit and integration tests, the
 integration ones on a real CMTAT `v3.3` token and RuleEngine `rc7`; 4 fuzz tests). After adding them and after the
-documentation changes for F-1, F-3 and F-4 (plus one integration test for F-4): `forge test` 1309 passed, 0 failed; `FOUNDRY_PROFILE=erc3643 forge test` 53 passed,
+documentation changes for F-1, F-3 and F-4 (plus two integration tests for F-4): `forge test` 1310 passed, 0 failed; `FOUNDRY_PROFILE=erc3643 forge test` 53 passed,
 0 failed; `forge fmt --check` clean.
 
 ---

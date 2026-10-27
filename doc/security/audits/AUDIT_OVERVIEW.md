@@ -15,7 +15,7 @@
 
 | Date | Type | Tool / Source | Version | Reports |
 |---|---|---|---|---|
-| 2026-10-26 | AI-assisted security review | Claude Code (Anthropic) | v0.7.0 | [**CLAUDE_AUDIT.md**](./tools/v0.7.0/claude-audit/CLAUDE_AUDIT.md) (security, delta since v0.6.0: 0 Low/Medium/High, 5 Info, 16 PoCs) |
+| 2026-10-26 | AI-assisted security review | Claude Code (Anthropic) | v0.7.0 | [**CLAUDE_AUDIT.md**](./tools/v0.7.0/CLAUDE_AUDIT.md) (security, delta since v0.6.0: 0 Low/Medium/High, 5 Info, 16 PoCs) |
 | 2026-10-26 | AI-assisted review | Claude Code (Anthropic) | v0.7.0 | [**CLAUDE_ANALYSIS.md**](./tools/v0.7.0/CLAUDE_ANALYSIS.md) (code quality, `src/`: 24 findings, 10 fixed, nothing exploitable) |
 | 2026-10-26 | Static analysis | Slither 0.11.6 | v0.7.0 | [report](./tools/v0.7.0/slither-report.md) · [feedback](./tools/v0.7.0/slither-report-feedback.md) · [0.11.5 comparison run](./tools/v0.7.0/slither-report-0.11.5.md) |
 | 2026-10-26 | Static analysis | Aderyn 0.6.5 | v0.7.0 | [report](./tools/v0.7.0/aderyn-report.md) · [feedback](./tools/v0.7.0/aderyn-report-feedback.md) — second run, after fixing the nine unused imports the first run reported |
@@ -220,7 +220,7 @@ Slither's tally is **unchanged** from the pre-remediation run. Aderyn moved 8 �
 
 ## AI-assisted security review results (v0.7.0)
 
-Scope: the code changed since `v0.6.0`, chiefly `RuleIssuanceCap`, the `RuleMaxTotalSupply` setters and hook, and code 85. **0 Critical · 0 High · 0 Medium · 0 Low · 5 Informational**, plus 20 threats verified safe or by design. An adversarial review pass downgraded F-1 from Low. Detail in [`CLAUDE_AUDIT.md`](./tools/v0.7.0/claude-audit/CLAUDE_AUDIT.md); PoCs in `test/ThreatModel/ThreatModelV070Tests.t.sol`.
+Scope: the code changed since `v0.6.0`, chiefly `RuleIssuanceCap`, the `RuleMaxTotalSupply` setters and hook, and code 85. **0 Critical · 0 High · 0 Medium · 0 Low · 5 Informational**, plus 20 threats verified safe or by design. An adversarial review pass downgraded F-1 from Low. Detail in [`CLAUDE_AUDIT.md`](./tools/v0.7.0/CLAUDE_AUDIT.md); PoCs in `test/ThreatModel/ThreatModelV070Tests.t.sol`.
 
 | ID | Severity | Finding | Status |
 |---|---|---|---|

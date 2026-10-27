@@ -136,12 +136,12 @@ Commit:
 
 ### Documentation
 
-- **Security review of `v0.7.0`** ([`CLAUDE_AUDIT.md`](./doc/security/audits/tools/v0.7.0/claude-audit/CLAUDE_AUDIT.md)), covering the code changed since `v0.6.0`: 0 Critical, 0 High, 0 Medium, 0 Low, 5 Info. No code change.
+- **Security review of `v0.7.0`** ([`CLAUDE_AUDIT.md`](./doc/security/audits/tools/v0.7.0/CLAUDE_AUDIT.md)), covering the code changed since `v0.6.0`: 0 Critical, 0 High, 0 Medium, 0 Low, 5 Info. No code change.
   - The Info findings concern deployment shapes `RuleIssuanceCap` cannot detect: a RuleEngine serving several tokens shares one counter (F-1), a binding unrelated to `tokenContract` is accepted while the views report OK (F-2), mints before attachment are not counted (F-4). Also: the `_afterMintChecked` hook does not warn that `RuleMaxTotalSupplyBase.transferred` is ungated (F-3), and code 85 does not name the unbound rule (F-5).
   - F-1 is documented, behaviour unchanged: the `RuleIssuanceCap.bindToken` NatSpec and `RuleIssuanceCap.md` § Binding now warn that a bound RuleEngine must serve only `tokenContract`, since every token it serves would consume this token's issuance budget.
   - F-3 is documented, behaviour unchanged: the `_afterMintChecked` NatSpec in `RuleMaxTotalSupplyBase` now warns that both `transferred` overloads are ungated, so a subclass that writes in the hook must restrict them to its bound caller.
   - The detach WARNING in `RuleIssuanceCap.md` now explains what revoking `MINTER_ROLE` achieves, and that it does not stop the token's default admin (CMTAT grants it every role) or depend on pausing (which does not stop mints).
-  - F-4 is documented, behaviour unchanged: `RuleIssuanceCap.md` gains a "Deployment order" section. Mints made before the rule is installed are not counted, so install it before anyone can mint. With a RuleEngine there is a gap-free order: set the engine in the CMTAT constructor and bind the token to the engine last, so every mint reverts until the cap rule is in place (pinned by a new integration test).
+  - F-4 is documented, behaviour unchanged: `RuleIssuanceCap.md` gains a "Deployment order" section. Mints made before the rule is installed are not counted, so install it before anyone can mint. With a RuleEngine there is a gap-free order: set the engine in the CMTAT constructor and bind the token to the engine last, so every mint reverts until the cap rule is in place (pinned by two new integration tests).
   - F-2 (a binding unrelated to `tokenContract` is accepted) is declined: a binding-time check misses the likely mistakes (a stale engine, a topology mix-up), and its strict form rejects both documented setup orders. The behaviour fails closed and is caused by the trusted compliance manager.
 - **Code-quality review of `v0.7.0`** (`doc/security/audits/tools/v0.7.0/CLAUDE_ANALYSIS.md`, 24 findings): 10 fixed, 9 checked correct, 5 deliberately left. H-1 was decided and implemented as the code-85 change above. Nothing found is a vulnerability.
 - **Production comments no longer cite AI-assisted review reports** (`CLAUDE_AUDIT.md`, `CLAUDE_ANALYSIS.md`) or their bare finding IDs; each of the seven affected comments now states its conclusion itself. Comments only, no code change.
@@ -194,10 +194,11 @@ Commit:
   - Negative controls: three mutations (off-by-one cap, over-strict cap, wrong headroom view) each fail the suite. A first version missed the off-by-one on the safety invariant, because random amounts never hit `headroom + 1`; the `mintAtBoundary` action fixes that. Recorded in `INVARIANT_TESTS.md` §4.
   - Documented in `INVARIANT_TESTS.md` §3.3 and in the "Invariant testing" section of `doc/README.md`.
 - `remainingMintable()`: unit tests (headroom, exact fit, cap below supply, unreadable supply), a fuzz property that the headroom is exactly the largest mint the pre-flight check accepts, the ERC-3643 variant, and a real CMTAT v3.0.0 token across mints and burns.
-- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,309 tests pass in the default profile and 53 in the `erc3643` profile.
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,310 tests pass in the default profile and 53 in the `erc3643` profile.
 - **Security-review tests** (`CLAUDE_AUDIT.md` v0.7.0):
   - 16 proof-of-concept tests in `test/ThreatModel/ThreatModelV070Tests.t.sol` (4 fuzz). Tests suffixed `_CurrentBehaviour` must fail once a finding is fixed.
   - `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow` (`RuleIssuanceCapCMTATIntegration`): the gap-free deployment order of F-4 on a real CMTAT `v3.3` token and RuleEngine `rc7`; every mint, the admin's included, reverts until the cap rule is installed.
+  - `testDeploymentWithEngineInConstructorBlocksGrantedMinter` (`RuleIssuanceCapCMTATIntegration`): the same order with a dedicated minter granted `MINTER_ROLE` before the engine binds the token; the role alone does not let it mint, and once the token is bound its mints are counted.
 
 ## v0.6.0 - 2026-08-24
 
