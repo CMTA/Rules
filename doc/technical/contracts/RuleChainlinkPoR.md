@@ -2,7 +2,7 @@
 
 [TOC]
 
-`RuleChainlinkPoR` ensures the total supply of a token never exceeds the reserves actually backing it. Before every mint it reads the latest reserve value from a [Chainlink Proof of Reserve](https://docs.chain.link/data-feeds/proof-of-reserve) data feed and checks whether the new total supply (current supply plus the requested mint amount) would exceed what the reserves can back. If it would, the mint is rejected.
+`RuleChainlinkPoR` ensures the total supply of a token never exceeds the reserves backing it. Before every mint it reads the latest reserve value from a [Chainlink Proof of Reserve](https://docs.chain.link/data-feeds/proof-of-reserve) data feed and checks whether the new total supply (current supply plus the requested mint amount) would exceed what the reserves can back. If it would, the mint is rejected.
 
 The maximum mintable supply equals the reported reserves **exactly**: there is no margin, buffer or headroom parameter. If you need a safety cushion, express it upstream (report conservative reserves on the feed) or compose with `RuleMaxTotalSupply` for a static ceiling.
 
@@ -19,15 +19,9 @@ The rule is split in two, so feed handling does not drag the rest of the rule al
 | [`ChainlinkPoRFeedManager`](../../../src/rules/validation/abstract/core/ChainlinkPoRFeedManager.sol) | The feed, the protected token, `tokenDecimals`, `maxStalenessSeconds`, their setters and the revert-free reserve read (`maxBackedSupply`, decimal scaling) | `TokenSupplyReader`, the invariant storage. **No constructor, no ERC-1404** |
 | [`RuleChainlinkPoRBase`](../../../src/rules/validation/abstract/base/RuleChainlinkPoRBase.sol) | The constructor, the ERC-1404 / ERC-3643 surface (`canReturnTransferRestrictionCode`, `messageForTransferRestriction`, `transferred`) and the restriction logic that turns a backed supply into a code | `RuleTransferValidation`, `ChainlinkPoRFeedManager` |
 
-The manager declaring no constructor is the point of the split: it exposes `_setReservesFeed`,
-`_setTokenMetadata` and `_setMaxStalenessSeconds` and leaves *when* they run to the inheritor.
-`RuleChainlinkPoRBase` calls all three from its constructor; an upgradeable variant would call the
-same three from an initializer, with no change to the manager. Nothing in the manager references a
-restriction-code interface either, so a contract that only wants a revert-free view of
-reserve-backed supply can inherit it without implementing an ERC-1404 surface it does not need.
+The manager declaring no constructor is the point of the split: it exposes `_setReservesFeed`, `_setTokenMetadata` and `_setMaxStalenessSeconds` and leaves *when* they run to the inheritor. `RuleChainlinkPoRBase` calls all three from its constructor; an upgradeable variant would call the same three from an initializer, with no change to the manager. Nothing in the manager references a restriction-code interface either, so a contract that only wants a revert-free view of reserve-backed supply can inherit it without implementing an ERC-1404 surface it does not need.
 
-Storage layout and the deployed ABI are **unchanged** by the split, verified per-slot from the
-compiled artifacts for both `RuleChainlinkPoR` and `RuleChainlinkPoROwnable2Step`.
+Storage layout and the deployed ABI are **unchanged** by the split, verified per-slot from the compiled artifacts for both `RuleChainlinkPoR` and `RuleChainlinkPoROwnable2Step`.
 
 ## Token compatibility: ERC-20 only
 
@@ -89,7 +83,7 @@ The feed's `decimals()` is read **on every check** and never cached. The value v
 
 Roughly 2.6% of a mint, paid only on the mint path; transfers and burns short-circuit before any feed access and are completely unaffected.
 
-**Why this is safe for a MUST-NOT-revert view.** Reading live adds a second external call that could fail, so both feed calls are guarded identically: the `code.length` check covers both (a `try` to a codeless address reverts *uncatchably*, so `try/catch` alone would not be enough — see the deployment-precondition section for why, and why the mechanism is the ABI decoder rather than `extcodesize`), and a reverting `decimals()` returns `CODE_RESERVES_ANSWER_INVALID`. The `MAX_FEED_DECIMALS` bound is additionally **re-checked at read time**, not just at configuration — otherwise a feed that raised its decimals past the bound would overflow the scaling exponent and revert the view.
+**Why this is safe for a MUST-NOT-revert view.** Reading live adds a second external call that could fail, so both feed calls are guarded identically: each is wrapped in `try/catch`, and a reverting `decimals()` returns `CODE_RESERVES_ANSWER_INVALID`. A `try` to a codeless address would revert *uncatchably*, so `try/catch` alone is enough only because the feed is checked to have code at configuration and EIP-6780 keeps it there; the deployment-precondition section explains this, and why the mechanism is the ABI decoder rather than `extcodesize`. The `MAX_FEED_DECIMALS` bound is additionally **re-checked at read time**, not just at configuration — otherwise a feed that raised its decimals past the bound would overflow the scaling exponent and revert the view.
 
 **Residual risk.** The scaling now always agrees with what the feed reports *at the moment of the check*, so there is no stale-cache window. What remains is that a feed changing decimals mid-life still changes the meaning of the reserve figure between one block and the next; the rule follows it faithfully rather than silently using an outdated scale, but an operator monitoring a feed migration should still confirm the new aggregator reports the reserve they expect.
 
@@ -195,37 +189,24 @@ Anything else returns `TRANSFER_OK`. `detectTransferRestrictionFrom` delegates t
 
 #### Why two feed-failure codes
 
-`79` and `77` both block the mint, so the *token* behaves identically. They are separated because they tell an
-operator different things, and the restriction code is the only channel available, because the read path cannot revert
-with data, and a view cannot emit an event.
+`79` and `77` both block the mint, so the *token* behaves identically. They are separated because they tell an operator different things, and the restriction code is the only channel available, because the read path cannot revert with data, and a view cannot emit an event.
 
 | Code | Meaning | What an operator checks |
 | --- | --- | --- |
 | `79` | The feed could not be read at all | Feed liveness; is the configured address a compatible `AggregatorV3Interface`? |
 | `77` | A round came back and its contents are unusable | Is this really a Proof of Reserve feed (a price feed can legitimately go negative)? Wait for the round to complete, or — for a future-dated `updatedAt` — treat the aggregator as compromised and repoint the feed. |
 
-`80` is left reserved. Splitting `79` further into "reverted" versus "decimals out of range" was considered and
-rejected: both mean the configured feed cannot be used, so the remedy is the same.
+`80` is left reserved. Splitting `79` further into "reverted" versus "decimals out of range" was considered and rejected: both mean the configured feed cannot be used, so the remedy is the same.
 
 #### Deployment precondition: EIP-6780 (Cancun or later)
 
-`try/catch` does **not** catch a call to an address with no code, and the reason is not the one usually quoted.
-`catch` handles a revert raised by the *callee*; it cannot handle a failure in this contract's own frame.
+`try/catch` does **not** catch a call to an address with no code, and the reason is not the one usually quoted. `catch` handles a revert raised by the *callee*; it cannot handle a failure in this contract's own frame.
 
-For a call that returns data (`totalSupply()`, `decimals()`, `latestRoundData()`), **Solidity 0.8.10 and later
-skip the `EXTCODESIZE` check entirely** and rely on the ABI decoder instead. The `CALL` to a codeless account
-*succeeds*, returning 0 bytes; the decoder then fails to read the expected values from nothing, in the caller's
-frame, after the call has already returned. There is no callee revert for `catch` to attach to. (For a call
-returning *nothing*, the `EXTCODESIZE` check is still emitted and reverts before any call is made. Also
-uncatchable, different mechanism.)
+For a call that returns data (`totalSupply()`, `decimals()`, `latestRoundData()`), **Solidity 0.8.10 and later skip the `EXTCODESIZE` check entirely** and rely on the ABI decoder instead. The `CALL` to a codeless account *succeeds*, returning 0 bytes; the decoder then fails to read the expected values from nothing, in the caller's frame, after the call has already returned. There is no callee revert for `catch` to attach to. For a call returning *nothing*, the `EXTCODESIZE` check is still emitted and reverts before any call is made: also uncatchable, by a different mechanism.
 
-Confirm it in one step: point the rule at a contract that *has* code whose fallback succeeds and returns zero
-bytes. `EXTCODESIZE` passes, the `CALL` succeeds, and the view still reverts uncatchably.
+Confirm it in one step: point the rule at a contract that *has* code whose fallback succeeds and returns zero bytes. `EXTCODESIZE` passes, the `CALL` succeeds, and the view still reverts uncatchably.
 
-The revert-free guarantee therefore rests on `reservesFeed` and `tokenContract` still having code at read time —
-**and on their returning well-formed data**. Code alone is not sufficient: a proxy upgraded to an implementation
-whose fallback returns empty data keeps its code and still breaks the read path. Both are trusted inputs for
-this reason.
+The revert-free guarantee therefore rests on `reservesFeed` and `tokenContract` still having code at read time — **and on their returning well-formed data**. Code alone is not sufficient: a proxy upgraded to an implementation whose fallback returns empty data keeps its code and still breaks the read path. Both are trusted inputs for this reason.
 
 That holds because the setters require code at configuration time (`RuleChainlinkPoR_FeedIsNotAContract`, `RuleChainlinkPoR_TokenIsNotAContract`), every write to either field goes through a validated setter, and **EIP-6780** (Cancun) restricts `SELFDESTRUCT` to accounts created in the same transaction — so a contract that exists across transactions can no longer be removed. A validated address stays a contract.
 
@@ -289,7 +270,7 @@ The decisive difference is **how a rejection is signalled**. `SecureMintPolicy.r
 ### Where this rule is stricter
 
 - **Feed failures degrade to a code, not a revert.** A feed with no code, a reverting `latestRoundData()`, a negative answer or an incomplete round all yield code `77`. ACE has no `updatedAt == 0` check at all, so with `maxStalenessSeconds == 0` an incomplete round is accepted at face value.
-- **A future `updatedAt` is rejected, not merely survived.** ACE computes `block.timestamp - updatedAt` unguarded, so a feed reporting a timestamp ahead of the block panics the whole call — fail-closed, but as a panic rather than a clean rejection. This rule returns code `77`, and does so **regardless of `maxStalenessSeconds`**: a timestamp no aggregator on this chain could have written is a malformed answer, and an operator who disables freshness checking must not thereby accept forged timestamps. (Nethermind AuditAgent NM-10; before the fix the underflow guard `block.timestamp > updatedAt` silently accepted any future stamp, so a feed frozen on an old reserve answer could keep authorising mints until that timestamp elapsed.)
+- **A future `updatedAt` is rejected, not merely survived.** ACE computes `block.timestamp - updatedAt` unguarded, so a feed reporting a timestamp ahead of the block panics the whole call — fail-closed, but as a panic rather than a clean rejection. This rule returns code `77`, and does so **regardless of `maxStalenessSeconds`**: a timestamp no aggregator on this chain could have written is a malformed answer, and an operator who disables freshness checking must not thereby accept forged timestamps. Reported as Nethermind AuditAgent NM-10: before the fix the underflow guard `block.timestamp > updatedAt` silently accepted any future stamp, so a feed frozen on an old reserve answer could keep authorising mints until that timestamp elapsed.
 - **Feed decimals are bounded at configuration time**, so the scaling exponent can never overflow. ACE accepts any `uint8`, where a feed reporting e.g. 78 decimals makes `10 ** 78` revert on every mint.
 - **`0`-decimals tokens are supported.** ACE requires `decimals > 0`, which excludes CMTAT equity tokens outright.
 
@@ -312,7 +293,7 @@ The rule never reads `msg.sender` and holds no per-token binding, so it behaves 
 
 > **Warning.** A `RuleChainlinkPoR` instance protects exactly **one** token: the one in `tokenContract`. Nothing on-chain enforces that. Deploy a separate instance per token.
 
-**What the rule actually checks.** On every mint the rule reads `totalSupply()` from the **configured `tokenContract`**, never from whichever token triggered the check. It has no way to learn that identity: in Topology A the caller is the RuleEngine, and the `transferred(spender, from, to, value)` payload carries no token address.
+**What the rule checks.** On every mint the rule reads `totalSupply()` from the **configured `tokenContract`**, never from whichever token triggered the check. It has no way to learn that identity: in Topology A the caller is the RuleEngine, and the `transferred(spender, from, to, value)` payload carries no token address.
 
 **What goes wrong.** Suppose one instance `R` is configured with `tokenContract = X` and added to both token X's RuleEngine and token Y's RuleEngine. A mint of `value` on **Y** is then evaluated as:
 

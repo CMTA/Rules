@@ -5,22 +5,13 @@ slither . --checklist --filter-paths "node_modules,lib,test,forge-std,mocks" \
   > doc/security/audits/tools/v0.7.0/slither-report.md
 ```
 
-Tool: **Slither 0.11.6**, the latest release, run through `uvx --from slither-analyzer==0.11.6` · Compiler: solc
-`0.8.36` · Run date: **2026-10-26**
-Scope: production contracts only. Mocks excluded via the `mocks` filter, vendored dependencies via `lib`.
-229 contracts, 102 detectors, **46 results**.
+Tool: **Slither 0.11.6**, the latest release, run through `uvx --from slither-analyzer==0.11.6` · Compiler: solc `0.8.36` · Run date: **2026-10-26** Scope: production contracts only. Mocks excluded via the `mocks` filter, vendored dependencies via `lib`. 229 contracts, 102 detectors, **46 results**.
 
-A second run with **Slither 0.11.5**, the version of the `v0.4.0`–`v0.6.0` reports, is kept as
-[`slither-report-0.11.5.md`](./slither-report-0.11.5.md). It separates what changed in the code from what changed in
-the tool: see [Two runs, two questions](#two-runs-two-questions).
+A second run with **Slither 0.11.5**, the version of the `v0.4.0`–`v0.6.0` reports, is kept as [`slither-report-0.11.5.md`](./slither-report-0.11.5.md). It separates what changed in the code from what changed in the tool: see [Two runs, two questions](#two-runs-two-questions).
 
-**Executive triage: nothing to fix.** No finding is exploitable. Both High-impact results are the same false
-positive dismissed since `v0.4.0`, on a permissioned path. Every `dead-code` result, including the new one on
-`RuleIssuanceCapBase._afterMintChecked`, is reachable through virtual dispatch.
+**Executive triage: nothing to fix.** No finding is exploitable. Both High-impact results are the same false positive dismissed since `v0.4.0`, on a permissioned path. Every `dead-code` result, including the new one on `RuleIssuanceCapBase._afterMintChecked`, is reachable through virtual dispatch.
 
-One **analysis blind spot**, present in both versions and in earlier releases without being recorded, is
-documented [below](#blind-spot-functions-slither-cannot-analyse). It does not hide a defect, but it limits what this
-report covers.
+One **analysis blind spot**, present in both versions and in earlier releases without being recorded, is documented [below](#blind-spot-functions-slither-cannot-analyse). It does not hide a defect, but it limits what this report covers.
 
 ### Scope check
 
@@ -45,8 +36,7 @@ grep -c 'test/\|src/mocks/'   slither-report.md   → 0 findings (same echo line
 | `naming-convention` | Informational | 6 | By design |
 | `unused-state` | Informational | 4 | Cosmetic |
 
-NOTE: Slither 0.11.6 leaves `arbitrary-send-erc20` out of the checklist's summary list at the top of the raw
-output, which therefore adds up to 44. Both results are in the body and on stderr. 46 is the correct count.
+NOTE: Slither 0.11.6 leaves `arbitrary-send-erc20` out of the checklist's summary list at the top of the raw output, which therefore adds up to 44. Both results are in the body and on stderr. 46 is the correct count.
 
 - **`arbitrary-send-erc20` (2)** — `approveAndTransferIfAllowed` in both conditional-transfer bases. `from` is caller-chosen, but the function is gated by `onlyTransferApprover`, consumes a recorded approval, checks the allowance and transfers only on the bound token.
 - **`uninitialized-local` (2)** — `ChainlinkPoRFeedManager` locals assigned inside `try`, whose `catch` returns or reverts before any read.
@@ -77,14 +67,11 @@ Changing the code and the tool at the same time would make a delta unreadable, h
 | `dead-code` | 3 | 9 | **+6** | New: the six `_contextSuffixLength` overrides and `RuleIssuanceCapBase._afterMintChecked`. No longer flagged: `RuleChainlinkPoRBase._detectTransferRestrictionOnNotify` |
 | all others | 34 | 34 | — | |
 
-Every result 0.11.6 adds is a false positive of the same kind, an internal function reached only through virtual
-dispatch or a function pointer. 0.11.6 is no more precise on this codebase than 0.11.5, just differently imprecise.
+Every result 0.11.6 adds is a false positive of the same kind, an internal function called only through virtual dispatch or a function pointer. 0.11.6 is no more precise on this codebase than 0.11.5, just differently imprecise.
 
 ### Delta of this release's code (0.11.5 on both)
 
-**46 → 46 results, 0 changed**, although this release added `RuleIssuanceCap` (four files, a stateful
-counter, caller binding), made `RuleMaxTotalSupplyBase.transferred` non-`view` with a new hook, and migrated to
-RuleEngine `v3.0.0-rc7` / CMTAT `v3.3.0-rc4`. Contract count 225 → 229, the four new files.
+**46 → 46 results, 0 changed**, although this release added `RuleIssuanceCap` (four files, a stateful counter, caller binding), made `RuleMaxTotalSupplyBase.transferred` non-`view` with a new hook, and migrated to RuleEngine `v3.0.0-rc7` / CMTAT `v3.3.0-rc4`. Contract count 225 → 229, the four new files.
 
 ## Blind spot: functions Slither cannot analyse
 
@@ -96,28 +83,20 @@ Both versions log `Impossible to generate IR … 'NoneType' object has no attrib
 | `IdentityRegistryWhitelist` | `_addAddresses`, `_removeAddresses` |
 | `ERC3643MaxBalanceHarness` (mock, out of scope) | `_addAddresses`, `_removeAddresses` |
 
-Each passes the internal function `_requireNotZeroAddress` as a function pointer to `AddressSetBatchLib`. Without
-IR, **no detector runs on those function bodies in those contracts**, and the run still reports success.
+Each passes the internal function `_requireNotZeroAddress` as a function pointer to `AddressSetBatchLib`. Without IR, **no detector runs on those function bodies in those contracts**, and the run still reports success.
 
-The same errors appear in the 0.11.5 log, and the code has not changed since `v0.6.0`. The `v0.6.0` run therefore
-very likely had the same gap; it was not recorded then.
+The same errors appear in the 0.11.5 log, and the code has not changed since `v0.6.0`. The `v0.6.0` run therefore very likely had the same gap; it was not recorded then.
 
 **Why it does not hide a defect here:**
 - The source is `RuleAddressSetInternal`, inherited unchanged. Slither does analyse it in the contracts where IR generation succeeds: the 0.11.5 run reports findings on `RuleAddressSetInternal._addAddresses` itself.
 - The functions are covered by the batch-operation unit tests of both contracts, including the zero-address rejection the pointer implements (I-12).
 
-**Recommendation:** treat it as a coverage limit of the tool, not a finding, and check the stderr log of every
-future run for `Impossible to generate IR`. A run that reports success can still have skipped functions.
+**Recommendation:** treat it as a coverage limit of the tool, not a finding, and check the stderr log of every future run for `Impossible to generate IR`. A run that reports success can still have skipped functions.
 
 ## Tooling note
 
-The system-wide `slither` launcher in this environment is broken (its Python package is missing), so both runs used
-`uvx` with an exact pinned version. That keeps each run reproducible. Re-run with
-`uvx --from slither-analyzer==0.11.6 slither …`.
+The system-wide `slither` launcher in this environment is broken (its Python package is missing), so both runs used `uvx` with an exact pinned version. That keeps each run reproducible. Re-run with `uvx --from slither-analyzer==0.11.6 slither …`.
 
 ## What a clean report does and does not mean
 
-Slither matched nothing actionable. That is not evidence of correctness: the properties that make
-`RuleIssuanceCap` safe are semantic. Burns must not restore room, the counter must be enforced with the real
-amount even on a re-phased write path, and only the bound caller may record a mint. These are established by the
-unit, CMTAT v3.0.0 and invariant suites, with mutation controls, not by static analysis.
+Slither matched nothing actionable. That is not evidence of correctness: the properties that make `RuleIssuanceCap` safe are semantic. Burns must not restore room, the counter must be enforced with the real amount even on a re-phased write path, and only the bound caller may record a mint. These are established by the unit, CMTAT v3.0.0 and invariant suites, with mutation controls, not by static analysis.

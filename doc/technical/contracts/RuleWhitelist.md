@@ -98,12 +98,9 @@ Enables or disables spender checks for `transferFrom`. Restricted to `DEFAULT_AD
 
 ### Zero address — the mint/burn sentinel, never a list member
 
-The zero address **cannot be added to the whitelist**: `addAddress(address(0))` reverts with
-`RuleAddressSet_ZeroAddressNotAllowed`, and a batch containing it reverts too.
+The zero address **cannot be added to the whitelist**: `addAddress(address(0))` reverts with `RuleAddressSet_ZeroAddressNotAllowed`, and a batch containing it reverts too.
 
-It is the ERC-20 mint/burn sentinel, not a participant. Listing it would make the standardized identity getters
-assert falsehoods — `isVerified(address(0))` and `contains(address(0))` would return `true`, contradicting ERC-3643,
-which defines `isVerified` as *"is this wallet a valid investor holding the required claims"*.
+It is the ERC-20 mint/burn sentinel, not a participant. Listing it would make the standardized identity getters assert falsehoods — `isVerified(address(0))` and `contains(address(0))` would return `true`, contradicting ERC-3643, which defines `isVerified` as *"is this wallet a valid investor holding the required claims"*.
 
 Mint and burn are instead governed by explicit flags:
 
@@ -112,11 +109,9 @@ Mint and burn are instead governed by explicit flags:
 | `allowMint` | Permits `from == address(0)` | `24` (`CODE_MINT_NOT_ALLOWED`) |
 | `allowBurn` | Permits `to == address(0)` | `25` (`CODE_BURN_NOT_ALLOWED`) |
 
-Both are set together by the `allowMintBurn` constructor parameter and are independently settable afterwards
-(`setAllowMint` / `setAllowBurn`), so an issuer can permanently close issuance while keeping redemptions open.
+Both are set together by the `allowMintBurn` constructor parameter and are independently settable afterwards (`setAllowMint` / `setAllowBurn`), so an issuer can permanently close issuance while keeping redemptions open.
 
-The flags gate the **operation only**: a permitted mint still requires a whitelisted **recipient**, and a permitted
-burn still requires a whitelisted **sender**.
+The flags gate the **operation only**: a permitted mint still requires a whitelisted **recipient**, and a permitted burn still requires a whitelisted **sender**.
 
 ### Batch vs single operations
 

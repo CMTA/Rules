@@ -6,19 +6,17 @@
 
 > **This is not a compliance rule.** It implements no `IRule` surface, has no restriction codes, and **must not be added to a `RuleEngine`**. It sits on the token's *identity registry* slot, not its *compliance* slot. Do not confuse it with [`RuleIdentityRegistry`](./RuleIdentityRegistry.md), which is the mirror image: a compliance rule that *consults* an external identity registry. This contract *is* the registry.
 
-> **Using it with a CMTAT token.** CMTAT has **no** `setIdentityRegistry` slot — that is ERC-3643 only — so
-> this contract cannot be installed on a CMTAT token directly. Reach it through
-> [`RuleIdentityRegistry`](./RuleIdentityRegistry.md) in a `RuleEngine`, which consults this registry over
-> `isVerified`. The two are wired by interface, not inheritance, and that pairing is pinned by
-> [`CMTATRuleIdentityRegistryComposition.t.sol`](../../../test/IdentityRegistryWhitelist/CMTATRuleIdentityRegistryComposition.t.sol).
+> **Using it with a CMTAT token.** CMTAT has **no** `setIdentityRegistry` slot — that is ERC-3643 only — so this contract cannot be installed on a CMTAT token directly. Use it through [`RuleIdentityRegistry`](./RuleIdentityRegistry.md) in a `RuleEngine`, which consults this registry over `isVerified`. The two are coupled by interface, not inheritance, and that pairing is pinned by [`CMTATRuleIdentityRegistryComposition.t.sol`](../../../test/IdentityRegistryWhitelist/CMTATRuleIdentityRegistryComposition.t.sol).
 
 ### Where the whitelist comes from
 
-The address set is **not re-implemented**. The contract inherits `RuleAddressSetInternal`, the same `EnumerableSet` machinery `RuleWhitelist` and `RuleBlacklist` are built on — so the storage layout, the zero-address guard and the revert errors (`RuleAddressSet_ZeroAddressNotAllowed`, `RuleAddressSet_AddressNotFound`) are shared code rather than a second implementation. **No separate whitelist contract is deployed**: the registry *is* the list.
+The address set is **not re-implemented**. The contract inherits `RuleAddressSetInternal`, the same `EnumerableSet` set code `RuleWhitelist` and `RuleBlacklist` are built on — so the storage layout, the zero-address guard and the revert errors (`RuleAddressSet_ZeroAddressNotAllowed`, `RuleAddressSet_AddressNotFound`) are shared code rather than a second implementation. **No separate whitelist contract is deployed**: the registry *is* the list.
 
-Only the `internal` layer is inherited, and that is deliberate: the registry exposes exactly one write API (the ERC-3643 one) rather than two overlapping ones. The two roles that gate `RuleAddressSet`'s public `addAddress` / `removeAddress` live in a separate `RuleAddressSetRolesStorage`, inherited by that public layer only, so **this registry does not advertise `ADDRESS_LIST_ADD_ROLE` / `ADDRESS_LIST_REMOVE_ROLE` at all** — it never enforces them, and exposing an inert role invites an operator to grant a privilege that authorises nothing. `testDoesNotExposeInertAddressListRoles` pins their absence from the ABI. Inheriting the public `RuleAddressSet` surface would add `addAddress` / `removeAddress` alongside `registerIdentity` / `deleteIdentity`, giving the same state change two sets of roles and two sets of events, and leaving an operator to guess which pair is authoritative.
+Only the `internal` layer is inherited, so that the registry exposes exactly one write API (the ERC-3643 one) rather than two overlapping ones. Inheriting the public `RuleAddressSet` surface would add `addAddress` / `removeAddress` alongside `registerIdentity` / `deleteIdentity`, giving the same state change two sets of roles and two sets of events, and leaving an operator to guess which pair is authoritative.
 
-The design goal is a **wrapper, not a registry**: it adapts the calls an ERC-3643 token makes onto a plain whitelist, and keeps **no identity state whatsoever**: no ONCHAINID, no country, no claims. `registerIdentity`'s `_identity` and `_country` arguments exist so the ERC-3643 signature matches; both are discarded. Verification means exactly one thing: is this wallet on the whitelist.
+The two roles that gate `RuleAddressSet`'s public `addAddress` / `removeAddress` live in a separate `RuleAddressSetRolesStorage`, inherited by that public layer only, so **this registry does not advertise `ADDRESS_LIST_ADD_ROLE` / `ADDRESS_LIST_REMOVE_ROLE` at all** — it never enforces them, and exposing an inert role invites an operator to grant a privilege that authorises nothing. `testDoesNotExposeInertAddressListRoles` pins their absence from the ABI.
+
+The design goal is a **wrapper, not a registry**: it adapts the calls an ERC-3643 token makes onto a plain whitelist, and keeps **no identity state**: no ONCHAINID, no country, no claims. `registerIdentity`'s `_identity` and `_country` arguments exist so the ERC-3643 signature matches; both are discarded. Verification means exactly one thing: is this wallet on the whitelist.
 
 ## Which ERC-3643 functions call the registry, and how
 
@@ -84,7 +82,7 @@ registry.grantRole(role, operator);        // maintains the whitelist
 registry.grantRole(role, address(token));  // REQUIRED for recoveryAddress
 ```
 
-Then, to recover a wallet (the replacement wallet is registered **by the token**, so do not pre-register it):
+Then, to recover a wallet: the replacement wallet is registered **by the token**, so do not pre-register it.
 
 ```solidity
 token.recoveryAddress(lostWallet, newWallet, investorOnchainId);    // a real ERC-734 identity
@@ -123,9 +121,7 @@ Whitelist membership. **`isVerified(address(0))` is always `false`**: the zero a
 
 ### `version() → string`
 
-Returns the library release the contract was deployed from (currently `"0.5.0"`), via `VersionModule`. The
-registry is not a rule, but it is a deployable production contract wired into a token's identity slot, so being
-able to identify its release matters for the same reasons it does for the rules.
+Returns the library release the contract was deployed from (currently `"0.5.0"`), via `VersionModule`. The registry is not a rule, but it is a deployable production contract wired into a token's identity slot, so being able to identify its release matters for the same reasons it does for the rules.
 
 ### `registeredIdentityCount() → uint256`
 
@@ -162,7 +158,7 @@ Less than it sounds, because the token barely uses it. Auditing the reference im
 | Location | Role |
 | --- | --- |
 | `token/Token.sol:308` (`recoveryAddress`) | **The only use in the token.** A pure pass-through: reads the lost wallet's country and hands it straight to `registerIdentity` for the new wallet. The token never branches on the value, never stores it, and exposes no getter — `IToken.sol` does not mention country at all. |
-| `registry/implementation/IdentityRegistryStorage.sol:91,112,177` | Storage plumbing: writes and reads the field. |
+| `registry/implementation/IdentityRegistryStorage.sol:91,112,177` | Storage: writes and reads the field. |
 | `registry/implementation/IdentityRegistry.sol:132,226` | Forwards to storage. |
 | `compliance/legacy/BasicCompliance.sol:175` | `_getCountry()`, the only place country drives *logic*, and it has **no caller** in the vendored tree; it exists for country-restriction modules built on top. Note the path: `legacy`. |
 | `_testContracts/` | `MockContract`, `LegacyToken_3_5_2`. |

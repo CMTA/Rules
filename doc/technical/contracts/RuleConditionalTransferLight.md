@@ -76,9 +76,7 @@ Works in **both** topologies, provided the bindings are set correctly — see [B
 
 #### It requires a token that calls back, and now checks that it did
 
-The helper **inverts checks-effects-interactions on purpose**: it records the approval *before*
-`safeTransferFrom`, so the approval exists while the token runs its compliance callback into this rule and the
-callback can consume it. That is only correct if the callback actually arrives.
+The helper **inverts checks-effects-interactions on purpose**: it records the approval *before* `safeTransferFrom`, so the approval exists while the token runs its compliance callback into this rule and the callback can consume it. That is only correct if the callback arrives.
 
 It ends with a post-condition:
 
@@ -93,24 +91,16 @@ require(
 );
 ```
 
-If the count did not come back down, no callback reached the rule — a plain ERC-20 bound with `bindToken`, or a
-RuleEngine never bound or since unbound with `unbindRuleEngine`. Before this check the transfer **succeeded** and
-left the approval standing, indistinguishable from an operator-created one and enough to authorise a later,
-never-approved transfer of exactly `(from, to, value)`. The only remedy was for the operator to notice the
-leftover count and call `resetApproval` (Nethermind AuditAgent `NM-17`).
+If the count did not come back down, the rule received no callback — a plain ERC-20 bound with `bindToken`, or a RuleEngine never bound or since unbound with `unbindRuleEngine`. Before this check the transfer **succeeded** and left the approval standing, indistinguishable from an operator-created one and enough to authorise a later, never-approved transfer of exactly `(from, to, value)`. The only remedy was for the operator to notice the leftover count and call `resetApproval` (Nethermind AuditAgent `NM-17`).
 
 Points worth knowing:
 
-- It compares against the count **before** the helper ran, not against zero, so an operator's own outstanding
-  approvals for the same tuple survive untouched.
-- Reading state *after* the external call is deliberate. A hostile token can only make the check **fail**, never
-  pass spuriously; a path that consumed more than one approval also fails, which is the direction you want.
-- It is a **behaviour change** for a deployment that ran the helper against a non-callback token: that call now
-  reverts instead of completing. That is the point — the transfer was leaving a compliance hole behind.
+- It compares against the count **before** the helper ran, not against zero, so an operator's own outstanding approvals for the same tuple survive untouched.
+- Reading state *after* the external call is deliberate. A hostile token can only make the check **fail**, never pass spuriously; a path that consumed more than one approval also fails, which is the direction you want.
+- It is a **behaviour change** for a deployment that ran the helper against a non-callback token: that call now reverts instead of completing. That is the point — the transfer was leaving a compliance hole behind.
 - Cost: two warm `SLOAD`s on an operator-only path.
 
-Pinned by `testRevertsWhenTheTokenDoesNotCallBack`, `testPreExistingApprovalsSurviveTheHelper` and
-`testDirectBindingFlowStillConsumesExactlyOne`.
+Pinned by `testRevertsWhenTheTokenDoesNotCallBack`, `testPreExistingApprovalsSurviveTheHelper` and `testDirectBindingFlowStillConsumesExactlyOne`.
 
 ### `approvedCount(address from, address to, uint256 value) → uint256`
 
@@ -188,47 +178,31 @@ For `transferred(spender, from, to, value)`, the spender address is ignored. App
 
 ### Zero-value transfers are not treated as no-ops
 
-**Open conformance gap against CMTAT `v3.3.0-rc3`.** That release added a normative requirement to
-`IRuleEngine`'s NatSpec:
+**Open conformance gap against CMTAT `v3.3.0-rc3`.** That release added a normative requirement to `IRuleEngine`'s NatSpec:
 
-> Zero-value calls are permissionless. ERC-20 requires transfers of `0` to be treated as normal transfers, and
-> OpenZeppelin's `_spendAllowance` consumes no allowance when `value == 0`, so any address can call
-> `transferFrom(victim, anyone, 0)` and reach this callback for an arbitrary `from`, with itself as `spender`,
-> without ever having been approved. *"Implementations MUST therefore treat `value == 0` as carrying no
-> economic meaning: any stateful rule ... MUST be a no-op for a zero value."*
+> Zero-value calls are permissionless. ERC-20 requires transfers of `0` to be treated as normal transfers, and OpenZeppelin's `_spendAllowance` consumes no allowance when `value == 0`, so any address can call `transferFrom(victim, anyone, 0)` and reach this callback for an arbitrary `from`, with itself as `spender`, without ever having been approved. *"Implementations MUST therefore treat `value == 0` as carrying no economic meaning: any stateful rule ... MUST be a no-op for a zero value."*
 
-This rule keys approvals on `(from, to, value)` with no special case for `value == 0`, so it does not yet
-satisfy that. Measured against the rule as shipped:
+This rule keys approvals on `(from, to, value)` with no special case for `value == 0`, so it does not yet satisfy that. Measured against the rule as shipped:
 
 | Call | Behaviour today |
 | --- | --- |
 | `transferred(attacker, victim, anyone, 0)` with no matching approval | **Reverts** — so a zero-value transfer that ERC-20 says should succeed is rejected |
 | An approval recorded for `(from, to, 0)` | **Consumable by any caller**, since the spender is not part of the key |
 
-Neither moves value, and the second requires an operator to have approved a zero-value transfer in the first
-place, which is a degenerate thing to do. The practical exposure is therefore low.
+Neither moves value, and the second requires an operator to have approved a zero-value transfer in the first place, which is a degenerate thing to do. The practical exposure is therefore low.
 
-**Decision: documented, not fixed, for `v0.5.0`.** The fix is an early return when `value == 0`, before any
-approval lookup or state change, on this rule and
-[`RuleConditionalTransferLightMultiToken`](./RuleConditionalTransferLightMultiToken.md). It is a **behaviour
-change** to shipped compliance logic — a zero-value transfer would stop reverting — so it was recorded rather
-than applied late in the release.
+**Decision: documented, not fixed, for `v0.5.0`.** The fix is an early return when `value == 0`, before any approval lookup or state change, on this rule and [`RuleConditionalTransferLightMultiToken`](./RuleConditionalTransferLightMultiToken.md). It is a **behaviour change** to shipped compliance logic — a zero-value transfer would stop reverting — so it was recorded rather than applied late in the release.
 
-**Which rules the fix would and would not cover**, measured against the code rather than inferred from the
-wording of the requirement:
+**Which rules the fix would and would not cover**, measured against the code rather than inferred from the wording of the requirement:
 
 | Rule | `value == 0` today | In scope? |
 | --- | --- | --- |
 | This rule and `…MultiToken` | Consumes an approval, for a caller never approved | **Yes** |
 | [`RuleMaxBalance`](./RuleMaxBalance.md) | Rejects a receiver already **over** the cap | **Yes** — receiving nothing cannot breach a holding cap |
-| `RuleMintAllowance` | Quota unchanged: debiting `0` is already a no-op, and the mint path is not permissionlessly reachable | **No** — nothing to change |
+| `RuleMintAllowance` | Quota unchanged: debiting `0` is already a no-op, and the mint path is not open to arbitrary callers | **No** — nothing to change |
 | `RuleBlacklist`, `RuleWhitelist`, `RuleSanctionsList`, `RuleIdentityRegistry` | Blocked, as for any value | **No, deliberately** — these screen *who*, not *how much*. A zero-value transfer still emits a `Transfer` event linking the parties, so a blanket "zero is always allowed" would weaken every deny-list for no benefit |
 
-The strongest argument for the change is **ERC-20 conformance**, not the desynchronisation the requirement
-describes: ERC-20 says a zero-value transfer must be treated as a normal transfer, so a rule that reverts one
-makes the *token* non-conformant and breaks integrations that sweep balances or probe with a zero-value send.
-The attacker-desynchronises-state framing barely applies here — it needs an operator to have recorded a
-zero-value approval first.
+The strongest argument for the change is **ERC-20 conformance**, not the desynchronisation the requirement describes: ERC-20 says a zero-value transfer must be treated as a normal transfer, so a rule that reverts one makes the *token* non-conformant and breaks integrations that sweep balances or probe with a zero-value send. The attacker-desynchronises-state framing barely applies here — it needs an operator to have recorded a zero-value approval first.
 
 ### Duplicate approvals
 

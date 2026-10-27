@@ -71,34 +71,18 @@ Side effect on gas: a mint or burn now makes one oracle call instead of two.
 | Burn (`to == address(0)`) | 5 308 | 2 478 | **−2 830** |
 | Plain transfer | 3 309 | 3 405 | +96 |
 
-**Why the saving is 2 830 and not "half of one call".** Removing one of two oracle calls sounds like it should
-save about half the screening cost, and the first version of this note said ~900 gas on exactly that reasoning.
-It is wrong, because not all storage reads cost the same.
+**Why the saving is 2 830 and not "half of one call".** Removing one of two oracle calls sounds like it should save about half the screening cost, and the first version of this note said ~900 gas on exactly that reasoning. It is wrong, because not all storage reads cost the same.
 
-Since **EIP-2929** (Berlin), reading a storage slot costs **2 100 gas the first time it is touched in a
-transaction** (*cold*) and **100 gas** on every subsequent read (*warm*). The oracle stores its list as
-`mapping(address => bool)`, so `isSanctioned(x)` is one `SLOAD` of the slot for `x`.
+Since **EIP-2929** (Berlin), reading a storage slot costs **2 100 gas the first time it is touched in a transaction** (*cold*) and **100 gas** on every subsequent read (*warm*). The oracle stores its list as `mapping(address => bool)`, so `isSanctioned(x)` is one `SLOAD` of the slot for `x`.
 
-Now compare what the two removed-versus-kept calls actually touch:
+Now compare what the two removed-versus-kept calls touch:
 
-- `isSanctioned(address(0))` — the sentinel. **Nothing else in the system ever reads that slot.** Not the
-  recipient check, not a previous transfer, not another rule. So on every mint it was **cold**: 2 100 gas for
-  the `SLOAD`, plus ~700 for the `STATICCALL` and ABI encode/decode around it. That is the ~2 830 that
-  disappeared.
-- `isSanctioned(alice)` on a plain transfer — real addresses are touched repeatedly by real activity, so these
-  slots are frequently already warm within a transaction, at 100 gas.
+- `isSanctioned(address(0))` — the sentinel. **Nothing else in the system ever reads that slot.** Not the recipient check, not a previous transfer, not another rule. So on every mint it was **cold**: 2 100 gas for the `SLOAD`, plus ~700 for the `STATICCALL` and ABI encode/decode around it. That is the ~2 830 that disappeared.
+- `isSanctioned(alice)` on a plain transfer — real addresses are touched repeatedly by real activity, so these slots are frequently already warm within a transaction, at 100 gas.
 
-That asymmetry inverted the usual ordering: **before the fix, a mint cost *more* than a transfer**
-(5 308 vs 3 309) while screening one *fewer* real participant. A mint has only one real party, yet it was the
-more expensive operation — the extra cost was entirely the cold lookup of an address that is not a wallet.
-That inversion is the clearest symptom of the bug this fix removes, and it is also what makes the naive
-"one call out of two ≈ 900 gas" estimate wrong by roughly 3×.
+That asymmetry inverted the usual ordering: **before the fix, a mint cost *more* than a transfer** (5 308 vs 3 309) while screening one *fewer* real participant. A mint has only one real party, yet it was the more expensive operation — the extra cost was entirely the cold lookup of an address that is not a wallet. That inversion is the clearest symptom of the bug this fix removes, and it is also what makes the naive "one call out of two ≈ 900 gas" estimate wrong by roughly 3×.
 
-**The cost side.** The two `!= address(0)` guards are evaluated on every plain transfer, where they are always
-true, adding **96 gas**. So the trade is: each transfer pays 96 so that each mint and burn saves 2 830. For any
-token that is not almost entirely issuance, that is strongly positive — and the gas was never the point. The
-reason for the change is that the rule no longer delegates its mint/burn behaviour to a third party's handling
-of a non-wallet.
+**The cost side.** The two `!= address(0)` guards are evaluated on every plain transfer, where they are always true, adding **96 gas**. So the trade is: each transfer pays 96 so that each mint and burn saves 2 830. For any token that is not almost entirely issuance, that is strongly positive — and the gas was never the point. The reason for the change is that the rule no longer delegates its mint/burn behaviour to a third party's handling of a non-wallet.
 
 ## Access Control
 

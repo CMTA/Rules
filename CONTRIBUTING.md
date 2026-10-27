@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-There are many ways to contribute to  Rules Contracts.
+There are many ways to contribute to Rules Contracts.
 
 ## Development branch
 
@@ -12,7 +12,7 @@ You can [open an issue] to suggest a feature, a difficulty you have or report a 
 
 Before opening an issue, be sure to search through the existing open and closed issues, and consider posting a comment in one of those instead.
 
-When requesting a new feature, include as many details as you can, especially around the use cases that motivate it. 
+When requesting a new feature, include as many details as you can, especially around the use cases that motivate it.
 
 ## Submitting a pull request
 

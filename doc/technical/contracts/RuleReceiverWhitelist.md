@@ -78,7 +78,7 @@ Available as `RuleReceiverWhitelist` (AccessControl) and `RuleReceiverWhitelistO
 | `ADDRESS_LIST_ADD_ROLE` | May call `addAddress` / `addAddresses` |
 | `ADDRESS_LIST_REMOVE_ROLE` | May call `removeAddress` / `removeAddresses` |
 
-Identical to the other address-set rules: the list machinery is `RuleAddressSet`, so batch operations skip duplicates, single operations revert on invalid input, and the zero address can never be listed.
+Identical to the other address-set rules: the list is implemented by `RuleAddressSet`, so batch operations skip duplicates, single operations revert on invalid input, and the zero address can never be listed.
 
 ## Methods
 
@@ -112,7 +112,7 @@ Because the rule's semantics match the token's own, it composes with the identit
 | `test/RuleReceiverWhitelist/Ownable/RuleReceiverWhitelistOwnable2Step.t.sol` | Ownable2Step variant |
 | `test/ERC3643Real/ERC3643ReceiverWhitelistParity.t.sol` | **Equivalence against the real vendored ERC-3643 token** |
 
-The parity suite is the one that matters for the conformance claim. It runs the rule in the compliance slot of the genuine `Token.sol` over the *same address set* the identity registry holds, and asserts the rule never changes the outcome — a de-listed holder still exits, an unlisted spender is not blocked, burn still works. A rule that screened the sender would break those while every unit test still passed. A final test confirms the rule is genuinely consulted (it blocks when its list is narrower than the registry's), so the parity results are not vacuous.
+The parity suite is the one that matters for the conformance claim. It runs the rule in the compliance slot of the genuine `Token.sol` over the *same address set* the identity registry holds, and asserts the rule never changes the outcome — a de-listed holder still exits, an unlisted spender is not blocked, burn still works. A rule that screened the sender would break those while every unit test still passed. A final test confirms the rule is consulted (it blocks when its list is narrower than the registry's), so the parity results are not vacuous.
 
 Run it with `FOUNDRY_PROFILE=erc3643 forge test`; see `foundry.toml` for why that suite needs its own profile.
 

@@ -4,19 +4,13 @@
 aderyn -x mocks --output doc/security/audits/tools/v0.7.0/aderyn-report.md
 ```
 
-Tool: **Aderyn 0.6.5** · Compiler: solc `0.8.36` · Run date: **2026-10-26** (two runs; the committed report is
-the second, see [First run: nine unused imports, fixed](#first-run-nine-unused-imports-fixed))
-Scope: production contracts only, mocks excluded via `-x mocks`. 98 source files. **4 354 nSLOC.**
-**0 High · 10 Low categories, 377 instances.**
+Tool: **Aderyn 0.6.5** · Compiler: solc `0.8.36` · Run date: **2026-10-26** (two runs; the committed report is the second, see [First run: nine unused imports, fixed](#first-run-nine-unused-imports-fixed)) Scope: production contracts only, mocks excluded via `-x mocks`. 98 source files. **4 354 nSLOC.** **0 High · 10 Low categories, 377 instances.**
 
-**Executive triage: nothing to fix.** Aderyn reports no High or Medium finding. Every Low category is by design,
-environmental, cosmetic or a verified false positive. The one real defect it found this release, nine unused
-imports, was fixed before the committed run.
+**Executive triage: nothing to fix.** Aderyn reports no High or Medium finding. Every Low category is by design, environmental, cosmetic or a verified false positive. The one real defect it found this release, nine unused imports, was fixed before the committed run.
 
 ### Scope check
 
-`lib/`, `test/` and `src/mocks/` citations are all **0**. Aderyn reads the Foundry config and scopes to `src/`
-by itself; `-x mocks` is the only exclusion. The new test-only `lib/CMTATv3.0.0` submodule is not in scope.
+`lib/`, `test/` and `src/mocks/` citations are all **0**. Aderyn reads the Foundry config and scopes to `src/` by itself; `-x mocks` is the only exclusion. The new test-only `lib/CMTATv3.0.0` submodule is not in scope.
 
 ## Summary
 
@@ -35,25 +29,13 @@ by itself; `-x mocks` is the only exclusion. The new test-only `lib/CMTATv3.0.0`
 
 ### L-9 State Change Without Event — `RuleMaxTotalSupplyBase.transferred` (×2, new)
 
-**False positive.** Aderyn infers "state change" from the function no longer being `view`; it does not look at
-what the body does. Both overloads were made non-`view` this release only so that `RuleIssuanceCap` can record
-mints through the `_afterMintChecked` hook, which is empty in `RuleMaxTotalSupplyBase`. The stock rule writes no
-storage, and that is no longer an inference but a test: `testTransferredNeverWritesStorage` calls both overloads
-for a mint, a transfer and a burn under `vm.record()` and asserts that `vm.accesses(rule)` reports **zero
-writes**. In `RuleIssuanceCap`, where the hook does write, every recorded mint emits `IssuanceRecorded`, so the
-detector's concern does not apply there either.
+**False positive.** Aderyn infers "state change" from the function no longer being `view`; it does not look at what the body does. Both overloads were made non-`view` this release only so that `RuleIssuanceCap` can record mints through the `_afterMintChecked` hook, which is empty in `RuleMaxTotalSupplyBase`. The stock rule writes no storage, and that is no longer an inference but a test: `testTransferredNeverWritesStorage` calls both overloads for a mint, a transfer and a burn under `vm.record()` and asserts that `vm.accesses(rule)` reports **zero writes**. In `RuleIssuanceCap`, where the hook does write, every recorded mint emits `IssuanceRecorded`, so the detector's concern does not apply there either.
 
 ## First run: nine unused imports, fixed
 
-The first run of the day reported an extra category, **Unused Import (9)**, one per validation base:
-`RuleBlacklistBase`, `RuleChainlinkPoRBase`, `RuleERC2980Base`, `RuleIdentityRegistryBase`,
-`RuleMaxBalanceBase`, `RuleMaxTotalSupplyBase`, `RuleReceiverWhitelistBase`, `RuleSanctionsListBase`,
-`RuleSpenderWhitelistBase`.
+The first run of the day reported an extra category, **Unused Import (9)**, one per validation base: `RuleBlacklistBase`, `RuleChainlinkPoRBase`, `RuleERC2980Base`, `RuleIdentityRegistryBase`, `RuleMaxBalanceBase`, `RuleMaxTotalSupplyBase`, `RuleReceiverWhitelistBase`, `RuleSanctionsListBase`, `RuleSpenderWhitelistBase`.
 
-**Real, and introduced by this release.** The RuleEngine `v3.0.0-rc7` migration turned
-`override(IRuleEngine)` into a plain `override` on each 4-argument `transferred`, which left `IRuleEngine`
-referenced only by an `@inheritdoc IRuleEngine` NatSpec tag. Aderyn does not count NatSpec as a use. `forge lint`
-does, which is why it did not catch it.
+**Real, and introduced by this release.** The RuleEngine `v3.0.0-rc7` migration turned `override(IRuleEngine)` into a plain `override` on each 4-argument `transferred`, which left `IRuleEngine` referenced only by an `@inheritdoc IRuleEngine` NatSpec tag. Aderyn does not count NatSpec as a use. `forge lint` does, which is why it did not catch it.
 
 **Fix:**
 - The `IRuleEngine` import was removed from all nine files.
@@ -65,8 +47,7 @@ No code or ABI change; 1 285 tests pass. The second run reports the category gon
 
 ## Delta from `v0.6.0`
 
-**346 → 377 instances (+31)** on **4 145 → 4 354 nSLOC (+209)**. Categories **9 → 10**: one added,
-`State Change Without Event`; none removed.
+**346 → 377 instances (+31)** on **4 145 → 4 354 nSLOC (+209)**. Categories **9 → 10**: one added, `State Change Without Event`; none removed.
 
 | ID | v0.6.0 | v0.7.0 | Δ | Source of the change |
 |---|---|---|---|---|
@@ -78,9 +59,7 @@ No code or ABI change; 1 285 tests pass. The second run reports the category gon
 | L-9 State Change Without Event | — | 2 | **+2** | `RuleMaxTotalSupplyBase.transferred` no longer `view` |
 | L-3, L-4, L-8, Unchecked Return | 8 | 8 | — | |
 
-Every instance was matched file by file against the `v0.6.0` report. No pre-existing file gained or lost an
-instance except the two `RuleMaxTotalSupply` deployables and `TotalSupplyCapManager` / `RuleMaxTotalSupplyBase`,
-all of which changed in this release.
+Every instance was matched file by file against the `v0.6.0` report. No pre-existing file gained or lost an instance except the two `RuleMaxTotalSupply` deployables and `TotalSupplyCapManager` / `RuleMaxTotalSupplyBase`, all of which changed in this release.
 
 Two points worth stating:
 
@@ -89,18 +68,13 @@ Two points worth stating:
 
 ## Notes on the two large categories
 
-`L-2` and `L-5` together are **194 of 377 instances (51%)**, and both are one-per-file. As in previous releases:
-treat a jump that is not a multiple of the new-file count as the signal, not the totals. This release added four
-production files and both categories grew by exactly four.
+`L-2` and `L-5` together are **194 of 377 instances (51%)**, and both are one-per-file. As in previous releases: treat a jump that is not a multiple of the new-file count as the signal, not the totals. This release added four production files and both categories grew by exactly four.
 
 ## What a clean report does and does not mean
 
-Aderyn's detectors matched one real defect (the imports, cosmetic) and nothing that affects behaviour. That is
-not evidence of correctness. The properties that matter for `RuleIssuanceCap` are semantic and are covered by
-tests, not by pattern matching:
+Aderyn's detectors matched one real defect (the imports, cosmetic) and nothing that affects behaviour. That is not evidence of correctness. The properties that matter for `RuleIssuanceCap` are semantic and are covered by tests, not by pattern matching:
 - burns never restore room;
 - the counter cannot be skipped on an ERC-3643-style re-phased write path;
 - the live-supply backstop catches uncounted mints.
 
-They are covered by the unit, CMTAT v3.0.0 and invariant suites, and two injected bugs prove the invariants can
-fail.
+They are covered by the unit, CMTAT v3.0.0 and invariant suites, and two injected bugs prove the invariants can fail.

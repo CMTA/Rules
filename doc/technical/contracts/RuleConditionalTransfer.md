@@ -16,7 +16,7 @@ The ConditionalTransfer rule has been implemented as an operation rule with the 
 
 Why use a dedicated rule instead of directly implementing the solution directly in the CMTAT ?
 
-1. This feature is not a standard features common to all tokens. 
+1. This feature is not a standard features common to all tokens.
 2. The CMTAT is curently too “heavy” and its contract code size is close to the maximum size limit (if the snapshot module is included), it is not possible to include new features inside.
 3. With the new version of the RuleEngine, it is now possible to update the storage of a rule during a transfer call from the CMTAT by using an operation rule.
 
@@ -190,7 +190,7 @@ The default admin is the address put in argument(`admin`) inside the constructor
 ## Time Condition
 
 - Once a request is `Approved`, the token holder has a date limit (e.g. 7 days) to perform the transfer. After that, he has to begin the whole process again. This parameter can be changed by the rule operator.
-- Once a request is created `Wait`, the operator has a date limit (e.g. 7 days) to  approve the transfer. After that, the token holder has to begin the whole process again. This parameter can be changed by the rule operator.
+- Once a request is created `Wait`, the operator has a date limit (e.g. 7 days) to approve the transfer. After that, the token holder has to begin the whole process again. This parameter can be changed by the rule operator.
 
 # FAQ
 
@@ -202,6 +202,6 @@ There is no control performed on the sender of the `transferFrom` call
 
 > Can I create several transfer requests with the same value/amount?
 
-No, it is not possible since each request has a key under the form of 
+No, it is not possible since each request has a key under the form of
 
 `hash(from, to, value`)

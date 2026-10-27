@@ -75,7 +75,7 @@ Not every rule exposes the same entrypoints. The ERC-7943 `tokenId` overloads an
 
 The `tokenId` parameter is **always ignored** by the rules that accept it — `RuleNFTAdapter` exists purely to re-expose the same restriction logic under the ERC-7943 signatures. Entrypoints describing the same transfer therefore return the same answer, asserted for every rule above in `test/TransferContext/OverloadParity.t.sol`.
 
-**How each interface signals a direct transfer differs, and that decides the routing.** An owner moving their own tokens reaches the adapter as `spender == from` on the ERC-7943 overloads (the spec calls that parameter "the address performing the transfer (owner/operator)") and as `sender == from` on the `ctx` entrypoints, whereas the CMTAT path signals it with the 3-arg overload or `spender == address(0)`:
+**How each interface signals a direct transfer differs, and that decides the routing.** An owner moving their own tokens arrives at the adapter as `spender == from` on the ERC-7943 overloads (the spec calls that parameter "the address performing the transfer (owner/operator)") and as `sender == from` on the `ctx` entrypoints, whereas the CMTAT path signals it with the 3-arg overload or `spender == address(0)`:
 
 | Interface | Direct transfer arrives as | Delegated transfer arrives as |
 |---|---|---|
@@ -129,8 +129,10 @@ Every adapter entrypoint normalises `spender == from` to the **direct** hook. Th
     - **The defect (`NM-20`):** a `RuleBlacklist` implements that interface identically and advertises the same ids, so ERC-165 alone could not tell them apart. Adding one made its blacklisted addresses whitelisted, and `isVerified` returned `true` for them.
     - **The fix:** polarity is declared rather than inferred. **`IAddressListPolarity`** (`0xdc4efe10`) adds a single `isAllowList()`, and `addRule` requires the interface *and* a `true` answer, on top of the `IAddressListBatchQuery` check from `NM-18`. **Absence of the polarity declaration is a refusal, never an assumed allow-list**, the only reading that fails closed.
     - **Who declares what:** `RuleWhitelist` and `RuleReceiverWhitelist` declare `true`; `RuleBlacklist` declares `false`; `RuleSpenderWhitelist` deliberately declines, because its set is permitted *spenders* rather than permitted *holders* and polarity alone would mislead.
-    - **Nesting is refused, deliberately (`NM-19`, declined):** a nested wrapper fails the first check, since it does not implement `areAddressesListed`. An OR nested in an OR is algebraically flat (`OR(OR(a,b),OR(c,d))` ≡ `OR(a,b,c,d)`), so nesting adds no expressive power. It would cost multiplicatively (~8.8k gas per child, and the rejected path never exits early) and open an `A → B → A` cycle class with no cheap on-chain defence. AND-of-ORs is available by putting several wrappers in the `RuleEngine`, which returns the first non-zero code.
-12c. **Unbound stateful rules report code 85 (`CODE_RULE_NOT_BOUND`).** `RuleConditionalTransferLight`, `RuleMintAllowance` and `RuleIssuanceCap` accept `transferred` only from a bound caller, so until one is bound every operation reverts. Their views report code 85 for every operation instead of "allowed", so a pre-flight check matches enforcement. Only the fully unbound state is visible: `RuleConditionalTransferLight` counts as bound once either a token or a RuleEngine is bound, and a view cannot know which caller will actually notify it.
+    - **Nesting is refused, deliberately (`NM-19`, declined):** a nested wrapper fails the first check, since it does not implement `areAddressesListed`. An OR nested in an OR is algebraically flat (`OR(OR(a,b),OR(c,d))` ≡ `OR(a,b,c,d)`), so nesting adds no expressive power. It would cost multiplicatively, ~8.8k gas per child since the rejected path never exits early, and it would open an `A → B → A` cycle class with no cheap on-chain defence. AND-of-ORs is available by putting several wrappers in the `RuleEngine`, which returns the first non-zero code.
+
+12c. **Unbound stateful rules report code 85 (`CODE_RULE_NOT_BOUND`).** `RuleConditionalTransferLight`, `RuleMintAllowance` and `RuleIssuanceCap` accept `transferred` only from a bound caller, so until one is bound every operation reverts. Their views report code 85 for every operation instead of "allowed", so a pre-flight check matches enforcement. Only the fully unbound state is visible: `RuleConditionalTransferLight` counts as bound once either a token or a RuleEngine is bound, and a view cannot know which caller will notify it.
+
 13. **`RuleIssuanceCap` caps cumulative issuance: burns never restore room.** It extends `RuleMaxTotalSupply` with a counter, `totalIssued`, raised on every accepted mint and never lowered. A mint is rejected with code `71` if the counter would pass the cap, or `50` if the live supply would, since the inherited live-supply check stays active against the same cap and catches mints the counter missed (rule detached). Stateful, so `transferred` is restricted to the bound caller (`bindToken`: the token, or the RuleEngine in front of it). The observed token is locked after deployment. For a cap that burns DO restore, use `RuleMaxTotalSupply`. See [RuleIssuanceCap.md](../contracts/RuleIssuanceCap.md).
 
 12. **The ERC-7943 `tokenId` overloads** are `detectTransferRestriction(from,to,tokenId,value)`, `detectTransferRestrictionFrom(spender,from,to,tokenId,value)`, `canTransfer(from,to,tokenId,amount)`, `canTransferFrom(spender,from,to,tokenId,value)`, `transferred(from,to,tokenId,value)` and `transferred(spender,from,to,tokenId,value)` — all supplied by `RuleNFTAdapter`. Per ERC-7943, `amount`/`value` MUST be `1` for ERC-721. The rules ignore `tokenId` entirely; it exists so an ERC-721/ERC-1155 token can call the same compliance rule without a shim.
@@ -159,7 +161,7 @@ function _detectTransferRestrictionOnNotify(address from, address to, uint256)
 
 ### Seam 2 — observation source: `_currentSupply` / `_balanceOf`
 
-Both are `internal view virtual`, so a rule may serve the figure from **its own storage** instead of calling the token — the shape needed for a rule that tracks the supply itself from an opening figure set at the start of the token's life.
+Both are `internal view virtual`, so a rule may serve the figure from **its own storage** instead of calling the token, which is what a rule needs when it tracks the supply itself from an opening figure set at the start of the token's life.
 
 A rule that keeps its own running total also controls *when* it updates it, so it checks before it records and **seam 1 stops applying to it**: it never depends on the host token's call order.
 
@@ -171,15 +173,13 @@ Two constraints before building one:
 
 ### Worked examples
 
-`src/mocks/harness/ERC3643CapHarnesses.sol` implements all four (one per cap rule for seam 1, plus a tracked-supply rule for seam 2), and `test/CapAccounting/ERC3643CapSeams.t.sol` asserts that the stock rules double-count under post-update accounting while the variants do not, and that neither ever admits anything above the cap.
+`src/mocks/harness/ERC3643CapHarnesses.sol` implements all four, one per cap rule for seam 1 plus a tracked-supply rule for seam 2, and `test/CapAccounting/ERC3643CapSeams.t.sol` asserts that the stock rules double-count under post-update accounting while the variants do not, and that neither ever admits anything above the cap.
 
 ---
 
 ## 6. ERC-3643 compatibility — which rules actually work on a T-REX token
 
-A rule's guarantees depend on **what the token tells it and when**. CMTAT and ERC-3643 / T-REX differ on both,
-so a rule that is correct on one can be inert or wrong on the other — silently, with nothing reverting at
-deployment. This section is the per-rule answer.
+A rule's guarantees depend on **what the token tells it and when**. CMTAT and ERC-3643 / T-REX differ on both, so a rule that is correct on one can be inert or wrong on the other — silently, with nothing reverting at deployment. This section is the per-rule answer.
 
 ### The two differences that cause everything below
 
@@ -189,8 +189,7 @@ deployment. This section is the per-rule answer.
 | **Ordering** | rule called **before** the value moves | rule called **after** — `_transfer` then `transferred`; `_mint` then `created` |
 | **Mint signal** | 4-arg `transferred(minter, address(0), to, value)` | `created(to, value)`, which `RuleEngine` forwards as 3-arg `transferred(address(0), to, value)` |
 
-Both paths also call `canTransfer` **before** the movement, so the read views are unaffected by the ordering
-difference and must always project the pending amount.
+Both paths also call `canTransfer` **before** the movement, so the read views are unaffected by the ordering difference and must always project the pending amount.
 
 ### Per-rule status
 
@@ -215,37 +214,22 @@ difference and must always project the pending amount.
 
 They are not equally dangerous, and the difference matters more than the symbol:
 
-- **"one flag / leg inert"** — the rule enforces less than its configuration suggests. Fail-**open** for that
-  leg: an operator who set `checkSpender = true` gets no spender screening and no signal. The `from`/`to`
-  screening is unaffected, so the rule still does its main job.
-- **"use the ERC-3643 variant"** — the stock rule fails **closed**: it rejects mints that are within the cap.
-  Nothing is over-issued, but issuance breaks in a way that looks intermittent, because only the amount *in
-  flight* is double-counted. The variants re-phase the write path only.
-- **"inert" / "not supported"** — the rule enforces **nothing**, or cannot be wired at all. `RuleMintAllowance`
-  is the one to watch: it is silently permissive rather than restrictive, and its pre-flight view says
-  `TRANSFER_OK` too, so neither the token nor an integrator sees a problem.
+- **"one flag / leg inert"** — the rule enforces less than its configuration suggests. Fail-**open** for that leg: an operator who set `checkSpender = true` gets no spender screening and no signal. The `from`/`to` screening is unaffected, so the rule still does its main job.
+- **"use the ERC-3643 variant"** — the stock rule fails **closed**: it rejects mints that are within the cap. Nothing is over-issued, but issuance breaks in a way that looks intermittent, because only the amount *in flight* is double-counted. The variants re-phase the write path only.
+- **"inert" / "not supported"** — the rule enforces **nothing**, or cannot be wired at all. `RuleMintAllowance` is the one to watch: it is silently permissive rather than restrictive, and its pre-flight view says `TRANSFER_OK` too, so neither the token nor an integrator sees a problem.
 
 ### Why `RuleMaxBalance` has no ERC-3643 variant
 
-Not effort — a policy decision that has not been made. Its observation is **per-address**, so unlike the two
-supply rules it engages on every transfer, and two T-REX agent powers interact badly with a post-update variant:
+Not effort — a policy decision that has not been made. Its observation is **per-address**, so unlike the two supply rules it engages on every transfer, and two T-REX agent powers interact badly with a post-update variant:
 
-- **`forcedTransfer` does notify compliance**, so the variant would *revert* an agent's forced transfer that
-  pushes the recipient over the cap. On T-REX ≤ 4.1, where `recoveryAddress` routes through `forcedTransfer`,
-  that **bricks wallet recovery** whenever the destination already holds tokens.
-- On the vendored **4.2.0-beta1 `recoveryAddress` notifies nobody**, so a recovered wallet can silently sit
-  above the cap. A token-reading rule self-heals — further receipts are blocked — but the invariant is violated
-  in state with no event.
+- **`forcedTransfer` does notify compliance**, so the variant would *revert* an agent's forced transfer that pushes the recipient over the cap. On T-REX ≤ 4.1, where `recoveryAddress` routes through `forcedTransfer`, that **bricks wallet recovery** whenever the destination already holds tokens.
+- On the vendored **4.2.0-beta1 `recoveryAddress` notifies nobody**, so a recovered wallet can silently sit above the cap. A token-reading rule self-heals — further receipts are blocked — but the invariant is violated in state with no event.
 
-Whether an agent action should be cap-exempt is the question to settle first. T-REX's own module library also
-ships a `MaxBalanceModule`, so the marginal value is the lowest of the three.
+Whether an agent action should be cap-exempt is the question to settle first. T-REX's own module library also ships a `MaxBalanceModule`, so the marginal value is the lowest of the three.
 
 ### Wiring, whichever rules you choose
 
-Use a **`RuleEngine`**, never a bare rule. ERC-3643 drives mint and burn through `created` / `destroyed`, which
-the validation rules do not implement; the engine implements the full `ICompliance` surface and forwards them.
-And build a `RuleChainlinkPoRERC3643` **after** `Token.init` — an uninitialised token reports `decimals() == 0`,
-which the rule's constructor accepts and caches.
+Use a **`RuleEngine`**, never a bare rule. ERC-3643 drives mint and burn through `created` / `destroyed`, which the validation rules do not implement; the engine implements the full `ICompliance` surface and forwards them. And build a `RuleChainlinkPoRERC3643` **after** `Token.init` — an uninitialised token reports `decimals() == 0`, which the rule's constructor accepts and caches.
 
 ---
 

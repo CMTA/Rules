@@ -1,13 +1,8 @@
 # AI-assisted review findings in production code — summary
 
-This file is the **link between production code and the AI-assisted review reports** (`CLAUDE_AUDIT.md`,
-`CLAUDE_ANALYSIS*.md`). Production source no longer cites those reports or their finding IDs (see the rule in
-`CLAUDE.md`). Each comment carries its own conclusion, and the history behind it is recorded **here**.
+This file is the **link between production code and the AI-assisted review reports** (`CLAUDE_AUDIT.md`, `CLAUDE_ANALYSIS*.md`). Production source no longer cites those reports or their finding IDs (see the rule in `CLAUDE.md`). Each comment carries its own conclusion, and the history behind it is recorded **here**.
 
-Why not in the code: those reports are rewritten each release and their IDs restart at `-1`
-(`CLAUDE_ANALYSIS.md` D-1 names three different findings in v0.5.0, v0.6.0 and v0.7.0). A citation baked into
-deployed, verified source cannot be corrected and cannot even say which report it meant. This file can be
-corrected at any time.
+Why not in the code: those reports are rewritten each release and their IDs restart at `-1`: `CLAUDE_ANALYSIS.md` D-1 names three different findings in v0.5.0, v0.6.0 and v0.7.0. A citation baked into deployed, verified source cannot be corrected and cannot even say which report it meant. This file can be corrected at any time.
 
 ## How to use this file
 
@@ -100,8 +95,7 @@ corrected at any time.
 | Finding | `CLAUDE_AUDIT.md` (v0.4.0) **F-5** (Info), "Wrapper does not ERC-165-check its child rules": partially fixed then (prerequisite shipped), completed with Nethermind AuditAgent NM-18 in v0.6.0 |
 | Change applied | `RuleWhitelistWrapper._checkRule` rejects a child that does not advertise the batch-query interface, with this error |
 
-The **Nethermind AuditAgent** citations (`NM-17`, `NM-18`, `NM-20`) remain in five production comments pending a
-decision: AuditAgent is an AI scan run by a company, between the two categories the rule distinguishes.
+The **Nethermind AuditAgent** citations (`NM-17`, `NM-18`, `NM-20`) remain in five production comments pending a decision: AuditAgent is an AI scan run by a company, between the two categories the rule distinguishes.
 
 ## v0.7.0 review — code changed by `CLAUDE_ANALYSIS.md` (v0.7.0)
 

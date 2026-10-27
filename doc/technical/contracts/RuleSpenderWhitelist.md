@@ -61,8 +61,7 @@ Owner can manage the spender list and transfer ownership with two-step acceptanc
 
 ### Direct transfer path
 
-`detectTransferRestriction(from, to, value)` always returns `TRANSFER_OK`.
-`transferred(from, to, value)` is a no-op and never reverts.
+`detectTransferRestriction(from, to, value)` always returns `TRANSFER_OK`. `transferred(from, to, value)` is a no-op and never reverts.
 
 ### Spender path (`transferFrom`)
 

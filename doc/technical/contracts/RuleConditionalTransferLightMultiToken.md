@@ -42,7 +42,7 @@ Case D "works" but is not a valid deployment:
 3. **`approveAndTransferIfAllowed` cannot work.** It calls `IERC20(token).allowance(...)` on what is actually the engine → revert.
 4. **It is strictly worse than the single-token rule.** Case D is only safe when the engine serves exactly one token, and in that situation [`RuleConditionalTransferLight`](./RuleConditionalTransferLight.md) does the same job with an honest API and a working `approveAndTransferIfAllowed`.
 
-**Correct deployment (direct binding).** Each token calls the rule itself, so `msg.sender == tokenX`, the approve key and the consume key are both `H(tokenX, …)`, and approvals are genuinely isolated per token:
+**Correct deployment (direct binding).** Each token calls the rule itself, so `msg.sender == tokenX`, the approve key and the consume key are both `H(tokenX, …)`, and approvals are isolated per token:
 
 ```
 CMTAT_A.setRuleEngine(rule);   rule.bindToken(address(CMTAT_A));
@@ -115,9 +115,7 @@ Returns the remaining count for a specific token key.
 
 Approves and executes `safeTransferFrom` on the specified token, requiring allowance for this rule as spender.
 
-Like its single-token twin, the helper **inverts checks-effects-interactions on purpose** — the approval is
-recorded *before* `safeTransferFrom` so the token's compliance callback can consume it — and it now ends with a
-post-condition asserting the approval was in fact consumed:
+Like its single-token twin, the helper **inverts checks-effects-interactions on purpose** — the approval is recorded *before* `safeTransferFrom` so the token's compliance callback can consume it — and it now ends with a post-condition asserting the approval was in fact consumed:
 
 ```solidity
 require(
@@ -126,12 +124,7 @@ require(
 );
 ```
 
-A count that did not come back down means no callback reached the rule — the token is not bound directly, or is
-a plain ERC-20 that notifies nobody. Before this check the transfer completed and left a spendable approval for
-`(token, from, to, value)` behind, enough to authorise a later never-approved transfer of that exact tuple
-(Nethermind AuditAgent `NM-17`). The comparison is against the count **before** the helper ran, so an operator's
-own outstanding approvals are untouched. Pinned by
-`testApproveAndTransferRevertsWhenTheTokenDoesNotCallBack`.
+A count that did not come back down means the rule received no callback — the token is not bound directly, or is a plain ERC-20 that notifies nobody. Before this check the transfer completed and left a spendable approval for `(token, from, to, value)` behind, enough to authorise a later never-approved transfer of that exact tuple (Nethermind AuditAgent `NM-17`). The comparison is against the count **before** the helper ran, so an operator's own outstanding approvals are untouched. Pinned by `testApproveAndTransferRevertsWhenTheTokenDoesNotCallBack`.
 
 ### `transferred(...)`
 

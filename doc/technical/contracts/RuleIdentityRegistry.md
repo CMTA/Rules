@@ -6,24 +6,15 @@ This rule checks an [ERC-3643](https://eips.ethereum.org/EIPS/eip-3643) Identity
 
 > ### When this rule is the right tool
 >
-> Reach for it when the token **cannot consult a registry itself**.
+> Use it when the token **cannot consult a registry itself**.
 >
-> - **CMTAT has no identity registry slot.** `setIdentityRegistry` is an ERC-3643 concept with no CMTAT
->   equivalent, so this rule behind a `RuleEngine` is the *only* way to apply identity-registry screening to a
->   CMTAT token. It consults whichever registry you point it at — an ONCHAINID-backed ERC-3643 registry, or
->   [`IdentityRegistryWhitelist`](./IdentityRegistryWhitelist.md) if you have no ONCHAINID deployment.
-> - **On an ERC-3643 token, prefer the token's own slot.** That token already calls `isVerified` on the
->   registry for every transfer. Adding this rule on top screens the same wallets a second time and adds no
->   restriction, so install the registry with `setIdentityRegistry` instead.
+> - **CMTAT has no identity registry slot.** `setIdentityRegistry` is an ERC-3643 concept with no CMTAT equivalent, so this rule behind a `RuleEngine` is the *only* way to apply identity-registry screening to a CMTAT token. It consults whichever registry you point it at — an ONCHAINID-backed ERC-3643 registry, or [`IdentityRegistryWhitelist`](./IdentityRegistryWhitelist.md) if you have no ONCHAINID deployment. - **On an ERC-3643 token, prefer the token's own slot.** That token already calls `isVerified` on the registry for every transfer. Adding this rule on top screens the same wallets a second time and adds no restriction, so install the registry with `setIdentityRegistry` instead.
 
 > ## ✅ ERC-3643 conformant: only the RECEIVER is verified
 >
 > The specification mandates exactly one identity check:
 >
-> - *"The **receiver** MUST be whitelisted on the Identity Registry and verified"* (§ Transfer)
-> - *"`transferFrom` **works the same way**"*: receiver only
-> - *"`mint` and `forcedTransfer` **only require the receiver** to be whitelisted and verified"*
-> - *"The `burn` function **bypasses all checks** on eligibility"*
+> - *"The **receiver** MUST be whitelisted on the Identity Registry and verified"* (§ Transfer) - *"`transferFrom` **works the same way**"*: receiver only - *"`mint` and `forcedTransfer` **only require the receiver** to be whitelisted and verified"* - *"The `burn` function **bypasses all checks** on eligibility"*
 >
 > The **sender**, the **spender** and the **minter** are therefore **not** verified by default.
 >
@@ -106,23 +97,13 @@ Returns the current identity registry address. Returns `address(0)` if none is s
 - For all other transfers, including **mint**:
   - **`to` is ALWAYS checked.** This is the only check ERC-3643 mandates.
   - `from` is checked **only if `checkSender` is enabled** (off by default, stricter than the spec).
-  - `spender` is checked **only if `checkSpender` is enabled** (off by default, stricter than the spec), and mint
-    and burn are exempt from it regardless: the minter/burner acts on its own authority, not as a delegated spender.
-    This is what lets an **unverified minter** mint to a verified recipient, exactly as ERC-3643 requires
-    (*"`mint` … only require[s] the receiver to be whitelisted and verified"*).
+  - `spender` is checked **only if `checkSpender` is enabled** (off by default, stricter than the spec), and mint and burn are exempt from it regardless: the minter/burner acts on its own authority, not as a delegated spender. This is what lets an **unverified minter** mint to a verified recipient, exactly as ERC-3643 requires (*"`mint` … only require[s] the receiver to be whitelisted and verified"*).
 
 ### Note for subclasses: the two hooks cannot diverge
 
-`_detectTransferRestrictionFrom` screens the spender and then **always delegates** to
-`_detectTransferRestriction`, including when no registry is set and when the transfer is a burn. Those two cases
-resolve to `TRANSFER_OK` inside the delegate, so the answer is unchanged — but the delegation is what guarantees
-that a subclass overriding **only** `_detectTransferRestriction`, the natural hook for adding a check, has that
-check honoured on `transferFrom` and `burnFrom` as well as on `transfer`.
+`_detectTransferRestrictionFrom` screens the spender and then **always delegates** to `_detectTransferRestriction`, including when no registry is set and when the transfer is a burn. Those two cases resolve to `TRANSFER_OK` inside the delegate, so the answer is unchanged — but the delegation is what guarantees that a subclass overriding **only** `_detectTransferRestriction`, the natural hook for adding a check, has that check honoured on `transferFrom` and `burnFrom` as well as on `transfer`.
 
-Until `v0.6.0` the function returned `TRANSFER_OK` directly in those two cases, so such a subclass silently
-screened one entrypoint and not the other. `RuleSanctionsListBase` carries the same guarantee for the same
-reason. If you extend either rule, override `_detectTransferRestriction` and leave the delegation intact; the
-behaviour is pinned by `test/RuleIdentityRegistry/RuleIdentityRegistryDelegation.t.sol`.
+Until `v0.6.0` the function returned `TRANSFER_OK` directly in those two cases, so such a subclass silently screened one entrypoint and not the other. `RuleSanctionsListBase` carries the same guarantee for the same reason. If you extend either rule, override `_detectTransferRestriction` and leave the delegation intact; the behaviour is pinned by `test/RuleIdentityRegistry/RuleIdentityRegistryDelegation.t.sol`.
 
 ## Usage scenario
 

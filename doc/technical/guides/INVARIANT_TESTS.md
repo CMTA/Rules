@@ -2,7 +2,7 @@
 
 [TOC]
 
-This document describes the **stateful invariant suite** in [`test/invariant/`](../../../test/invariant/): what each invariant asserts, why it matters, how the handlers are built, and how the suite was verified to actually catch bugs.
+This document describes the **stateful invariant suite** in [`test/invariant/`](../../../test/invariant/): what each invariant asserts, why it matters, how the handlers are built, and how the suite was verified to catch bugs.
 
 Invariant tests differ from the unit and fuzz tests elsewhere in `test/`: instead of exercising a fixed call sequence, Foundry drives a **handler** contract with long, randomly-ordered sequences of calls and re-checks every `invariant_*` function after each step. They are the right tool for the two **stateful (operation) rules**, whose storage evolves across calls.
 
@@ -39,7 +39,7 @@ fail_on_revert = true # a reverting handler call fails the run
 Foundry cannot usefully fuzz a rule directly: `approveTransfer` needs `OPERATOR_ROLE`, `transferred` may only be called by the bound entity, and random inputs would mostly revert. So each rule gets a **handler** that:
 
 1. **Holds the required roles and is itself the bound entity.** The handler is passed to `bindToken(address(handler))` and granted the operator role, so `msg.sender` inside the rule is the handler and every call is authorized.
-2. **Bounds the inputs.** A small actor set (3 addresses) and a small value range make the fuzzer *collide* on the same keys repeatedly, which is what actually exercises the accounting.
+2. **Bounds the inputs.** A small actor set (3 addresses) and a small value range make the fuzzer *collide* on the same keys repeatedly, which is what exercises the accounting.
 3. **Skips calls that would revert** (e.g. cancelling a non-existent approval), so `fail_on_revert = true` stays meaningful.
 4. **Maintains ghost variables**: an independent, off-chain-style mirror of what the rule's state *should* be. The invariant then compares the rule against the ghost.
 
@@ -72,8 +72,7 @@ Foundry cannot usefully fuzz a rule directly: `approveTransfer` needs `OPERATOR_
 
 ### 3.1 `RuleConditionalTransferLight` — approval conservation
 
-Handler actions: `approve` · `cancel` · `execute` · `executeMintOrBurn`.
-Ghosts: `totalApproved`, `totalCancelled`, `totalExecuted`, `mintBurnCalls`.
+Handler actions: `approve` · `cancel` · `execute` · `executeMintOrBurn`. Ghosts: `totalApproved`, `totalCancelled`, `totalExecuted`, `mintBurnCalls`.
 
 #### `invariant_approvalConservation`
 
@@ -83,7 +82,7 @@ totalApproved − totalCancelled − totalExecuted  ==  Σ approvalCounts
 
 Every approval ever recorded is, at any moment, in exactly one of three states: **still outstanding**, **cancelled**, or **consumed by a transfer**. The equality says approvals are neither **double-spent** (one `approveTransfer` consumed twice) nor **lost** (an approval that vanishes without being cancelled or used).
 
-The invariant additionally asserts `totalApproved >= totalCancelled + totalExecuted`, which fails loudly if the rule ever lets more approvals be consumed than were recorded — i.e. an underflow of `approvalCounts` (`INV-5`).
+The invariant additionally asserts `totalApproved >= totalCancelled + totalExecuted`, which fails if the rule ever lets more approvals be consumed than were recorded — i.e. an underflow of `approvalCounts` (`INV-5`).
 
 #### `invariant_noApprovalExceedsTotalRecorded`
 
@@ -101,8 +100,7 @@ So the mint/burn exemption is proved by the conservation invariant itself, so no
 
 ### 3.2 `RuleMintAllowance` — exact quota accounting
 
-Handler actions: `setAllowance` · `increase` · `decrease` · `mint` · `regularTransfer`.
-Ghosts: `ghostAllowance[minter]` (a full mirror), `totalCredited`, `totalMinted`.
+Handler actions: `setAllowance` · `increase` · `decrease` · `mint` · `regularTransfer`. Ghosts: `ghostAllowance[minter]` (a full mirror), `totalCredited`, `totalMinted`.
 
 #### `invariant_allowanceMatchesGhost`
 

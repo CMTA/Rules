@@ -28,12 +28,10 @@ Utility tool for smart contract systems.
 
 ## Submodule
 
-**[OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)**
-OpenZeppelin Contracts
-The version of the library used is available in the [READEME](../README.md)
+**[OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)** OpenZeppelin Contracts The version of the library used is available in the [READEME](../README.md)
 
-Warning: 
-- Submodules are not automatically updated when the host repository is updated.  
+Warning:
+- Submodules are not automatically updated when the host repository is updated.
 - Only update the module to a specific version, not an intermediary commit.
 
 
@@ -65,13 +63,13 @@ Whitelist
 npx sol2uml class src/Whitelist.sol
 ```
 
-The related component can be installed with `npm install` (see [package.json](./package.json)). 
+The related component can be installed with `npm install` (see [package.json](./package.json)).
 
 ### [Surya](https://github.com/ConsenSys/surya)
 
 #### Graph
 
-To generate  graphs with Surya, you can run the following command
+To generate graphs with Surya, you can run the following command
 
 ```bash
 npm run-script surya:graph
