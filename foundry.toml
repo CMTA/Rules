@@ -5,7 +5,7 @@ out = 'out'
 libs = ['lib']
 optimizer = true
 optimizer_runs = 200
-evm_version = 'prague'
+evm_version = 'osaka'
 # ERC-3643's Token.sol pins `pragma solidity 0.8.30` exactly, which cannot share a compilation unit
 # with solc 0.8.38. Tests that deploy the real vendored token therefore live in their own directory
 # and are built by the `erc3643` profile below. Run them with:
@@ -21,7 +21,7 @@ out = 'out-erc3643'
 libs = ['lib']
 optimizer = true
 optimizer_runs = 200
-evm_version = 'prague'
+evm_version = 'osaka'
 # Profiles inherit unspecified keys from [profile.default], so the default's `skip` must be
 # cleared here or this profile would skip the very tests it exists to run.
 skip = []

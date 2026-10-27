@@ -224,7 +224,7 @@ this reason.
 
 That holds because the setters require code at configuration time (`RuleChainlinkPoR_FeedIsNotAContract`, `RuleChainlinkPoR_TokenIsNotAContract`), every write to either field goes through a validated setter, and **EIP-6780** (Cancun) restricts `SELFDESTRUCT` to accounts created in the same transaction — so a contract that exists across transactions can no longer be removed. A validated address stays a contract.
 
-There is deliberately **no runtime code-length re-check**: it would be unreachable code on any supported chain, and unreachable defensive code misrepresents the threat model. It is recorded here as a deployment precondition instead. `foundry.toml` targets `prague`, which is post-Cancun.
+There is deliberately **no runtime code-length re-check**: it would be unreachable code on any supported chain, and unreachable defensive code misrepresents the threat model. It is recorded here as a deployment precondition instead. `foundry.toml` targets `osaka`, which is post-Cancun.
 
 > **If you deploy to a chain without EIP-6780** (post-Shanghai but pre-Cancun, as some L2s were for a period), this guarantee does not hold: a `SELFDESTRUCT`ed feed or token would make the ERC-1404 views revert instead of returning a code. Re-introduce an `address(x).code.length == 0` guard before each `try` if you target such a chain — it costs about 100 gas per call site, not the 2,600 a cold `EXTCODESIZE` suggests, because the account is warmed either way.
 

@@ -48,6 +48,7 @@ Custom changelog tag
   - Perform an audit with several audit tools (Mythril and Slither), update the report in the corresponding directory [./doc/security/audits/tools](./doc/security/audits/tools)
   - Update surya doc by running the 3 scripts in [./doc/script](./doc/script)
   - Check that the compilation artifacts of the release are in [./doc/compilation](./doc/compilation), in a `vX.Y.Z` directory (`foundry/` from `forge build`, `hardhat/` from `npx hardhat compile --force`, one entry per deployable contract). Artifacts of a previous version may stay alongside, but the latest one must be present.
+  - Check that the Solidity version and the EVM version in `foundry.toml` and `hardhat.config.js` are the latest ones; if not, state the reason clearly in the documentation ([./doc/FOUNDRY.md](./doc/FOUNDRY.md)).
   - Update changelog
 
 
@@ -106,6 +107,8 @@ Commit:
   - Selectors and behaviour are unchanged; the ABI `stateMutability` of `transferred` changes from `view` to `nonpayable`, which is what `IRule` / `IRuleEngine` already declare.
   - The compiler no longer proves that `RuleMaxTotalSupply` never writes storage; `testTransferredNeverWritesStorage` now asserts it with `vm.accesses`. All existing `RuleMaxTotalSupply` suites (unit, CMTAT v3.0.0, invariants) pass unchanged.
 - **Deployment scripts deploy `RuleEngine2771` only when a forwarder is given.** `DeployCMTATWithBlacklistAndSanctionsList` and `DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply` deploy `RuleEngine` when `forwarder == address(0)` and `RuleEngine2771` otherwise, so the engine trusts the same forwarder as the token and the rules, as it did with rc6. The returned engine is still typed `RuleEngine`.
+- EVM target raised from `prague` to `osaka` in `foundry.toml` (both profiles) and `hardhat.config.js`; solc stays at `0.8.38`, the latest release.
+  - The compiled contracts contain no Osaka-only opcode (`CLZ`), so they still run on Prague and Cancun chains.
 
 ### Fixed
 
@@ -173,7 +176,7 @@ Commit:
   - "Behaviour by token operation": one row per operation, each with the test that pins it. Covers mint, burn, transfers, `burnAndMint` (net increase only), cross-chain mint/burn, forced burn, a cap at or below supply (including the zero-value-mint case), supply that existed before installation, and detach / re-attach.
   - A warning that detaching the rule is the only way to exceed the cap, and a "One instance per token" subsection, previously documented only in `CLAUDE.md` and `RULE_SEMANTICS.md`.
 - Coverage report (`doc/coverage/`, lcov and HTML) and Surya diagrams and reports (`doc/surya/`) regenerated for `v0.7.0`; they now include `RuleIssuanceCap` and the other contracts added in this release.
-- Compilation artifacts of `v0.7.0` added in `doc/compilation/v0.7.0/`: `foundry/` (`forge build`) and `hardhat/` (`npx hardhat compile --force`), one JSON per deployable contract (35), solc `0.8.38`, optimizer 200 runs, EVM `prague`. The empty `doc/compilation/hardhat/` directory was removed.
+- Compilation artifacts of `v0.7.0` added in `doc/compilation/v0.7.0/`: `foundry/` (`forge build`) and `hardhat/` (`npx hardhat compile --force`), one JSON per deployable contract (35), solc `0.8.38`, optimizer 200 runs, EVM `osaka`. The empty `doc/compilation/hardhat/` directory was removed.
 
 ### Testing
 

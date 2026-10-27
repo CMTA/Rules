@@ -1081,7 +1081,7 @@ These roles are listed above in the Role Summary table.
 
 ## Toolchains and Usage
 
-This repository is developed and tested with [Foundry](https://book.getfoundry.sh); a Hardhat config is also present for compilation and a small smoke test. Build settings (`foundry.toml` / `hardhat.config.js`): solc `v0.8.38`, EVM `Prague`, optimizer on (200 runs).
+This repository is developed and tested with [Foundry](https://book.getfoundry.sh); a Hardhat config is also present for compilation and a small smoke test. Build settings (`foundry.toml` / `hardhat.config.js`): solc `v0.8.38`, EVM `Osaka`, optimizer on (200 runs). The compiled contracts use no Osaka-only opcode (no `CLZ`), so they also run on a Prague or Cancun chain.
 
 ### Main commands
 

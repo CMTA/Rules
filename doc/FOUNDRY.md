@@ -9,14 +9,17 @@ Here are the settings for [Hardhat](https://hardhat.org) and [Foundry](https://g
 - `hardhat.config.js`
 
   - Solidity [v0.8.38](https://docs.soliditylang.org/en/v0.8.38/)
-  - EVM version: Prague (Pectra upgrade)
+  - EVM version: Osaka (Fusaka upgrade)
   - Optimizer: true, 200 runs
 
 - `foundry.toml`
 
   - Solidity [v0.8.38](https://docs.soliditylang.org/en/v0.8.38/)
-  - EVM version: Prague (Pectra upgrade)
+  - EVM version: Osaka (Fusaka upgrade)
   - Optimizer: true, 200 runs
+  - Exception, the `erc3643` profile (tests in `test/ERC3643Real/` only): Solidity v0.8.30, not the latest, because the vendored ERC-3643 `Token.sol` pins `pragma solidity 0.8.30` exactly. It builds no deployable artifact.
+
+The compiled contracts contain no Osaka-only opcode (`CLZ`), so they also run on a Prague or Cancun chain. They need Cancun at least: the revert-free supply and feed reads rely on EIP-6780.
 
 - Library
 
