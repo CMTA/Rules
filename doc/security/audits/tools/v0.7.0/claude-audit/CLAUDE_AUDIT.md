@@ -129,10 +129,105 @@ engine), every operation of the real token reverts with `TokenBinding_Unauthoriz
 `detectTransferRestriction` reports 0: code 85 is returned only while **no** caller is bound. `RULE_SEMANTICS.md`
 already states that only the fully unbound state is visible to a view.
 
-**Impact.** Admin error only; fails closed. **Recommendation (optional).** Override `_checkBindingTarget(token)` to
-accept `address(tokenContract)`, or an engine that reports `isTokenBound(address(tokenContract))` (in `try/catch`).
-This catches a wrong binding at configuration time; it does not prevent a second token being bound to the engine
-later, so F-1's documentation is still needed.
+**Impact.** Admin error only; it fails closed (no mint can succeed through a wrong binding). The cost is
+diagnosis: an operator sees every mint revert with `TokenBinding_UnauthorizedCaller` while the token's
+`detectTransferRestriction` answers 0, and nothing on-chain says the binding is the cause.
+
+#### Context: where a check could go
+
+`bindToken` in `RuleIssuanceCapBase` ends in `TokenBindingModule._bindToken`, which already calls a hook made for
+this purpose: `_checkBindingTarget(address token) internal view virtual`, empty in RuleEngine `rc7` ("hook for
+host-specific restrictions on which addresses may be bound; reverts to reject"). Every binding path the rule
+inherits goes through it, and `unbindToken` does not, so a wrong binding can always be removed.
+
+Two legitimate targets exist, one per topology:
+
+| Topology | Correct target | How to recognise it on-chain |
+|---|---|---|
+| B, rule set directly on the token | the token | `target == address(tokenContract)` |
+| A, rule inside a RuleEngine | the engine | `IERC3643Compliance(target).isTokenBound(address(tokenContract))` returns `true`. `isTokenBound` is part of the ERC-3643 compliance interface, which RuleEngine implements (`ITokenBinding`) |
+
+#### Option A: check at binding time (recommended if implemented)
+
+```solidity
+// RuleIssuanceCapInvariantStorage
+error RuleIssuanceCap_BindingTargetNotServingToken(address target, address tokenContract);
+
+// RuleIssuanceCapBase
+/**
+ * @notice Accepts only the observed token, or an engine that already serves it.
+ */
+function _checkBindingTarget(address target) internal view virtual override {
+    address token = address(tokenContract);
+    if (target == token) {
+        return;
+    }
+    require(_servesToken(target, token), RuleIssuanceCap_BindingTargetNotServingToken(target, token));
+}
+
+/**
+ * @notice True when `engine` reports `token` as bound. Never reverts.
+ */
+function _servesToken(address engine, address token) internal view virtual returns (bool) {
+    // A `try` to a codeless address (an EOA, a typo) fails outside the `catch`; reject it explicitly.
+    if (engine.code.length == 0) {
+        return false;
+    }
+    try ITokenBinding(engine).isTokenBound(token) returns (bool bound) {
+        return bound;
+    } catch {
+        return false;
+    }
+}
+```
+
+What it costs: one external `view` call on `bindToken` only, so no gas on the transfer path; one new custom error;
+no storage, no ABI change to existing functions. Tests: `testIC2_BindingUnrelatedCallerIsAccepted_CurrentBehaviour`
+must be inverted into a regression test, plus cases for an EOA, an engine that does not serve the token, an engine
+that does, and a contract without `isTokenBound`.
+
+**Drawbacks**
+
+1. **It conflicts with the gap-free deployment order of F-4.** That order binds the rule to the engine (step 4)
+   *before* binding the token to the engine (step 5), precisely so that every mint reverts until the rule is in
+   place. With this check, step 4 reverts: the engine does not serve the token yet. Swapping the two steps makes
+   the check pass but reopens the window F-4 closes: between `engine.bindToken(token)` and `engine.addRule(rule)`,
+   the engine accepts the token's mints without the cap rule. The deployer would be back to "nobody mints in
+   between" by procedure. **This is the main reason not to implement the check as is.**
+2. **It is a snapshot.** It checks the engine once, at binding. It does not prevent the engine from later binding
+   a second token (F-1), nor notice the engine later unbinding `tokenContract` (harmless: the engine then rejects
+   the token's calls, so mints revert anyway).
+3. **It trusts the target's answer.** Any contract can return `true` from `isTokenBound`. The check catches
+   mistakes, not a malicious compliance manager, who is trusted anyway.
+4. **Engines without `isTokenBound` are refused.** A custom engine that does not implement the ERC-3643 compliance
+   binding functions cannot be bound, even if it would work. Fail-closed, but an interoperability cost.
+5. **Test churn.** About 40 `bindToken` calls appear in the `RuleIssuanceCap` suites; most bind a stand-in
+   address (for example `address(0xCA11)` in the unit tests) rather than a real token or engine. Those would need a mock that answers `isTokenBound`, or to bind the token mock itself.
+6. **Inconsistency with the sibling rules.** `RuleMintAllowance` and `RuleConditionalTransferLight` bind the same
+   way and would keep accepting any address, unless the same hook is added to them.
+
+#### Option B: detect a wrong binding in the views
+
+Extend `_ruleNotBound()` so that the views also report 85 when the bound caller is neither the token nor an engine
+serving it. That closes the view/enforcement gap itself instead of preventing it. Drawbacks: an external call on
+**every** read, and on every write too, since the write path runs the same `_detectTransferRestriction`; it must be
+`try/catch`-guarded to keep the views non-reverting; and the answer can change without any action on the rule (the
+engine unbinds the token). Not recommended: it puts a configuration check on the hot path.
+
+#### Option C: also require a single-token engine
+
+Additionally require `getTokenBounds().length == 1` on the engine, which would address F-1 at binding time.
+Drawbacks: `getTokenBounds` belongs to RuleEngine's extended module, not to the ERC-3643 interface, so other
+engines would be refused; it is still a snapshot, and RuleEngine can later add a token through `bindToken`, the
+batch functions or token self-binding. Not recommended.
+
+#### Verdict
+
+Leave the code unchanged for `v0.7.0`. The failure is fail-closed and caused by the trusted compliance manager, and
+the documented deployment order (F-4) already gives a configuration where mints revert until the setup is correct.
+If the check is wanted later, the way to keep F-4's guarantee is to accept the engine at binding time without
+requiring the token yet (call `isTokenBound` in `try/catch` and ignore the answer, rejecting only EOAs and contracts that do not
+implement it), which catches typos but not a wrong engine. That trade-off is a maintainer decision.
 
 ### 3.4 F-3 — `_afterMintChecked` does not warn that `transferred` is ungated (Info)
 
@@ -269,11 +364,11 @@ documentation changes for F-1, F-3 and F-4 (plus one integration test for F-4): 
 
 | # | Improvement | Addresses | Effort | Breaking? | Priority |
 |---|---|---|---|---|---|
-| 1 | `_checkBindingTarget` accepting only `tokenContract` or an engine bound to it | F-1, F-2 | Small (code + tests) | No for the standard setup (a RuleEngine binds its token at construction), but the setup order becomes fixed | Low; a design decision |
+| 1 | `_checkBindingTarget` accepting only `tokenContract` or an engine bound to it (§3.3, option A) | F-1, F-2 | Small (code + ~40 test call sites) | No ABI break, but it rejects step 4 of the gap-free deployment order of F-4 | Low; a design decision, not recommended for `v0.7.0` |
 
-The documentation items are done (F-1, F-3, F-4; §6). The remaining item moves part of F-1 and F-2
-from documentation into a configuration-time check, at the cost of a fixed setup order (the engine must serve the token before
-the rule binds the engine); the maintainers should decide whether that is acceptable.
+The documentation items are done (F-1, F-3, F-4; §6). The remaining item would move part of F-1 and F-2 from
+documentation into a configuration-time check, but it rejects the gap-free deployment order of F-4; §3.3 gives the
+implementation, its drawbacks and two alternatives.
 
 ---
 
