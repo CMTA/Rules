@@ -1096,6 +1096,7 @@ This repository is developed and tested with [Foundry](https://book.getfoundry.s
 | Gas snapshot | `forge snapshot` (check only: `forge snapshot --check`) |
 | Coverage | `forge coverage` |
 | Coverage report ([`doc/coverage`](./coverage/)) | `forge coverage --exclude-tests --no-match-coverage '(test\|mocks?\|script)/' --report lcov --report-file doc/coverage/lcov.info && genhtml doc/coverage/lcov.info --branch-coverage --prefix "$PWD/" --output-dir doc/coverage/coverage` |
+| Compilation artifacts ([`doc/compilation`](./compilation/)) | `forge build` and `npx hardhat compile --force`, then copy one JSON per deployable contract into `doc/compilation/vX.Y.Z/foundry/` and `.../hardhat/` |
 | Invariant suite only | `forge test --match-path "test/invariant/*"` |
 | Format | `forge fmt` |
 | Deploy a script | `forge script script/<Deploy...>.s.sol --rpc-url <url> --account <keystore>` |
