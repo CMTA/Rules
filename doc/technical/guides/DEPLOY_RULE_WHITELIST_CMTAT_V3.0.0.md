@@ -67,6 +67,9 @@ Constructor flags of the rule:
 
 ## 4. Deployment steps
 
+Each setup lists its steps, then draws them as a sequence diagram. The calls are shown from a single admin; in
+production the whitelist, rule and minting roles can be held by different addresses (§3).
+
 ### 4.1 Rule set directly, at deployment (recommended for a whitelist alone)
 
 1. **Deploy the rule:** `RuleWhitelist(admin, address(0), checkSpender, true)`. It needs no token address.
@@ -78,6 +81,21 @@ Constructor flags of the rule:
    `token.detectTransferRestriction(address(0), investor1, 1) == 0` and the same call to an unlisted address returns
    22. A small test mint confirms it end to end.
 
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Admin (deployer)
+    participant Rule as RuleWhitelist
+    participant Token as CMTAT v3.0.0
+
+    Admin->>Rule: deploy RuleWhitelist(admin, 0, checkSpender, true)
+    Admin->>Rule: addAddresses([investor1, investor2, ...])
+    Admin->>Token: deploy CMTATStandalone(..., Engine(rule, 0, 0))
+    Note over Token,Rule: compliance active from the first block: token.ruleEngine() == rule
+    Admin->>Token: grantRole(MINTER_ROLE, minter)
+    Admin->>Token: detectTransferRestriction(0, investor1, 1) returns 0
+```
+
 ### 4.2 Rule set directly, after deployment
 
 1. **Deploy the token** with `Engine(ruleEngine = address(0), ...)`. Do not mint yet.
@@ -85,6 +103,23 @@ Constructor flags of the rule:
 3. **Install it:** `token.setRuleEngine(rule)`, as the token's `DEFAULT_ADMIN_ROLE`. It emits `RuleEngine(rule)`
    and reverts with `CMTAT_ValidationModule_SameValue` if that rule is already set.
 4. **Grant `MINTER_ROLE`**, then check as in 4.1 step 5.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Admin (deployer)
+    participant Token as CMTAT v3.0.0
+    participant Rule as RuleWhitelist
+
+    Admin->>Token: deploy CMTATStandalone(..., Engine(0, 0, 0))
+    Note over Token: no compliance yet: do not mint
+    Admin->>Rule: deploy RuleWhitelist(admin, 0, checkSpender, true)
+    Admin->>Rule: addAddresses([investor1, investor2, ...])
+    Admin->>Token: setRuleEngine(rule)
+    Token-->>Admin: event RuleEngine(rule)
+    Admin->>Token: grantRole(MINTER_ROLE, minter)
+    Admin->>Token: detectTransferRestriction(0, investor1, 1) returns 0
+```
 
 The repository script `script/DeployCMTATWithWhitelist.s.sol` follows this order, but deploys the current CMTAT
 (v3.3), not v3.0.0. See `DEPLOYMENT_SCRIPTS.md`.
@@ -101,6 +136,25 @@ binds it afterwards. Until that binding, the engine rejects every call from the 
 4. **Bind the token:** `engine.bindToken(token)` (`COMPLIANCE_MANAGER_ROLE`). From now on the token works.
 5. **Grant `MINTER_ROLE`** and check as in 4.1 step 5.
 
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Admin (deployer)
+    participant Engine as RuleEngine
+    participant Rule as RuleWhitelist
+    participant Token as CMTAT v3.0.0
+
+    Admin->>Engine: deploy RuleEngine(admin, 0)
+    Admin->>Rule: deploy RuleWhitelist(admin, 0, checkSpender, true)
+    Admin->>Rule: addAddresses([investor1, investor2, ...])
+    Admin->>Engine: addRule(rule)
+    Admin->>Token: deploy CMTATStandalone(..., Engine(engine, 0, 0))
+    Note over Token,Engine: token not bound yet: every mint and transfer reverts (TokenBinding_UnauthorizedCaller)
+    Admin->>Engine: bindToken(token)
+    Admin->>Token: grantRole(MINTER_ROLE, minter)
+    Admin->>Token: detectTransferRestriction(0, investor1, 1) returns 0
+```
+
 ### 4.4 Behind a RuleEngine, after deployment
 
 1. **Deploy the token** with `Engine(ruleEngine = address(0), ...)`. Do not mint yet.
@@ -108,6 +162,25 @@ binds it afterwards. Until that binding, the engine rejects every call from the 
 3. **Deploy the rule**, fill the whitelist, `engine.addRule(rule)`.
 4. **Install it:** `token.setRuleEngine(engine)`.
 5. **Grant `MINTER_ROLE`** and check as in 4.1 step 5.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Admin (deployer)
+    participant Token as CMTAT v3.0.0
+    participant Engine as RuleEngine
+    participant Rule as RuleWhitelist
+
+    Admin->>Token: deploy CMTATStandalone(..., Engine(0, 0, 0))
+    Note over Token: no compliance yet: do not mint
+    Admin->>Engine: deploy RuleEngine(admin, token): binds the token
+    Admin->>Rule: deploy RuleWhitelist(admin, 0, checkSpender, true)
+    Admin->>Rule: addAddresses([investor1, investor2, ...])
+    Admin->>Engine: addRule(rule)
+    Admin->>Token: setRuleEngine(engine)
+    Admin->>Token: grantRole(MINTER_ROLE, minter)
+    Admin->>Token: detectTransferRestriction(0, investor1, 1) returns 0
+```
 
 A RuleEngine serving one token is the expected shape. `RuleWhitelist` itself would work for several tokens (it reads
 no token state), but every token would then share one whitelist.

@@ -184,6 +184,7 @@ Commit:
   - On `v3.3.0` the minter reaches the rule as `spender`; `RuleWhitelist` does not screen it, even with `checkSpender`.
   - A table lists the differences from `v3.0.0`: constructor `Engine` struct, mint path and error, token-side errors, reentrancy guard.
   - Both guides draw each workflow twice: rule plugged directly into the token, and rule behind a RuleEngine.
+  - Both guides also draw each of the four deployment setups as a sequence diagram (rule on the token or in a RuleEngine, installed in the constructor or after).
 - Contract pages (`doc/technical/contracts/`): the Schema section now opens with a short explanation of the Surya call graph and inheritance diagrams, and of the CMTAT flow diagram where there is one.
 - `RuleWhitelist` / `RuleWhitelistOwnable2Step` NatSpec: the `allowMintBurn` constructor parameter said it pre-lists `address(0)`; it sets the `allowMint` and `allowBurn` flags, and the zero address is never listed.
 
