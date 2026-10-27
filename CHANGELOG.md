@@ -27,6 +27,7 @@ Reference: [keepachangelog.com/en/1.1.0/](https://keepachangelog.com/en/1.1.0/)
 
 Custom changelog tag
 
+- `Summary`: main new features/changes with a short description, at the top of each release
 - `breaking change`: breaking change regarding storage [ERC-7201](https://eips.ethereum.org/EIPS/eip-7201) namespace , as well as external engine
 - `Dependencies` (npm package, openzeppelin,...)
 - `Documentation`
@@ -53,6 +54,15 @@ Custom changelog tag
 ## v0.7.0 - 2026-10-26
 
 Commit: 
+
+### Summary
+
+- Contracts now report `version()` → `"0.7.0"`.
+- Dependency update: CMTAT `v3.3.0-rc4` and RuleEngine `v3.0.0-rc7`. The update itself changes no rule's screening logic, restriction codes or storage layout.
+- RuleEngine `v3.0.0-rc7` changes how an engine is deployed (constructor, ERC-2771 variant, `IRule` id); rules stay compatible with older engines (see Breaking change).
+- Every rule is now tested against a real CMTAT `v3.0.0` token, the last audited CMTAT release, and the documentation states per rule what v3.0.0 supports.
+- **New rule `RuleIssuanceCap`** ([CMTA/Rules#16](https://github.com/CMTA/Rules/issues/16)): a per-token cap on cumulative issuance that burns do not restore, working on CMTAT v3.0.0. Built as an extension of `RuleMaxTotalSupply`, so no cap logic is duplicated.
+- One ABI change for off-chain consumers: `RuleMaxTotalSupply`'s `MaxTotalSupplyUpdated` event now carries the previous cap (see Changed).
 
 ### Added
 
