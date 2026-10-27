@@ -55,6 +55,12 @@ Supporting true per-token scoping behind a `RuleEngine` would require the token 
 
 ## Schema
 
+The **Graph** and **Inheritance** diagrams are generated from the source code with [Surya](https://github.com/Consensys/surya), by the scripts in `doc/script/`, and must be regenerated after a code change:
+
+- **Graph** (`surya graph`): the call graph of the contract's source file. Each node is a function, grouped by contract, and each arrow is a call from one function to another, including calls to other contracts. Only that file is parsed, so logic inherited from a base contract appears in that base contract's own graph.
+- **Inheritance** (`surya inheritance`): the contracts and interfaces this contract inherits from, which tells you where each inherited function and modifier is defined.
+- **Flow with a CMTAT token**: a sequence diagram, written by hand in PlantUML (source in `doc/img/`), of how the rule takes part in a token transfer.
+
 ### Graph
 
 ![surya_graph_RuleConditionalTransferLightMultiToken](../../surya/surya_graph/surya_graph_RuleConditionalTransferLightMultiToken.sol.png)

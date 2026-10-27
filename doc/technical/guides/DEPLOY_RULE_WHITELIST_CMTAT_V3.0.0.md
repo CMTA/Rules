@@ -118,12 +118,15 @@ no token state), but every token would then share one whitelist.
 (contract deactivated, receiver frozen), then notifies the compliance contract **before** creating the tokens, on the
 3-argument `transferred(address(0), to, value)`: no minter is forwarded. Pause does not stop a mint on v3.0.0.
 
+### 5.1 Rule plugged directly into the token
+
+The token calls `RuleWhitelist` itself: `token.ruleEngine() == rule`.
+
 ```mermaid
 sequenceDiagram
     autonumber
     actor Minter as Minter (MINTER_ROLE)
     participant Token as CMTAT v3.0.0
-    participant Engine as RuleEngine (optional)
     participant Rule as RuleWhitelist
 
     Minter->>Token: mint(to, value)
@@ -132,13 +135,7 @@ sequenceDiagram
     alt token check fails
         Token-->>Minter: revert CMTAT_InvalidTransfer
     end
-    alt rule set directly on the token
-        Token->>Rule: transferred(address(0), to, value)
-    else rule inside a RuleEngine
-        Token->>Engine: transferred(address(0), to, value)
-        Engine->>Engine: onlyBoundToken (caller is the bound token?)
-        Engine->>Rule: transferred(address(0), to, value)
-    end
+    Token->>Rule: transferred(address(0), to, value)
     Rule->>Rule: allowMint? (else code 24)
     Rule->>Rule: receiver whitelisted? (else code 22)
     alt rejected
@@ -151,6 +148,42 @@ sequenceDiagram
     end
 ```
 
+### 5.2 Rule behind a RuleEngine
+
+The token calls the RuleEngine, which accepts only its bound token and then calls each of its rules in order.
+The first rule that reverts stops the mint, and the revert reaches the token through the engine.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Minter as Minter (MINTER_ROLE)
+    participant Token as CMTAT v3.0.0
+    participant Engine as RuleEngine
+    participant Rule as RuleWhitelist
+
+    Minter->>Token: mint(to, value)
+    Token->>Token: onlyRole(MINTER_ROLE)
+    Token->>Token: deactivated? receiver frozen?
+    alt token check fails
+        Token-->>Minter: revert CMTAT_InvalidTransfer
+    end
+    Token->>Engine: transferred(address(0), to, value)
+    Engine->>Engine: onlyBoundToken (caller is the bound token?)
+    Engine->>Rule: transferred(address(0), to, value)
+    Rule->>Rule: allowMint? (else code 24)
+    Rule->>Rule: receiver whitelisted? (else code 22)
+    alt rejected
+        Rule-->>Engine: revert RuleWhitelist_InvalidTransfer(rule, 0, to, value, code)
+        Engine-->>Token: revert bubbles up
+        Token-->>Minter: whole mint reverts
+    else accepted
+        Rule-->>Engine: return
+        Engine-->>Token: return
+        Token->>Token: _mint(to, value): balance and totalSupply increase
+        Token-->>Minter: Transfer(address(0), to, value)
+    end
+```
+
 ## 6. Transfer workflow
 
 `transfer(to, value)` by a holder. The token first checks that the tokens are not frozen (active balance), then that
@@ -158,12 +191,15 @@ nobody involved is frozen and that the token is not paused, then notifies the co
 the balance. A `transfer` has no spender and takes the 3-argument path; `transferFrom` takes the 4-argument path with
 the caller as spender, where the rule also checks the spender if `checkSpender` is on.
 
+### 6.1 Rule plugged directly into the token
+
+The token calls `RuleWhitelist` itself: `token.ruleEngine() == rule`.
+
 ```mermaid
 sequenceDiagram
     autonumber
     actor Holder as Holder (from)
     participant Token as CMTAT v3.0.0
-    participant Engine as RuleEngine (optional)
     participant Rule as RuleWhitelist
 
     Holder->>Token: transfer(to, value)
@@ -172,13 +208,7 @@ sequenceDiagram
     alt token check fails
         Token-->>Holder: revert
     end
-    alt rule set directly on the token
-        Token->>Rule: transferred(from, to, value)
-    else rule inside a RuleEngine
-        Token->>Engine: transferred(from, to, value)
-        Engine->>Engine: onlyBoundToken
-        Engine->>Rule: transferred(from, to, value)
-    end
+    Token->>Rule: transferred(from, to, value)
     Rule->>Rule: sender whitelisted? (else code 21)
     Rule->>Rule: receiver whitelisted? (else code 22)
     alt rejected
@@ -186,6 +216,41 @@ sequenceDiagram
         Token-->>Holder: whole transfer reverts
     else accepted
         Rule-->>Token: return
+        Token->>Token: _transfer(from, to, value)
+        Token-->>Holder: Transfer(from, to, value)
+    end
+```
+
+### 6.2 Rule behind a RuleEngine
+
+Same path through the engine as for a mint (§5.2), on the 3-argument `transferred`.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Holder as Holder (from)
+    participant Token as CMTAT v3.0.0
+    participant Engine as RuleEngine
+    participant Rule as RuleWhitelist
+
+    Holder->>Token: transfer(to, value)
+    Token->>Token: active balance >= value? (frozen tokens excluded)
+    Token->>Token: paused? sender or receiver frozen?
+    alt token check fails
+        Token-->>Holder: revert
+    end
+    Token->>Engine: transferred(from, to, value)
+    Engine->>Engine: onlyBoundToken
+    Engine->>Rule: transferred(from, to, value)
+    Rule->>Rule: sender whitelisted? (else code 21)
+    Rule->>Rule: receiver whitelisted? (else code 22)
+    alt rejected
+        Rule-->>Engine: revert RuleWhitelist_InvalidTransfer(rule, from, to, value, code)
+        Engine-->>Token: revert bubbles up
+        Token-->>Holder: whole transfer reverts
+    else accepted
+        Rule-->>Engine: return
+        Engine-->>Token: return
         Token->>Token: _transfer(from, to, value)
         Token-->>Holder: Transfer(from, to, value)
     end

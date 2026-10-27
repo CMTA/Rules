@@ -54,6 +54,11 @@ artifacts for both `RuleMaxBalance` and `RuleMaxBalanceOwnable2Step`.
 
 ## Schema
 
+The **Graph** and **Inheritance** diagrams are generated from the source code with [Surya](https://github.com/Consensys/surya), by the scripts in `doc/script/`, and must be regenerated after a code change:
+
+- **Graph** (`surya graph`): the call graph of the contract's source file. Each node is a function, grouped by contract, and each arrow is a call from one function to another, including calls to other contracts. Only that file is parsed, so logic inherited from a base contract appears in that base contract's own graph.
+- **Inheritance** (`surya inheritance`): the contracts and interfaces this contract inherits from, which tells you where each inherited function and modifier is defined.
+
 ### Graph
 
 ![surya_graph_RuleMaxBalance](../../surya/surya_graph/surya_graph_RuleMaxBalance.sol.png)
