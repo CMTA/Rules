@@ -312,6 +312,28 @@ sequenceDiagram
     end
 ```
 
+### 6.3 Happy path: both holders whitelisted
+
+The same transfer when everything passes, without the failure branches. Alice and Bob are both on the whitelist, Alice holds at least 100 unfrozen tokens, and the token is not paused. The rule is plugged directly into the token; behind a RuleEngine the engine sits between the token and the rule, as in §6.2.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Alice as Alice (whitelisted holder)
+    participant Token as CMTAT v3.0.0
+    participant Rule as RuleWhitelist
+
+    Alice->>Token: transfer(bob, 100)
+    Token->>Token: active balance >= 100: yes
+    Token->>Token: paused, Alice or Bob frozen: no
+    Token->>Rule: transferred(alice, bob, 100)
+    Rule->>Rule: Alice whitelisted: yes
+    Rule->>Rule: Bob whitelisted: yes
+    Rule-->>Token: return, no revert (restriction code 0)
+    Token->>Token: _transfer(alice, bob, 100)
+    Token-->>Alice: Transfer(alice, bob, 100), returns true
+```
+
 Before sending, a wallet or a front end can ask the same question without a transaction: `token.canTransfer(from, to, value)` on both variants, and `token.detectTransferRestriction(from, to, value)` plus `messageForTransferRestriction(code)` on the Standard variant (the Debt variant has no ERC-1404 layer).
 
 ## 7. Operating the token
