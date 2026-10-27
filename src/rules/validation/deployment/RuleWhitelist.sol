@@ -26,7 +26,7 @@ contract RuleWhitelist is RuleWhitelistBase, AccessControlModuleStandalone {
      * @param admin Address of the contract (Access Control)
      * @param forwarderIrrevocable Address of the forwarder, required for the gasless support
      * @param checkSpender_ Enables spender checks for transferFrom when true.
-     * @param allowMintBurn Pre-lists `address(0)` at deployment when true.
+     * @param allowMintBurn When true, permits both minting and burning (sets `allowMint` and `allowBurn`).
      */
     constructor(address admin, address forwarderIrrevocable, bool checkSpender_, bool allowMintBurn)
         RuleWhitelistBase(forwarderIrrevocable, checkSpender_, allowMintBurn)

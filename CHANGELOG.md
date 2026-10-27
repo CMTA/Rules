@@ -177,9 +177,14 @@ Commit:
   - A warning that detaching the rule is the only way to exceed the cap, and a "One instance per token" subsection, previously documented only in `CLAUDE.md` and `RULE_SEMANTICS.md`.
 - Coverage report (`doc/coverage/`, lcov and HTML) and Surya diagrams and reports (`doc/surya/`) regenerated for `v0.7.0`; they now include `RuleIssuanceCap` and the other contracts added in this release.
 - Compilation artifacts of `v0.7.0` added in `doc/compilation/v0.7.0/`: `foundry/` (`forge build`) and `hardhat/` (`npx hardhat compile --force`), one JSON per deployable contract (35), solc `0.8.38`, optimizer 200 runs, EVM `osaka`. The empty `doc/compilation/hardhat/` directory was removed.
+- New guide `doc/technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md`: step-by-step deployment of `RuleWhitelist` with a CMTAT `v3.0.0` token.
+  - Four setups: rule set directly or behind a RuleEngine, installed in the token constructor or later with `setRuleEngine`, with the roles and checks for each.
+  - Mermaid sequence diagrams of a mint and of a transfer with the rule active.
+- `RuleWhitelist` / `RuleWhitelistOwnable2Step` NatSpec: the `allowMintBurn` constructor parameter said it pre-lists `address(0)`; it sets the `allowMint` and `allowBurn` flags, and the zero address is never listed.
 
 ### Testing
 
+- `RuleWhitelistV300Deployment.t.sol` (CMTAT `v3.0.0`): `RuleWhitelist`, or a RuleEngine holding it, passed in the token constructor; the first mint is screened, and with a RuleEngine nothing moves until the engine binds the token.
 - `test/InterfaceId/RuleInterfaceIdCompatibility.t.sol` (3 tests): pins the two `IRule` id literals and checks that each distinct `supportsInterface` implementation advertises the new id, the legacy id and `IRuleEngine`.
 - Deployment-script tests: one test per engine script for each branch of the forwarder choice (4 tests).
 - **CMTAT v3.0.0 integration suites** (`test/CMTATv3.0.0/`, 320 tests): one suite per rule, each run on the Standard and Debt variants, set directly on the token and behind a `RuleEngine` (`RuleConditionalTransferLightMultiToken`: direct only).
@@ -200,7 +205,7 @@ Commit:
   - Negative controls: three mutations (off-by-one cap, over-strict cap, wrong headroom view) each fail the suite. A first version missed the off-by-one on the safety invariant, because random amounts never hit `headroom + 1`; the `mintAtBoundary` action fixes that. Recorded in `INVARIANT_TESTS.md` §4.
   - Documented in `INVARIANT_TESTS.md` §3.3 and in the "Invariant testing" section of `doc/README.md`.
 - `remainingMintable()`: unit tests (headroom, exact fit, cap below supply, unreadable supply), a fuzz property that the headroom is exactly the largest mint the pre-flight check accepts, the ERC-3643 variant, and a real CMTAT v3.0.0 token across mints and burns.
-- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,310 tests pass in the default profile and 53 in the `erc3643` profile.
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,312 tests pass in the default profile and 53 in the `erc3643` profile.
 - **Security-review tests** (`CLAUDE_AUDIT.md` v0.7.0):
   - 16 proof-of-concept tests in `test/ThreatModel/ThreatModelV070Tests.t.sol` (4 fuzz). Tests suffixed `_CurrentBehaviour` must fail once a finding is fixed.
   - `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow` (`RuleIssuanceCapCMTATIntegration`): the gap-free deployment order of F-4 on a real CMTAT `v3.3` token and RuleEngine `rc7`; every mint, the admin's included, reverts until the cap rule is installed.

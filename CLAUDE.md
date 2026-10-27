@@ -49,7 +49,7 @@ Rules that implement a standardized interface must match that standard's semanti
 | `src/registry/` | Contracts filling a token's **identity registry** slot, not its compliance slot (`IdentityRegistryWhitelist`). Not rules: no `IRule`, never added to a RuleEngine |
 | `src/modules/` | Reusable modules (`AccessControlModuleStandalone`, `MetaTxModuleStandalone`, `VersionModule`, `Ownable2StepERC165Module`) |
 | `doc/technical/contracts/` | One documentation page per deployable contract |
-| `doc/technical/guides/` | Cross-cutting docs: `RULE_SEMANTICS.md`, `INVARIANT_TESTS.md`, `DEPLOYMENT_SCRIPTS.md` |
+| `doc/technical/guides/` | Cross-cutting docs: `RULE_SEMANTICS.md`, `INVARIANT_TESTS.md`, `DEPLOYMENT_SCRIPTS.md`, `DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md` |
 | `test/` | Foundry tests, one folder per rule |
 | `lib/` | Git submodule dependencies (do not edit) |
 

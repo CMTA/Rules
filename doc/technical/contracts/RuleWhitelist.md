@@ -127,4 +127,6 @@ The operator deploys `RuleWhitelist`, grants `ADDRESS_LIST_ADD_ROLE` to a compli
 - Mint and burn are gated by `allowMint` / `allowBurn` exactly as on v3.3: the minter never matters to this rule, so the missing mint spender changes nothing.
 - `checkSpender` screens `transferFrom` spenders, which v3.0.0 forwards on the 4-argument path.
 
-Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleWhitelistV300.t.sol`.
+Step-by-step deployment with a v3.0.0 token, and the mint and transfer workflows: [`DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md).
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleWhitelistV300.t.sol`; the rule or a RuleEngine passed in the token constructor: `test/CMTATv3.0.0/RuleWhitelistV300Deployment.t.sol`.

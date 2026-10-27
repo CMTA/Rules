@@ -21,7 +21,7 @@ contract RuleWhitelistOwnable2Step is RuleWhitelistBase, Ownable2Step, Ownable2S
      * @param owner Contract owner.
      * @param forwarderIrrevocable Address of the ERC-2771 forwarder.
      * @param checkSpender_ Enables spender checks for transferFrom when true.
-     * @param allowMintBurn Pre-lists `address(0)` at deployment when true.
+     * @param allowMintBurn When true, permits both minting and burning (sets `allowMint` and `allowBurn`).
      */
     constructor(address owner, address forwarderIrrevocable, bool checkSpender_, bool allowMintBurn)
         RuleWhitelistBase(forwarderIrrevocable, checkSpender_, allowMintBurn)
