@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/interfaces/IERC7943NonFungibleCompliance.sol | 55871969a9e16b8fce437cf48ebcd3f4a33ee99f |
+| ./rules/interfaces/IERC7943NonFungibleCompliance.sol | d44ce54cdabe0e103cb3c9227884948d07343dc8 |
 
 
 ### Contracts Description Table

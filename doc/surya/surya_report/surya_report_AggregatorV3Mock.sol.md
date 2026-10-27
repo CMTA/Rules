@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./mocks/AggregatorV3Mock.sol | 3e21c9d393d555a54881080553072e74a00704ce |
+| ./mocks/AggregatorV3Mock.sol | 938651e859f7413cc2855abc42592dc56632c5cf |
 
 
 ### Contracts Description Table

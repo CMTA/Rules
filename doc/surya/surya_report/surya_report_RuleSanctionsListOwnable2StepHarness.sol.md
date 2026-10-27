@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./mocks/harness/RuleSanctionsListOwnable2StepHarness.sol | 5e3aaeac93cd6c4c55b1f88c53026bb5f463e9ed |
+| ./mocks/harness/RuleSanctionsListOwnable2StepHarness.sol | 257ba9472426440c1a81171d03b1fb094d823899 |
 
 
 ### Contracts Description Table

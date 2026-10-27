@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/core/CapAccounting.sol | 449269c90e1cf8a1bdcd01a8024cd8c8711e534a |
+| ./rules/validation/abstract/core/CapAccounting.sol | eb5edaaa1ad1566fdc3f7e00a29f1b45273c8519 |
 
 
 ### Contracts Description Table

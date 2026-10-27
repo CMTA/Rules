@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/core/TotalSupplyCapManager.sol | 4b3c48fb12e49a65c1a2ddb3998a5fd7d2cb3b37 |
+| ./rules/validation/abstract/core/TotalSupplyCapManager.sol | 2480d5c2b67486b18690c6dd41b0a66aab5b1d13 |
 
 
 ### Contracts Description Table
@@ -17,13 +17,17 @@
 ||||||
 | **TotalSupplyCapManager** | Implementation | CapAccounting, TokenSupplyReader, RuleMaxTotalSupplyInvariantStorage |||
 | └ | setMaxTotalSupply | Public ❗️ | 🛑  | onlyMaxTotalSupplyManager |
-| └ | setTokenContract | Public ❗️ | 🛑  | onlyMaxTotalSupplyManager |
+| └ | increaseMaxTotalSupply | Public ❗️ | 🛑  | onlyMaxTotalSupplyManager |
+| └ | decreaseMaxTotalSupply | Public ❗️ | 🛑  | onlyMaxTotalSupplyManager |
+| └ | setTokenContract | Public ❗️ | 🛑  | onlyTokenContractManager |
 | └ | _setMaxTotalSupply | Internal 🔒 | 🛑  | |
 | └ | _setTokenContract | Internal 🔒 | 🛑  | |
 | └ | _validateTokenContract | Internal 🔒 |   | |
 | └ | _authorizeMaxTotalSupplyManager | Internal 🔒 |   | |
+| └ | _authorizeTokenContractManager | Internal 🔒 |   | |
 | └ | _supplyToken | Internal 🔒 |   | |
 | └ | _capExceeded | Internal 🔒 |   | |
+| └ | _remainingMintable | Internal 🔒 |   | |
 
 
 ### Legend

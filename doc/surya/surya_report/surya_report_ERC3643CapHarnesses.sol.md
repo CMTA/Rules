@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./mocks/harness/ERC3643CapHarnesses.sol | 1ee6bd8daa637884f5fb5a851f708640f146d380 |
+| ./mocks/harness/ERC3643CapHarnesses.sol | e73b331535951bf8e3c87a1b8bd32d7d2f8a9980 |
 
 
 ### Contracts Description Table

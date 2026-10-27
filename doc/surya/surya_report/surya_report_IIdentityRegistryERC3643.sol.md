@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./registry/interfaces/IIdentityRegistryERC3643.sol | 851c11bf58b26370bf18076ddbba7f5de12c44de |
+| ./registry/interfaces/IIdentityRegistryERC3643.sol | 9a9f1168353bf024b3a3f53afbdf420aadbf3920 |
 
 
 ### Contracts Description Table

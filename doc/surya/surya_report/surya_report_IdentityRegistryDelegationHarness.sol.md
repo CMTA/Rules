@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./mocks/harness/IdentityRegistryDelegationHarness.sol | 07ae2614113053b786bd43f4961c735f2e34ec0c |
+| ./mocks/harness/IdentityRegistryDelegationHarness.sol | 2349c4a1d71f97739513df7befefcb18a43c6cef |
 
 
 ### Contracts Description Table

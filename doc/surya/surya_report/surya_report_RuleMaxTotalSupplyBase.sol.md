@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/base/RuleMaxTotalSupplyBase.sol | dc9656537f33ebce7ffb09435f1620cfc2d0385f |
+| ./rules/validation/abstract/base/RuleMaxTotalSupplyBase.sol | 95b9a62c8ec65e7e694b94df06952021c9dafa31 |
 
 
 ### Contracts Description Table
@@ -17,15 +17,17 @@
 ||||||
 | **RuleMaxTotalSupplyBase** | Implementation | RuleTransferValidation, TotalSupplyCapManager |||
 | └ | <Constructor> | Public ❗️ | 🛑  |NO❗️ |
-| └ | canReturnTransferRestrictionCode | External ❗️ |   |NO❗️ |
-| └ | transferred | Public ❗️ |   |NO❗️ |
-| └ | transferred | Public ❗️ |   |NO❗️ |
+| └ | canReturnTransferRestrictionCode | Public ❗️ |   |NO❗️ |
+| └ | remainingMintable | Public ❗️ |   |NO❗️ |
+| └ | transferred | Public ❗️ | 🛑  |NO❗️ |
+| └ | transferred | Public ❗️ | 🛑  |NO❗️ |
 | └ | messageForTransferRestriction | Public ❗️ |   |NO❗️ |
 | └ | _detectTransferRestriction | Internal 🔒 |   | |
 | └ | _detectTransferRestrictionFrom | Internal 🔒 |   | |
 | └ | _detectTransferRestrictionOnNotify | Internal 🔒 |   | |
-| └ | _transferred | Internal 🔒 |   | |
-| └ | _transferredFrom | Internal 🔒 |   | |
+| └ | _transferred | Internal 🔒 | 🛑  | |
+| └ | _transferredFrom | Internal 🔒 | 🛑  | |
+| └ | _afterMintChecked | Internal 🔒 | 🛑  | |
 
 
 ### Legend

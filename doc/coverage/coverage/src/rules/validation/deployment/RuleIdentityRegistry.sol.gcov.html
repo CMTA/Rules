@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - lcov2.info - src/rules/validation/deployment/RuleIdentityRegistry.sol</title>
+  <title>LCOV - lcov.info - src/rules/validation/deployment/RuleIdentityRegistry.sol</title>
   <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
 </head>
 
@@ -28,7 +28,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">lcov2.info</td>
+            <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntry">4</td>
@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-08-19 15:38:25</td>
+            <td class="headerValue">2026-10-27 15:10:38</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">2</td>
@@ -70,7 +70,7 @@
 <pre class="sourceHeading">           Branch data     Line data    Source code</pre>
 <pre class="source">
 <a name="1"><span class="lineNum">       1 </span>                :            : // SPDX-License-Identifier: MPL-2.0</a>
-<a name="2"><span class="lineNum">       2 </span>                :            : pragma solidity ^0.8.20;</a>
+<a name="2"><span class="lineNum">       2 </span>                :            : pragma solidity ^0.8.27;</a>
 <a name="3"><span class="lineNum">       3 </span>                :            : </a>
 <a name="4"><span class="lineNum">       4 </span>                :            : import {AccessControlEnumerable} from &quot;@openzeppelin/contracts/access/extensions/AccessControlEnumerable.sol&quot;;</a>
 <a name="5"><span class="lineNum">       5 </span>                :            : import {AccessControlModuleStandalone} from &quot;../../../modules/AccessControlModuleStandalone.sol&quot;;</a>
@@ -113,15 +113,15 @@
 <a name="42"><span class="lineNum">      42 </span>                :            :      * @param interfaceId The interface identifier, as specified in ERC-165.</a>
 <a name="43"><span class="lineNum">      43 </span>                :            :      * @return True if the interface is supported.</a>
 <a name="44"><span class="lineNum">      44 </span>                :            :      */</a>
-<a name="45"><span class="lineNum">      45 </span>                :<span class="lineCov">         66 :     function supportsInterface(bytes4 interfaceId)</span></a>
+<a name="45"><span class="lineNum">      45 </span>                :<span class="lineCov">        111 :     function supportsInterface(bytes4 interfaceId)</span></a>
 <a name="46"><span class="lineNum">      46 </span>                :            :         public</a>
 <a name="47"><span class="lineNum">      47 </span>                :            :         view</a>
 <a name="48"><span class="lineNum">      48 </span>                :            :         virtual</a>
 <a name="49"><span class="lineNum">      49 </span>                :            :         override(AccessControlEnumerable, RuleTransferValidation)</a>
 <a name="50"><span class="lineNum">      50 </span>                :            :         returns (bool)</a>
 <a name="51"><span class="lineNum">      51 </span>                :            :     {</a>
-<a name="52"><span class="lineNum">      52 </span>                :<span class="lineCov">         66 :         return AccessControlEnumerable.supportsInterface(interfaceId)</span></a>
-<a name="53"><span class="lineNum">      53 </span>                :<span class="lineCov">         44 :             || RuleTransferValidation.supportsInterface(interfaceId);</span></a>
+<a name="52"><span class="lineNum">      52 </span>                :<span class="lineCov">        111 :         return AccessControlEnumerable.supportsInterface(interfaceId)</span></a>
+<a name="53"><span class="lineNum">      53 </span>                :<span class="lineCov">         75 :             || RuleTransferValidation.supportsInterface(interfaceId);</span></a>
 <a name="54"><span class="lineNum">      54 </span>                :            :     }</a>
 <a name="55"><span class="lineNum">      55 </span>                :            : </a>
 <a name="56"><span class="lineNum">      56 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>

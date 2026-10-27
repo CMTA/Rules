@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/interfaces/ITotalSupply.sol | 952fe9fcc0b0d3aa5d2ee777fe862785763dbd7a |
+| ./rules/interfaces/ITotalSupply.sol | 0729b10c2fdf0d658d75b45015212ed992b1b082 |
 
 
 ### Contracts Description Table

@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/core/BalanceCapManager.sol | 8d23cbb921630627842b86c40e4941ae4ef676f6 |
+| ./rules/validation/abstract/core/BalanceCapManager.sol | ed7371a59250d5743bcb396c540bc8138923fae1 |
 
 
 ### Contracts Description Table

@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/operation/abstract/RuleMintAllowanceInvariantStorage.sol | 696a62157ce9b1b2da23d82edcc3f3bc018d2591 |
+| ./rules/operation/abstract/RuleMintAllowanceInvariantStorage.sol | eca941899b50f548f94f7bba300e8367cbcdb303 |
 
 
 ### Contracts Description Table
@@ -15,7 +15,7 @@
 |:----------:|:-------------------:|:----------------:|:----------------:|:---------------:|
 |     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 ||||||
-| **RuleMintAllowanceInvariantStorage** | Implementation | RuleSharedInvariantStorage |||
+| **RuleMintAllowanceInvariantStorage** | Implementation | RuleSharedInvariantStorage, RuleBindingInvariantStorage |||
 
 
 ### Legend

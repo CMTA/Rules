@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/operation/abstract/RuleConditionalTransferLightBase.sol | d69293485b40c9f6bd53bb0b7cce2e86938939c2 |
+| ./rules/operation/abstract/RuleConditionalTransferLightBase.sol | 371cd65d61dffbc82129e3c9d6912802628ce81c |
 
 
 ### Contracts Description Table
@@ -15,7 +15,7 @@
 |:----------:|:-------------------:|:----------------:|:----------------:|:---------------:|
 |     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 ||||||
-| **RuleConditionalTransferLightBase** | Implementation | VersionModule, ERC3643ComplianceModule, RuleConditionalTransferLightApprovalBase, IRule |||
+| **RuleConditionalTransferLightBase** | Implementation | VersionModule, ERC3643ComplianceModule, RuleConditionalTransferLightApprovalBase, IRuleEngineERC1404, IRule |||
 | └ | created | External ❗️ | 🛑  | onlyBoundToken |
 | └ | destroyed | External ❗️ | 🛑  | onlyBoundToken |
 | └ | canReturnTransferRestrictionCode | External ❗️ |   |NO❗️ |
@@ -31,6 +31,7 @@
 | └ | detectTransferRestrictionFrom | Public ❗️ |   |NO❗️ |
 | └ | canTransfer | Public ❗️ |   |NO❗️ |
 | └ | canTransferFrom | Public ❗️ |   |NO❗️ |
+| └ | _ruleNotBound | Internal 🔒 |   | |
 | └ | _authorizeTransferExecution | Internal 🔒 |   | |
 
 

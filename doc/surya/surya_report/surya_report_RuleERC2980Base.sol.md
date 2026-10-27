@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/base/RuleERC2980Base.sol | 8f278a7b80cdc7c6829bb93d0f99b4a4b05cdedf |
+| ./rules/validation/abstract/base/RuleERC2980Base.sol | b391797a15cf166c899e323fad1f0b63cb84b754 |
 
 
 ### Contracts Description Table

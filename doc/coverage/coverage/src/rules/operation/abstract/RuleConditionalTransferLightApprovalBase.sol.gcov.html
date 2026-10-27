@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - lcov2.info - src/rules/operation/abstract/RuleConditionalTransferLightApprovalBase.sol</title>
+  <title>LCOV - lcov.info - src/rules/operation/abstract/RuleConditionalTransferLightApprovalBase.sol</title>
   <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
 </head>
 
@@ -28,21 +28,21 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">lcov2.info</td>
+            <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntry">42</td>
-            <td class="headerCovTableEntry">44</td>
-            <td class="headerCovTableEntryHi">95.5 %</td>
+            <td class="headerCovTableEntry">42</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-08-19 15:38:25</td>
+            <td class="headerValue">2026-10-27 15:10:38</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">10</td>
-            <td class="headerCovTableEntry">12</td>
-            <td class="headerCovTableEntryMed">83.3 %</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr>
             <td></td>
@@ -70,7 +70,7 @@
 <pre class="sourceHeading">           Branch data     Line data    Source code</pre>
 <pre class="source">
 <a name="1"><span class="lineNum">       1 </span>                :            : // SPDX-License-Identifier: MPL-2.0</a>
-<a name="2"><span class="lineNum">       2 </span>                :            : pragma solidity ^0.8.20;</a>
+<a name="2"><span class="lineNum">       2 </span>                :            : pragma solidity ^0.8.27;</a>
 <a name="3"><span class="lineNum">       3 </span>                :            : </a>
 <a name="4"><span class="lineNum">       4 </span>                :            : import {ITransferContext} from &quot;../../interfaces/ITransferContext.sol&quot;;</a>
 <a name="5"><span class="lineNum">       5 </span>                :            : import {RuleConditionalTransferLightInvariantStorage} from &quot;./RuleConditionalTransferLightInvariantStorage.sol&quot;;</a>
@@ -108,7 +108,7 @@
 <a name="37"><span class="lineNum">      37 </span>                :            :      * @notice Consumes one approval for the transfer described by `ctx`.</a>
 <a name="38"><span class="lineNum">      38 </span>                :            :      * @param ctx The fungible transfer context (from, to, value).</a>
 <a name="39"><span class="lineNum">      39 </span>                :            :      */</a>
-<a name="40"><span class="lineNum">      40 </span>                :<span class="lineCov">          6 :     function transferred(ITransferContext.FungibleTransferContext calldata ctx) external onlyTransferExecutor {</span></a>
+<a name="40"><span class="lineNum">      40 </span>                :<span class="lineCov">          6 :     function transferred(ITransferContext.FungibleTransferContext calldata ctx) external virtual onlyTransferExecutor {</span></a>
 <a name="41"><span class="lineNum">      41 </span>                :<span class="lineCov">          6 :         _transferredFromContext(ctx);</span></a>
 <a name="42"><span class="lineNum">      42 </span>                :            :     }</a>
 <a name="43"><span class="lineNum">      43 </span>                :            : </a>
@@ -122,11 +122,11 @@
 <a name="51"><span class="lineNum">      51 </span>                :            :      * @param to The recipient of the transfer to approve.</a>
 <a name="52"><span class="lineNum">      52 </span>                :            :      * @param value The amount of the transfer to approve.</a>
 <a name="53"><span class="lineNum">      53 </span>                :            :      */</a>
-<a name="54"><span class="lineNum">      54 </span>                :<span class="lineCov">       6231 :     function approveTransfer(address from, address to, uint256 value) public virtual onlyTransferApprover {</span></a>
-<a name="55"><span class="lineNum">      55 </span>                :<span class="lineCov">       6238 :         bytes32 transferHash = _transferHash(from, to, value);</span></a>
-<a name="56"><span class="lineNum">      56 </span>                :<span class="lineCov">       6238 :         uint256 newCount = approvalCounts[transferHash] + 1;</span></a>
-<a name="57"><span class="lineNum">      57 </span>                :<span class="lineCov">       6238 :         approvalCounts[transferHash] = newCount;</span></a>
-<a name="58"><span class="lineNum">      58 </span>                :<span class="lineCov">       6238 :         emit TransferApproved(from, to, value, newCount);</span></a>
+<a name="54"><span class="lineNum">      54 </span>                :<span class="lineCov">       6309 :     function approveTransfer(address from, address to, uint256 value) public virtual onlyTransferApprover {</span></a>
+<a name="55"><span class="lineNum">      55 </span>                :<span class="lineCov">       6320 :         bytes32 transferHash = _transferHash(from, to, value);</span></a>
+<a name="56"><span class="lineNum">      56 </span>                :<span class="lineCov">       6320 :         uint256 newCount = approvalCounts[transferHash] + 1;</span></a>
+<a name="57"><span class="lineNum">      57 </span>                :<span class="lineCov">       6320 :         approvalCounts[transferHash] = newCount;</span></a>
+<a name="58"><span class="lineNum">      58 </span>                :<span class="lineCov">       6320 :         emit TransferApproved(from, to, value, newCount);</span></a>
 <a name="59"><span class="lineNum">      59 </span>                :            :     }</a>
 <a name="60"><span class="lineNum">      60 </span>                :            : </a>
 <a name="61"><span class="lineNum">      61 </span>                :            :     /**</a>
@@ -135,12 +135,12 @@
 <a name="64"><span class="lineNum">      64 </span>                :            :      * @param to The recipient of the transfer whose approval is cancelled.</a>
 <a name="65"><span class="lineNum">      65 </span>                :            :      * @param value The amount of the transfer whose approval is cancelled.</a>
 <a name="66"><span class="lineNum">      66 </span>                :            :      */</a>
-<a name="67"><span class="lineNum">      67 </span>                :<span class="lineCov">       1405 :     function cancelTransferApproval(address from, address to, uint256 value) public virtual onlyTransferApprover {</span></a>
-<a name="68"><span class="lineNum">      68 </span>                :<span class="lineCov">       1404 :         bytes32 transferHash = _transferHash(from, to, value);</span></a>
-<a name="69"><span class="lineNum">      69 </span>                :<span class="lineCov">       1404 :         uint256 count = approvalCounts[transferHash];</span></a>
-<a name="70"><span class="lineNum">      70 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1403 times"> + </span>]:<span class="lineCov">       1404 :         require(count != 0, TransferApprovalNotFound());</span></a>
-<a name="71"><span class="lineNum">      71 </span>                :<span class="lineCov">       1403 :         approvalCounts[transferHash] = count - 1;</span></a>
-<a name="72"><span class="lineNum">      72 </span>                :<span class="lineCov">       1403 :         emit TransferApprovalCancelled(from, to, value, approvalCounts[transferHash]);</span></a>
+<a name="67"><span class="lineNum">      67 </span>                :<span class="lineCov">       1377 :     function cancelTransferApproval(address from, address to, uint256 value) public virtual onlyTransferApprover {</span></a>
+<a name="68"><span class="lineNum">      68 </span>                :<span class="lineCov">       1376 :         bytes32 transferHash = _transferHash(from, to, value);</span></a>
+<a name="69"><span class="lineNum">      69 </span>                :<span class="lineCov">       1376 :         uint256 count = approvalCounts[transferHash];</span></a>
+<a name="70"><span class="lineNum">      70 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 1375 times"> + </span>]:<span class="lineCov">       1376 :         require(count != 0, TransferApprovalNotFound());</span></a>
+<a name="71"><span class="lineNum">      71 </span>                :<span class="lineCov">       1375 :         approvalCounts[transferHash] = count - 1;</span></a>
+<a name="72"><span class="lineNum">      72 </span>                :<span class="lineCov">       1375 :         emit TransferApprovalCancelled(from, to, value, approvalCounts[transferHash]);</span></a>
 <a name="73"><span class="lineNum">      73 </span>                :            :     }</a>
 <a name="74"><span class="lineNum">      74 </span>                :            : </a>
 <a name="75"><span class="lineNum">      75 </span>                :            :     /**</a>
@@ -175,9 +175,9 @@
 <a name="104"><span class="lineNum">     104 </span>                :            :      * @param value The amount of the transfer.</a>
 <a name="105"><span class="lineNum">     105 </span>                :            :      * @return The current approval count for the transfer.</a>
 <a name="106"><span class="lineNum">     106 </span>                :            :      */</a>
-<a name="107"><span class="lineNum">     107 </span>                :<span class="lineCov">       9216 :     function approvedCount(address from, address to, uint256 value) public view returns (uint256) {</span></a>
-<a name="108"><span class="lineNum">     108 </span>                :<span class="lineCov">       9231 :         bytes32 transferHash = _transferHash(from, to, value);</span></a>
-<a name="109"><span class="lineNum">     109 </span>                :<span class="lineCov">       9231 :         return approvalCounts[transferHash];</span></a>
+<a name="107"><span class="lineNum">     107 </span>                :<span class="lineCov">       9228 :     function approvedCount(address from, address to, uint256 value) public view virtual returns (uint256) {</span></a>
+<a name="108"><span class="lineNum">     108 </span>                :<span class="lineCov">       9251 :         bytes32 transferHash = _transferHash(from, to, value);</span></a>
+<a name="109"><span class="lineNum">     109 </span>                :<span class="lineCov">       9251 :         return approvalCounts[transferHash];</span></a>
 <a name="110"><span class="lineNum">     110 </span>                :            :     }</a>
 <a name="111"><span class="lineNum">     111 </span>                :            : </a>
 <a name="112"><span class="lineNum">     112 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
@@ -199,17 +199,17 @@
 <a name="128"><span class="lineNum">     128 </span>                :            :      * @param to The recipient of the transfer.</a>
 <a name="129"><span class="lineNum">     129 </span>                :            :      * @param value The amount of the transfer.</a>
 <a name="130"><span class="lineNum">     130 </span>                :            :      */</a>
-<a name="131"><span class="lineNum">     131 </span>                :<span class="lineCov">       6244 :     function _transferred(address from, address to, uint256 value) internal virtual {</span></a>
-<a name="132"><span class="lineNum">     132 </span>           [<span class="branchCov" title="Branch 0 was taken 6244 times"> + </span>]:<span class="lineCov">       6244 :         if (from == address(0) || to == address(0)) {</span></a>
-<a name="133"><span class="lineNum">     133 </span>                :<span class="lineCov">       6244 :             return;</span></a>
+<a name="131"><span class="lineNum">     131 </span>                :<span class="lineCov">       6307 :     function _transferred(address from, address to, uint256 value) internal virtual {</span></a>
+<a name="132"><span class="lineNum">     132 </span>           [<span class="branchCov" title="Branch 0 was taken 6307 times"> + </span>]:<span class="lineCov">       6307 :         if (from == address(0) || to == address(0)) {</span></a>
+<a name="133"><span class="lineNum">     133 </span>                :<span class="lineCov">       6307 :             return;</span></a>
 <a name="134"><span class="lineNum">     134 </span>                :            :         }</a>
-<a name="135"><span class="lineNum">     135 </span>                :<span class="lineCov">       2198 :         bytes32 transferHash = _transferHash(from, to, value);</span></a>
-<a name="136"><span class="lineNum">     136 </span>                :<span class="lineCov">       2198 :         uint256 count = approvalCounts[transferHash];</span></a>
+<a name="135"><span class="lineNum">     135 </span>                :<span class="lineCov">       2245 :         bytes32 transferHash = _transferHash(from, to, value);</span></a>
+<a name="136"><span class="lineNum">     136 </span>                :<span class="lineCov">       2245 :         uint256 count = approvalCounts[transferHash];</span></a>
 <a name="137"><span class="lineNum">     137 </span>                :            : </a>
-<a name="138"><span class="lineNum">     138 </span>        [<span class="branchCov" title="Branch 0 was taken 5 times"> + </span><span class="branchCov" title="Branch 1 was taken 2193 times"> + </span>]:<span class="lineCov">       2198 :         require(count != 0, TransferNotApproved());</span></a>
+<a name="138"><span class="lineNum">     138 </span>        [<span class="branchCov" title="Branch 0 was taken 13 times"> + </span><span class="branchCov" title="Branch 1 was taken 2232 times"> + </span>]:<span class="lineCov">       2245 :         require(count != 0, TransferNotApproved());</span></a>
 <a name="139"><span class="lineNum">     139 </span>                :            : </a>
-<a name="140"><span class="lineNum">     140 </span>                :<span class="lineCov">       2193 :         approvalCounts[transferHash] = count - 1;</span></a>
-<a name="141"><span class="lineNum">     141 </span>                :<span class="lineCov">       2193 :         emit TransferExecuted(from, to, value, approvalCounts[transferHash]);</span></a>
+<a name="140"><span class="lineNum">     140 </span>                :<span class="lineCov">       2232 :         approvalCounts[transferHash] = count - 1;</span></a>
+<a name="141"><span class="lineNum">     141 </span>                :<span class="lineCov">       2232 :         emit TransferExecuted(from, to, value, approvalCounts[transferHash]);</span></a>
 <a name="142"><span class="lineNum">     142 </span>                :            :     }</a>
 <a name="143"><span class="lineNum">     143 </span>                :            : </a>
 <a name="144"><span class="lineNum">     144 </span>                :            :     /**</a>
@@ -224,35 +224,35 @@
 <a name="153"><span class="lineNum">     153 </span>                :            :      * keccak256(abi.encodePacked(from, bytes12(0), to, bytes12(0), value))</a>
 <a name="154"><span class="lineNum">     154 </span>                :            :      * keccak256(abi.encode(bytes32(bytes20(from)), bytes32(bytes20(to)), value))</a>
 <a name="155"><span class="lineNum">     155 </span>                :            :      * ```</a>
-<a name="156"><span class="lineNum">     156 </span>                :            :      * Pinned by `testDocumentedPreimageMatchesTheStorageKey`. Use {approvedCount} unless you need</a>
-<a name="157"><span class="lineNum">     157 </span>                :            :      * the storage slot directly.</a>
-<a name="158"><span class="lineNum">     158 </span>                :            :      * @param from The sender of the transfer.</a>
-<a name="159"><span class="lineNum">     159 </span>                :            :      * @param to The recipient of the transfer.</a>
-<a name="160"><span class="lineNum">     160 </span>                :            :      * @param value The amount of the transfer.</a>
-<a name="161"><span class="lineNum">     161 </span>                :            :      * @return hash The keccak256 hash uniquely identifying the transfer.</a>
-<a name="162"><span class="lineNum">     162 </span>                :            :      */</a>
-<a name="163"><span class="lineNum">     163 </span>                :<span class="lineCov">      19083 :     function _transferHash(address from, address to, uint256 value) internal pure virtual returns (bytes32 hash) {</span></a>
-<a name="164"><span class="lineNum">     164 </span>                :            :         // Hand-rolled rather than `abi.encodePacked` on the linter's `asm-keccak256` advice: this is</a>
-<a name="165"><span class="lineNum">     165 </span>                :            :         // on the transfer write path, and the assembly is ~109 gas cheaper per call. Injectivity is</a>
-<a name="166"><span class="lineNum">     166 </span>                :            :         // verified in `CLAUDE_AUDIT.md` F-12; the exact layout is documented above.</a>
+<a name="156"><span class="lineNum">     156 </span>                :            :      * Use {approvedCount} unless you need the storage slot directly.</a>
+<a name="157"><span class="lineNum">     157 </span>                :            :      * @param from The sender of the transfer.</a>
+<a name="158"><span class="lineNum">     158 </span>                :            :      * @param to The recipient of the transfer.</a>
+<a name="159"><span class="lineNum">     159 </span>                :            :      * @param value The amount of the transfer.</a>
+<a name="160"><span class="lineNum">     160 </span>                :            :      * @return hash The keccak256 hash uniquely identifying the transfer.</a>
+<a name="161"><span class="lineNum">     161 </span>                :            :      */</a>
+<a name="162"><span class="lineNum">     162 </span>                :<span class="lineCov">      19218 :     function _transferHash(address from, address to, uint256 value) internal pure virtual returns (bytes32 hash) {</span></a>
+<a name="163"><span class="lineNum">     163 </span>                :            :         // Hand-rolled rather than `abi.encodePacked` on the linter's `asm-keccak256` advice: this is</a>
+<a name="164"><span class="lineNum">     164 </span>                :            :         // on the transfer write path, and the assembly is ~109 gas cheaper per call. Injective because</a>
+<a name="165"><span class="lineNum">     165 </span>                :            :         // all three words are fixed-width, so distinct (from, to, value) tuples cannot share a</a>
+<a name="166"><span class="lineNum">     166 </span>                :            :         // preimage; the exact layout is documented above.</a>
 <a name="167"><span class="lineNum">     167 </span>                :            :         assembly (&quot;memory-safe&quot;) {</a>
-<a name="168"><span class="lineNum">     168 </span>                :<span class="lineCov">      19083 :             let ptr := mload(0x40)</span></a>
-<a name="169"><span class="lineNum">     169 </span>                :<span class="lineCov">      19083 :             mstore(ptr, shl(96, from))</span></a>
-<a name="170"><span class="lineNum">     170 </span>                :<span class="lineCov">      19083 :             mstore(add(ptr, 0x20), shl(96, to))</span></a>
-<a name="171"><span class="lineNum">     171 </span>                :<span class="lineCov">      19083 :             mstore(add(ptr, 0x40), value)</span></a>
-<a name="172"><span class="lineNum">     172 </span>                :<span class="lineCov">      19083 :             hash := keccak256(ptr, 0x60)</span></a>
+<a name="168"><span class="lineNum">     168 </span>                :<span class="lineCov">      19218 :             let ptr := mload(0x40)</span></a>
+<a name="169"><span class="lineNum">     169 </span>                :<span class="lineCov">      19218 :             mstore(ptr, shl(96, from))</span></a>
+<a name="170"><span class="lineNum">     170 </span>                :<span class="lineCov">      19218 :             mstore(add(ptr, 0x20), shl(96, to))</span></a>
+<a name="171"><span class="lineNum">     171 </span>                :<span class="lineCov">      19218 :             mstore(add(ptr, 0x40), value)</span></a>
+<a name="172"><span class="lineNum">     172 </span>                :<span class="lineCov">      19218 :             hash := keccak256(ptr, 0x60)</span></a>
 <a name="173"><span class="lineNum">     173 </span>                :            :         }</a>
 <a name="174"><span class="lineNum">     174 </span>                :            :     }</a>
 <a name="175"><span class="lineNum">     175 </span>                :            : </a>
 <a name="176"><span class="lineNum">     176 </span>                :            :     /**</a>
 <a name="177"><span class="lineNum">     177 </span>                :            :      * @notice Authorizes the caller to approve or cancel transfers; reverts if unauthorized.</a>
 <a name="178"><span class="lineNum">     178 </span>                :            :      */</a>
-<a name="179"><span class="lineNum">     179 </span>                :<span class="lineNoCov">          0 :     function _authorizeTransferApproval() internal view virtual;</span></a>
+<a name="179"><span class="lineNum">     179 </span>                :            :     function _authorizeTransferApproval() internal view virtual;</a>
 <a name="180"><span class="lineNum">     180 </span>                :            : </a>
 <a name="181"><span class="lineNum">     181 </span>                :            :     /**</a>
 <a name="182"><span class="lineNum">     182 </span>                :            :      * @notice Authorizes the caller to execute (consume) approved transfers; reverts if unauthorized.</a>
 <a name="183"><span class="lineNum">     183 </span>                :            :      */</a>
-<a name="184"><span class="lineNum">     184 </span>                :<span class="lineNoCov">          0 :     function _authorizeTransferExecution() internal view virtual;</span></a>
+<a name="184"><span class="lineNum">     184 </span>                :            :     function _authorizeTransferExecution() internal view virtual;</a>
 <a name="185"><span class="lineNum">     185 </span>                :            : }</a>
 </pre>
       </td>

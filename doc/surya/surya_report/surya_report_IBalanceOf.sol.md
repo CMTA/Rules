@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/interfaces/IBalanceOf.sol | b929f79eea73ae74eed29be94200ec1617f113f0 |
+| ./rules/interfaces/IBalanceOf.sol | c521b032b675ffc58ecc85828b4720ce2f1ac859 |
 
 
 ### Contracts Description Table

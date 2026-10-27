@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/interfaces/IDecimals.sol | 1e05c1a66e9c16c176f35007b168a5870b4ae01b |
+| ./rules/interfaces/IDecimals.sol | d43329896e3eef19de162882c6ff901c6012a870 |
 
 
 ### Contracts Description Table

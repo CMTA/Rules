@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/core/RuleTransferValidation.sol | 8b7882c2f071b0a6480e27f3ecc1e5dbc6eaab4a |
+| ./rules/validation/abstract/core/RuleTransferValidation.sol | 649170709ce9bdf780fc083f452125ba309b1478 |
 
 
 ### Contracts Description Table
@@ -15,11 +15,12 @@
 |:----------:|:-------------------:|:----------------:|:----------------:|:---------------:|
 |     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 ||||||
-| **RuleTransferValidation** | Implementation | VersionModule, IERC1404Extend, IERC3643ComplianceRead, IERC7551Compliance, IRule |||
+| **RuleTransferValidation** | Implementation | VersionModule, IERC1404Extend, IERC3643ComplianceRead, IERC7551Compliance, IRuleEngineERC1404, IRule |||
 | └ | detectTransferRestriction | Public ❗️ |   |NO❗️ |
 | └ | detectTransferRestrictionFrom | Public ❗️ |   |NO❗️ |
 | └ | canTransfer | Public ❗️ |   |NO❗️ |
 | └ | canTransferFrom | Public ❗️ |   |NO❗️ |
+| └ | transferred | Public ❗️ | 🛑  |NO❗️ |
 | └ | supportsInterface | Public ❗️ |   |NO❗️ |
 | └ | _detectTransferRestriction | Internal 🔒 |   | |
 | └ | _detectTransferRestrictionFrom | Internal 🔒 |   | |

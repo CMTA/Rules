@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - lcov2.info - src/rules/validation/abstract/core/BalanceCapManager.sol</title>
+  <title>LCOV - lcov.info - src/rules/validation/abstract/core/BalanceCapManager.sol</title>
   <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
 </head>
 
@@ -28,21 +28,21 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">lcov2.info</td>
+            <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntry">58</td>
-            <td class="headerCovTableEntry">59</td>
-            <td class="headerCovTableEntryHi">98.3 %</td>
+            <td class="headerCovTableEntry">58</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-08-19 15:38:25</td>
+            <td class="headerValue">2026-10-27 15:10:38</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">16</td>
-            <td class="headerCovTableEntry">17</td>
-            <td class="headerCovTableEntryHi">94.1 %</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr>
             <td></td>
@@ -70,7 +70,7 @@
 <pre class="sourceHeading">           Branch data     Line data    Source code</pre>
 <pre class="source">
 <a name="1"><span class="lineNum">       1 </span>                :            : // SPDX-License-Identifier: MPL-2.0</a>
-<a name="2"><span class="lineNum">       2 </span>                :            : pragma solidity ^0.8.20;</a>
+<a name="2"><span class="lineNum">       2 </span>                :            : pragma solidity ^0.8.27;</a>
 <a name="3"><span class="lineNum">       3 </span>                :            : </a>
 <a name="4"><span class="lineNum">       4 </span>                :            : import {RuleMaxBalanceInvariantStorage} from &quot;../invariant/RuleMaxBalanceInvariantStorage.sol&quot;;</a>
 <a name="5"><span class="lineNum">       5 </span>                :            : import {IBalanceOf} from &quot;../../../interfaces/IBalanceOf.sol&quot;;</a>
@@ -127,8 +127,8 @@
 <a name="56"><span class="lineNum">      56 </span>                :            :      * back under the cap.</a>
 <a name="57"><span class="lineNum">      57 </span>                :            :      * @param newMaxBalance The new cap. `0` forbids holding entirely; it does not disable the cap.</a>
 <a name="58"><span class="lineNum">      58 </span>                :            :      */</a>
-<a name="59"><span class="lineNum">      59 </span>                :<span class="lineCov">          6 :     function setMaxBalance(uint256 newMaxBalance) public virtual onlyMaxBalanceManager {</span></a>
-<a name="60"><span class="lineNum">      60 </span>                :<span class="lineCov">          4 :         _setMaxBalance(newMaxBalance);</span></a>
+<a name="59"><span class="lineNum">      59 </span>                :<span class="lineCov">         10 :     function setMaxBalance(uint256 newMaxBalance) public virtual onlyMaxBalanceManager {</span></a>
+<a name="60"><span class="lineNum">      60 </span>                :<span class="lineCov">          8 :         _setMaxBalance(newMaxBalance);</span></a>
 <a name="61"><span class="lineNum">      61 </span>                :            :     }</a>
 <a name="62"><span class="lineNum">      62 </span>                :            : </a>
 <a name="63"><span class="lineNum">      63 </span>                :            :     /**</a>
@@ -211,130 +211,133 @@
 <a name="140"><span class="lineNum">     140 </span>                :            :      *</a>
 <a name="141"><span class="lineNum">     141 </span>                :            :      *      `_addAddress` does not guard the sentinel; the caller must, exactly as the whitelist</a>
 <a name="142"><span class="lineNum">     142 </span>                :            :      *      rules and `IdentityRegistryWhitelist` do. The batch path is guarded separately, by the</a>
-<a name="143"><span class="lineNum">     143 </span>                :            :      *      function pointer `_addAddresses` passes to `AddressSetBatchLib`. Invariant I-12.</a>
-<a name="144"><span class="lineNum">     144 </span>                :            :      * @param targetAddress The address to exempt.</a>
-<a name="145"><span class="lineNum">     145 </span>                :            :      */</a>
-<a name="146"><span class="lineNum">     146 </span>                :<span class="lineCov">         10 :     function _addExemptAddress(address targetAddress) internal virtual {</span></a>
-<a name="147"><span class="lineNum">     147 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 9 times"> + </span>]:<span class="lineCov">         10 :         require(targetAddress != address(0), RuleAddressSet_ZeroAddressNotAllowed());</span></a>
-<a name="148"><span class="lineNum">     148 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 8 times"> + </span>]:<span class="lineCov">          9 :         require(_addAddress(targetAddress), RuleAddressSet_AddressAlreadyListed());</span></a>
-<a name="149"><span class="lineNum">     149 </span>                :<span class="lineCov">          8 :         emit ExemptAddressAdded(targetAddress);</span></a>
-<a name="150"><span class="lineNum">     150 </span>                :            :     }</a>
-<a name="151"><span class="lineNum">     151 </span>                :            : </a>
-<a name="152"><span class="lineNum">     152 </span>                :            :     /**</a>
-<a name="153"><span class="lineNum">     153 </span>                :            :      * @notice Removes an exemption: guards, writes and announces, in one place.</a>
-<a name="154"><span class="lineNum">     154 </span>                :            :      * @param targetAddress The address to bring back under the cap.</a>
-<a name="155"><span class="lineNum">     155 </span>                :            :      */</a>
-<a name="156"><span class="lineNum">     156 </span>                :<span class="lineCov">          3 :     function _removeExemptAddress(address targetAddress) internal virtual {</span></a>
-<a name="157"><span class="lineNum">     157 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 2 times"> + </span>]:<span class="lineCov">          3 :         require(_removeAddress(targetAddress), RuleAddressSet_AddressNotFound());</span></a>
-<a name="158"><span class="lineNum">     158 </span>                :<span class="lineCov">          2 :         emit ExemptAddressRemoved(targetAddress);</span></a>
-<a name="159"><span class="lineNum">     159 </span>                :            :     }</a>
-<a name="160"><span class="lineNum">     160 </span>                :            : </a>
-<a name="161"><span class="lineNum">     161 </span>                :            :     /**</a>
-<a name="162"><span class="lineNum">     162 </span>                :            :      * @notice Stores the cap and emits {MaxBalanceUpdated}.</a>
-<a name="163"><span class="lineNum">     163 </span>                :            :      * @param newMaxBalance The new cap.</a>
-<a name="164"><span class="lineNum">     164 </span>                :            :      */</a>
-<a name="165"><span class="lineNum">     165 </span>                :<span class="lineCov">         64 :     function _setMaxBalance(uint256 newMaxBalance) internal virtual {</span></a>
-<a name="166"><span class="lineNum">     166 </span>                :<span class="lineCov">         64 :         maxBalance = newMaxBalance;</span></a>
-<a name="167"><span class="lineNum">     167 </span>                :<span class="lineCov">         64 :         emit MaxBalanceUpdated(newMaxBalance);</span></a>
-<a name="168"><span class="lineNum">     168 </span>                :            :     }</a>
-<a name="169"><span class="lineNum">     169 </span>                :            : </a>
-<a name="170"><span class="lineNum">     170 </span>                :            :     /**</a>
-<a name="171"><span class="lineNum">     171 </span>                :            :      * @notice Stores the observed token and emits {MaxBalanceTokenUpdated}.</a>
-<a name="172"><span class="lineNum">     172 </span>                :            :      * @dev Probes `balanceOf` at configuration time so a token that cannot serve the check fails</a>
-<a name="173"><span class="lineNum">     173 </span>                :            :      * loudly at setup instead of silently blocking every transfer.</a>
-<a name="174"><span class="lineNum">     174 </span>                :            :      * @param newBalanceToken The new token contract.</a>
-<a name="175"><span class="lineNum">     175 </span>                :            :      */</a>
-<a name="176"><span class="lineNum">     176 </span>                :<span class="lineCov">         67 :     function _setBalanceToken(address newBalanceToken) internal virtual {</span></a>
-<a name="177"><span class="lineNum">     177 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 66 times"> + </span>]:<span class="lineCov">         67 :         require(newBalanceToken != address(0), RuleMaxBalance_TokenAddressZeroNotAllowed());</span></a>
-<a name="178"><span class="lineNum">     178 </span>                :            :         // Explicit, rather than relying on the uncatchable extcodesize revert the probe below happens</a>
-<a name="179"><span class="lineNum">     179 </span>                :            :         // to produce for a codeless address: that is compiler behaviour, not a check.</a>
-<a name="180"><span class="lineNum">     180 </span>        [<span class="branchCov" title="Branch 0 was taken 2 times"> + </span><span class="branchCov" title="Branch 1 was taken 64 times"> + </span>]:<span class="lineCov">         66 :         require(newBalanceToken.code.length != 0, RuleMaxBalance_TokenIsNotAContract(newBalanceToken));</span></a>
-<a name="181"><span class="lineNum">     181 </span>           [<span class="branchCov" title="Branch 0 was taken 64 times"> + </span>]:<span class="lineCov">         64 :         try IBalanceOf(newBalanceToken).balanceOf(address(this)) returns (uint256) {</span></a>
-<a name="182"><span class="lineNum">     182 </span>                :            :         // callable</a>
-<a name="183"><span class="lineNum">     183 </span>                :            :         }</a>
-<a name="184"><span class="lineNum">     184 </span>           [<span class="branchCov" title="Branch 1 was taken 2 times"> + </span>]:<span class="lineCov">          2 :         catch {</span></a>
-<a name="185"><span class="lineNum">     185 </span>                :<span class="lineCov">          2 :             revert RuleMaxBalance_TokenBalanceUnavailable(newBalanceToken);</span></a>
+<a name="143"><span class="lineNum">     143 </span>                :            :      *      function pointer `_addAddresses` passes to `AddressSetBatchLib`. Either way the zero</a>
+<a name="144"><span class="lineNum">     144 </span>                :            :      *      address can never enter the exemption list.</a>
+<a name="145"><span class="lineNum">     145 </span>                :            :      * @param targetAddress The address to exempt.</a>
+<a name="146"><span class="lineNum">     146 </span>                :            :      */</a>
+<a name="147"><span class="lineNum">     147 </span>                :<span class="lineCov">         10 :     function _addExemptAddress(address targetAddress) internal virtual {</span></a>
+<a name="148"><span class="lineNum">     148 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 9 times"> + </span>]:<span class="lineCov">         10 :         require(targetAddress != address(0), RuleAddressSet_ZeroAddressNotAllowed());</span></a>
+<a name="149"><span class="lineNum">     149 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 8 times"> + </span>]:<span class="lineCov">          9 :         require(_addAddress(targetAddress), RuleAddressSet_AddressAlreadyListed());</span></a>
+<a name="150"><span class="lineNum">     150 </span>                :<span class="lineCov">          8 :         emit ExemptAddressAdded(targetAddress);</span></a>
+<a name="151"><span class="lineNum">     151 </span>                :            :     }</a>
+<a name="152"><span class="lineNum">     152 </span>                :            : </a>
+<a name="153"><span class="lineNum">     153 </span>                :            :     /**</a>
+<a name="154"><span class="lineNum">     154 </span>                :            :      * @notice Removes an exemption: guards, writes and announces, in one place.</a>
+<a name="155"><span class="lineNum">     155 </span>                :            :      * @param targetAddress The address to bring back under the cap.</a>
+<a name="156"><span class="lineNum">     156 </span>                :            :      */</a>
+<a name="157"><span class="lineNum">     157 </span>                :<span class="lineCov">          3 :     function _removeExemptAddress(address targetAddress) internal virtual {</span></a>
+<a name="158"><span class="lineNum">     158 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 2 times"> + </span>]:<span class="lineCov">          3 :         require(_removeAddress(targetAddress), RuleAddressSet_AddressNotFound());</span></a>
+<a name="159"><span class="lineNum">     159 </span>                :<span class="lineCov">          2 :         emit ExemptAddressRemoved(targetAddress);</span></a>
+<a name="160"><span class="lineNum">     160 </span>                :            :     }</a>
+<a name="161"><span class="lineNum">     161 </span>                :            : </a>
+<a name="162"><span class="lineNum">     162 </span>                :            :     /**</a>
+<a name="163"><span class="lineNum">     163 </span>                :            :      * @notice Stores the cap and emits {MaxBalanceUpdated}.</a>
+<a name="164"><span class="lineNum">     164 </span>                :            :      * @param newMaxBalance The new cap.</a>
+<a name="165"><span class="lineNum">     165 </span>                :            :      */</a>
+<a name="166"><span class="lineNum">     166 </span>                :<span class="lineCov">         89 :     function _setMaxBalance(uint256 newMaxBalance) internal virtual {</span></a>
+<a name="167"><span class="lineNum">     167 </span>                :<span class="lineCov">         89 :         maxBalance = newMaxBalance;</span></a>
+<a name="168"><span class="lineNum">     168 </span>                :<span class="lineCov">         89 :         emit MaxBalanceUpdated(newMaxBalance);</span></a>
+<a name="169"><span class="lineNum">     169 </span>                :            :     }</a>
+<a name="170"><span class="lineNum">     170 </span>                :            : </a>
+<a name="171"><span class="lineNum">     171 </span>                :            :     /**</a>
+<a name="172"><span class="lineNum">     172 </span>                :            :      * @notice Stores the observed token and emits {MaxBalanceTokenUpdated}.</a>
+<a name="173"><span class="lineNum">     173 </span>                :            :      * @dev Probes `balanceOf` at configuration time so a token that cannot serve the check reverts</a>
+<a name="174"><span class="lineNum">     174 </span>                :            :      * at setup instead of silently blocking every transfer.</a>
+<a name="175"><span class="lineNum">     175 </span>                :            :      * @param newBalanceToken The new token contract.</a>
+<a name="176"><span class="lineNum">     176 </span>                :            :      */</a>
+<a name="177"><span class="lineNum">     177 </span>                :<span class="lineCov">         88 :     function _setBalanceToken(address newBalanceToken) internal virtual {</span></a>
+<a name="178"><span class="lineNum">     178 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 87 times"> + </span>]:<span class="lineCov">         88 :         require(newBalanceToken != address(0), RuleMaxBalance_TokenAddressZeroNotAllowed());</span></a>
+<a name="179"><span class="lineNum">     179 </span>                :            :         // Explicit, rather than relying on the uncatchable extcodesize revert the probe below happens</a>
+<a name="180"><span class="lineNum">     180 </span>                :            :         // to produce for a codeless address: that is compiler behaviour, not a check.</a>
+<a name="181"><span class="lineNum">     181 </span>        [<span class="branchCov" title="Branch 0 was taken 2 times"> + </span><span class="branchCov" title="Branch 1 was taken 85 times"> + </span>]:<span class="lineCov">         87 :         require(newBalanceToken.code.length != 0, RuleMaxBalance_TokenIsNotAContract(newBalanceToken));</span></a>
+<a name="182"><span class="lineNum">     182 </span>           [<span class="branchCov" title="Branch 0 was taken 85 times"> + </span>]:<span class="lineCov">         85 :         try IBalanceOf(newBalanceToken).balanceOf(address(this)) returns (</span></a>
+<a name="183"><span class="lineNum">     183 </span>                :            :             uint256</a>
+<a name="184"><span class="lineNum">     184 </span>                :            :         ) {</a>
+<a name="185"><span class="lineNum">     185 </span>                :            :         // callable</a>
 <a name="186"><span class="lineNum">     186 </span>                :            :         }</a>
-<a name="187"><span class="lineNum">     187 </span>                :<span class="lineCov">         62 :         balanceToken = IBalanceOf(newBalanceToken);</span></a>
-<a name="188"><span class="lineNum">     188 </span>                :<span class="lineCov">         62 :         emit MaxBalanceTokenUpdated(newBalanceToken);</span></a>
-<a name="189"><span class="lineNum">     189 </span>                :            :     }</a>
-<a name="190"><span class="lineNum">     190 </span>                :            : </a>
-<a name="191"><span class="lineNum">     191 </span>                :            :     /**</a>
-<a name="192"><span class="lineNum">     192 </span>                :            :      * @notice Authorization hook invoked before any configuration or exemption change.</a>
-<a name="193"><span class="lineNum">     193 </span>                :            :      * @dev Implemented by concrete subclasses with the desired access-control policy.</a>
-<a name="194"><span class="lineNum">     194 </span>                :            :      */</a>
-<a name="195"><span class="lineNum">     195 </span>                :<span class="lineNoCov">          0 :     function _authorizeMaxBalanceManager() internal view virtual;</span></a>
-<a name="196"><span class="lineNum">     196 </span>                :            : </a>
-<a name="197"><span class="lineNum">     197 </span>                :            :     /**</a>
-<a name="198"><span class="lineNum">     198 </span>                :            :      * @notice Returns the balance `to` may still receive before reaching the cap.</a>
-<a name="199"><span class="lineNum">     199 </span>                :            :      * @dev Never reverts. Kept `internal` and code-free deliberately: the rule wraps it in a public</a>
-<a name="200"><span class="lineNum">     200 </span>                :            :      * `remainingCapacity` that reports an ERC-1404 restriction code, which is a concern this</a>
-<a name="201"><span class="lineNum">     201 </span>                :            :      * contract does not carry.</a>
-<a name="202"><span class="lineNum">     202 </span>                :            :      * @param to The prospective receiver.</a>
-<a name="203"><span class="lineNum">     203 </span>                :            :      * @return balanceAvailable False when the balance could not be read; `headroom` is then</a>
-<a name="204"><span class="lineNum">     204 </span>                :            :      * meaningless and the caller should treat the query as failed.</a>
-<a name="205"><span class="lineNum">     205 </span>                :            :      * @return headroom Remaining capacity in token units. `type(uint256).max` for an exempt address</a>
-<a name="206"><span class="lineNum">     206 </span>                :            :      * or the burn sentinel.</a>
-<a name="207"><span class="lineNum">     207 </span>                :            :      */</a>
-<a name="208"><span class="lineNum">     208 </span>                :<span class="lineCov">          5 :     function _remainingCapacity(address to) internal view virtual returns (bool balanceAvailable, uint256 headroom) {</span></a>
-<a name="209"><span class="lineNum">     209 </span>           [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span>]:<span class="lineCov">          5 :         if (to == address(0) || _isAddressListed(to)) {</span></a>
-<a name="210"><span class="lineNum">     210 </span>                :<span class="lineCov">          1 :             return (true, type(uint256).max);</span></a>
-<a name="211"><span class="lineNum">     211 </span>                :            :         }</a>
-<a name="212"><span class="lineNum">     212 </span>                :<span class="lineCov">          4 :         (bool available, uint256 balance) = _balanceOf(to);</span></a>
-<a name="213"><span class="lineNum">     213 </span>           [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span>]:<span class="lineCov">          4 :         if (!available) {</span></a>
-<a name="214"><span class="lineNum">     214 </span>                :<span class="lineCov">          1 :             return (false, 0);</span></a>
-<a name="215"><span class="lineNum">     215 </span>                :            :         }</a>
-<a name="216"><span class="lineNum">     216 </span>                :<span class="lineCov">          3 :         return (true, _capHeadroom(balance, maxBalance));</span></a>
-<a name="217"><span class="lineNum">     217 </span>                :            :     }</a>
-<a name="218"><span class="lineNum">     218 </span>                :            : </a>
-<a name="219"><span class="lineNum">     219 </span>                :            :     /**</a>
-<a name="220"><span class="lineNum">     220 </span>                :            :      * @notice Reads an address's balance without ever reverting.</a>
-<a name="221"><span class="lineNum">     221 </span>                :            :      * @dev Wrapped in `try/catch` so the rule's read path stays revert-free if the token breaks after</a>
-<a name="222"><span class="lineNum">     222 </span>                :            :      * configuration -- a proxy upgraded to something that reverts, or a pausable implementation that</a>
-<a name="223"><span class="lineNum">     223 </span>                :            :      * reverts while paused.</a>
-<a name="224"><span class="lineNum">     224 </span>                :            :      * @param account The address to query.</a>
-<a name="225"><span class="lineNum">     225 </span>                :            :      * @return available True when the balance could be read.</a>
-<a name="226"><span class="lineNum">     226 </span>                :            :      * @return balance The balance; meaningless when `available` is false.</a>
-<a name="227"><span class="lineNum">     227 </span>                :            :      */</a>
-<a name="228"><span class="lineNum">     228 </span>                :<span class="lineCov">         44 :     function _balanceOf(address account) internal view virtual returns (bool available, uint256 balance) {</span></a>
-<a name="229"><span class="lineNum">     229 </span>           [<span class="branchCov" title="Branch 0 was taken 44 times"> + </span>]:<span class="lineCov">         44 :         try balanceToken.balanceOf(account) returns (uint256 balance_) {</span></a>
-<a name="230"><span class="lineNum">     230 </span>                :<span class="lineCov">         41 :             return (true, balance_);</span></a>
-<a name="231"><span class="lineNum">     231 </span>           [<span class="branchCov" title="Branch 1 was taken 3 times"> + </span>]:<span class="lineCov">          3 :         } catch {</span></a>
-<a name="232"><span class="lineNum">     232 </span>                :<span class="lineCov">          3 :             return (false, 0);</span></a>
-<a name="233"><span class="lineNum">     233 </span>                :            :         }</a>
-<a name="234"><span class="lineNum">     234 </span>                :            :     }</a>
-<a name="235"><span class="lineNum">     235 </span>                :            : </a>
-<a name="236"><span class="lineNum">     236 </span>                :            :     /**</a>
-<a name="237"><span class="lineNum">     237 </span>                :            :      * @notice Reports whether `to` receiving `value` would breach its cap, without ever reverting.</a>
-<a name="238"><span class="lineNum">     238 </span>                :            :      * @dev Answers in booleans rather than restriction codes, so the caller owns the ERC-1404</a>
-<a name="239"><span class="lineNum">     239 </span>                :            :      * mapping. Burns and exempt receivers are resolved before any balance is read, so they keep</a>
-<a name="240"><span class="lineNum">     240 </span>                :            :      * working while the token is unreadable. Overflow-safe: `balance + value` could exceed uint256 on</a>
-<a name="241"><span class="lineNum">     241 </span>                :            :      * a MUST-NOT-revert path, so the comparison uses the remaining headroom instead.</a>
-<a name="242"><span class="lineNum">     242 </span>                :            :      * @param to The receiver whose resulting balance is checked.</a>
-<a name="243"><span class="lineNum">     243 </span>                :            :      * @param value The amount that would be received.</a>
-<a name="244"><span class="lineNum">     244 </span>                :            :      * @return balanceAvailable False when the balance could not be read; `exceeded` is then</a>
-<a name="245"><span class="lineNum">     245 </span>                :            :      * meaningless and the caller should treat the check as failed.</a>
-<a name="246"><span class="lineNum">     246 </span>                :            :      * @return exceeded True when the transfer would push `to` past {maxBalance}.</a>
-<a name="247"><span class="lineNum">     247 </span>                :            :      */</a>
-<a name="248"><span class="lineNum">     248 </span>                :<span class="lineCov">         46 :     function _capExceeded(address to, uint256 value)</span></a>
-<a name="249"><span class="lineNum">     249 </span>                :            :         internal</a>
-<a name="250"><span class="lineNum">     250 </span>                :            :         view</a>
-<a name="251"><span class="lineNum">     251 </span>                :            :         virtual</a>
-<a name="252"><span class="lineNum">     252 </span>                :            :         returns (bool balanceAvailable, bool exceeded)</a>
-<a name="253"><span class="lineNum">     253 </span>                :            :     {</a>
-<a name="254"><span class="lineNum">     254 </span>                :            :         // Burns cannot breach a maximum, and address(0) is the sentinel rather than a holder.</a>
-<a name="255"><span class="lineNum">     255 </span>                :            :         // Exempt receivers may hold any amount. Neither reads a balance.</a>
-<a name="256"><span class="lineNum">     256 </span>           [<span class="branchCov" title="Branch 0 was taken 6 times"> + </span>]:<span class="lineCov">         46 :         if (to == address(0) || _isAddressListed(to)) {</span></a>
-<a name="257"><span class="lineNum">     257 </span>                :<span class="lineCov">          6 :             return (true, false);</span></a>
-<a name="258"><span class="lineNum">     258 </span>                :            :         }</a>
-<a name="259"><span class="lineNum">     259 </span>                :<span class="lineCov">         40 :         uint256 balance;</span></a>
-<a name="260"><span class="lineNum">     260 </span>                :<span class="lineCov">         40 :         (balanceAvailable, balance) = _balanceOf(to);</span></a>
-<a name="261"><span class="lineNum">     261 </span>           [<span class="branchCov" title="Branch 0 was taken 2 times"> + </span>]:<span class="lineCov">         40 :         if (!balanceAvailable) {</span></a>
-<a name="262"><span class="lineNum">     262 </span>                :<span class="lineCov">          2 :             return (false, false);</span></a>
-<a name="263"><span class="lineNum">     263 </span>                :            :         }</a>
-<a name="264"><span class="lineNum">     264 </span>                :<span class="lineCov">         38 :         return (true, _capExceededBy(balance, maxBalance, value));</span></a>
-<a name="265"><span class="lineNum">     265 </span>                :            :     }</a>
-<a name="266"><span class="lineNum">     266 </span>                :            : }</a>
+<a name="187"><span class="lineNum">     187 </span>           [<span class="branchCov" title="Branch 1 was taken 2 times"> + </span>]:<span class="lineCov">          2 :         catch {</span></a>
+<a name="188"><span class="lineNum">     188 </span>                :<span class="lineCov">          2 :             revert RuleMaxBalance_TokenBalanceUnavailable(newBalanceToken);</span></a>
+<a name="189"><span class="lineNum">     189 </span>                :            :         }</a>
+<a name="190"><span class="lineNum">     190 </span>                :<span class="lineCov">         83 :         balanceToken = IBalanceOf(newBalanceToken);</span></a>
+<a name="191"><span class="lineNum">     191 </span>                :<span class="lineCov">         83 :         emit MaxBalanceTokenUpdated(newBalanceToken);</span></a>
+<a name="192"><span class="lineNum">     192 </span>                :            :     }</a>
+<a name="193"><span class="lineNum">     193 </span>                :            : </a>
+<a name="194"><span class="lineNum">     194 </span>                :            :     /**</a>
+<a name="195"><span class="lineNum">     195 </span>                :            :      * @notice Authorization hook invoked before any configuration or exemption change.</a>
+<a name="196"><span class="lineNum">     196 </span>                :            :      * @dev Implemented by concrete subclasses with the desired access-control policy.</a>
+<a name="197"><span class="lineNum">     197 </span>                :            :      */</a>
+<a name="198"><span class="lineNum">     198 </span>                :            :     function _authorizeMaxBalanceManager() internal view virtual;</a>
+<a name="199"><span class="lineNum">     199 </span>                :            : </a>
+<a name="200"><span class="lineNum">     200 </span>                :            :     /**</a>
+<a name="201"><span class="lineNum">     201 </span>                :            :      * @notice Returns the balance `to` may still receive before reaching the cap.</a>
+<a name="202"><span class="lineNum">     202 </span>                :            :      * @dev Never reverts. Kept `internal` and code-free deliberately: the rule wraps it in a public</a>
+<a name="203"><span class="lineNum">     203 </span>                :            :      * `remainingCapacity` that reports an ERC-1404 restriction code, which is a concern this</a>
+<a name="204"><span class="lineNum">     204 </span>                :            :      * contract does not carry.</a>
+<a name="205"><span class="lineNum">     205 </span>                :            :      * @param to The prospective receiver.</a>
+<a name="206"><span class="lineNum">     206 </span>                :            :      * @return balanceAvailable False when the balance could not be read; `headroom` is then</a>
+<a name="207"><span class="lineNum">     207 </span>                :            :      * meaningless and the caller should treat the query as failed.</a>
+<a name="208"><span class="lineNum">     208 </span>                :            :      * @return headroom Remaining capacity in token units. `type(uint256).max` for an exempt address</a>
+<a name="209"><span class="lineNum">     209 </span>                :            :      * or the burn sentinel.</a>
+<a name="210"><span class="lineNum">     210 </span>                :            :      */</a>
+<a name="211"><span class="lineNum">     211 </span>                :<span class="lineCov">          5 :     function _remainingCapacity(address to) internal view virtual returns (bool balanceAvailable, uint256 headroom) {</span></a>
+<a name="212"><span class="lineNum">     212 </span>           [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span>]:<span class="lineCov">          5 :         if (to == address(0) || _isAddressListed(to)) {</span></a>
+<a name="213"><span class="lineNum">     213 </span>                :<span class="lineCov">          1 :             return (true, type(uint256).max);</span></a>
+<a name="214"><span class="lineNum">     214 </span>                :            :         }</a>
+<a name="215"><span class="lineNum">     215 </span>                :<span class="lineCov">          4 :         (bool available, uint256 balance) = _balanceOf(to);</span></a>
+<a name="216"><span class="lineNum">     216 </span>           [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span>]:<span class="lineCov">          4 :         if (!available) {</span></a>
+<a name="217"><span class="lineNum">     217 </span>                :<span class="lineCov">          1 :             return (false, 0);</span></a>
+<a name="218"><span class="lineNum">     218 </span>                :            :         }</a>
+<a name="219"><span class="lineNum">     219 </span>                :<span class="lineCov">          3 :         return (true, _capHeadroom(balance, maxBalance));</span></a>
+<a name="220"><span class="lineNum">     220 </span>                :            :     }</a>
+<a name="221"><span class="lineNum">     221 </span>                :            : </a>
+<a name="222"><span class="lineNum">     222 </span>                :            :     /**</a>
+<a name="223"><span class="lineNum">     223 </span>                :            :      * @notice Reads an address's balance without ever reverting.</a>
+<a name="224"><span class="lineNum">     224 </span>                :            :      * @dev Wrapped in `try/catch` so the rule's read path stays revert-free if the token breaks after</a>
+<a name="225"><span class="lineNum">     225 </span>                :            :      * configuration -- a proxy upgraded to something that reverts, or a pausable implementation that</a>
+<a name="226"><span class="lineNum">     226 </span>                :            :      * reverts while paused.</a>
+<a name="227"><span class="lineNum">     227 </span>                :            :      * @param account The address to query.</a>
+<a name="228"><span class="lineNum">     228 </span>                :            :      * @return available True when the balance could be read.</a>
+<a name="229"><span class="lineNum">     229 </span>                :            :      * @return balance The balance; meaningless when `available` is false.</a>
+<a name="230"><span class="lineNum">     230 </span>                :            :      */</a>
+<a name="231"><span class="lineNum">     231 </span>                :<span class="lineCov">        118 :     function _balanceOf(address account) internal view virtual returns (bool available, uint256 balance) {</span></a>
+<a name="232"><span class="lineNum">     232 </span>           [<span class="branchCov" title="Branch 0 was taken 118 times"> + </span>]:<span class="lineCov">        118 :         try balanceToken.balanceOf(account) returns (uint256 balance_) {</span></a>
+<a name="233"><span class="lineNum">     233 </span>                :<span class="lineCov">        115 :             return (true, balance_);</span></a>
+<a name="234"><span class="lineNum">     234 </span>           [<span class="branchCov" title="Branch 1 was taken 3 times"> + </span>]:<span class="lineCov">          3 :         } catch {</span></a>
+<a name="235"><span class="lineNum">     235 </span>                :<span class="lineCov">          3 :             return (false, 0);</span></a>
+<a name="236"><span class="lineNum">     236 </span>                :            :         }</a>
+<a name="237"><span class="lineNum">     237 </span>                :            :     }</a>
+<a name="238"><span class="lineNum">     238 </span>                :            : </a>
+<a name="239"><span class="lineNum">     239 </span>                :            :     /**</a>
+<a name="240"><span class="lineNum">     240 </span>                :            :      * @notice Reports whether `to` receiving `value` would breach its cap, without ever reverting.</a>
+<a name="241"><span class="lineNum">     241 </span>                :            :      * @dev Answers in booleans rather than restriction codes, so the caller owns the ERC-1404</a>
+<a name="242"><span class="lineNum">     242 </span>                :            :      * mapping. Burns and exempt receivers are resolved before any balance is read, so they keep</a>
+<a name="243"><span class="lineNum">     243 </span>                :            :      * working while the token is unreadable. Overflow-safe: `balance + value` could exceed uint256 on</a>
+<a name="244"><span class="lineNum">     244 </span>                :            :      * a MUST-NOT-revert path, so the comparison uses the remaining headroom instead.</a>
+<a name="245"><span class="lineNum">     245 </span>                :            :      * @param to The receiver whose resulting balance is checked.</a>
+<a name="246"><span class="lineNum">     246 </span>                :            :      * @param value The amount that would be received.</a>
+<a name="247"><span class="lineNum">     247 </span>                :            :      * @return balanceAvailable False when the balance could not be read; `exceeded` is then</a>
+<a name="248"><span class="lineNum">     248 </span>                :            :      * meaningless and the caller should treat the check as failed.</a>
+<a name="249"><span class="lineNum">     249 </span>                :            :      * @return exceeded True when the transfer would push `to` past {maxBalance}.</a>
+<a name="250"><span class="lineNum">     250 </span>                :            :      */</a>
+<a name="251"><span class="lineNum">     251 </span>                :<span class="lineCov">        124 :     function _capExceeded(address to, uint256 value)</span></a>
+<a name="252"><span class="lineNum">     252 </span>                :            :         internal</a>
+<a name="253"><span class="lineNum">     253 </span>                :            :         view</a>
+<a name="254"><span class="lineNum">     254 </span>                :            :         virtual</a>
+<a name="255"><span class="lineNum">     255 </span>                :            :         returns (bool balanceAvailable, bool exceeded)</a>
+<a name="256"><span class="lineNum">     256 </span>                :            :     {</a>
+<a name="257"><span class="lineNum">     257 </span>                :            :         // Burns cannot breach a maximum, and address(0) is the sentinel rather than a holder.</a>
+<a name="258"><span class="lineNum">     258 </span>                :            :         // Exempt receivers may hold any amount. Neither reads a balance.</a>
+<a name="259"><span class="lineNum">     259 </span>           [<span class="branchCov" title="Branch 0 was taken 10 times"> + </span>]:<span class="lineCov">        124 :         if (to == address(0) || _isAddressListed(to)) {</span></a>
+<a name="260"><span class="lineNum">     260 </span>                :<span class="lineCov">         10 :             return (true, false);</span></a>
+<a name="261"><span class="lineNum">     261 </span>                :            :         }</a>
+<a name="262"><span class="lineNum">     262 </span>                :<span class="lineCov">        114 :         uint256 balance;</span></a>
+<a name="263"><span class="lineNum">     263 </span>                :<span class="lineCov">        114 :         (balanceAvailable, balance) = _balanceOf(to);</span></a>
+<a name="264"><span class="lineNum">     264 </span>           [<span class="branchCov" title="Branch 0 was taken 2 times"> + </span>]:<span class="lineCov">        114 :         if (!balanceAvailable) {</span></a>
+<a name="265"><span class="lineNum">     265 </span>                :<span class="lineCov">          2 :             return (false, false);</span></a>
+<a name="266"><span class="lineNum">     266 </span>                :            :         }</a>
+<a name="267"><span class="lineNum">     267 </span>                :<span class="lineCov">        112 :         return (true, _capExceededBy(balance, maxBalance, value));</span></a>
+<a name="268"><span class="lineNum">     268 </span>                :            :     }</a>
+<a name="269"><span class="lineNum">     269 </span>                :            : }</a>
 </pre>
       </td>
     </tr>
