@@ -82,7 +82,7 @@ are a missing warning on an extension point of `RuleMaxTotalSupplyBase` and the 
 | ID | Severity | Status | Finding | Component | PoC |
 |---|---|---|---|---|---|
 | F-1 | Info (downgraded from Low) | ⚠️ Documented | A RuleEngine serving several tokens shares one issuance counter | `RuleIssuanceCapBase.sol` (`bindToken`, `_afterMintChecked`) | `testIC1_SharedEngineCountsOtherTokensMints_CurrentBehaviour`, `testIC1_SharedEngineCapsTokenBByTokenAsCounter_CurrentBehaviour` |
-| F-2 | Info | Open | The bound caller is not checked against `tokenContract`; the views report OK | `RuleIssuanceCapBase.sol`, `bindToken` | `testIC2_BindingUnrelatedCallerIsAccepted_CurrentBehaviour` |
+| F-2 | Info | ⛔ Declined | The bound caller is not checked against `tokenContract`; the views report OK | `RuleIssuanceCapBase.sol`, `bindToken` | `testIC2_BindingUnrelatedCallerIsAccepted_CurrentBehaviour` |
 | F-3 | Info | ⚠️ Documented | `_afterMintChecked` does not warn that `transferred` is ungated | `RuleMaxTotalSupplyBase.sol`, `_afterMintChecked` | `testMTS1_UngatedSubclassIsDrivableByAnyone_CurrentBehaviour` |
 | F-4 | Info | ⚠️ Documented | Mints before attachment are not counted | `RuleIssuanceCapBase.sol` | `testIC3_IssuanceBeforeAttachIsNotCounted_CurrentBehaviour` |
 | F-5 | Info | By design | Code 85 does not say which rule is unbound | `RuleBindingInvariantStorage.sol` | `testB85_EngineSurfacesSharedCode` |
@@ -221,13 +221,29 @@ Drawbacks: `getTokenBounds` belongs to RuleEngine's extended module, not to the 
 engines would be refused; it is still a snapshot, and RuleEngine can later add a token through `bindToken`, the
 batch functions or token self-binding. Not recommended.
 
-#### Verdict
+#### Option A misses the likely mistakes
 
-Leave the code unchanged for `v0.7.0`. The failure is fail-closed and caused by the trusted compliance manager, and
-the documented deployment order (F-4) already gives a configuration where mints revert until the setup is correct.
-If the check is wanted later, the way to keep F-4's guarantee is to accept the engine at binding time without
-requiring the token yet (call `isTokenBound` in `try/catch` and ignore the answer, rejecting only EOAs and contracts that do not
-implement it), which catches typos but not a wrong engine. That trade-off is a maintainer decision.
+Option A checks that the target is *related* to the token, not that it is the address that will call the rule:
+
+- **A stale engine passes.** After a migration from engine E1 to E2 (`setRuleEngine(E2)`), E1 still reports
+  `isTokenBound(token) == true` unless `E1.unbindToken(token)` was called. Binding the rule to E1 passes, and every
+  mint reverts because E2 is the caller. This is the "previous engine" case this finding describes.
+- **A topology mix-up passes, both ways.** The token branch accepts the token even when the rule sits behind an
+  engine, and the engine branch accepts a serving engine even when the rule is set directly on the token. In both
+  cases the real caller is rejected.
+- **The strict fix contradicts both documented setup orders.** Requiring `token.ruleEngine() == address(this)` (or
+  `== target`) would catch all three mistakes, but both documented orders bind *before* installing: `bindToken`
+  then `setRuleEngine` in the direct topology, and the rule bound to the engine before the engine binds the token in
+  the gap-free order (F-4). At binding time the final configuration does not exist yet, so no check can be both
+  strict and compatible with them.
+
+#### Decision: declined
+
+**The maintainers declined F-2; the code is unchanged.** Option A catches typos and EOAs but not the mistakes an
+operator is likely to make, its strict form rejects the documented setup orders, and options B and C put a check on
+the hot path or depend on a RuleEngine-only function. The failure is fail-closed and caused by the trusted
+compliance manager, and the F-4 deployment order already keeps every mint reverting until the setup is correct.
+`testIC2_BindingUnrelatedCallerIsAccepted_CurrentBehaviour` stays as the record of the accepted behaviour.
 
 ### 3.4 F-3 — `_afterMintChecked` does not warn that `transferred` is ungated (Info)
 
@@ -347,7 +363,7 @@ will: non-replenishment holds relative to the cap the issuer sets. This is inher
 | F-1 | ⚠️ Documented, behaviour unchanged | `bindToken` NatSpec (`RuleIssuanceCapBase.sol`) gains a WARNING and an `@param` note that a bound RuleEngine must serve only `tokenContract`; `RuleIssuanceCap.md` § Binding gains a WARNING explaining what a multi-token engine does to the counter | Doc change only; the two `testIC1_*_CurrentBehaviour` PoCs still pass, since the behaviour they pin is unchanged |
 | F-3 | ⚠️ Documented, behaviour unchanged | `_afterMintChecked` NatSpec (`RuleMaxTotalSupplyBase.sol`) gains a WARNING: both `transferred` overloads are ungated, and a subclass that writes in the hook must restrict them to its bound caller | Doc change only; `testMTS1_UngatedSubclassIsDrivableByAnyone_CurrentBehaviour` still passes, as the base is unchanged |
 | F-4 | ⚠️ Documented, behaviour unchanged | `RuleIssuanceCap.md` gains a "Deployment order" section: the window before first installation, the setup order for each topology, the admin caveat, and the `initialIssued` rule for a live token. It adds a gap-free order not in the original recommendation: set the RuleEngine in the CMTAT constructor and bind the token to the engine **last**, so every mint, the admin's included, reverts until the cap rule is in place | New test `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow` (real CMTAT `v3.3` + RuleEngine `rc7`); `testIC3_IssuanceBeforeAttachIsNotCounted_CurrentBehaviour` still passes, as the rule is unchanged |
-| F-2 | Open | — | — |
+| F-2 | ⛔ Declined | None: a binding check misses the likely mistakes (stale engine, topology mix-up) and, in its strict form, rejects both documented setup orders (§3.3) | `testIC2_BindingUnrelatedCallerIsAccepted_CurrentBehaviour` pins the accepted behaviour |
 | F-5 | By design, not changed | — | — |
 
 No runtime code changed. The NatSpec change is recorded in `CLAUDE_ANALYSIS_SUMMARY.md`, as production comments do
@@ -364,11 +380,10 @@ documentation changes for F-1, F-3 and F-4 (plus one integration test for F-4): 
 
 | # | Improvement | Addresses | Effort | Breaking? | Priority |
 |---|---|---|---|---|---|
-| 1 | `_checkBindingTarget` accepting only `tokenContract` or an engine bound to it (§3.3, option A) | F-1, F-2 | Small (code + ~40 test call sites) | No ABI break, but it rejects step 4 of the gap-free deployment order of F-4 | Low; a design decision, not recommended for `v0.7.0` |
+| — | None open | — | — | — | — |
 
-The documentation items are done (F-1, F-3, F-4; §6). The remaining item would move part of F-1 and F-2 from
-documentation into a configuration-time check, but it rejects the gap-free deployment order of F-4; §3.3 gives the
-implementation, its drawbacks and two alternatives.
+The documentation items are done (F-1, F-3, F-4; §6). The binding check proposed for F-2 was declined (§3.3): it
+is recorded there with its implementation, its drawbacks and two alternatives, should the question come back.
 
 ---
 
@@ -400,4 +415,4 @@ documented for `RuleMaxTotalSupply` and `RuleChainlinkPoR`, applied to a statefu
 
 The `v0.7.0` changes introduce no vulnerability. `RuleIssuanceCap` is correct for its documented deployment (one
 instance per token, bound to that token or to an engine serving only it), and its counter is closed to every
-caller but the bound one. The remaining work is an optional binding check (F-2).
+caller but the bound one. No work remains open: F-1, F-3 and F-4 are documented, F-2 was declined, and F-5 is by design.
