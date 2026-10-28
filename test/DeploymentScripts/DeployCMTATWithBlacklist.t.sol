@@ -18,7 +18,7 @@ contract DeployCMTATWithBlacklistTest is Test {
         script = new DeployCMTATWithBlacklist();
         // The script contract is the acting deployer: a direct deploy() call is not a broadcast, so
         // it makes the wiring calls itself.
-        (token, rule) = script.deploy(ADMIN, address(script), address(0));
+        (token, rule) = script.deploy(ADMIN, address(0));
     }
 
     function testBindsTheRuleToTheToken() public view {

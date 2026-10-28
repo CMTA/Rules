@@ -27,7 +27,7 @@ contract DeployCMTATWithSanctionsListTest is Test {
         oracle = new SanctionListOracle();
         oracle.addToSanctionsList(SANCTIONED);
         // The script contract is the acting deployer: a direct deploy() call is not a broadcast.
-        (token, rule) = script.deploy(ADMIN, address(script), address(0), ISanctionsList(address(oracle)));
+        (token, rule) = script.deploy(ADMIN, address(0), ISanctionsList(address(oracle)));
     }
 
     function testSetsTheRuleOnTheTokenWithTheOracle() public view {
@@ -47,7 +47,7 @@ contract DeployCMTATWithSanctionsListTest is Test {
 
     function testAdminEqualToDeployerKeepsTheRole() public {
         (CMTATStandardStandalone t2, RuleSanctionsList r2) =
-            script.deploy(address(script), address(script), address(0), ISanctionsList(address(oracle)));
+            script.deploy(address(script), address(0), ISanctionsList(address(oracle)));
         assertTrue(t2.hasRole(t2.DEFAULT_ADMIN_ROLE(), address(script)));
         assertTrue(r2.hasRole(r2.DEFAULT_ADMIN_ROLE(), address(script)));
     }
@@ -91,7 +91,7 @@ contract DeployCMTATWithSanctionsListTest is Test {
     /// The default `run()` oracle is address(0): screening is disabled and everything passes.
     function testUnsetOracleFailsOpen() public {
         (CMTATStandardStandalone t2, RuleSanctionsList r2) =
-            script.deploy(ADMIN, address(script), address(0), ISanctionsList(address(0)));
+            script.deploy(ADMIN, address(0), ISanctionsList(address(0)));
         assertEq(address(r2.sanctionsList()), address(0));
 
         assertEq(t2.detectTransferRestriction(address(0), SANCTIONED, 100), 0);

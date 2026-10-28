@@ -121,6 +121,8 @@ sequenceDiagram
     Admin->>Rule: remainingMintable() returns (0, cap)
 ```
 
+The repository script `script/DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply.s.sol` follows this order, with a blacklist and a sanctions rule in the same engine, but deploys CMTAT v3.3.0, not v3.0.0. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+
 ### 4.2 Rule set directly, after deployment
 
 1. **Deploy the token** with `Engine(ruleEngine = 0, 0, 0)`. Do not mint yet.
@@ -173,8 +175,6 @@ sequenceDiagram
     Admin->>Token: grantRole(MINTER_ROLE, minter)
     Admin->>Rule: remainingMintable() returns (0, cap)
 ```
-
-The repository script `script/DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply.s.sol` follows this order, with a blacklist and a sanctions rule in the same engine, but deploys CMTAT v3.3.0, not v3.0.0. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
 
 ## 5. Mint workflow
 

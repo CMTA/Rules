@@ -23,7 +23,7 @@ contract DeployCMTATWithIdentityRegistryTest is Test {
     function setUp() public {
         script = new DeployCMTATWithIdentityRegistry();
         // The script contract is the acting deployer: a direct deploy() call is not a broadcast.
-        (token, registry, rule) = script.deploy(ADMIN, address(script), address(0), false, false);
+        (token, registry, rule) = script.deploy(ADMIN, address(0), false, false);
     }
 
     function _register(address wallet) internal {
@@ -51,7 +51,7 @@ contract DeployCMTATWithIdentityRegistryTest is Test {
     }
 
     function testAdminEqualToDeployerKeepsTheRole() public {
-        (CMTATStandardStandalone t2,,) = script.deploy(address(script), address(script), address(0), false, false);
+        (CMTATStandardStandalone t2,,) = script.deploy(address(script), address(0), false, false);
         assertTrue(t2.hasRole(t2.DEFAULT_ADMIN_ROLE(), address(script)));
     }
 

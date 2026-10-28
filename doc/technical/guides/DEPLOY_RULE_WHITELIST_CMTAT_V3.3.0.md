@@ -124,6 +124,8 @@ sequenceDiagram
     Admin->>Token: detectTransferRestriction(0, investor1, 1) returns 0
 ```
 
+The repository script `script/DeployCMTATWithWhitelist.s.sol` deploys this setup on v3.3.0. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+
 ### 4.2 Rule set directly, after deployment
 
 1. **Deploy the token** with `Engine(ruleEngine = address(0))`. Do not mint yet.
@@ -147,8 +149,6 @@ sequenceDiagram
     Admin->>Token: grantRole(MINTER_ROLE, minter)
     Admin->>Token: detectTransferRestriction(0, investor1, 1) returns 0
 ```
-
-The repository script `script/DeployCMTATWithWhitelist.s.sol` deploys this setup on v3.3.0. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
 
 ### 4.3 Behind a RuleEngine, at deployment
 

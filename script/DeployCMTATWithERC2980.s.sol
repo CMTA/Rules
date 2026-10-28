@@ -11,10 +11,11 @@ import {CMTATDeploymentBase} from "./base/CMTATDeploymentBase.sol";
  * @notice Deploys a CMTAT token guarded by a single `RuleERC2980` (ERC-2980 Swiss Compliant).
  *
  *         Deployment order:
- *         1. `CMTATStandardStandalone` — the token, with `deployer` as temporary admin
- *         2. `RuleERC2980`             — receiver whitelist plus a frozenlist (sender, receiver, spender)
- *         3. `token.setRuleEngine(rule)`
- *         4. Hand `DEFAULT_ADMIN_ROLE` to `admin`, renounce the deployer's
+ *         1. `RuleERC2980` — receiver whitelist plus a frozenlist (sender, receiver, spender)
+ *         2. `CMTATStandardStandalone` — the token, created with `admin` and the rule in its constructor
+ *
+ * @dev The token is created with `admin` as its admin and the rule already installed, so it never
+ *      exists without compliance and the deployer never holds a role on it.
  *
  * @dev **Topology B (direct binding).** The rule is set straight on the token, no RuleEngine.
  *
@@ -26,32 +27,24 @@ import {CMTATDeploymentBase} from "./base/CMTATDeploymentBase.sol";
 contract DeployCMTATWithERC2980 is CMTATDeploymentBase {
     /**
      * @notice Deploys and wires the token and its rule.
-     * @dev `deployer` is explicit rather than read as `address(this)`: under `forge script` the
-     *      broadcaster makes the calls below, not the script contract.
      * @param admin Address that ends up holding `DEFAULT_ADMIN_ROLE` on the token and the rule.
-     * @param deployer Address that executes the calls and holds the temporary admin role.
      * @param forwarder ERC-2771 trusted forwarder for the token and the rule; `address(0)` disables it.
      * @param allowMintBurn Whether the rule permits mint and burn. With `false` every mint is rejected
      *        with code 64 and every burn with code 65; changeable later with `setAllowMint` / `setAllowBurn`.
      * @return token The deployed CMTAT.
      * @return rule The ERC-2980 rule set on it.
      */
-    function deploy(address admin, address deployer, address forwarder, bool allowMintBurn)
+    function deploy(address admin, address forwarder, bool allowMintBurn)
         public
         virtual
         returns (CMTATStandardStandalone token, RuleERC2980 rule)
     {
-        token = new CMTATStandardStandalone(
-            forwarder, deployer, _erc20Attributes(), _extraInformationAttributes(), _emptyEngine()
-        );
         rule = new RuleERC2980(admin, forwarder, allowMintBurn);
 
-        token.setRuleEngine(IRuleEngine(address(rule)));
-
-        if (admin != deployer) {
-            token.grantRole(token.DEFAULT_ADMIN_ROLE(), admin);
-            token.renounceRole(token.DEFAULT_ADMIN_ROLE(), deployer);
-        }
+        // The token takes `admin` and the rule in its constructor: no temporary admin to hand over.
+        token = new CMTATStandardStandalone(
+            forwarder, admin, _erc20Attributes(), _extraInformationAttributes(), _engine(IRuleEngine(address(rule)))
+        );
 
         _logDeployment("CMTAT token", address(token));
         _logDeployment("RuleERC2980", address(rule));
@@ -63,7 +56,7 @@ contract DeployCMTATWithERC2980 is CMTATDeploymentBase {
      */
     function run() external virtual returns (CMTATStandardStandalone token, RuleERC2980 rule) {
         vm.startBroadcast();
-        (token, rule) = deploy(msg.sender, msg.sender, _forwarder(), true);
+        (token, rule) = deploy(msg.sender, _forwarder(), true);
         vm.stopBroadcast();
     }
 }

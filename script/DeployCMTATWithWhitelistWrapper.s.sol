@@ -13,12 +13,14 @@ import {CMTATDeploymentBase} from "./base/CMTATDeploymentBase.sol";
  * @notice Deploys a CMTAT token guarded by a `RuleWhitelistWrapper` aggregating two whitelists.
  *
  *         Deployment order:
- *         1. `CMTATStandardStandalone` — the token, with `deployer` as temporary admin
- *         2. Two `RuleWhitelist` children, owned by `admin` — one per whitelist operator
- *         3. `RuleWhitelistWrapper`    — `deployer` as temporary admin; an address passes if ANY child lists it
- *         4. `wrapper.addRule(childA)`, `wrapper.addRule(childB)`
- *         5. `token.setRuleEngine(wrapper)`
- *         6. Hand `DEFAULT_ADMIN_ROLE` on the token and the wrapper to `admin`, renounce the deployer's
+ *         1. Two `RuleWhitelist` children, owned by `admin` — one per whitelist operator
+ *         2. `RuleWhitelistWrapper` — `deployer` as temporary admin; an address passes if ANY child lists it
+ *         3. `wrapper.addRule(childA)`, `wrapper.addRule(childB)`
+ *         4. `CMTATStandardStandalone` — the token, created with `admin` and the wrapper in its constructor
+ *         5. Hand `DEFAULT_ADMIN_ROLE` on the wrapper to `admin`, renounce the deployer's
+ *
+ * @dev The token is created with `admin` as its admin and the rule already installed, so the deployer
+ *      never holds a role on it. Only the wrapper needs a temporary admin, for the `addRule` calls.
  *
  * @dev **Topology B (direct binding).** Only the wrapper is set on the token. The children must
  *      never be set on the token nor added to a RuleEngine: they would screen on their own, and an
@@ -35,7 +37,7 @@ contract DeployCMTATWithWhitelistWrapper is CMTATDeploymentBase {
      *      broadcaster makes the calls below, not the script contract, and Foundry rejects
      *      `address(this)` inside a broadcast.
      * @param admin Address that ends up holding `DEFAULT_ADMIN_ROLE` on every deployed contract.
-     * @param deployer Address that executes the calls and holds the temporary admin roles.
+     * @param deployer Address that executes the calls and holds the temporary admin role on the wrapper.
      * @param forwarder ERC-2771 trusted forwarder; `address(0)` disables meta-transactions.
      * @param checkSpender When true, `transferFrom` also requires the spender to be listed in a child.
      * @param allowMintBurn Whether the wrapper permits mint and burn. With `false` every mint is
@@ -55,9 +57,6 @@ contract DeployCMTATWithWhitelistWrapper is CMTATDeploymentBase {
             RuleWhitelist childB
         )
     {
-        token = new CMTATStandardStandalone(
-            forwarder, deployer, _erc20Attributes(), _extraInformationAttributes(), _emptyEngine()
-        );
         // Children: the flags are unused by the wrapper, so they are left off.
         childA = new RuleWhitelist(admin, forwarder, false, false);
         childB = new RuleWhitelist(admin, forwarder, false, false);
@@ -67,13 +66,16 @@ contract DeployCMTATWithWhitelistWrapper is CMTATDeploymentBase {
         wrapper.addRule(IRule(address(childA)));
         wrapper.addRule(IRule(address(childB)));
 
-        token.setRuleEngine(IRuleEngine(address(wrapper)));
+        // The token takes `admin` and the wrapper in its constructor: no temporary admin to hand over.
+        token = new CMTATStandardStandalone(
+            forwarder, admin, _erc20Attributes(), _extraInformationAttributes(), _engine(IRuleEngine(address(wrapper)))
+        );
 
+        // The wrapper was created with the deployer as admin only so it could call `addRule` above.
+        // Skipped when both are the same address: the renounce would then remove the only admin.
         if (admin != deployer) {
             wrapper.grantRole(wrapper.DEFAULT_ADMIN_ROLE(), admin);
             wrapper.renounceRole(wrapper.DEFAULT_ADMIN_ROLE(), deployer);
-            token.grantRole(token.DEFAULT_ADMIN_ROLE(), admin);
-            token.renounceRole(token.DEFAULT_ADMIN_ROLE(), deployer);
         }
 
         _logDeployment("CMTAT token         ", address(token));

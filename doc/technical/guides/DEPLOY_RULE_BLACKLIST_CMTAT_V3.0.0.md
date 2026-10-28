@@ -123,6 +123,8 @@ sequenceDiagram
     Admin->>Token: detectTransferRestriction(0, blocked1, 1) returns 37
 ```
 
+The repository script `script/DeployCMTATWithBlacklist.s.sol` follows this order, but deploys the current CMTAT (v3.3), not v3.0.0. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+
 ### 4.2 Rule set directly, after deployment
 
 1. **Deploy the token** with `Engine(ruleEngine = address(0), ...)`. Do not mint yet.
@@ -146,8 +148,6 @@ sequenceDiagram
     Admin->>Token: grantRole(MINTER_ROLE, minter)
     Admin->>Token: detectTransferRestriction(0, blocked1, 1) returns 37
 ```
-
-The repository script `script/DeployCMTATWithBlacklist.s.sol` follows this order, but deploys the current CMTAT (v3.3), not v3.0.0. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
 
 ### 4.3 Behind a RuleEngine, at deployment (recommended with other rules)
 
@@ -178,6 +178,8 @@ sequenceDiagram
     Admin->>Token: detectTransferRestriction(0, blocked1, 1) returns 37
 ```
 
+The repository script `script/DeployCMTATWithBlacklistAndSanctionsList.s.sol` follows this order with a sanctions list as a second rule, on CMTAT v3.3.
+
 ### 4.4 Behind a RuleEngine, after deployment
 
 1. **Deploy the token** with `Engine(ruleEngine = address(0), ...)`. Do not mint yet.
@@ -204,8 +206,6 @@ sequenceDiagram
     Admin->>Token: grantRole(MINTER_ROLE, minter)
     Admin->>Token: detectTransferRestriction(0, blocked1, 1) returns 37
 ```
-
-The repository script `script/DeployCMTATWithBlacklistAndSanctionsList.s.sol` follows this order with a sanctions list as a second rule, on CMTAT v3.3.
 
 A RuleEngine serving one token is the intended setup. `RuleBlacklist` itself would work for several tokens (it reads no token state), but every token would then share one blacklist.
 

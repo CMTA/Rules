@@ -23,7 +23,7 @@ contract DeployCMTATWithERC2980Test is Test {
     function setUp() public {
         script = new DeployCMTATWithERC2980();
         // The script contract is the acting deployer: a direct deploy() call is not a broadcast.
-        (token, rule) = script.deploy(ADMIN, address(script), address(0), true);
+        (token, rule) = script.deploy(ADMIN, address(0), true);
     }
 
     function testSetsTheRuleOnTheToken() public view {
@@ -41,7 +41,7 @@ contract DeployCMTATWithERC2980Test is Test {
     }
 
     function testAdminEqualToDeployerKeepsTheRole() public {
-        (CMTATStandardStandalone t2,) = script.deploy(address(script), address(script), address(0), true);
+        (CMTATStandardStandalone t2,) = script.deploy(address(script), address(0), true);
         assertTrue(t2.hasRole(t2.DEFAULT_ADMIN_ROLE(), address(script)));
     }
 
@@ -78,7 +78,7 @@ contract DeployCMTATWithERC2980Test is Test {
     }
 
     function testMintIsRejectedWhenMintBurnIsNotAllowed() public {
-        (CMTATStandardStandalone t2, RuleERC2980 r2) = script.deploy(ADMIN, address(script), address(0), false);
+        (CMTATStandardStandalone t2, RuleERC2980 r2) = script.deploy(ADMIN, address(0), false);
         vm.prank(ADMIN);
         r2.addWhitelistAddress(INVESTOR);
 

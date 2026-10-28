@@ -22,7 +22,7 @@ contract DeployCMTATWithWhitelistTest is Test {
         script = new DeployCMTATWithWhitelist();
         // The script contract is the acting deployer: a direct deploy() call is not a broadcast, so
         // it makes the wiring calls itself.
-        (token, rule) = script.deploy(ADMIN, address(script), address(0), false, true);
+        (token, rule) = script.deploy(ADMIN, address(0), false, true);
     }
 
     function testBindsTheRuleToTheToken() public view {
@@ -59,7 +59,7 @@ contract DeployCMTATWithWhitelistTest is Test {
 
     /// Pins the failure mode the old default caused, so a regression is legible rather than puzzling.
     function testMintIsRejectedWhenMintBurnIsNotAllowed() public {
-        (CMTATStandardStandalone t2, RuleWhitelist r2) = script.deploy(ADMIN, address(script), address(0), false, false);
+        (CMTATStandardStandalone t2, RuleWhitelist r2) = script.deploy(ADMIN, address(0), false, false);
 
         vm.prank(ADMIN);
         r2.addAddress(INVESTOR);

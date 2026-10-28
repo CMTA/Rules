@@ -539,7 +539,7 @@ Deployment scripts:
 - `script/DeployCMTATWithBlacklistAndSanctionsList.s.sol` — CMTAT + RuleEngine with blacklist and sanctions rules
 - `script/DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply.s.sol` — the same plus a supply cap
 
-Each script deploys with the caller as both deployer and final admin, hands over every admin role, and renounces the deployer's, so no temporary rights outlive the transaction. Run one with:
+Where it can, a script deploys the rule (or the RuleEngine) first and creates the token with its final admin and the rule in its constructor, so the deployer never holds a role on the token. Where a call must follow the token's deployment (`setRuleEngine` for a rule that needs the token's address, `bindToken`, `addRule`), the deployer is a temporary admin and hands the role over at the end, so no temporary rights outlive the run. Run one with:
 
 ```bash
 forge script script/DeployCMTATWithBlacklist.s.sol:DeployCMTATWithBlacklist \

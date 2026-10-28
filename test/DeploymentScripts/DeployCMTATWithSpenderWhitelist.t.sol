@@ -23,7 +23,7 @@ contract DeployCMTATWithSpenderWhitelistTest is Test {
     function setUp() public {
         script = new DeployCMTATWithSpenderWhitelist();
         // The script contract is the acting deployer: a direct deploy() call is not a broadcast.
-        (token, rule) = script.deploy(ADMIN, address(script), address(0));
+        (token, rule) = script.deploy(ADMIN, address(0));
 
         // Mints are not screened by this rule.
         vm.prank(ADMIN);
@@ -49,8 +49,7 @@ contract DeployCMTATWithSpenderWhitelistTest is Test {
     }
 
     function testAdminEqualToDeployerKeepsTheRole() public {
-        (CMTATStandardStandalone t2, RuleSpenderWhitelist r2) =
-            script.deploy(address(script), address(script), address(0));
+        (CMTATStandardStandalone t2, RuleSpenderWhitelist r2) = script.deploy(address(script), address(0));
         assertTrue(t2.hasRole(t2.DEFAULT_ADMIN_ROLE(), address(script)));
         assertTrue(r2.hasRole(r2.DEFAULT_ADMIN_ROLE(), address(script)));
     }

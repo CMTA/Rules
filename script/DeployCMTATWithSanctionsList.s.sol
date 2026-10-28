@@ -12,10 +12,11 @@ import {CMTATDeploymentBase} from "./base/CMTATDeploymentBase.sol";
  * @notice Deploys a CMTAT token guarded by a single `RuleSanctionsList`.
  *
  *         Deployment order:
- *         1. `CMTATStandardStandalone` — the token, with `deployer` as temporary admin
- *         2. `RuleSanctionsList`       — blocks sanctioned sender / recipient / spender via an oracle
- *         3. `token.setRuleEngine(rule)`
- *         4. Hand `DEFAULT_ADMIN_ROLE` to `admin`, renounce the deployer's
+ *         1. `RuleSanctionsList` — blocks sanctioned sender / recipient / spender via an oracle
+ *         2. `CMTATStandardStandalone` — the token, created with `admin` and the rule in its constructor
+ *
+ * @dev The token is created with `admin` as its admin and the rule already installed, so it never
+ *      exists without compliance and the deployer never holds a role on it.
  *
  * @dev **Topology B (direct binding).** The rule is set straight on the token.
  *
@@ -27,32 +28,23 @@ import {CMTATDeploymentBase} from "./base/CMTATDeploymentBase.sol";
 contract DeployCMTATWithSanctionsList is CMTATDeploymentBase {
     /**
      * @notice Deploys and wires the token and its rule.
-     * @dev `deployer` is explicit rather than read as `address(this)`: under `forge script` the
-     *      broadcaster makes the calls below, not the script contract, and Foundry rejects
-     *      `address(this)` inside a broadcast.
      * @param admin Address that ends up holding `DEFAULT_ADMIN_ROLE` on the token and the rule.
-     * @param deployer Address that executes the calls and holds the temporary admin role.
      * @param forwarder ERC-2771 trusted forwarder; `address(0)` disables meta-transactions.
      * @param sanctionsOracle Sanctions oracle; `address(0)` leaves screening disabled (fail open).
      * @return token The deployed CMTAT.
      * @return rule The sanctions rule set on it.
      */
-    function deploy(address admin, address deployer, address forwarder, ISanctionsList sanctionsOracle)
+    function deploy(address admin, address forwarder, ISanctionsList sanctionsOracle)
         public
         virtual
         returns (CMTATStandardStandalone token, RuleSanctionsList rule)
     {
-        token = new CMTATStandardStandalone(
-            forwarder, deployer, _erc20Attributes(), _extraInformationAttributes(), _emptyEngine()
-        );
         rule = new RuleSanctionsList(admin, forwarder, sanctionsOracle);
 
-        token.setRuleEngine(IRuleEngine(address(rule)));
-
-        if (admin != deployer) {
-            token.grantRole(token.DEFAULT_ADMIN_ROLE(), admin);
-            token.renounceRole(token.DEFAULT_ADMIN_ROLE(), deployer);
-        }
+        // The token takes `admin` and the rule in its constructor: no temporary admin to hand over.
+        token = new CMTATStandardStandalone(
+            forwarder, admin, _erc20Attributes(), _extraInformationAttributes(), _engine(IRuleEngine(address(rule)))
+        );
 
         _logDeployment("CMTAT token      ", address(token));
         _logDeployment("RuleSanctionsList", address(rule));
@@ -65,8 +57,7 @@ contract DeployCMTATWithSanctionsList is CMTATDeploymentBase {
      */
     function run() external virtual returns (CMTATStandardStandalone token, RuleSanctionsList rule) {
         vm.startBroadcast();
-        (token, rule) =
-            deploy(msg.sender, msg.sender, _forwarder(), ISanctionsList(vm.envOr("SANCTIONS_ORACLE", address(0))));
+        (token, rule) = deploy(msg.sender, _forwarder(), ISanctionsList(vm.envOr("SANCTIONS_ORACLE", address(0))));
         vm.stopBroadcast();
     }
 }

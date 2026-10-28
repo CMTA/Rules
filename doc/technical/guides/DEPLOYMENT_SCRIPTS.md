@@ -67,12 +67,12 @@ Each script exposes two entry points:
 
 | Function | Used by | Notes |
 | --- | --- | --- |
-| `deploy(...)` | tests, and other scripts | Plain function call. Takes `admin` and `deployer` explicitly. |
-| `run()` | `forge script` | Wraps `deploy` in `vm.startBroadcast()`, passing `msg.sender` for both. |
+| `deploy(...)` | tests, and other scripts | Plain function call. Takes `admin`, plus `deployer` in the scripts that need a temporary admin (see below). |
+| `run()` | `forge script` | Wraps `deploy` in `vm.startBroadcast()`, passing `msg.sender` as `admin` (and as `deployer`). |
 
 ### Why the deployer is a parameter
 
-`deploy()` takes both an `admin` and a `deployer`, which looks redundant since `run()` passes the same address for both. It is not redundant, and reading the deployer from `address(this)` instead is a bug that these scripts used to have.
+Where a script needs a temporary admin, `deploy()` takes both an `admin` and a `deployer`, which looks redundant since `run()` passes the same address for both. It is not redundant, and reading the deployer from `address(this)` instead is a bug that these scripts used to have.
 
 Under `forge script` the calls are made by the **broadcaster**, not by the script contract. Two independent things break if a script assumes otherwise:
 
@@ -83,14 +83,17 @@ Three of the four scripts read `address(this)` and could not deploy anything at 
 
 ### Temporary admin and hand-over
 
-The token and the RuleEngine are constructed with `deployer` as admin, because the wiring calls that follow are role-gated: `token.setRuleEngine(...)` needs admin on the token, `ruleEngine.addRule(...)` needs rights on the engine. The rules are constructed with `admin` directly, because nothing in the script ever configures them. `addRule` is a call on the engine, not on the rule.
+**The token is created with its final `admin` whenever possible.** CMTAT accepts its rule, or a RuleEngine, in its constructor, so a script that can deploy the rule first passes it there with `admin` as the token's admin: no `setRuleEngine` call, no temporary admin, and the token never exists without its compliance. The deployer only holds a role where a role-gated call must happen **after** the token exists:
 
-| Contract | Constructor admin | Deployer ever holds rights? | Handed over at the end? |
-| --- | --- | --- | --- |
-| CMTAT token | `deployer` | Yes | Yes |
-| `RuleEngine` | `deployer` | Yes | Yes |
-| Each rule the script never configures | `admin` | No | Not needed |
-| A rule the script configures (`bindToken` on the operation rules, `addRule` on the wrapper) | `deployer` | Yes | Yes |
+| Script | Temporary admin held by the deployer | Why |
+| --- | --- | --- |
+| Whitelist, receiver whitelist, spender whitelist, blacklist, sanctions list, ERC-2980, identity registry | none | the rule is deployed first and passed to the token's constructor; `deploy()` takes no `deployer` |
+| Whitelist wrapper | the wrapper | `wrapper.addRule(...)` for the two children |
+| Conditional transfer, multi-token conditional transfer, mint allowance | the rule | `rule.bindToken(token)` needs the token's address, so it runs after the token exists |
+| The two RuleEngine scripts | the RuleEngine | `addRule` and `bindToken(token)`. The engine is passed to the token's constructor and binds the token last, so the token itself gets `admin` directly |
+| Max total supply, max balance, Chainlink PoR, issuance cap | the **token** (and the rule, for the issuance cap) | the rule needs the token's address, so it can only be installed with `setRuleEngine` once the token exists, which needs the token's admin |
+
+Each script that keeps a temporary admin says why in a comment above its hand-over.
 
 The hand-over is a grant followed by a renounce, in that order, because `AccessControl` has no atomic transfer and renouncing first would leave nobody able to grant:
 
@@ -98,12 +101,10 @@ The hand-over is a grant followed by a renounce, in that order, because `AccessC
 if (admin != deployer) {
     ruleEngine.grantRole(ruleEngine.DEFAULT_ADMIN_ROLE(), admin);
     ruleEngine.renounceRole(ruleEngine.DEFAULT_ADMIN_ROLE(), deployer);
-    token.grantRole(token.DEFAULT_ADMIN_ROLE(), admin);
-    token.renounceRole(token.DEFAULT_ADMIN_ROLE(), deployer);
 }
 ```
 
-**The `if` is load-bearing.** In `run()` both arguments are `msg.sender`, so `admin == deployer`. Without the guard the grant would be a no-op and the renounce would then strip the only administrator, leaving a token nobody can ever configure or mint. Removing the guard and running the `admin == deployer` case was measured: the contract ends with no admin at all.
+**The `if` is load-bearing.** In `run()` both arguments are `msg.sender`, so `admin == deployer`. Without the guard the grant would be a no-op and the renounce would then strip the only administrator, leaving a contract nobody can ever configure. Removing the guard and running the `admin == deployer` case was measured: the contract ends with no admin at all.
 
 Both CMTAT and `RuleEngine` grant exactly one role at construction, `DEFAULT_ADMIN_ROLE`, so renouncing it is complete. If someone later adds an explicit `grantRole(SOME_ROLE, deployer)` to the wiring, this block would not remove it and the current tests would not notice.
 
@@ -111,7 +112,7 @@ Both CMTAT and `RuleEngine` grant exactly one role at construction, `DEFAULT_ADM
 
 The scripts deliberately use both integration models described in `CLAUDE.md`, and the choice changes what `msg.sender` is inside a rule:
 
-- **Topology B, direct binding** (every single-rule script). The rule is passed straight to `token.setRuleEngine(rule)`, with no engine in between, so inside the rule `msg.sender` is the token. Fine for a single validation rule, and cheaper: one contract fewer and no engine hop per transfer.
+- **Topology B, direct binding** (every single-rule script). The rule is installed straight on the token, in its constructor or with `setRuleEngine(rule)`, with no engine in between, so inside the rule `msg.sender` is the token. Fine for a single validation rule, and cheaper: one contract fewer and no engine hop per transfer.
 - **Topology A, RuleEngine** (the two others). Required as soon as there is more than one rule.
 
 This matters if you copy a script as a starting point. An operation rule such as `RuleConditionalTransferLightMultiToken` is direct-binding only, while `RuleMintAllowance` is not, so the two are not interchangeable. Each script states its topology in its NatSpec header.
@@ -168,7 +169,7 @@ RuleMaxTotalSupply 0xA8452Ec99ce0C64f20701dB7dD3abDb607c00496
 
 ### DeployCMTATWithWhitelist
 
-Signature: `deploy(admin, deployer, forwarder, checkSpender, allowMintBurn)`.
+Signature: `deploy(admin, forwarder, checkSpender, allowMintBurn)`.
 
 Transfers are allowed only between whitelisted addresses (code `21` / `22`, and `23` for the spender when `checkSpender` is on). `run()` passes `checkSpender = false` and `allowMintBurn = true`.
 
@@ -176,7 +177,7 @@ Transfers are allowed only between whitelisted addresses (code `21` / `22`, and 
 
 ### DeployCMTATWithBlacklist
 
-Signature: `deploy(admin, deployer, forwarder)`.
+Signature: `deploy(admin, forwarder)`.
 
 Blocks transfers involving a blacklisted sender, recipient or spender (codes `36` to `38`). The list starts empty, so a freshly deployed token allows every transfer until an address is added. Mint is open: `address(0)` is not on the list and `RuleBlacklist` has no mint flag.
 
@@ -194,13 +195,13 @@ To combine the cap with other rules, use the three-rule script below, which puts
 
 ### DeployCMTATWithReceiverWhitelist
 
-Signature: `deploy(admin, deployer, forwarder)`.
+Signature: `deploy(admin, forwarder)`.
 
 Screens only the receiver, as ERC-3643 eligibility does (code `81`). The sender and spender are never checked, so a holder removed from the list can still send to a listed receiver. Mints are screened on the receiver, with no `allowMint` flag; burns always pass. The list starts empty, so nothing can be minted until investors are added.
 
 ### DeployCMTATWithSpenderWhitelist
 
-Signature: `deploy(admin, deployer, forwarder)`.
+Signature: `deploy(admin, forwarder)`.
 
 Acts only on `transferFrom`: the spender must be listed (code `66`). Direct transfers, mints and burns always pass, so on its own the token screens no holder. In production, combine it behind a RuleEngine with a rule that screens holders (`RuleWhitelist`, `RuleReceiverWhitelist` or `RuleIdentityRegistry`).
 
@@ -208,23 +209,23 @@ Acts only on `transferFrom`: the spender must be listed (code `66`). Direct tran
 
 Signature: `deploy(admin, deployer, forwarder, checkSpender, allowMintBurn)`, returning the token, the wrapper and both children. `run()` passes `checkSpender = false`, `allowMintBurn = true`.
 
-Two child whitelists, one per operator, are owned by `admin` from the start. The wrapper is constructed with `deployer` as temporary admin so that it can `addRule` both children, then it is set on the token and handed over. An address listed in **either** child is eligible. The children are never set on the token or added to a RuleEngine. Mint and burn depend on the wrapper's own `allowMintBurn`, not on the children's flags; with `false`, every mint is rejected with code `24`.
+Two child whitelists, one per operator, are owned by `admin` from the start. The wrapper is constructed with `deployer` as temporary admin so that it can `addRule` both children, then it is passed to the token's constructor and the wrapper is handed over; the token gets `admin` directly. An address listed in **either** child is eligible. The children are never set on the token or added to a RuleEngine. Mint and burn depend on the wrapper's own `allowMintBurn`, not on the children's flags; with `false`, every mint is rejected with code `24`.
 
 ### DeployCMTATWithSanctionsList
 
-Signature: `deploy(admin, deployer, forwarder, sanctionsOracle)`. `run()` reads the oracle from `SANCTIONS_ORACLE`.
+Signature: `deploy(admin, forwarder, sanctionsOracle)`. `run()` reads the oracle from `SANCTIONS_ORACLE`.
 
 The sanctions rule alone, set directly on the token (codes `30` to `32`). On CMTAT v3.3 the minter and burner are screened too. **An unset oracle fails open**, as in the engine scripts. An oracle address without code, or a reverting oracle, makes every operation revert.
 
 ### DeployCMTATWithERC2980
 
-Signature: `deploy(admin, deployer, forwarder, allowMintBurn)`. `run()` passes `allowMintBurn = true`.
+Signature: `deploy(admin, forwarder, allowMintBurn)`. `run()` passes `allowMintBurn = true`.
 
 ERC-2980 whitelist (receiver only) plus frozenlist (sender, receiver and `transferFrom` spender; frozen takes priority), codes `60` to `65`. The rule's frozenlist is separate from the token's own freeze. On CMTAT v3.3 the minter is also checked against the frozenlist.
 
 ### DeployCMTATWithIdentityRegistry
 
-Signature: `deploy(admin, deployer, forwarder, checkSender, checkSpender)`, returning the token, the registry and the rule. `run()` passes `false, false`: receiver only, as ERC-3643 requires.
+Signature: `deploy(admin, forwarder, checkSender, checkSpender)`, returning the token, the registry and the rule. `run()` passes `false, false`: receiver only, as ERC-3643 requires.
 
 Deploys an `IdentityRegistryWhitelist` owned by `admin` as the registry, and `RuleIdentityRegistry` pointing at it, set directly on the token (codes `55` to `57`). CMTAT has no identity-registry slot, so the token never calls the registry and needs no role on it. A de-listed holder can still send.
 
@@ -244,7 +245,7 @@ Caps mints at the reserves reported by a Chainlink Proof of Reserve feed (codes 
 
 Signature: `deploy(admin, deployer, forwarder)`.
 
-An operation rule: each transfer needs an operator approval of the exact `(from, to, value)`, consumed by the transfer (code `46` without one, `85` while unbound). Mints and burns need no approval. The rule is constructed with `deployer` as temporary admin so that it can `bindToken(token)`, then both the rule and the token are handed over. One token per rule.
+An operation rule: each transfer needs an operator approval of the exact `(from, to, value)`, consumed by the transfer (code `46` without one, `85` while unbound). Mints and burns need no approval. The rule is constructed with `deployer` as temporary admin so that it can `bindToken(token)` once the token exists, then the rule is handed over. The token is created with `admin` and the rule in its constructor, so it gets no temporary admin; until `bindToken` every operation reverts. One token per rule.
 
 ### DeployCMTATWithConditionalTransferLightMultiToken
 
@@ -268,7 +269,7 @@ Caps cumulative issuance: burns never free room (code `71`, and `50` / `51` from
 
 Signature: `deploy(admin, deployer, forwarder, sanctionsOracle)`.
 
-Adds a `RuleEngine` holding `RuleBlacklist` then `RuleSanctionsList` (codes `30` to `32`). Rule order affects only *which* code a rejected transfer reports, since the engine returns the first non-zero one, not whether it is rejected. `testBlacklistTakesPriorityOverSanctions` pins that ordering.
+Adds a `RuleEngine` holding `RuleBlacklist` then `RuleSanctionsList` (codes `30` to `32`). The engine is deployed with no token and the deployer as temporary admin, the rules are added, the token is created with `admin` and the engine in its constructor, and the engine binds the token last; only the engine is handed over. Rule order affects only *which* code a rejected transfer reports, since the engine returns the first non-zero one, not whether it is rejected. `testBlacklistTakesPriorityOverSanctions` pins that ordering.
 
 **Which engine is deployed depends on `forwarder`.** Since RuleEngine `v3.0.0-rc7`, ERC-2771 is opt-in: the plain `RuleEngine(admin, token)` has no trusted forwarder, and `RuleEngine2771(admin, forwarder, token)` is the variant that has one. Both engine scripts deploy `RuleEngine` when `forwarder == address(0)` and `RuleEngine2771` otherwise, so the engine trusts the same forwarder as the token and the rules. The returned value is typed `RuleEngine` in both cases (`RuleEngine2771` extends it). Either way, token callbacks (`transferred`, `created`, `destroyed`) are never relayable: rc7 identifies the token by `msg.sender`. The same choice applies to the next script; `testRuleEngineHasNoForwarderWhenNoneIsGiven` and `testRuleEngineTrustsTheForwarderWhenOneIsGiven` pin it in both.
 
@@ -280,7 +281,7 @@ Signature: `deploy(admin, deployer, forwarder, sanctionsOracle, maxTotalSupply)`
 
 The same, plus `RuleMaxTotalSupply` capping mints at `maxTotalSupply` (code `50`, or `51` when the supply cannot be read). Burning frees headroom for a later mint, which `testBurningFreesHeadroomForANewMint` pins.
 
-**Step order matters here.** `RuleMaxTotalSupply` validates its token at construction: non-zero, has code, and `totalSupply()` callable. It therefore cannot be deployed before the token exists, and passing a placeholder reverts with `RuleMaxTotalSupply_TokenIsNotAContract`.
+**Step order matters here.** `RuleMaxTotalSupply` validates its token at construction: non-zero, has code, and `totalSupply()` callable. It therefore cannot be deployed before the token exists, and passing a placeholder reverts with `RuleMaxTotalSupply_TokenIsNotAContract`. The order is: engine (no token yet), token with the engine in its constructor, the cap rule, `addRule` for the three rules, then `bindToken` last.
 
 ## After deployment
 

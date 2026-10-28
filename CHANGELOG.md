@@ -54,7 +54,7 @@ Custom changelog tag
 
 
 
-## v0.7.0 - 2026-10-26
+## v0.7.0 - 2026-10-28
 
 Commit: 
 
@@ -119,6 +119,10 @@ Commit:
 - Deployment scripts: the default caps (`CMTAT_MAX_SUPPLY`, `CMTAT_MAX_BALANCE`, `CMTAT_ISSUANCE_CAP`) are now read by `_maxTotalSupply()`, `_maxBalance()` and `_issuanceCap()` in `CMTATDeploymentBase`, with defaults in whole tokens scaled by `CMTAT_DECIMALS`.
   - Before, the defaults were base units, so with `CMTAT_DECIMALS = 18` the default supply cap allowed 0.000000000001 tokens and every mint failed. Unchanged at the default 0 decimals; a value set in the environment is still base units.
   - `CMTAT_MAX_SUPPLY` was read in two scripts, each with its own copy of the default. Found by the first static analysis of `script/` (Aderyn, large numeric literals); pinned by `test/DeploymentScripts/CMTATDeploymentBase.t.sol`.
+- Deployment scripts: the token is created with its final `admin` whenever possible, with the rule or RuleEngine passed in its constructor, instead of with the deployer as a temporary admin followed by `setRuleEngine` and a hand-over.
+  - Seven single-rule scripts (whitelist, receiver whitelist, spender whitelist, blacklist, sanctions list, ERC-2980, identity registry) no longer take a `deployer` argument: `deploy(admin, forwarder, ...)`. The deployer never holds a role, and the token never exists without its rule.
+  - The wrapper, conditional-transfer and mint-allowance scripts keep a temporary admin on the wrapper or the rule only, for `addRule` / `bindToken`. The two RuleEngine scripts keep one on the engine only: it is deployed without a token, passed to the token's constructor, and binds the token last.
+  - The max-total-supply, max-balance, Chainlink PoR and issuance-cap scripts keep the token's temporary admin, because their rule needs the token's address and can only be installed with `setRuleEngine` afterwards. Every script that keeps a temporary admin explains why in a comment above its hand-over.
 
 ### Fixed
 

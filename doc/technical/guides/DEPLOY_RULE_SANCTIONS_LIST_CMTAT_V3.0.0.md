@@ -189,6 +189,8 @@ sequenceDiagram
     Admin->>Rule: sanctionsList() returns oracle
 ```
 
+The repository script `script/DeployCMTATWithBlacklistAndSanctionsList.s.sol` follows this order with a blacklist as a second rule, but deploys the current CMTAT (v3.3), not v3.0.0. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+
 ### 4.4 Behind a RuleEngine, after deployment
 
 1. **Deploy the token** with `Engine(ruleEngine = address(0), ...)`. Do not mint yet.
@@ -214,8 +216,6 @@ sequenceDiagram
     Admin->>Token: grantRole(MINTER_ROLE, minter)
     Admin->>Rule: sanctionsList() returns oracle
 ```
-
-The repository script `script/DeployCMTATWithBlacklistAndSanctionsList.s.sol` follows this order with a blacklist as a second rule, but deploys the current CMTAT (v3.3), not v3.0.0. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
 
 A RuleEngine serving one token is the intended setup. `RuleSanctionsList` itself would work for several tokens (it reads no token state), and they would all follow the same oracle.
 

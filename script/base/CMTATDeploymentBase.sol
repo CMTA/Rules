@@ -88,14 +88,24 @@ abstract contract CMTATDeploymentBase is Script {
     }
 
     /**
-     * @notice The engine slot passed at construction.
-     * @dev Always empty. Every script wires the engine (or the rule, in direct-binding mode) after
-     *      deployment with `setRuleEngine`, because the engine has to know the token address and the
-     *      token has to exist first.
+     * @notice The engine slot passed at construction, empty.
+     * @dev For the scripts whose rule needs the token's address, and so can only be installed with
+     *      `setRuleEngine` once the token exists.
      * @return engines A struct holding the zero rule engine.
      */
     function _emptyEngine() internal pure virtual returns (ICMTATConstructor.Engine memory engines) {
         engines = ICMTATConstructor.Engine(IRuleEngine(address(0)));
+    }
+
+    /**
+     * @notice The engine slot passed at construction, holding a rule or a RuleEngine.
+     * @dev Installing it in the constructor lets the token be created with its final admin: no later
+     *      `setRuleEngine`, so no temporary admin role for the deployer.
+     * @param ruleEngine The rule, or RuleEngine, the token calls on every transfer.
+     * @return engines A struct holding `ruleEngine`.
+     */
+    function _engine(IRuleEngine ruleEngine) internal pure virtual returns (ICMTATConstructor.Engine memory engines) {
+        engines = ICMTATConstructor.Engine(ruleEngine);
     }
 
     /**

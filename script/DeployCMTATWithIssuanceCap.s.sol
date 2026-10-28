@@ -50,6 +50,10 @@ contract DeployCMTATWithIssuanceCap is CMTATDeploymentBase {
         rule.bindToken(address(token));
         token.setRuleEngine(IRuleEngine(address(rule)));
 
+        // Why the deployer is the token's temporary admin: the rule needs the token's address, so it
+        // can only be installed after the token exists, and `setRuleEngine` needs the token's admin.
+        // Hand the role over now. Skipped when both are the same address: the renounce would then
+        // remove the only admin.
         if (admin != deployer) {
             rule.grantRole(rule.DEFAULT_ADMIN_ROLE(), admin);
             rule.renounceRole(rule.DEFAULT_ADMIN_ROLE(), deployer);
