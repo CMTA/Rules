@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-28 13:44:39</td>
+            <td class="headerValue">2026-10-28 14:03:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">15</td>
@@ -224,10 +224,10 @@
 <a name="153"><span class="lineNum">     153 </span>           [<span class="branchCov" title="Branch 0 was taken 17 times"> + </span>]:<span class="lineCov">      39516 :         if (_ruleNotBound()) {</span></a>
 <a name="154"><span class="lineNum">     154 </span>                :<span class="lineCov">         17 :             return CODE_RULE_NOT_BOUND;</span></a>
 <a name="155"><span class="lineNum">     155 </span>                :            :         }</a>
-<a name="156"><span class="lineNum">     156 </span>           [<span class="branchCov" title="Branch 0 was taken 16317 times"> + </span>]:<span class="lineCov">      39499 :         if (from == address(0) &amp;&amp; _issuanceExceededBy(value)) {</span></a>
-<a name="157"><span class="lineNum">     157 </span>                :<span class="lineCov">      16317 :             return CODE_ISSUANCE_CAP_EXCEEDED;</span></a>
+<a name="156"><span class="lineNum">     156 </span>           [<span class="branchCov" title="Branch 0 was taken 16376 times"> + </span>]:<span class="lineCov">      39499 :         if (from == address(0) &amp;&amp; _issuanceExceededBy(value)) {</span></a>
+<a name="157"><span class="lineNum">     157 </span>                :<span class="lineCov">      16376 :             return CODE_ISSUANCE_CAP_EXCEEDED;</span></a>
 <a name="158"><span class="lineNum">     158 </span>                :            :         }</a>
-<a name="159"><span class="lineNum">     159 </span>                :<span class="lineCov">      23182 :         return super._detectTransferRestriction(from, to, value);</span></a>
+<a name="159"><span class="lineNum">     159 </span>                :<span class="lineCov">      23123 :         return super._detectTransferRestriction(from, to, value);</span></a>
 <a name="160"><span class="lineNum">     160 </span>                :            :     }</a>
 <a name="161"><span class="lineNum">     161 </span>                :            : </a>
 <a name="162"><span class="lineNum">     162 </span>                :            :     /**</a>
@@ -235,19 +235,19 @@
 <a name="164"><span class="lineNum">     164 </span>                :            :      * @dev Re-checks the counter with the real amount: on a re-phased (ERC-3643) write path the inherited</a>
 <a name="165"><span class="lineNum">     165 </span>                :            :      * check runs with `value = 0` and would not catch it.</a>
 <a name="166"><span class="lineNum">     166 </span>                :            :      */</a>
-<a name="167"><span class="lineNum">     167 </span>                :<span class="lineCov">       3936 :     function _afterMintChecked(uint256 value) internal virtual override {</span></a>
+<a name="167"><span class="lineNum">     167 </span>                :<span class="lineCov">       3873 :     function _afterMintChecked(uint256 value) internal virtual override {</span></a>
 <a name="168"><span class="lineNum">     168 </span>                :            :         // Both slots are read once, into locals: `require` evaluates its error arguments on the success path too.</a>
-<a name="169"><span class="lineNum">     169 </span>                :<span class="lineCov">       3936 :         uint256 issued = totalIssued;</span></a>
-<a name="170"><span class="lineNum">     170 </span>                :<span class="lineCov">       3936 :         uint256 cap = maxTotalSupply;</span></a>
-<a name="171"><span class="lineNum">     171 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 3935 times"> + </span>]:<span class="lineCov">       3936 :         require(</span></a>
+<a name="169"><span class="lineNum">     169 </span>                :<span class="lineCov">       3873 :         uint256 issued = totalIssued;</span></a>
+<a name="170"><span class="lineNum">     170 </span>                :<span class="lineCov">       3873 :         uint256 cap = maxTotalSupply;</span></a>
+<a name="171"><span class="lineNum">     171 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 3872 times"> + </span>]:<span class="lineCov">       3873 :         require(</span></a>
 <a name="172"><span class="lineNum">     172 </span>                :            :             !_capExceededBy(issued, cap, value), RuleIssuanceCap_IssuanceCapExceeded(address(this), issued, cap, value)</a>
 <a name="173"><span class="lineNum">     173 </span>                :            :         );</a>
-<a name="174"><span class="lineNum">     174 </span>           [<span class="branchCov" title="Branch 0 was taken 158 times"> + </span>]:<span class="lineCov">       3935 :         if (value == 0) {</span></a>
-<a name="175"><span class="lineNum">     175 </span>                :<span class="lineCov">        158 :             return;</span></a>
+<a name="174"><span class="lineNum">     174 </span>           [<span class="branchCov" title="Branch 0 was taken 161 times"> + </span>]:<span class="lineCov">       3872 :         if (value == 0) {</span></a>
+<a name="175"><span class="lineNum">     175 </span>                :<span class="lineCov">        161 :             return;</span></a>
 <a name="176"><span class="lineNum">     176 </span>                :            :         }</a>
-<a name="177"><span class="lineNum">     177 </span>                :<span class="lineCov">       3777 :         issued += value;</span></a>
-<a name="178"><span class="lineNum">     178 </span>                :<span class="lineCov">       3777 :         totalIssued = issued;</span></a>
-<a name="179"><span class="lineNum">     179 </span>                :<span class="lineCov">       3777 :         emit IssuanceRecorded(value, issued);</span></a>
+<a name="177"><span class="lineNum">     177 </span>                :<span class="lineCov">       3711 :         issued += value;</span></a>
+<a name="178"><span class="lineNum">     178 </span>                :<span class="lineCov">       3711 :         totalIssued = issued;</span></a>
+<a name="179"><span class="lineNum">     179 </span>                :<span class="lineCov">       3711 :         emit IssuanceRecorded(value, issued);</span></a>
 <a name="180"><span class="lineNum">     180 </span>                :            :     }</a>
 <a name="181"><span class="lineNum">     181 </span>                :            : </a>
 <a name="182"><span class="lineNum">     182 </span>                :            :     /**</a>

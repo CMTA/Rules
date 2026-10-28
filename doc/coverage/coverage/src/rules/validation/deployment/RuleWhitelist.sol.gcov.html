@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-28 13:44:39</td>
+            <td class="headerValue">2026-10-28 14:03:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">8</td>
@@ -143,7 +143,7 @@
 <a name="72"><span class="lineNum">      72 </span>                :            :     /**</a>
 <a name="73"><span class="lineNum">      73 </span>                :            :      * @notice Restricts adding addresses to the whitelist to holders of ADDRESS_LIST_ADD_ROLE.</a>
 <a name="74"><span class="lineNum">      74 </span>                :            :      */</a>
-<a name="75"><span class="lineNum">      75 </span>                :<span class="lineCov">        997 :     function _authorizeAddressListAdd() internal view virtual override onlyRole(ADDRESS_LIST_ADD_ROLE) {}</span></a>
+<a name="75"><span class="lineNum">      75 </span>                :<span class="lineCov">       1001 :     function _authorizeAddressListAdd() internal view virtual override onlyRole(ADDRESS_LIST_ADD_ROLE) {}</span></a>
 <a name="76"><span class="lineNum">      76 </span>                :            : </a>
 <a name="77"><span class="lineNum">      77 </span>                :            :     /**</a>
 <a name="78"><span class="lineNum">      78 </span>                :            :      * @notice Restricts removing addresses from the whitelist to holders of ADDRESS_LIST_REMOVE_ROLE.</a>
@@ -158,8 +158,8 @@
 <a name="87"><span class="lineNum">      87 </span>                :            :      * @notice Returns the message sender, accounting for meta-transaction (ERC-2771) context.</a>
 <a name="88"><span class="lineNum">      88 </span>                :            :      * @return sender The address of the message sender.</a>
 <a name="89"><span class="lineNum">      89 </span>                :            :      */</a>
-<a name="90"><span class="lineNum">      90 </span>                :<span class="lineCov">       1624 :     function _msgSender() internal view virtual override(Context, RuleAddressSet) returns (address sender) {</span></a>
-<a name="91"><span class="lineNum">      91 </span>                :<span class="lineCov">       1624 :         return super._msgSender();</span></a>
+<a name="90"><span class="lineNum">      90 </span>                :<span class="lineCov">       1628 :     function _msgSender() internal view virtual override(Context, RuleAddressSet) returns (address sender) {</span></a>
+<a name="91"><span class="lineNum">      91 </span>                :<span class="lineCov">       1628 :         return super._msgSender();</span></a>
 <a name="92"><span class="lineNum">      92 </span>                :            :     }</a>
 <a name="93"><span class="lineNum">      93 </span>                :            : </a>
 <a name="94"><span class="lineNum">      94 </span>                :            :     /**</a>
@@ -174,8 +174,8 @@
 <a name="103"><span class="lineNum">     103 </span>                :            :      * @notice Returns the length of the context suffix appended by the forwarder.</a>
 <a name="104"><span class="lineNum">     104 </span>                :            :      * @return The context suffix length in bytes.</a>
 <a name="105"><span class="lineNum">     105 </span>                :            :      */</a>
-<a name="106"><span class="lineNum">     106 </span>                :<span class="lineCov">       1625 :     function _contextSuffixLength() internal view virtual override(Context, RuleAddressSet) returns (uint256) {</span></a>
-<a name="107"><span class="lineNum">     107 </span>                :<span class="lineCov">       1625 :         return super._contextSuffixLength();</span></a>
+<a name="106"><span class="lineNum">     106 </span>                :<span class="lineCov">       1629 :     function _contextSuffixLength() internal view virtual override(Context, RuleAddressSet) returns (uint256) {</span></a>
+<a name="107"><span class="lineNum">     107 </span>                :<span class="lineCov">       1629 :         return super._contextSuffixLength();</span></a>
 <a name="108"><span class="lineNum">     108 </span>                :            :     }</a>
 <a name="109"><span class="lineNum">     109 </span>                :            : }</a>
 </pre>

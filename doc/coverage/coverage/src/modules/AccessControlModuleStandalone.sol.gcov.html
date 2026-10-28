@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-28 13:44:39</td>
+            <td class="headerValue">2026-10-28 14:03:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">2</td>
@@ -123,10 +123,10 @@
 <a name="52"><span class="lineNum">      52 </span>                :            :     {</a>
 <a name="53"><span class="lineNum">      53 </span>                :            :         // Dev note: default admin is treated as having all roles but may not appear in enumerable role members.</a>
 <a name="54"><span class="lineNum">      54 </span>                :            :         // The Default Admin has all roles</a>
-<a name="55"><span class="lineNum">      55 </span>        [<span class="branchCov" title="Branch 0 was taken 39960 times"> + </span><span class="branchCov" title="Branch 1 was taken 19809 times"> + </span>]:<span class="lineCov">      59769 :         if (AccessControl.hasRole(DEFAULT_ADMIN_ROLE, account)) {</span></a>
-<a name="56"><span class="lineNum">      56 </span>                :<span class="lineCov">      39960 :             return true;</span></a>
+<a name="55"><span class="lineNum">      55 </span>        [<span class="branchCov" title="Branch 0 was taken 39955 times"> + </span><span class="branchCov" title="Branch 1 was taken 19822 times"> + </span>]:<span class="lineCov">      59777 :         if (AccessControl.hasRole(DEFAULT_ADMIN_ROLE, account)) {</span></a>
+<a name="56"><span class="lineNum">      56 </span>                :<span class="lineCov">      39955 :             return true;</span></a>
 <a name="57"><span class="lineNum">      57 </span>                :            :         } else {</a>
-<a name="58"><span class="lineNum">      58 </span>                :<span class="lineCov">      19809 :             return AccessControl.hasRole(role, account);</span></a>
+<a name="58"><span class="lineNum">      58 </span>                :<span class="lineCov">      19822 :             return AccessControl.hasRole(role, account);</span></a>
 <a name="59"><span class="lineNum">      59 </span>                :            :         }</a>
 <a name="60"><span class="lineNum">      60 </span>                :            :     }</a>
 <a name="61"><span class="lineNum">      61 </span>                :            : }</a>

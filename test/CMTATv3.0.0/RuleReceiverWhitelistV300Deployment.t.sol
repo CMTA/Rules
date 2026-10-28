@@ -22,7 +22,7 @@ import {
  * on the receiver, and a de-listed holder can still send to a listed receiver.
  */
 contract RuleReceiverWhitelistV300DeploymentTest is Test, HelperContract {
-    uint8 private constant CODE_RECEIVER = 81;
+    uint8 private constant CODE_RECEIVER = 90;
     RuleReceiverWhitelist private rule;
 
     function setUp() public {

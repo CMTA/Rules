@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-28 13:44:39</td>
+            <td class="headerValue">2026-10-28 14:03:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">21</td>
@@ -184,12 +184,12 @@
 <a name="113"><span class="lineNum">     113 </span>                :            :      * @param minter The minter whose allowance is decreased.</a>
 <a name="114"><span class="lineNum">     114 </span>                :            :      * @param amount The amount to subtract from the allowance.</a>
 <a name="115"><span class="lineNum">     115 </span>                :            :      */</a>
-<a name="116"><span class="lineNum">     116 </span>                :<span class="lineCov">       3113 :     function decreaseMintAllowance(address minter, uint256 amount) public virtual onlyAllowanceOperator {</span></a>
-<a name="117"><span class="lineNum">     117 </span>                :<span class="lineCov">       3112 :         uint256 current = mintAllowance[minter];</span></a>
-<a name="118"><span class="lineNum">     118 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 3111 times"> + </span>]:<span class="lineCov">       3112 :         require(amount &lt;= current, RuleMintAllowance_DecreaseBelowZero(minter, current, amount));</span></a>
-<a name="119"><span class="lineNum">     119 </span>                :<span class="lineCov">       3111 :         uint256 newAllowance = current - amount;</span></a>
-<a name="120"><span class="lineNum">     120 </span>                :<span class="lineCov">       3111 :         mintAllowance[minter] = newAllowance;</span></a>
-<a name="121"><span class="lineNum">     121 </span>                :<span class="lineCov">       3111 :         emit MintAllowanceDecreased(minter, amount, newAllowance);</span></a>
+<a name="116"><span class="lineNum">     116 </span>                :<span class="lineCov">       3109 :     function decreaseMintAllowance(address minter, uint256 amount) public virtual onlyAllowanceOperator {</span></a>
+<a name="117"><span class="lineNum">     117 </span>                :<span class="lineCov">       3108 :         uint256 current = mintAllowance[minter];</span></a>
+<a name="118"><span class="lineNum">     118 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 3107 times"> + </span>]:<span class="lineCov">       3108 :         require(amount &lt;= current, RuleMintAllowance_DecreaseBelowZero(minter, current, amount));</span></a>
+<a name="119"><span class="lineNum">     119 </span>                :<span class="lineCov">       3107 :         uint256 newAllowance = current - amount;</span></a>
+<a name="120"><span class="lineNum">     120 </span>                :<span class="lineCov">       3107 :         mintAllowance[minter] = newAllowance;</span></a>
+<a name="121"><span class="lineNum">     121 </span>                :<span class="lineCov">       3107 :         emit MintAllowanceDecreased(minter, amount, newAllowance);</span></a>
 <a name="122"><span class="lineNum">     122 </span>                :            :     }</a>
 <a name="123"><span class="lineNum">     123 </span>                :            : </a>
 <a name="124"><span class="lineNum">     124 </span>                :            :     /**</a>
@@ -253,13 +253,13 @@
 <a name="182"><span class="lineNum">     182 </span>                :            :      * @param to The recipient address.</a>
 <a name="183"><span class="lineNum">     183 </span>                :            :      * @param value The amount transferred.</a>
 <a name="184"><span class="lineNum">     184 </span>                :            :      */</a>
-<a name="185"><span class="lineNum">     185 </span>                :<span class="lineCov">       6833 :     function transferred(address spender, address from, address to, uint256 value)</span></a>
+<a name="185"><span class="lineNum">     185 </span>                :<span class="lineCov">       6847 :     function transferred(address spender, address from, address to, uint256 value)</span></a>
 <a name="186"><span class="lineNum">     186 </span>                :            :         public</a>
 <a name="187"><span class="lineNum">     187 </span>                :            :         virtual</a>
 <a name="188"><span class="lineNum">     188 </span>                :            :         override(IRule, IRuleEngine)</a>
 <a name="189"><span class="lineNum">     189 </span>                :            :         onlyBoundToken</a>
 <a name="190"><span class="lineNum">     190 </span>                :            :     {</a>
-<a name="191"><span class="lineNum">     191 </span>                :<span class="lineCov">       6830 :         _transferredFrom(spender, from, to, value);</span></a>
+<a name="191"><span class="lineNum">     191 </span>                :<span class="lineCov">       6844 :         _transferredFrom(spender, from, to, value);</span></a>
 <a name="192"><span class="lineNum">     192 </span>                :            :     }</a>
 <a name="193"><span class="lineNum">     193 </span>                :            : </a>
 <a name="194"><span class="lineNum">     194 </span>                :            :     /**</a>
@@ -358,15 +358,15 @@
 <a name="287"><span class="lineNum">     287 </span>                :            :      * @param from The sender address (must be address(0) to deduct).</a>
 <a name="288"><span class="lineNum">     288 </span>                :            :      * @param value The amount minted.</a>
 <a name="289"><span class="lineNum">     289 </span>                :            :      */</a>
-<a name="290"><span class="lineNum">     290 </span>                :<span class="lineCov">       6830 :     function _transferredFrom(address spender, address from, address, uint256 value) internal virtual {</span></a>
-<a name="291"><span class="lineNum">     291 </span>           [<span class="branchCov" title="Branch 0 was taken 6830 times"> + </span>]:<span class="lineCov">       6830 :         if (from != address(0)) {</span></a>
-<a name="292"><span class="lineNum">     292 </span>                :<span class="lineCov">       6830 :             return;</span></a>
+<a name="290"><span class="lineNum">     290 </span>                :<span class="lineCov">       6844 :     function _transferredFrom(address spender, address from, address, uint256 value) internal virtual {</span></a>
+<a name="291"><span class="lineNum">     291 </span>           [<span class="branchCov" title="Branch 0 was taken 6844 times"> + </span>]:<span class="lineCov">       6844 :         if (from != address(0)) {</span></a>
+<a name="292"><span class="lineNum">     292 </span>                :<span class="lineCov">       6844 :             return;</span></a>
 <a name="293"><span class="lineNum">     293 </span>                :            :         }</a>
-<a name="294"><span class="lineNum">     294 </span>                :<span class="lineCov">       3551 :         uint256 current = mintAllowance[spender];</span></a>
-<a name="295"><span class="lineNum">     295 </span>        [<span class="branchCov" title="Branch 0 was taken 265 times"> + </span><span class="branchCov" title="Branch 1 was taken 3286 times"> + </span>]:<span class="lineCov">       3551 :         require(value &lt;= current, RuleMintAllowance_AllowanceExceeded(address(this), spender, current, value));</span></a>
-<a name="296"><span class="lineNum">     296 </span>                :<span class="lineCov">       3286 :         uint256 remaining = current - value;</span></a>
-<a name="297"><span class="lineNum">     297 </span>                :<span class="lineCov">       3286 :         mintAllowance[spender] = remaining;</span></a>
-<a name="298"><span class="lineNum">     298 </span>                :<span class="lineCov">       3286 :         emit MintAllowanceConsumed(spender, value, remaining);</span></a>
+<a name="294"><span class="lineNum">     294 </span>                :<span class="lineCov">       3565 :         uint256 current = mintAllowance[spender];</span></a>
+<a name="295"><span class="lineNum">     295 </span>        [<span class="branchCov" title="Branch 0 was taken 263 times"> + </span><span class="branchCov" title="Branch 1 was taken 3302 times"> + </span>]:<span class="lineCov">       3565 :         require(value &lt;= current, RuleMintAllowance_AllowanceExceeded(address(this), spender, current, value));</span></a>
+<a name="296"><span class="lineNum">     296 </span>                :<span class="lineCov">       3302 :         uint256 remaining = current - value;</span></a>
+<a name="297"><span class="lineNum">     297 </span>                :<span class="lineCov">       3302 :         mintAllowance[spender] = remaining;</span></a>
+<a name="298"><span class="lineNum">     298 </span>                :<span class="lineCov">       3302 :         emit MintAllowanceConsumed(spender, value, remaining);</span></a>
 <a name="299"><span class="lineNum">     299 </span>                :            :     }</a>
 <a name="300"><span class="lineNum">     300 </span>                :            : </a>
 <a name="301"><span class="lineNum">     301 </span>                :            :     /**</a>

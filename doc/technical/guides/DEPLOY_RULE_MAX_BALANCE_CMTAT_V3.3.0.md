@@ -44,14 +44,14 @@ Every setup below is tested against a real v3.3.0-rc4 token (Standard variant):
 
 | Operation | Checked by `RuleMaxBalance` | Rejected with |
 | --- | --- | --- |
-| Transfer, `transferFrom` of `value` to `to` | `balanceOf(to) + value <= maxBalance`, with `balanceOf(to)` read from the token before the move. The sender and the spender are never checked | 82 (cap exceeded), 83 (`balanceOf` unreadable) |
-| Mint of `value` to `to` | the same check on the receiver | 82, 83 |
+| Transfer, `transferFrom` of `value` to `to` | `balanceOf(to) + value <= maxBalance`, with `balanceOf(to)` read from the token before the move. The sender and the spender are never checked | 80 (cap exceeded), 81 (`balanceOf` unreadable) |
+| Mint of `value` to `to` | the same check on the receiver | 80, 81 |
 | Burn | nothing: a burn only lowers a balance | never |
 | Any operation to an exempt address | nothing: an exempt address may hold any amount | never |
 
 On v3.3.0 mint and burn call the rule through the 4-argument `transferred(spender, from, to, value)`, with the minter or burner as `spender`, and `transferFrom` takes the same path with the caller as `spender`. A plain `transfer` takes the 3-argument path. The rule ignores the spender in every case, since the cap concerns who ends up holding the tokens.
 
-**`maxBalance = 0` forbids holding.** It does not disable the rule: every mint or transfer to a non-exempt address is then rejected with code 82. To lift the cap, set `type(uint256).max` or remove the rule.
+**`maxBalance = 0` forbids holding.** It does not disable the rule: every mint or transfer to a non-exempt address is then rejected with code 80. To lift the cap, set `type(uint256).max` or remove the rule.
 
 **The cap is in base units.** It is compared as-is with `balanceOf`. On a 0-decimal token (a typical CMTAT share), `50_000` means 50,000 shares; on an 18-decimal token it is `50_000 * 10**18`.
 
@@ -99,7 +99,7 @@ Each setup lists its steps, then draws them as a sequence diagram. The calls are
 | --- | --- | --- | --- |
 | `admin` | `address` | Receives `DEFAULT_ADMIN_ROLE`, which implicitly holds every role of the rule. Set it to the account (ideally a multisig) that will operate the rule. | Reverts if `address(0)`. On the `Ownable2Step` variant this parameter is `owner`, who then holds every privileged function |
 | `balanceToken_` | `address` | The token whose `balanceOf` the rule reads to check the receiver's balance. | Must be non-zero, have code and answer `balanceOf`, so the rule is deployed after the token |
-| `maxBalance_` | `uint256` | The largest balance a non-exempt address may hold, in base units. A transfer or mint that would push the receiver above it is refused (code 82). | `0` forbids holding entirely, it does not disable the rule. Change later with `setMaxBalance` |
+| `maxBalance_` | `uint256` | The largest balance a non-exempt address may hold, in base units. A transfer or mint that would push the receiver above it is refused (code 80). | `0` forbids holding entirely, it does not disable the rule. Change later with `setMaxBalance` |
 
 ### 4.1 Behind a RuleEngine, set at deployment (recommended)
 
@@ -110,7 +110,7 @@ Each setup lists its steps, then draws them as a sequence diagram. The calls are
 5. **Add the rules:** `engine.addRule(whitelist)` and `engine.addRule(rule)` (`RULES_MANAGEMENT_ROLE`).
 6. **Bind the token last:** `engine.bindToken(token)` (`COMPLIANCE_MANAGER_ROLE`). From now on the token works, and the cap holds from the first mint.
 7. **Grant `MINTER_ROLE`** to the issuer's minting address, if it is not the admin.
-8. **Check the setup:** `rule.remainingCapacity(investor)` returns `(0, cap)`; on the Standard variant, `token.detectTransferRestriction(address(0), investor, cap + 1)` returns 82.
+8. **Check the setup:** `rule.remainingCapacity(investor)` returns `(0, cap)`; on the Standard variant, `token.detectTransferRestriction(address(0), investor, cap + 1)` returns 80.
 
 ```mermaid
 sequenceDiagram
@@ -216,8 +216,8 @@ sequenceDiagram
     Rule->>Rule: to exempt? (then accepted, no balance read)
     Rule->>Token: balanceOf(to) (read before the mint, so it excludes value)
     Token-->>Rule: balance
-    Rule->>Rule: balance unreadable? (else code 83)
-    Rule->>Rule: value > maxBalance - balance? (code 82)
+    Rule->>Rule: balance unreadable? (else code 81)
+    Rule->>Rule: value > maxBalance - balance? (code 80)
     alt rejected
         Rule-->>Token: revert RuleMaxBalance_InvalidTransferFrom(rule, minter, 0, to, value, code)
         Token-->>Minter: whole mint reverts
@@ -252,8 +252,8 @@ sequenceDiagram
     Rule->>Rule: to exempt? (then accepted, no balance read)
     Rule->>Token: balanceOf(to) (read before the mint, so it excludes value)
     Token-->>Rule: balance
-    Rule->>Rule: balance unreadable? (else code 83)
-    Rule->>Rule: value > maxBalance - balance? (code 82)
+    Rule->>Rule: balance unreadable? (else code 81)
+    Rule->>Rule: value > maxBalance - balance? (code 80)
     alt rejected
         Rule-->>Engine: revert RuleMaxBalance_InvalidTransferFrom(rule, minter, 0, to, value, code)
         Engine-->>Token: revert bubbles up
@@ -314,8 +314,8 @@ sequenceDiagram
     Rule->>Rule: to exempt? (then accepted, no balance read)
     Rule->>Token: balanceOf(to)
     Token-->>Rule: balance
-    Rule->>Rule: balance unreadable? (else code 83)
-    Rule->>Rule: value > maxBalance - balance? (code 82)
+    Rule->>Rule: balance unreadable? (else code 81)
+    Rule->>Rule: value > maxBalance - balance? (code 80)
     alt rejected
         Rule-->>Token: revert RuleMaxBalance_InvalidTransfer(rule, from, to, value, code)
         Token-->>Holder: whole transfer reverts
@@ -349,7 +349,7 @@ sequenceDiagram
     Rule->>Rule: to exempt? (then accepted, no balance read)
     Rule->>Token: balanceOf(to)
     Token-->>Rule: balance
-    Rule->>Rule: value > maxBalance - balance? (code 82, or 83 if unreadable)
+    Rule->>Rule: value > maxBalance - balance? (code 80, or 81 if unreadable)
     alt rejected
         Rule-->>Engine: revert RuleMaxBalance_InvalidTransfer(rule, from, to, value, code)
         Engine-->>Token: revert bubbles up
@@ -410,7 +410,7 @@ sequenceDiagram
     Token-->>Burner: Transfer(from, address(0), value)
 ```
 
-Before sending or minting, a front end can size the amount without a transaction: `rule.remainingCapacity(to)` returns `(0, headroom)`, where `headroom` is `type(uint256).max` for an exempt address, or `(83, 0)` if the balance cannot be read. On the Standard variant `token.detectTransferRestriction(from, to, value)` returns the code the operation would fail with; the Debt variant has no ERC-1404 layer, so use `token.canTransfer(from, to, value)`.
+Before sending or minting, a front end can size the amount without a transaction: `rule.remainingCapacity(to)` returns `(0, headroom)`, where `headroom` is `type(uint256).max` for an exempt address, or `(81, 0)` if the balance cannot be read. On the Standard variant `token.detectTransferRestriction(from, to, value)` returns the code the operation would fail with; the Debt variant has no ERC-1404 layer, so use `token.canTransfer(from, to, value)`.
 
 ## 7. Operating the token
 
@@ -426,7 +426,7 @@ Before sending or minting, a front end can size the amount without a transaction
 Key warnings:
 
 - **Lowering the cap, or removing an exemption, takes nothing back.** An address above the cap keeps its tokens and may still send them; it only cannot receive more until back under the cap.
-- **A zero-value transfer to an address above the cap is rejected** with code 82, although nothing moves.
+- **A zero-value transfer to an address above the cap is rejected** with code 80, although nothing moves.
 - **`forcedTransfer` does not call the compliance contract,** so the admin can push an address above the cap with it.
 - **An exempt address may hold any amount.** If the cap implements a regulatory concentration limit, each exemption is a policy decision.
 - **The cap holds per address only.** Keep the onboarding rule of one admitted address per investor (§1).

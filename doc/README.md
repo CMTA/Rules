@@ -163,7 +163,7 @@ That second case is the reason the two contracts compose, and it is pinned end t
 
 ERC-3643 requires that **only the receiver** be verified: `transferFrom` works the same way, `mint` and `forcedTransfer` check only the receiver, and `burn` bypasses eligibility entirely. That asymmetry is deliberate — screening the sender would trap a de-listed holder in their position.
 
-- [`RuleReceiverWhitelist`](./technical/contracts/RuleReceiverWhitelist.md) reproduces this exactly (code `81`).
+- [`RuleReceiverWhitelist`](./technical/contracts/RuleReceiverWhitelist.md) reproduces this exactly (code `90`).
 - [`RuleIdentityRegistry`](./technical/contracts/RuleIdentityRegistry.md) defaults to the same behaviour, with `checkSender` / `checkSpender` available as explicit opt-ins, both `false` by default.
 
 Every rule and the registry implement `IERC3643Version`, so `version()` is queryable on-chain.
@@ -305,14 +305,14 @@ Here is the list of codes used by the different rules. Each row names every rule
 |                                                                      | CODE_RESERVES_ANSWER_INVALID                              | 77    |
 |                                                                      | CODE_TOTAL_SUPPLY_UNAVAILABLE                             | 78    |
 |                                                                      | CODE_RESERVES_FEED_UNAVAILABLE                            | 79    |
-|                                                                      | Reserved slot                                             | 80    |
-| RuleReceiverWhitelist                                                | CODE_ADDRESS_RECEIVER_NOT_WHITELISTED                     | 81    |
-| RuleMaxBalance                                                       | CODE_MAX_BALANCE_EXCEEDED                                 | 82    |
-|                                                                      | CODE_BALANCE_UNAVAILABLE                                  | 83    |
-|                                                                      | Reserved slot                                             | 84    |
+| RuleMaxBalance                                                       | CODE_MAX_BALANCE_EXCEEDED                                 | 80    |
+|                                                                      | CODE_BALANCE_UNAVAILABLE                                  | 81    |
+|                                                                      | Reserved slot                                             | 82-84 |
 | RuleConditionalTransferLight, RuleMintAllowance, RuleIssuanceCap     | CODE_RULE_NOT_BOUND (shared, same message)                | 85    |
 | RuleIssuanceCap                                                      | CODE_ISSUANCE_CAP_EXCEEDED                                | 86    |
 |                                                                      | Reserved slot                                             | 87-89 |
+| RuleReceiverWhitelist                                                | CODE_ADDRESS_RECEIVER_NOT_WHITELISTED                     | 90    |
+|                                                                      | Reserved slot                                             | 91-93 |
 
 Note:
 
@@ -321,6 +321,7 @@ Note:
 - Reserved slots are intentionally left unused for future rule expansion (maximum of 3 per rule).
 - New rule code blocks should start at codes ending in `1` or `6` (e.g., `21`, `26`), leaving the remaining codes in the previous block for that prior rule’s reserved slots.
 - Current allocations are legacy; new rules should follow the start-at-1-or-6 policy without changing existing codes.
+- Two rules have no reserved slot, because the next code was already taken: `RuleERC2980` (60-65, followed by `RuleSpenderWhitelist` at 66) and `RuleChainlinkPoR` (75-79, followed by `RuleMaxBalance` at 80). A new code for either rule takes the next free block starting at a code ending in `1` or `6` (currently `96`), and the code list records which rule it belongs to.
 
 ### Rules as Standalone Compliance Contracts
 
@@ -920,7 +921,7 @@ Caps how many tokens a single address may hold. One cap applies to every holder,
 
 **Usage scenario**
 
-An issuer must keep any single investor below 5% of a 1,000,000-token issue. They deploy `RuleWhitelist` and `RuleMaxBalance(admin, cmtat, 50_000)` in the same RuleEngine, admit exactly one address per onboarded investor, and exempt the treasury address holding the unsold allocation. An investor at 50,000 tokens can still sell, and can buy again once below the cap; a mint that would push them over is rejected with code `82`.
+An issuer must keep any single investor below 5% of a 1,000,000-token issue. They deploy `RuleWhitelist` and `RuleMaxBalance(admin, cmtat, 50_000)` in the same RuleEngine, admit exactly one address per onboarded investor, and exempt the treasury address holding the unsold allocation. An investor at 50,000 tokens can still sell, and can buy again once below the cap; a mint that would push them over is rejected with code `80`.
 
 #### Chainlink Proof of Reserve
 

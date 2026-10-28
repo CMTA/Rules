@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-28 13:44:39</td>
+            <td class="headerValue">2026-10-28 14:03:03</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">10</td>
@@ -215,10 +215,10 @@
 <a name="144"><span class="lineNum">     144 </span>                :            :         }</a>
 <a name="145"><span class="lineNum">     145 </span>                :            :         // The comparison, the overflow-safety and the pre-update accounting assumption all live in</a>
 <a name="146"><span class="lineNum">     146 </span>                :            :         // {CapAccounting}; the reserve figure is simply this rule's cap.</a>
-<a name="147"><span class="lineNum">     147 </span>           [<span class="branchCov" title="Branch 0 was taken 212 times"> + </span>]:<span class="lineCov">        409 :         if (_capExceededBy(currentSupply, backedSupply, value)) {</span></a>
-<a name="148"><span class="lineNum">     148 </span>                :<span class="lineCov">        212 :             return CODE_RESERVES_EXCEEDED;</span></a>
+<a name="147"><span class="lineNum">     147 </span>           [<span class="branchCov" title="Branch 0 was taken 214 times"> + </span>]:<span class="lineCov">        409 :         if (_capExceededBy(currentSupply, backedSupply, value)) {</span></a>
+<a name="148"><span class="lineNum">     148 </span>                :<span class="lineCov">        214 :             return CODE_RESERVES_EXCEEDED;</span></a>
 <a name="149"><span class="lineNum">     149 </span>                :            :         }</a>
-<a name="150"><span class="lineNum">     150 </span>                :<span class="lineCov">        197 :         return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
+<a name="150"><span class="lineNum">     150 </span>                :<span class="lineCov">        195 :         return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
 <a name="151"><span class="lineNum">     151 </span>                :            :     }</a>
 <a name="152"><span class="lineNum">     152 </span>                :            : </a>
 <a name="153"><span class="lineNum">     153 </span>                :            :     /**</a>

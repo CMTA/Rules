@@ -197,7 +197,7 @@ To combine the cap with other rules, use the three-rule script below, which puts
 
 Signature: `deploy(admin, forwarder)`.
 
-Screens only the receiver, as ERC-3643 eligibility does (code `81`). The sender and spender are never checked, so a holder removed from the list can still send to a listed receiver. Mints are screened on the receiver, with no `allowMint` flag; burns always pass. The list starts empty, so nothing can be minted until investors are added.
+Screens only the receiver, as ERC-3643 eligibility does (code `90`). The sender and spender are never checked, so a holder removed from the list can still send to a listed receiver. Mints are screened on the receiver, with no `allowMint` flag; burns always pass. The list starts empty, so nothing can be minted until investors are added.
 
 ### DeployCMTATWithSpenderWhitelist
 
@@ -233,7 +233,7 @@ Deploys an `IdentityRegistryWhitelist` owned by `admin` as the registry, and `Ru
 
 Signature: `deploy(admin, deployer, forwarder, maxBalance)`. `run()` reads the cap from `CMTAT_MAX_BALANCE`, default `100000` base units.
 
-Caps what one address may hold (codes `82`, `83`), screening the receiver; burns are exempt. Deployed after the token, which its constructor validates. **Bypassable by splitting a position across wallets**: in production combine it behind a RuleEngine with a one-address-per-investor rule. `maxBalance = 0` forbids holding, it does not disable the rule.
+Caps what one address may hold (codes `80`, `81`), screening the receiver; burns are exempt. Deployed after the token, which its constructor validates. **Bypassable by splitting a position across wallets**: in production combine it behind a RuleEngine with a one-address-per-investor rule. `maxBalance = 0` forbids holding, it does not disable the rule.
 
 ### DeployCMTATWithChainlinkPoR
 

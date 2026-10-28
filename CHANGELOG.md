@@ -147,6 +147,10 @@ Commit:
   - `RuleEngine` is now `constructor(admin, tokenContract)`; a forwarder needs `RuleEngine2771(admin, forwarder, tokenContract)`. The deployables moved to `RuleEngine/deployment/accessControl/` and `RuleEngine/deployment/ownable/`.
   - The `IRule` ERC-165 id changed to `0xb1a69752`. Every rule advertises both the new and the legacy id (`0x2497d6cb`), so no engine version rejects it.
   - No rule storage changed: no ERC-7201 namespace or slot moved.
+- **Restriction codes renumbered for two rules**, so that each has reserved slots after its code. Off-chain code matching on the old numbers must be updated.
+  - `RuleReceiverWhitelist`: `CODE_ADDRESS_RECEIVER_NOT_WHITELISTED` **81 → 90**, with 91-93 reserved.
+  - `RuleMaxBalance`: `CODE_MAX_BALANCE_EXCEEDED` **82 → 80** and `CODE_BALANCE_UNAVAILABLE` **83 → 81**, with 82-84 reserved.
+  - The constants keep their names, messages and meaning; only their values change. `RuleChainlinkPoR` gives up its reserved code 80 to `RuleMaxBalance` and keeps 75-79.
 
 ### Dependencies
 
@@ -231,7 +235,7 @@ Commit:
 - Tables of contents: the `[TOC]` placeholder, which GitHub shows as plain text, is replaced in 51 documents (`doc/technical/`, `doc/TOOLCHAIN.md`) by a generated list of links to the level-2 and level-3 headings, between `<!-- toc -->` markers so it can be regenerated.
 - Static analysis re-run before tagging (2026-10-28, solc `0.8.38`, EVM `osaka`): Slither 47 results (one more `dead-code` false positive), Aderyn 383 instances (+6 one-per-file for the three new storage contracts). Nothing to fix.
 - First static analysis of the deployment scripts: `slither-report-script.md`, `aderyn-report-script.md` and `script-report-feedback.md` in `doc/security/audits/tools/v0.7.0/`. Slither's default build skips `script/` and Aderyn does not accept it as a source folder; both reports record the command that brings the scripts into scope.
-- `doc/README.md` code list: each row now names every rule that can return the code (the whitelist wrapper for 21-25, both conditional-transfer rules for 46, the `…ERC3643` variants for 50-51 and 75-79, `RuleIssuanceCap` for 50-51), and the note on unique codes lists the shared exceptions.
+- `doc/README.md` code list: each row now names every rule that can return the code (the whitelist wrapper for 21-25, both conditional-transfer rules for 46, the `…ERC3643` variants for 50-51 and 75-79, `RuleIssuanceCap` for 50-51), and the note on unique codes lists the shared exceptions. A new note names the two rules left with no reserved slot (`RuleERC2980`, `RuleChainlinkPoR`) and where a future code for them would go.
 
 ### Testing
 

@@ -13,7 +13,7 @@ import {
  * @notice Only the receiver is screened, so a de-listed holder can still exit; burns are exempt.
  */
 abstract contract RuleReceiverWhitelistV300Test is CMTATv300TestBase {
-    uint8 constant CODE_RECEIVER = 81;
+    uint8 constant CODE_RECEIVER = 90;
     RuleReceiverWhitelist internal rule;
 
     function setUp() public {

@@ -14,7 +14,7 @@ contract DeployCMTATWithMaxBalanceTest is Test {
     uint256 constant CAP = 1_000;
 
     /// RuleMaxBalanceInvariantStorage.CODE_MAX_BALANCE_EXCEEDED
-    uint8 constant CODE_MAX_BALANCE_EXCEEDED = 82;
+    uint8 constant CODE_MAX_BALANCE_EXCEEDED = 80;
 
     DeployCMTATWithMaxBalance script;
     CMTATStandardStandalone token;

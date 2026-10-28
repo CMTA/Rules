@@ -56,7 +56,7 @@ Legend: ✅ screened / can block · ❌ not screened · ⚙️ conditional (see 
 |---|---|---|---|---|
 | `RuleWhitelist` | n/a (local address set) | ❌ | `canTransfer` / `canTransferFrom` | 21–25 |
 | `RuleWhitelistWrapper` | empty wrapper ⇒ **all rejected** (fail-closed); children must be allow-lists [12b] | ❌ | `canTransfer` / `canTransferFrom` | 21–25 |
-| `RuleReceiverWhitelist` | n/a (local address set) | ❌ | `canTransfer` / `canTransferFrom` | 81 |
+| `RuleReceiverWhitelist` | n/a (local address set) | ❌ | `canTransfer` / `canTransferFrom` | 90 |
 | `RuleSpenderWhitelist` | n/a (local address set) | ❌ | `canTransfer` (always ✓) / `canTransferFrom` | 66 |
 | `RuleBlacklist` | n/a (local address set) | ❌ | `canTransfer` / `canTransferFrom` | 36–38 |
 | `RuleSanctionsList` | oracle == 0 ⇒ **all allowed** (fail-open) [8] | ❌ | `canTransfer` / `canTransferFrom` | 30–32 |
