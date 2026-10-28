@@ -1,6 +1,41 @@
 # Rule ERC-2980
 
-[TOC]
+<!-- toc -->
+
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Restriction codes](#restriction-codes)
+- [Access Control](#access-control)
+- [Constructor burn configuration](#constructor-burn-configuration)
+- [Whitelist methods](#whitelist-methods)
+  - [addWhitelistAddress(address targetAddress)](#addwhitelistaddressaddress-targetaddress)
+  - [addWhitelistAddresses(address[] calldata targetAddresses)](#addwhitelistaddressesaddress-calldata-targetaddresses)
+  - [removeWhitelistAddress(address targetAddress)](#removewhitelistaddressaddress-targetaddress)
+  - [removeWhitelistAddresses(address[] calldata targetAddresses)](#removewhitelistaddressesaddress-calldata-targetaddresses)
+  - [isWhitelisted(address targetAddress) → bool](#iswhitelistedaddress-targetaddress--bool)
+  - [areWhitelisted(address[] memory targetAddresses) → bool[]](#arewhitelistedaddress-memory-targetaddresses--bool)
+  - [whitelistAddressCount() → uint256](#whitelistaddresscount--uint256)
+  - [whitelist(address _operator) → bool](#whitelistaddress-_operator--bool)
+- [Frozenlist methods](#frozenlist-methods)
+  - [addFrozenlistAddress(address targetAddress)](#addfrozenlistaddressaddress-targetaddress)
+  - [addFrozenlistAddresses(address[] calldata targetAddresses)](#addfrozenlistaddressesaddress-calldata-targetaddresses)
+  - [removeFrozenlistAddress(address targetAddress)](#removefrozenlistaddressaddress-targetaddress)
+  - [removeFrozenlistAddresses(address[] calldata targetAddresses)](#removefrozenlistaddressesaddress-calldata-targetaddresses)
+  - [isFrozen(address targetAddress) → bool](#isfrozenaddress-targetaddress--bool)
+  - [areFrozen(address[] memory targetAddresses) → bool[]](#arefrozenaddress-memory-targetaddresses--bool)
+  - [frozenlistAddressCount() → uint256](#frozenlistaddresscount--uint256)
+  - [frozenlist(address _operator) → bool](#frozenlistaddress-_operator--bool)
+- [Notes](#notes)
+  - [Sender whitelist exemption](#sender-whitelist-exemption)
+  - [Deviation from ERC-2980 example interface](#deviation-from-erc-2980-example-interface)
+  - [isVerified semantics](#isverified-semantics)
+- [Usage scenario](#usage-scenario)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 This rule implements the [ERC-2980](https://eips.ethereum.org/EIPS/eip-2980) Swiss Compliant Asset Token transfer restriction. It combines two independent address lists managed within a single contract:
 

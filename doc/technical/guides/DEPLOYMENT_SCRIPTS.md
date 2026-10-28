@@ -1,6 +1,25 @@
 # Deployment Scripts
 
-[TOC]
+<!-- toc -->
+
+- [Inventory](#inventory)
+- [The shape every script shares](#the-shape-every-script-shares)
+  - [Why the deployer is a parameter](#why-the-deployer-is-a-parameter)
+  - [Temporary admin and hand-over](#temporary-admin-and-hand-over)
+  - [The two topologies](#the-two-topologies)
+- [Configuration](#configuration)
+  - [Running](#running)
+- [The scripts](#the-scripts)
+  - [DeployCMTATWithWhitelist](#deploycmtatwithwhitelist)
+  - [DeployCMTATWithBlacklist](#deploycmtatwithblacklist)
+  - [DeployCMTATWithMaxTotalSupply](#deploycmtatwithmaxtotalsupply)
+  - [DeployCMTATWithBlacklistAndSanctionsList](#deploycmtatwithblacklistandsanctionslist)
+  - [DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply](#deploycmtatwithblacklistsanctionslistandmaxtotalsupply)
+- [After deployment](#after-deployment)
+- [Limitations](#limitations)
+- [Testing](#testing)
+
+<!-- /toc -->
 
 This document covers the Foundry scripts in [`script/`](../../../script/): what each one deploys, the shape they all share, how to configure them, what you still have to do after running one, and the limitations worth knowing before you use them on a real chain.
 

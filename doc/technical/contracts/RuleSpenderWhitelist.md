@@ -1,6 +1,25 @@
 # Rule SpenderWhitelist
 
-[TOC]
+<!-- toc -->
+
+- [Configuration](#configuration)
+  - [Constructor parameters](#constructor-parameters)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Restriction codes](#restriction-codes)
+- [Access control](#access-control)
+  - [AccessControlEnumerable variant (RuleSpenderWhitelist)](#accesscontrolenumerable-variant-rulespenderwhitelist)
+  - [Ownable2Step variant (RuleSpenderWhitelistOwnable2Step)](#ownable2step-variant-rulespenderwhitelistownable2step)
+- [Behavior](#behavior)
+  - [Direct transfer path](#direct-transfer-path)
+  - [Spender path (transferFrom)](#spender-path-transferfrom)
+- [Notes](#notes)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 This rule restricts only spender-initiated transfers (`transferFrom`): the spender must be listed in an internal whitelist. Regular transfers (`transfer`) are always accepted by this rule.
 

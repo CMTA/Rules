@@ -1,6 +1,32 @@
 # Rule Mint Allowance
 
-[TOC]
+<!-- toc -->
+
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Restriction codes](#restriction-codes)
+- [Access Control](#access-control)
+- [Methods](#methods)
+  - [setMintAllowance(address minter, uint256 amount)](#setmintallowanceaddress-minter-uint256-amount)
+  - [increaseMintAllowance(address minter, uint256 amount)](#increasemintallowanceaddress-minter-uint256-amount)
+  - [decreaseMintAllowance(address minter, uint256 amount)](#decreasemintallowanceaddress-minter-uint256-amount)
+  - [clearMintAllowances(address[] calldata minters)](#clearmintallowancesaddress-calldata-minters)
+  - [mintAllowance(address minter) → uint256](#mintallowanceaddress-minter--uint256)
+  - [bindToken(address token) / unbindToken(address token)](#bindtokenaddress-token--unbindtokenaddress-token)
+- [Workflow](#workflow)
+- [Allowance deduction](#allowance-deduction)
+- [Multiple minters](#multiple-minters)
+- [Notes](#notes)
+  - [3-arg transferred path](#3-arg-transferred-path)
+  - [Burns not restricted](#burns-not-restricted)
+  - [Eligibility views: which one is authoritative](#eligibility-views-which-one-is-authoritative)
+- [Usage scenario](#usage-scenario)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 This rule enforces a per-minter mint quota. An operator assigns each minter address a maximum number of tokens it is allowed to mint. Every successful mint reduces the minter's remaining allowance. The operator can adjust the allowance at any time by setting an absolute value or by incrementing/decrementing the current one.
 

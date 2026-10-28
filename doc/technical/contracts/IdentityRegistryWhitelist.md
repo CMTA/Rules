@@ -1,6 +1,31 @@
 # Identity Registry Whitelist (ERC-3643)
 
-[TOC]
+<!-- toc -->
+
+  - [Where the whitelist comes from](#where-the-whitelist-comes-from)
+- [Which ERC-3643 functions call the registry, and how](#which-erc-3643-functions-call-the-registry-and-how)
+  - [The recoveryAddress sequence](#the-recoveryaddress-sequence)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+- [Installation](#installation)
+- [Access Control](#access-control)
+- [Methods](#methods)
+  - [registerIdentity(address _userAddress, address _identity, uint16 _country)](#registeridentityaddress-_useraddress-address-_identity-uint16-_country)
+  - [deleteIdentity(address _userAddress)](#deleteidentityaddress-_useraddress)
+  - [isVerified(address _userAddress) → bool](#isverifiedaddress-_useraddress--bool)
+  - [investorCountry(address _userAddress) → uint16](#investorcountryaddress-_useraddress--uint16)
+  - [version() → string](#version--string)
+  - [registeredIdentityCount() → uint256](#registeredidentitycount--uint256)
+- [Limitations](#limitations)
+  - [1. No ERC-734 surface: recoveryAddress needs a real ONCHAINID](#1-no-erc-734-surface-recoveryaddress-needs-a-real-onchainid)
+  - [2. Recovery still trusts the token agent completely](#2-recovery-still-trusts-the-token-agent-completely)
+  - [3. No identity data is kept](#3-no-identity-data-is-kept)
+  - [4. No claim topics, no trusted issuers](#4-no-claim-topics-no-trusted-issuers)
+  - [5. Only the token-facing interface exists](#5-only-the-token-facing-interface-exists)
+- [Tests](#tests)
+
+<!-- /toc -->
 
 `IdentityRegistryWhitelist` is a whitelist that presents itself to an **ERC-3643 token as its identity registry**. Install it with `token.setIdentityRegistry(address(this))`. `registerIdentity` whitelists a wallet, `deleteIdentity` removes it, and `isVerified` answers the question the token asks on every inbound transfer.
 

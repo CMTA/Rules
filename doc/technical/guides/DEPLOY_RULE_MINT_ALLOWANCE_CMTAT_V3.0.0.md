@@ -1,6 +1,12 @@
 # Deploy `RuleMintAllowance` with a CMTAT v3.0.0 token
 
-[TOC]
+<!-- toc -->
+
+- [1. Why the rule is inert on v3.0.0](#1-why-the-rule-is-inert-on-v300)
+- [2. What happens on a mint](#2-what-happens-on-a-mint)
+- [3. What to use instead](#3-what-to-use-instead)
+
+<!-- /toc -->
 
 **`RuleMintAllowance` is not supported on CMTAT v3.0.0.** It can be deployed, bound and installed without any error, but it enforces nothing there: every mint passes, whatever the minter's quota, and no quota is ever debited. Use CMTAT v3.3.0 or later, with the [v3.3.0 guide](./DEPLOY_RULE_MINT_ALLOWANCE_CMTAT_V3.3.0.md).
 
@@ -51,7 +57,7 @@ sequenceDiagram
     Note over Token,Rule: mint of 100 accepted, mintAllowance[minter] still 5
 ```
 
-**The views disagree with enforcement.** The rule's own `canTransferFrom(minter, address(0), alice, 100)` returns `false`, because it reads the quota, while the mint it describes succeeds. The 3-argument `canTransfer` and `detectTransferRestriction` answer "allowed", as on v3.3.0. Nothing on the token signals that the quota is not applied, so an operator watching the views would believe it is.
+**The views disagree with enforcement.** The rule's own `canTransferFrom(minter, address(0), alice, 100)` returns `false`, because it reads the quota, while the mint it describes succeeds. The token's 4-argument views forward to the rule, so `token.detectTransferRestrictionFrom(minter, address(0), alice, 100)` reports code 70 for that same mint. The 3-argument `canTransfer` and `detectTransferRestriction` answer "allowed", as on v3.3.0. Nothing on the token signals that the quota is not applied, so an operator watching the views would believe it is.
 
 Transfers and burns are not affected either way: the rule never restricts them, on any version.
 

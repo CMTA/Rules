@@ -1,6 +1,30 @@
 # Deploy `RuleIdentityRegistry` with a CMTAT v3.3.0 token
 
-[TOC]
+<!-- toc -->
+
+- [1. What the rule enforces](#1-what-the-rule-enforces)
+- [2. Choose the registry](#2-choose-the-registry)
+- [3. Choose the setup](#3-choose-the-setup)
+- [4. Contracts and roles](#4-contracts-and-roles)
+- [5. Deployment steps](#5-deployment-steps)
+  - [5.1 Rule set directly, at deployment (recommended for identity alone)](#51-rule-set-directly-at-deployment-recommended-for-identity-alone)
+  - [5.2 Rule set directly, after deployment](#52-rule-set-directly-after-deployment)
+  - [5.3 Behind a RuleEngine, at deployment](#53-behind-a-ruleengine-at-deployment)
+  - [5.4 Behind a RuleEngine, after deployment](#54-behind-a-ruleengine-after-deployment)
+- [6. Mint workflow](#6-mint-workflow)
+  - [6.1 Rule plugged directly into the token](#61-rule-plugged-directly-into-the-token)
+  - [6.2 Rule behind a RuleEngine](#62-rule-behind-a-ruleengine)
+  - [6.3 Happy path: a mint to a registered investor](#63-happy-path-a-mint-to-a-registered-investor)
+- [7. Transfer and burn workflows](#7-transfer-and-burn-workflows)
+  - [7.1 Rule plugged directly into the token](#71-rule-plugged-directly-into-the-token)
+  - [7.2 Rule behind a RuleEngine](#72-rule-behind-a-ruleengine)
+  - [7.3 transferFrom](#73-transferfrom)
+  - [7.4 Happy path: a de-listed holder sells to a registered investor](#74-happy-path-a-de-listed-holder-sells-to-a-registered-investor)
+  - [7.5 Burn](#75-burn)
+- [8. Operating the token](#8-operating-the-token)
+- [9. Differences from CMTAT v3.0.0](#9-differences-from-cmtat-v300)
+
+<!-- /toc -->
 
 This guide deploys a CMTAT **v3.3.0** token whose receivers must be verified in an ERC-3643 identity registry, checked by `RuleIdentityRegistry`. It covers:
 

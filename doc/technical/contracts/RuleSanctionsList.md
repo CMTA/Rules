@@ -1,6 +1,24 @@
 # Rule SanctionsList
 
-[TOC]
+<!-- toc -->
+
+- [How to use](#how-to-use)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Restriction codes](#restriction-codes)
+- [Who is screened](#who-is-screened)
+- [Access Control](#access-control)
+- [Methods](#methods)
+  - [setSanctionListOracle(ISanctionsList sanctionContractOracle_)](#setsanctionlistoracleisanctionslist-sanctioncontractoracle_)
+  - [clearSanctionListOracle()](#clearsanctionlistoracle)
+  - [sanctionsList() → ISanctionsList](#sanctionslist--isanctionslist)
+- [Usage scenario](#usage-scenario)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 This rule uses the [Chainalysis](https://www.chainalysis.com/) on-chain oracle to block transfers involving sanctioned addresses. It checks the US, EU, and UN sanctions lists maintained by the oracle.
 

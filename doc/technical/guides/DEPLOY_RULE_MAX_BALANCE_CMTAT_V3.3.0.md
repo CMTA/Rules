@@ -1,6 +1,27 @@
 # Deploy `RuleMaxBalance` with a CMTAT v3.3.0 token
 
-[TOC]
+<!-- toc -->
+
+- [1. What the rule enforces](#1-what-the-rule-enforces)
+- [2. Choose the setup](#2-choose-the-setup)
+- [3. Contracts and roles](#3-contracts-and-roles)
+- [4. Deployment steps](#4-deployment-steps)
+  - [4.1 Behind a RuleEngine, set at deployment (recommended)](#41-behind-a-ruleengine-set-at-deployment-recommended)
+  - [4.2 Rule set directly, after deployment](#42-rule-set-directly-after-deployment)
+  - [4.3 Behind a RuleEngine, after deployment](#43-behind-a-ruleengine-after-deployment)
+- [5. Mint workflow](#5-mint-workflow)
+  - [5.1 Rule plugged directly into the token](#51-rule-plugged-directly-into-the-token)
+  - [5.2 Rule behind a RuleEngine](#52-rule-behind-a-ruleengine)
+  - [5.3 Happy path: a mint that fits under the cap](#53-happy-path-a-mint-that-fits-under-the-cap)
+- [6. Transfer and burn workflows](#6-transfer-and-burn-workflows)
+  - [6.1 Rule plugged directly into the token](#61-rule-plugged-directly-into-the-token)
+  - [6.2 Rule behind a RuleEngine](#62-rule-behind-a-ruleengine)
+  - [6.3 Happy path: the receiver stays under the cap](#63-happy-path-the-receiver-stays-under-the-cap)
+  - [6.4 Burn](#64-burn)
+- [7. Operating the token](#7-operating-the-token)
+- [8. Differences from CMTAT v3.0.0](#8-differences-from-cmtat-v300)
+
+<!-- /toc -->
 
 This guide deploys a CMTAT **v3.3.0** token on which no single address can hold more than a fixed number of tokens, enforced by `RuleMaxBalance`. It covers:
 

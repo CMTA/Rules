@@ -1,6 +1,27 @@
 # Rule Receiver Whitelist
 
-[TOC]
+<!-- toc -->
+
+- [Why receiver-only](#why-receiver-only)
+- [Behaviour](#behaviour)
+  - [Burn is exempted explicitly](#burn-is-exempted-explicitly)
+  - [Mint has no opt-out flag](#mint-has-no-opt-out-flag)
+- [Restriction codes](#restriction-codes)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+- [Configuration](#configuration)
+  - [Constructor parameters](#constructor-parameters)
+- [Access Control](#access-control)
+- [Methods](#methods)
+- [Usage](#usage)
+  - [Behind a RuleEngine, for a CMTAT token](#behind-a-ruleengine-for-a-cmtat-token)
+  - [As the compliance contract of an ERC-3643 token](#as-the-compliance-contract-of-an-erc-3643-token)
+- [Tests](#tests)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 `RuleReceiverWhitelist` is a whitelist that screens **only the receiver**, reproducing ERC-3643's eligibility rule as a CMTAT compliance rule. The sender and the spender are never checked.
 

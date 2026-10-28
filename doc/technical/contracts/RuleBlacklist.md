@@ -1,6 +1,27 @@
 # Rule Blacklist
 
-[TOC]
+<!-- toc -->
+
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Restriction codes](#restriction-codes)
+- [Access Control](#access-control)
+- [Methods](#methods)
+  - [addAddress(address targetAddress)](#addaddressaddress-targetaddress)
+  - [addAddresses(address[] calldata targetAddresses)](#addaddressesaddress-calldata-targetaddresses)
+  - [removeAddress(address targetAddress)](#removeaddressaddress-targetaddress)
+  - [removeAddresses(address[] calldata targetAddresses)](#removeaddressesaddress-calldata-targetaddresses)
+  - [isAddressListed(address targetAddress) → bool](#isaddresslistedaddress-targetaddress--bool)
+  - [areAddressesListed(address[] memory targetAddresses) → bool[]](#areaddresseslistedaddress-memory-targetaddresses--bool)
+- [Notes](#notes)
+  - [Batch vs single operations](#batch-vs-single-operations)
+  - [Usage scenario](#usage-scenario)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 This rule blocks transfers involving any blacklisted address. Both the sender (`from`) and recipient (`to`) are checked. The spender in a `transferFrom` call is always checked as well.
 

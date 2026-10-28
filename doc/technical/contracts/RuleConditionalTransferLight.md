@@ -1,6 +1,36 @@
 # Rule Conditional Transfer Light
 
-[TOC]
+<!-- toc -->
+
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Restriction codes](#restriction-codes)
+- [Access Control](#access-control)
+- [Methods](#methods)
+  - [approveTransfer(address from, address to, uint256 value)](#approvetransferaddress-from-address-to-uint256-value)
+  - [cancelTransferApproval(address from, address to, uint256 value)](#canceltransferapprovaladdress-from-address-to-uint256-value)
+  - [resetApproval(address from, address to, uint256 value) → uint256](#resetapprovaladdress-from-address-to-uint256-value--uint256)
+  - [approveAndTransferIfAllowed(address from, address to, uint256 value) → bool](#approveandtransferifallowedaddress-from-address-to-uint256-value--bool)
+  - [approvedCount(address from, address to, uint256 value) → uint256](#approvedcountaddress-from-address-to-uint256-value--uint256)
+  - [Binding: token vs RuleEngine](#binding-token-vs-ruleengine)
+  - [bindToken(address token) / unbindToken(address token)](#bindtokenaddress-token--unbindtokenaddress-token)
+  - [bindRuleEngine(address ruleEngine) / unbindRuleEngine()](#bindruleengineaddress-ruleengine--unbindruleengine)
+  - [isTransferExecutor(address caller) → bool](#istransferexecutoraddress-caller--bool)
+- [Workflow](#workflow)
+  - [Token holder initiates](#token-holder-initiates)
+  - [Operator initiates](#operator-initiates)
+- [Approval counting](#approval-counting)
+- [Notes](#notes)
+  - [transferFrom spender ignored](#transferfrom-spender-ignored)
+  - [Zero-value transfers are not treated as no-ops](#zero-value-transfers-are-not-treated-as-no-ops)
+  - [Duplicate approvals](#duplicate-approvals)
+- [Usage scenario](#usage-scenario)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 This rule requires that each transfer be explicitly approved by an operator before it can execute. It is an **operation rule**: it modifies state during the transfer call (consuming one approval count), unlike validation rules which are read-only.
 

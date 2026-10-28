@@ -1,6 +1,26 @@
 # Deploy `RuleMintAllowance` with a CMTAT v3.3.0 token
 
-[TOC]
+<!-- toc -->
+
+- [1. What the rule enforces](#1-what-the-rule-enforces)
+- [2. Choose the setup](#2-choose-the-setup)
+- [3. Contracts and roles](#3-contracts-and-roles)
+- [4. Deployment steps](#4-deployment-steps)
+  - [4.1 Rule set directly, at deployment (recommended for the quota alone)](#41-rule-set-directly-at-deployment-recommended-for-the-quota-alone)
+  - [4.2 Rule set directly, after deployment](#42-rule-set-directly-after-deployment)
+  - [4.3 Behind a RuleEngine, at deployment (recommended with other rules)](#43-behind-a-ruleengine-at-deployment-recommended-with-other-rules)
+  - [4.4 Behind a RuleEngine, after deployment](#44-behind-a-ruleengine-after-deployment)
+- [5. Mint workflow](#5-mint-workflow)
+  - [5.1 Rule plugged directly into the token](#51-rule-plugged-directly-into-the-token)
+  - [5.2 Rule behind a RuleEngine](#52-rule-behind-a-ruleengine)
+  - [5.3 Happy path: a mint within the quota](#53-happy-path-a-mint-within-the-quota)
+- [6. Transfer and burn workflows](#6-transfer-and-burn-workflows)
+  - [6.1 Transfer](#61-transfer)
+  - [6.2 Burn](#62-burn)
+- [7. Operating the token](#7-operating-the-token)
+- [8. Differences from CMTAT v3.0.0](#8-differences-from-cmtat-v300)
+
+<!-- /toc -->
 
 This guide deploys a CMTAT **v3.3.0** token on which each minter may only mint up to a quota set by an operator, enforced by `RuleMintAllowance`. It covers:
 
@@ -14,6 +34,7 @@ Every step below is tested against a real v3.3.0-rc4 token:
 
 - `test/RuleMintAllowance/RuleMintAllowanceCMTATDeployment.t.sol`: rule passed in the token constructor and bound afterwards (setup 4.1), rule set directly after deployment (setup 4.2), RuleEngine passed in the token constructor with the token bound last (setup 4.3), and the single-binding guard;
 - `test/RuleMintAllowance/CMTATIntegration.t.sol`: rule behind a RuleEngine set after deployment (setup 4.4), with several minters, `batchMint`, the token's pre-flight views and a quota raised after exhaustion.
+- `test/RuleMintAllowance/RuleMintAllowanceCMTATOperations.t.sol`: which caller each token operation charges, with the rule set directly on the token: `crosschainMint` charged to the bridge, the mint leg of `burnAndMint` to its caller, `batchMint` in total and rolled back as a whole; burns, `crosschainBurn`, forced transfers, `transfer` and `transferFrom` charge nothing; quotas survive `unbindToken`; the Debt variant enforces the quota.
 
 ## 1. What the rule enforces
 

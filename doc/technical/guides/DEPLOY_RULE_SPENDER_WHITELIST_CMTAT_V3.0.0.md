@@ -1,6 +1,25 @@
 # Deploy `RuleSpenderWhitelist` with a CMTAT v3.0.0 token
 
-[TOC]
+<!-- toc -->
+
+- [1. What the rule enforces](#1-what-the-rule-enforces)
+- [2. Choose the setup](#2-choose-the-setup)
+- [3. Contracts and roles](#3-contracts-and-roles)
+- [4. Deployment steps](#4-deployment-steps)
+  - [4.1 Rule set directly, at deployment](#41-rule-set-directly-at-deployment)
+  - [4.2 Rule set directly, after deployment](#42-rule-set-directly-after-deployment)
+  - [4.3 Behind a RuleEngine, at deployment (recommended)](#43-behind-a-ruleengine-at-deployment-recommended)
+  - [4.4 Behind a RuleEngine, after deployment](#44-behind-a-ruleengine-after-deployment)
+- [5. transferFrom workflow](#5-transferfrom-workflow)
+  - [5.1 Rule plugged directly into the token](#51-rule-plugged-directly-into-the-token)
+  - [5.2 Rule behind a RuleEngine](#52-rule-behind-a-ruleengine)
+  - [5.3 Happy path: a listed settlement contract moves an investor's tokens](#53-happy-path-a-listed-settlement-contract-moves-an-investors-tokens)
+- [6. Transfer, mint and burn: the rule returns at once](#6-transfer-mint-and-burn-the-rule-returns-at-once)
+  - [6.1 Transfer](#61-transfer)
+  - [6.2 Mint and burn](#62-mint-and-burn)
+- [7. Operating the token](#7-operating-the-token)
+
+<!-- /toc -->
 
 This guide deploys a CMTAT **v3.0.0** token where `transferFrom` can only be called by whitelisted spenders, enforced by `RuleSpenderWhitelist`. Direct transfers, mints and burns are not screened by the rule. It covers:
 

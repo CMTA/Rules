@@ -1,6 +1,41 @@
 # Rule Chainlink Proof of Reserve
 
-[TOC]
+<!-- toc -->
+
+- [Contract layout](#contract-layout)
+- [Token compatibility: ERC-20 only](#token-compatibility-erc-20-only)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+- [Configuration](#configuration)
+  - [Constructor parameters](#constructor-parameters)
+  - [Proof of Reserve feed](#proof-of-reserve-feed)
+  - [Token metadata](#token-metadata)
+  - [Staleness threshold](#staleness-threshold)
+- [Restriction codes](#restriction-codes)
+- [Access Control](#access-control)
+- [Methods](#methods)
+  - [setReservesFeed(AggregatorV3Interface newReservesFeed)](#setreservesfeedaggregatorv3interface-newreservesfeed)
+  - [setTokenMetadata(address newTokenContract, uint8 newTokenDecimals)](#settokenmetadataaddress-newtokencontract-uint8-newtokendecimals)
+  - [setMaxStalenessSeconds(uint256 newMaxStalenessSeconds)](#setmaxstalenesssecondsuint256-newmaxstalenessseconds)
+  - [maxBackedSupply() → (uint8 restrictionCode, uint256 backedSupply)](#maxbackedsupply--uint8-restrictioncode-uint256-backedsupply)
+  - [feedDecimals() → uint8](#feeddecimals--uint8)
+  - [View getters](#view-getters)
+- [Transfer restriction logic](#transfer-restriction-logic)
+  - [Read-path safety](#read-path-safety)
+  - [Failure modes are fail-closed for mints only](#failure-modes-are-fail-closed-for-mints-only)
+- [Usage scenario](#usage-scenario)
+- [Relationship to Chainlink's SecureMintPolicy](#relationship-to-chainlinks-securemintpolicy)
+  - [Summary](#summary)
+  - [Where this rule is stricter](#where-this-rule-is-stricter)
+  - [Where ACE is stricter, and what this rule does instead](#where-ace-is-stricter-and-what-this-rule-does-instead)
+- [Interaction with other rules](#interaction-with-other-rules)
+- [Deployment topology](#deployment-topology)
+  - [One instance per protected token](#one-instance-per-protected-token)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 `RuleChainlinkPoR` ensures the total supply of a token never exceeds the reserves backing it. Before every mint it reads the latest reserve value from a [Chainlink Proof of Reserve](https://docs.chain.link/data-feeds/proof-of-reserve) data feed and checks whether the new total supply (current supply plus the requested mint amount) would exceed what the reserves can back. If it would, the mint is rejected.
 

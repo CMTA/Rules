@@ -1,6 +1,19 @@
 # Invariant Tests
 
-[TOC]
+<!-- toc -->
+
+- [1. Running the suite](#1-running-the-suite)
+- [2. Architecture — the handler pattern](#2-architecture--the-handler-pattern)
+- [3. The invariants](#3-the-invariants)
+  - [3.1 RuleConditionalTransferLight — approval conservation](#31-ruleconditionaltransferlight--approval-conservation)
+  - [3.2 RuleMintAllowance — exact quota accounting](#32-rulemintallowance--exact-quota-accounting)
+  - [3.3 RuleMaxTotalSupply — the cap holds across any sequence](#33-rulemaxtotalsupply--the-cap-holds-across-any-sequence)
+  - [3.4 RuleIssuanceCap — the counter is exact and never restored](#34-ruleissuancecap--the-counter-is-exact-and-never-restored)
+- [4. Negative controls — proving the suite can fail](#4-negative-controls--proving-the-suite-can-fail)
+- [5. Coverage map](#5-coverage-map)
+- [6. Adding a new invariant](#6-adding-a-new-invariant)
+
+<!-- /toc -->
 
 This document describes the **stateful invariant suite** in [`test/invariant/`](../../../test/invariant/): what each invariant asserts, why it matters, how the handlers are built, and how the suite was verified to catch bugs.
 

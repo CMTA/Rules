@@ -1,6 +1,27 @@
 # Deploy `RuleWhitelistWrapper` with a CMTAT v3.0.0 token
 
-[TOC]
+<!-- toc -->
+
+- [1. What the rule enforces](#1-what-the-rule-enforces)
+  - [Which child rules are accepted](#which-child-rules-are-accepted)
+- [2. Choose the setup](#2-choose-the-setup)
+- [3. Contracts and roles](#3-contracts-and-roles)
+- [4. Deployment steps](#4-deployment-steps)
+  - [4.1 Wrapper set directly, at deployment (recommended for the wrapper alone)](#41-wrapper-set-directly-at-deployment-recommended-for-the-wrapper-alone)
+  - [4.2 Wrapper set directly, after deployment](#42-wrapper-set-directly-after-deployment)
+  - [4.3 Behind a RuleEngine, at deployment (recommended with other rules)](#43-behind-a-ruleengine-at-deployment-recommended-with-other-rules)
+  - [4.4 Behind a RuleEngine, after deployment](#44-behind-a-ruleengine-after-deployment)
+- [5. Mint workflow](#5-mint-workflow)
+  - [5.1 Wrapper plugged directly into the token](#51-wrapper-plugged-directly-into-the-token)
+  - [5.2 Wrapper behind a RuleEngine](#52-wrapper-behind-a-ruleengine)
+  - [5.3 Happy path: a mint to an investor listed by operator B](#53-happy-path-a-mint-to-an-investor-listed-by-operator-b)
+- [6. Transfer workflow](#6-transfer-workflow)
+  - [6.1 Wrapper plugged directly into the token](#61-wrapper-plugged-directly-into-the-token)
+  - [6.2 Wrapper behind a RuleEngine](#62-wrapper-behind-a-ruleengine)
+  - [6.3 Happy path: holders listed by different operators](#63-happy-path-holders-listed-by-different-operators)
+- [7. Operating the token](#7-operating-the-token)
+
+<!-- /toc -->
 
 This guide deploys a CMTAT **v3.0.0** token whose transfers and mints are restricted to addresses listed in **any** of several whitelists, enforced by `RuleWhitelistWrapper`. Each whitelist is a child rule, typically run by a different operator. It covers:
 

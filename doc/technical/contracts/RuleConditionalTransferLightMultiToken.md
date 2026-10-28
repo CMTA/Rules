@@ -1,6 +1,29 @@
 # Rule Conditional Transfer Light MultiToken
 
-[TOC]
+<!-- toc -->
+
+- [Deployment topology — why a RuleEngine does not work](#deployment-topology--why-a-ruleengine-does-not-work)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Restriction codes](#restriction-codes)
+- [Access control](#access-control)
+- [Methods](#methods)
+  - [approveTransfer(address token, address from, address to, uint256 value)](#approvetransferaddress-token-address-from-address-to-uint256-value)
+  - [cancelTransferApproval(address token, address from, address to, uint256 value)](#canceltransferapprovaladdress-token-address-from-address-to-uint256-value)
+  - [resetApproval(address token, address from, address to, uint256 value) -> uint256](#resetapprovaladdress-token-address-from-address-to-uint256-value---uint256)
+  - [approvedCount(address token, address from, address to, uint256 value) -> uint256](#approvedcountaddress-token-address-from-address-to-uint256-value---uint256)
+  - [approveAndTransferIfAllowed(address token, address from, address to, uint256 value) -> bool](#approveandtransferifallowedaddress-token-address-from-address-to-uint256-value---bool)
+  - [transferred(...)](#transferred)
+  - [detectTransferRestrictionForToken(address token, address from, address to, uint256 value) -> uint8](#detecttransferrestrictionfortokenaddress-token-address-from-address-to-uint256-value---uint8)
+  - [canTransferForToken(address token, address from, address to, uint256 value) -> bool](#cantransferfortokenaddress-token-address-from-address-to-uint256-value---bool)
+  - [detectTransferRestriction(from, to, value) / canTransfer(from, to, value)](#detecttransferrestrictionfrom-to-value--cantransferfrom-to-value)
+- [Notes](#notes)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 `RuleConditionalTransferLightMultiToken` is an operation rule that requires explicit operator approval before each transfer, with approvals scoped per token.
 

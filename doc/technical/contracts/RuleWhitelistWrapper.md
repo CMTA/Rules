@@ -1,6 +1,33 @@
 # Rule Whitelist Wrapper
 
-[TOC]
+<!-- toc -->
+
+- [Architecture](#architecture)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Configuration](#configuration)
+  - [Constructor parameters](#constructor-parameters)
+  - [checkSpender flag](#checkspender-flag)
+- [Restriction codes](#restriction-codes)
+- [Access Control](#access-control)
+- [Methods](#methods)
+  - [Child rule management](#child-rule-management)
+  - [setCheckSpender(bool value)](#setcheckspenderbool-value)
+  - [isVerified(address targetAddress) → bool](#isverifiedaddress-targetaddress--bool)
+  - [rule(uint256 index) → address](#ruleuint256-index--address)
+  - [rulesCount() → uint256](#rulescount--uint256)
+- [Gas cost of the child-rule scan](#gas-cost-of-the-child-rule-scan)
+  - [Measured cost](#measured-cost)
+  - [Two things make the worst case the common case](#two-things-make-the-worst-case-the-common-case)
+  - [Operator guidance](#operator-guidance)
+- [Notes](#notes)
+  - [Usage scenario](#usage-scenario)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 This rule aggregates multiple child whitelist rules using OR logic. An address is considered whitelisted if it appears in **any** of the registered child rules. This enables a multi-operator model where each operator manages their own whitelist independently.
 

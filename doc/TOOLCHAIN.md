@@ -1,6 +1,17 @@
 # TOOLCHAIN
 
-[TOC]
+<!-- toc -->
+
+- [Node.JS  package](#nodejs--package)
+  - [Dev](#dev)
+- [Submodule](#submodule)
+- [Generate documentation](#generate-documentation)
+  - [sol2uml](#sol2uml)
+  - [Surya](#surya)
+  - [Slither](#slither)
+- [Code style guidelines](#code-style-guidelines)
+
+<!-- /toc -->
 
 ## Node.JS  package
 

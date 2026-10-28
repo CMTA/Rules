@@ -1,6 +1,26 @@
 # Rule Issuance Cap
 
-[TOC]
+<!-- toc -->
+
+- [Which cap rule to use](#which-cap-rule-to-use)
+- [Contract layout](#contract-layout)
+- [How it decides](#how-it-decides)
+- [Configuration](#configuration)
+  - [Constructor parameters](#constructor-parameters)
+  - [Binding](#binding)
+  - [Deployment order: no uncounted mint](#deployment-order-no-uncounted-mint)
+  - [Post-deployment configuration](#post-deployment-configuration)
+- [Restriction codes](#restriction-codes)
+- [Access control](#access-control)
+- [Methods and events](#methods-and-events)
+- [Behaviour by token operation](#behaviour-by-token-operation)
+- [ERC-3643](#erc-3643)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+- [Migration](#migration)
+- [Tests](#tests)
+
+<!-- /toc -->
 
 This rule caps the **cumulative issuance** of a token: the total ever minted can never exceed a configured amount, and **burns do not restore room**. It fits a fixed issue volume, such as the number of shares authorised by a corporate resolution or the issue size of a bond, where redeemed tokens must not be re-issued under the same authorisation.
 

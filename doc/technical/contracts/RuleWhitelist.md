@@ -1,6 +1,31 @@
 # Rule Whitelist
 
-[TOC]
+<!-- toc -->
+
+- [Configuration](#configuration)
+  - [Constructor parameters](#constructor-parameters)
+  - [checkSpender flag](#checkspender-flag)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Restriction codes](#restriction-codes)
+- [Access Control](#access-control)
+- [Methods](#methods)
+  - [addAddress(address targetAddress)](#addaddressaddress-targetaddress)
+  - [addAddresses(address[] calldata targetAddresses)](#addaddressesaddress-calldata-targetaddresses)
+  - [removeAddress(address targetAddress)](#removeaddressaddress-targetaddress)
+  - [removeAddresses(address[] calldata targetAddresses)](#removeaddressesaddress-calldata-targetaddresses)
+  - [isAddressListed(address targetAddress) → bool](#isaddresslistedaddress-targetaddress--bool)
+  - [areAddressesListed(address[] memory targetAddresses) → bool[]](#areaddresseslistedaddress-memory-targetaddresses--bool)
+  - [setCheckSpender(bool value)](#setcheckspenderbool-value)
+- [Notes](#notes)
+  - [Zero address — the mint/burn sentinel, never a list member](#zero-address--the-mintburn-sentinel-never-a-list-member)
+  - [Batch vs single operations](#batch-vs-single-operations)
+  - [Usage scenario](#usage-scenario)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 This rule restricts transfers so that only whitelisted addresses may send and receive tokens. Optionally, spender addresses (used in `transferFrom`) can also be checked.
 

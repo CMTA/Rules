@@ -1,6 +1,36 @@
 # Rule Max Total Supply
 
-[TOC]
+<!-- toc -->
+
+- [Contract layout](#contract-layout)
+- [Configuration](#configuration)
+  - [Constructor parameters](#constructor-parameters)
+  - [Unit of the cap](#unit-of-the-cap)
+  - [Post-deployment configuration](#post-deployment-configuration)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Restriction codes](#restriction-codes)
+- [Access Control](#access-control)
+- [Events](#events)
+- [Methods](#methods)
+  - [setMaxTotalSupply(uint256 newMaxTotalSupply)](#setmaxtotalsupplyuint256-newmaxtotalsupply)
+  - [increaseMaxTotalSupply(uint256 amount) / decreaseMaxTotalSupply(uint256 amount)](#increasemaxtotalsupplyuint256-amount--decreasemaxtotalsupplyuint256-amount)
+  - [setTokenContract(address newTokenContract)](#settokencontractaddress-newtokencontract)
+  - [maxTotalSupply() → uint256](#maxtotalsupply--uint256)
+  - [tokenContract() → ITotalSupply](#tokencontract--itotalsupply)
+  - [remainingMintable() → (uint8 restrictionCode, uint256 headroom)](#remainingmintable--uint8-restrictioncode-uint256-headroom)
+- [Transfer restriction logic](#transfer-restriction-logic)
+  - [What the cap measures](#what-the-cap-measures)
+  - [Behaviour by token operation](#behaviour-by-token-operation)
+  - [One instance per token](#one-instance-per-token)
+  - [Read-path safety](#read-path-safety)
+- [Deployment guides](#deployment-guides)
+- [Usage scenario](#usage-scenario)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 This rule restricts minting so that the token's total supply never exceeds a configured maximum. Only mint operations (`from == address(0)`) are checked. Regular transfers between holders and burns are not affected.
 

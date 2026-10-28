@@ -1,6 +1,25 @@
 # Rule Semantics — comparison table
 
-[TOC]
+<!-- toc -->
+
+- [1. Who each rule screens](#1-who-each-rule-screens)
+- [2. Operational characteristics](#2-operational-characteristics)
+- [3. Overload surface (ERC-7943 tokenId / ITransferContext)](#3-overload-surface-erc-7943-tokenid--itransfercontext)
+- [4. Notes & caveats](#4-notes--caveats)
+- [5. Cap rules: the two seams for an ERC-3643 variant](#5-cap-rules-the-two-seams-for-an-erc-3643-variant)
+  - [Seam 1 — accounting phase: _detectTransferRestrictionOnNotify](#seam-1--accounting-phase-_detecttransferrestrictiononnotify)
+  - [Seam 2 — observation source: _currentSupply / _balanceOf](#seam-2--observation-source-_currentsupply--_balanceof)
+  - [Worked examples](#worked-examples)
+- [6. ERC-3643 compatibility — which rules actually work on a T-REX token](#6-erc-3643-compatibility--which-rules-actually-work-on-a-t-rex-token)
+  - [The two differences that cause everything below](#the-two-differences-that-cause-everything-below)
+  - [Per-rule status](#per-rule-status)
+  - [Reading the three failure modes](#reading-the-three-failure-modes)
+  - [Why RuleMaxBalance has no ERC-3643 variant](#why-rulemaxbalance-has-no-erc-3643-variant)
+  - [Wiring, whichever rules you choose](#wiring-whichever-rules-you-choose)
+- [7. CMTAT version compatibility — v3.0.0 vs v3.3+](#7-cmtat-version-compatibility--v300-vs-v33)
+  - [Per-rule status on v3.0.0](#per-rule-status-on-v300)
+
+<!-- /toc -->
 
 The rules in this library answer the same two questions — *may this transfer proceed?* (read path) and *record/enforce it* (write path) — but they answer with **different conventions**. In particular they differ on **whether they screen the spender**, **how they treat mint (`from == address(0)`) and burn (`to == address(0)`)**, and **what happens when their external oracle/registry is unset**. This page is the single place those differences are laid out side by side so an integrator does not have to read each rule's source to learn them.
 

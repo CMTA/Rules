@@ -1,6 +1,24 @@
 # Deploy `RuleConditionalTransferLightMultiToken` with CMTAT v3.3.0 tokens
 
-[TOC]
+<!-- toc -->
+
+- [1. What the rule enforces](#1-what-the-rule-enforces)
+- [2. Choose the setup](#2-choose-the-setup)
+- [3. Contracts and roles](#3-contracts-and-roles)
+- [4. Deployment steps](#4-deployment-steps)
+  - [4.1 Rule set directly, at deployment (recommended)](#41-rule-set-directly-at-deployment-recommended)
+  - [4.2 Rule set directly, after deployment](#42-rule-set-directly-after-deployment)
+  - [4.3 Add a further token to a deployed rule](#43-add-a-further-token-to-a-deployed-rule)
+- [5. Transfer workflows](#5-transfer-workflows)
+  - [5.1 Operator approval, then transfer](#51-operator-approval-then-transfer)
+  - [5.2 Happy path: an approved transfer of 100 on token A](#52-happy-path-an-approved-transfer-of-100-on-token-a)
+  - [5.3 Rejected: the approval was given for another token](#53-rejected-the-approval-was-given-for-another-token)
+  - [5.4 Operator helper: approveAndTransferIfAllowed](#54-operator-helper-approveandtransferifallowed)
+- [6. Mint and burn workflow](#6-mint-and-burn-workflow)
+- [7. Operating the token](#7-operating-the-token)
+- [8. Differences from CMTAT v3.0.0](#8-differences-from-cmtat-v300)
+
+<!-- /toc -->
 
 This guide deploys one or more CMTAT **v3.3.0** tokens on which every transfer needs a prior approval from an operator, enforced by a single `RuleConditionalTransferLightMultiToken` shared by all of them. Approvals are recorded per token, so an approval given for one token never authorises a transfer of another. It covers:
 

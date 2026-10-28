@@ -1,6 +1,28 @@
 # Rule ConditionalTransfer
 
-[TOC]
+<!-- toc -->
+
+- [Introduction](#introduction)
+  - [Swiss Law requirement](#swiss-law-requirement)
+- [Configuration](#configuration)
+  - [Options/Parameters](#optionsparameters)
+  - [Conditional Whitelist](#conditional-whitelist)
+  - [Automatic transfer after approval](#automatic-transfer-after-approval)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+  - [Workflow](#workflow)
+- [Request](#request)
+  - [Status](#status-1)
+  - [Attributes](#attributes)
+  - [Initiate by the token holder(sender)](#initiate-by-the-token-holdersender)
+  - [Initiate by the operator](#initiate-by-the-operator)
+- [Access Control](#access-control)
+  - [Graph](#graph-1)
+- [Time Condition](#time-condition)
+
+<!-- /toc -->
 
 This page describes a Conditional Transfer implementation. This rule requires that transfers have to be approved before being executed by the token holders.
 

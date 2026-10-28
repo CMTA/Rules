@@ -1,6 +1,25 @@
 # Deploy `RuleWhitelist` with a CMTAT v3.0.0 token
 
-[TOC]
+<!-- toc -->
+
+- [1. What the rule enforces](#1-what-the-rule-enforces)
+- [2. Choose the setup](#2-choose-the-setup)
+- [3. Contracts and roles](#3-contracts-and-roles)
+- [4. Deployment steps](#4-deployment-steps)
+  - [4.1 Rule set directly, at deployment (recommended for a whitelist alone)](#41-rule-set-directly-at-deployment-recommended-for-a-whitelist-alone)
+  - [4.2 Rule set directly, after deployment](#42-rule-set-directly-after-deployment)
+  - [4.3 Behind a RuleEngine, at deployment](#43-behind-a-ruleengine-at-deployment)
+  - [4.4 Behind a RuleEngine, after deployment](#44-behind-a-ruleengine-after-deployment)
+- [5. Mint workflow](#5-mint-workflow)
+  - [5.1 Rule plugged directly into the token](#51-rule-plugged-directly-into-the-token)
+  - [5.2 Rule behind a RuleEngine](#52-rule-behind-a-ruleengine)
+- [6. Transfer workflow](#6-transfer-workflow)
+  - [6.1 Rule plugged directly into the token](#61-rule-plugged-directly-into-the-token)
+  - [6.2 Rule behind a RuleEngine](#62-rule-behind-a-ruleengine)
+  - [6.3 Happy path: both holders whitelisted](#63-happy-path-both-holders-whitelisted)
+- [7. Operating the token](#7-operating-the-token)
+
+<!-- /toc -->
 
 This guide deploys a CMTAT **v3.0.0** token whose transfers and mints are restricted to whitelisted addresses by `RuleWhitelist`. It covers:
 

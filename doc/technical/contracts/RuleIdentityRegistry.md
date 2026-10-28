@@ -1,6 +1,27 @@
 # Rule Identity Registry
 
-[TOC]
+<!-- toc -->
+
+- [Configuration](#configuration)
+  - [Constructor parameters](#constructor-parameters)
+  - [Behaviour when no registry is set](#behaviour-when-no-registry-is-set)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Restriction codes](#restriction-codes)
+- [Access Control](#access-control)
+- [Methods](#methods)
+  - [setIdentityRegistry(address newRegistry)](#setidentityregistryaddress-newregistry)
+  - [clearIdentityRegistry()](#clearidentityregistry)
+  - [identityRegistry() → IIdentityRegistryVerified](#identityregistry--iidentityregistryverified)
+- [Transfer restriction logic](#transfer-restriction-logic)
+  - [Note for subclasses: the two hooks cannot diverge](#note-for-subclasses-the-two-hooks-cannot-diverge)
+- [Usage scenario](#usage-scenario)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 This rule checks an [ERC-3643](https://eips.ethereum.org/EIPS/eip-3643) Identity Registry to verify that transfer participants are registered and verified.
 

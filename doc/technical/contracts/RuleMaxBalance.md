@@ -1,6 +1,25 @@
 # Rule Max Balance
 
-[TOC]
+<!-- toc -->
+
+- [Contract layout](#contract-layout)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+- [Restriction codes](#restriction-codes)
+- [Who is screened](#who-is-screened)
+- [Configuration](#configuration)
+  - [maxBalance has no magic value](#maxbalance-has-no-magic-value)
+- [Methods](#methods)
+  - [Typical exemptions](#typical-exemptions)
+- [Zero-value transfers to a holder already over the cap](#zero-value-transfers-to-a-holder-already-over-the-cap)
+- [The read path never reverts](#the-read-path-never-reverts)
+- [One instance per protected token](#one-instance-per-protected-token)
+- [Usage scenario](#usage-scenario)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 `RuleMaxBalance` caps how many tokens a single address may hold. One cap applies to every holder, and the operator may exempt specific addresses from it.
 
