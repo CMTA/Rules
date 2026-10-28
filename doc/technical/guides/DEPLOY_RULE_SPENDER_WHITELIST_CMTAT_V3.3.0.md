@@ -200,6 +200,8 @@ sequenceDiagram
 
 A RuleEngine serving one token is the intended setup. `RuleSpenderWhitelist` itself would work for several tokens (it reads no token state), but every token would then share one spender list.
 
+The repository script `script/DeployCMTATWithSpenderWhitelist.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+
 ## 5. `transferFrom` workflow
 
 `transferFrom(from, to, value)` by a spender holding an allowance. The token first checks that `from` has enough unfrozen tokens, then that the token is not paused and that neither the spender, `from` nor `to` is frozen. It then notifies the compliance contract on the 4-argument `transferred(spender, from, to, value)`, and only after that spends the allowance and moves the balance. An unlisted spender is therefore rejected by the rule even if its allowance is also too low.

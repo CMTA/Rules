@@ -180,7 +180,7 @@ Deploying a token with rules attached:
 forge script script/DeployCMTATWithBlacklist.s.sol:DeployCMTATWithBlacklist --rpc-url <RPC> --broadcast
 ```
 
-Five scripts cover the common combinations. See [`DEPLOYMENT_SCRIPTS.md`](./doc/technical/guides/DEPLOYMENT_SCRIPTS.md) for configuration and limitations.
+Seventeen scripts: one per rule, plus two RuleEngine combinations. See [`DEPLOYMENT_SCRIPTS.md`](./doc/technical/guides/DEPLOYMENT_SCRIPTS.md) for configuration and limitations.
 
 ## Documentation
 

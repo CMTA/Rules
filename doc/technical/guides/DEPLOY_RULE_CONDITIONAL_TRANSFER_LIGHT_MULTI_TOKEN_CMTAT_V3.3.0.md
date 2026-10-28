@@ -164,6 +164,8 @@ sequenceDiagram
     Admin->>Rule: approveTransfer(tokenC, from, to, value) now accepted
 ```
 
+The repository script `script/DeployCMTATWithConditionalTransferLightMultiToken.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+
 ## 5. Transfer workflows
 
 `transfer(to, value)` by a holder. The token first checks its own conditions (active balance, pause, frozen addresses), then calls the rule **before** moving the balance, on the 3-argument `transferred(from, to, value)`. A `transferFrom` takes the 4-argument path with the caller as spender; the rule ignores the spender, so the diagrams apply unchanged. There is no RuleEngine variant of these diagrams: the topology is not supported (§2).

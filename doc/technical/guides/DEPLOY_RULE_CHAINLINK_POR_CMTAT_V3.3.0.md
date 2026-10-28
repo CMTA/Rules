@@ -177,6 +177,8 @@ sequenceDiagram
     Admin->>Rule: maxBackedSupply() returns (0, backed)
 ```
 
+The repository script `script/DeployCMTATWithChainlinkPoR.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+
 ## 5. Mint workflow
 
 `mint(to, value)` by a `MINTER_ROLE` holder, with the rule active. The token runs its own checks first (contract deactivated, receiver frozen), then notifies the compliance contract **before** creating the tokens, so the supply the rule reads does not include `value` yet. The rule reads the feed, then calls back the token for `totalSupply()`. Pause does not stop a mint. On the Standard variant the call to the compliance contract runs under a transient reentrancy guard.

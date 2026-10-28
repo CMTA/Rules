@@ -524,6 +524,18 @@ Deployment scripts:
 - `script/DeployCMTATWithWhitelist.s.sol` — CMTAT + whitelist rule, bound directly to the token
 - `script/DeployCMTATWithBlacklist.s.sol` — CMTAT + blacklist rule, bound directly to the token
 - `script/DeployCMTATWithMaxTotalSupply.s.sol` — CMTAT + max-total-supply rule, bound directly to the token
+- `script/DeployCMTATWithReceiverWhitelist.s.sol` — CMTAT + `RuleReceiverWhitelist`, set directly on the token
+- `script/DeployCMTATWithSpenderWhitelist.s.sol` — CMTAT + `RuleSpenderWhitelist`, set directly on the token
+- `script/DeployCMTATWithWhitelistWrapper.s.sol` — CMTAT + `RuleWhitelistWrapper` + 2 child `RuleWhitelist`, set directly on the token
+- `script/DeployCMTATWithSanctionsList.s.sol` — CMTAT + `RuleSanctionsList`, set directly on the token
+- `script/DeployCMTATWithERC2980.s.sol` — CMTAT + `RuleERC2980`, set directly on the token
+- `script/DeployCMTATWithIdentityRegistry.s.sol` — CMTAT + `IdentityRegistryWhitelist` + `RuleIdentityRegistry`, set directly on the token
+- `script/DeployCMTATWithMaxBalance.s.sol` — CMTAT + `RuleMaxBalance`, set directly on the token
+- `script/DeployCMTATWithChainlinkPoR.s.sol` — CMTAT + `RuleChainlinkPoR`, set directly on the token
+- `script/DeployCMTATWithConditionalTransferLight.s.sol` — CMTAT + `RuleConditionalTransferLight`, set directly on the token
+- `script/DeployCMTATWithConditionalTransferLightMultiToken.s.sol` — CMTAT + `RuleConditionalTransferLightMultiToken`, set directly on the token
+- `script/DeployCMTATWithMintAllowance.s.sol` — CMTAT + `RuleMintAllowance`, set directly on the token
+- `script/DeployCMTATWithIssuanceCap.s.sol` — CMTAT + `RuleIssuanceCap`, set directly on the token
 - `script/DeployCMTATWithBlacklistAndSanctionsList.s.sol` — CMTAT + RuleEngine with blacklist and sanctions rules
 - `script/DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply.s.sol` — the same plus a supply cap
 
@@ -549,8 +561,12 @@ Values are read from the environment, with the defaults below applied when a var
 | `CMTAT_TERMS_NAME` / `CMTAT_TERMS_URI` / `CMTAT_TERMS_HASH` | example document | all |
 | `CMTAT_INFORMATION` | `CMTAT_info` | all |
 | `CMTAT_FORWARDER` | `address(0)` (meta-transactions off) | all |
-| `SANCTIONS_ORACLE` | `address(0)` | the two sanctions scripts |
+| `SANCTIONS_ORACLE` | `address(0)` | the three sanctions scripts |
 | `CMTAT_MAX_SUPPLY` | `1000000` | the two max-total-supply scripts |
+| `CMTAT_MAX_BALANCE` | `100000` | the max-balance script |
+| `CMTAT_ISSUANCE_CAP` | `1000000` | the issuance-cap script |
+| `CHAINLINK_POR_FEED` | `address(0)` (mock feed on chain 31337, revert elsewhere) | the Chainlink PoR script |
+| `CHAINLINK_POR_MAX_STALENESS` | `86400` | the Chainlink PoR script |
 
 > ⚠️ **An unset `SANCTIONS_ORACLE` fails open.** `RuleSanctionsList` is registered and reports no error, and every transfer passes it until `setSanctionListOracle` is called. The oracle address is chain-specific, so there is no safe default. Set it before the token goes live.
 
@@ -1093,7 +1109,7 @@ All suites are **mutation-verified**: injecting an approval double-spend, an off
 
 Full details — handler architecture, ghost variables, the negative controls, the coverage map against the threat-model invariants, and how to add a new one — are in **[doc/technical/guides/INVARIANT_TESTS.md](./technical/guides/INVARIANT_TESTS.md)**.
 
-Deployment scripts: `script/DeployCMTATWithWhitelist.s.sol`, `script/DeployCMTATWithBlacklist.s.sol`, `script/DeployCMTATWithBlacklistAndSanctionsList.s.sol`.
+Deployment scripts: one per rule (`script/DeployCMTATWith<Rule>.s.sol`) plus two RuleEngine combinations; see [Deployment Guide](#deployment-guide).
 
 > **Deployment key security:** avoid passing `--private-key` on the command line: it is visible in shell history and to any process that can read `/proc`. Prefer hardware wallets (`--ledger`, `--trezor`) or encrypted keystores (`--account <keystore>`). See [Foundry best practices](https://www.getfoundry.sh/best-practices).
 

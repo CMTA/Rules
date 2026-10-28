@@ -180,6 +180,8 @@ sequenceDiagram
 
 **For a token that is already live,** use 4.2 or 4.3 and pass as `initialIssued` the issuance at the moment the rule is installed: at least `totalSupply()`, and more if tokens were already burned. Do not mint between the rule's deployment and its installation.
 
+The repository script `script/DeployCMTATWithIssuanceCap.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+
 ## 5. Mint workflow
 
 `mint(to, value)` by a `MINTER_ROLE` holder, with the rule active. The token runs its own checks first (contract deactivated, receiver frozen), then notifies the compliance contract **before** creating the tokens, so the supply the rule reads does not include `value` yet. Pause does not stop a mint. On the Standard variant the call to the compliance contract runs under a transient reentrancy guard.

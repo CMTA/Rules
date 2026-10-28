@@ -87,6 +87,10 @@ Commit:
   - Backward compatible: the admin holds every role implicitly, so existing deployments behave as before. The admin is not enumerated as a member of the new role.
   - The constant is declared in the AccessControl deployable, not in the invariant storage, so the Ownable2Step variants (owner-only, unchanged) do not publish a role they never check.
 - Deployment script `script/DeployCMTATWithMaxTotalSupply.s.sol`: a CMTAT token (current version) with `RuleMaxTotalSupply` set directly on it, the cap read from `CMTAT_MAX_SUPPLY` (default `1000000`). Same shape as the whitelist and blacklist scripts: token first, then the rule, then `setRuleEngine`, then the admin hand-over. Covered by 8 tests in `test/DeploymentScripts/` and by the CI dry run.
+- Deployment scripts for every other rule, each deploying a CMTAT token (current version) with the rule set directly on it: `DeployCMTATWith` + `ReceiverWhitelist`, `SpenderWhitelist`, `WhitelistWrapper`, `SanctionsList`, `ERC2980`, `IdentityRegistry`, `MaxBalance`, `ChainlinkPoR`, `ConditionalTransferLight`, `ConditionalTransferLightMultiToken`, `MintAllowance`, `IssuanceCap` (12 scripts, 91 tests in `test/DeploymentScripts/`, all dry-run in CI).
+  - Same shape as the existing scripts: `deploy(admin, deployer, forwarder, ...)`, the token's admin handed over at the end. A rule the script must configure (`bindToken` on the four operation rules, `addRule` on the wrapper) is constructed with the deployer as temporary admin and handed over too.
+  - `DeployCMTATWithWhitelistWrapper` deploys two child whitelists, one per operator; `DeployCMTATWithIdentityRegistry` deploys an `IdentityRegistryWhitelist` as the registry.
+  - New environment variables: `CMTAT_MAX_BALANCE`, `CMTAT_ISSUANCE_CAP`, `CHAINLINK_POR_FEED`, `CHAINLINK_POR_MAX_STALENESS`. Without a feed, `DeployCMTATWithChainlinkPoR` deploys a mock feed on the local chain (31337) so the CI dry run succeeds, and reverts on any other chain.
 
 ### Changed
 
@@ -233,7 +237,7 @@ Commit:
   - Negative controls: three mutations (off-by-one cap, over-strict cap, wrong headroom view) each fail the suite. A first version missed the off-by-one on the safety invariant, because random amounts never hit `headroom + 1`; the `mintAtBoundary` action fixes that. Recorded in `INVARIANT_TESTS.md` §4.
   - Documented in `INVARIANT_TESTS.md` §3.3 and in the "Invariant testing" section of `doc/README.md`.
 - `remainingMintable()`: unit tests (headroom, exact fit, cap below supply, unreadable supply), a fuzz property that the headroom is exactly the largest mint the pre-flight check accepts, the ERC-3643 variant, and a real CMTAT v3.0.0 token across mints and burns.
-- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,398 tests pass in the default profile and 53 in the `erc3643` profile.
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,489 tests pass in the default profile and 53 in the `erc3643` profile.
 - **Security-review tests** (`CLAUDE_AUDIT.md` v0.7.0):
   - 16 proof-of-concept tests in `test/ThreatModel/ThreatModelV070Tests.t.sol` (4 fuzz). Tests suffixed `_CurrentBehaviour` must fail once a finding is fixed.
   - `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow` (`RuleIssuanceCapCMTATIntegration`): the gap-free deployment order of F-4 on a real CMTAT `v3.3` token and RuleEngine `rc7`; every mint, the admin's included, reverts until the cap rule is installed.

@@ -245,6 +245,8 @@ sequenceDiagram
 
 A RuleEngine serving one token is the intended setup. The wrapper itself would work for several tokens (it reads no token state), but every token would then share the same children.
 
+The repository script `script/DeployCMTATWithWhitelistWrapper.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+
 ## 5. Mint workflow
 
 `mint(to, value)` by a `MINTER_ROLE` holder, with the wrapper active. The token runs its own checks first (contract deactivated, receiver frozen), then notifies the compliance contract **before** creating the tokens, on the 4-argument `transferred(minter, address(0), to, value)`. Pause does not stop a mint. On the Standard variant the call to the compliance contract runs under a transient reentrancy guard.

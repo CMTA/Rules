@@ -13,6 +13,18 @@
   - [DeployCMTATWithWhitelist](#deploycmtatwithwhitelist)
   - [DeployCMTATWithBlacklist](#deploycmtatwithblacklist)
   - [DeployCMTATWithMaxTotalSupply](#deploycmtatwithmaxtotalsupply)
+  - [DeployCMTATWithReceiverWhitelist](#deploycmtatwithreceiverwhitelist)
+  - [DeployCMTATWithSpenderWhitelist](#deploycmtatwithspenderwhitelist)
+  - [DeployCMTATWithWhitelistWrapper](#deploycmtatwithwhitelistwrapper)
+  - [DeployCMTATWithSanctionsList](#deploycmtatwithsanctionslist)
+  - [DeployCMTATWithERC2980](#deploycmtatwitherc2980)
+  - [DeployCMTATWithIdentityRegistry](#deploycmtatwithidentityregistry)
+  - [DeployCMTATWithMaxBalance](#deploycmtatwithmaxbalance)
+  - [DeployCMTATWithChainlinkPoR](#deploycmtatwithchainlinkpor)
+  - [DeployCMTATWithConditionalTransferLight](#deploycmtatwithconditionaltransferlight)
+  - [DeployCMTATWithConditionalTransferLightMultiToken](#deploycmtatwithconditionaltransferlightmultitoken)
+  - [DeployCMTATWithMintAllowance](#deploycmtatwithmintallowance)
+  - [DeployCMTATWithIssuanceCap](#deploycmtatwithissuancecap)
   - [DeployCMTATWithBlacklistAndSanctionsList](#deploycmtatwithblacklistandsanctionslist)
   - [DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply](#deploycmtatwithblacklistsanctionslistandmaxtotalsupply)
 - [After deployment](#after-deployment)
@@ -32,10 +44,22 @@ Every script produces a working CMTAT token with compliance rules attached and a
 | `DeployCMTATWithWhitelist.s.sol` | CMTAT + `RuleWhitelist` | B (direct) | 7 |
 | `DeployCMTATWithBlacklist.s.sol` | CMTAT + `RuleBlacklist` | B (direct) | 6 |
 | `DeployCMTATWithMaxTotalSupply.s.sol` | CMTAT + `RuleMaxTotalSupply` | B (direct) | 8 |
-| `DeployCMTATWithBlacklistAndSanctionsList.s.sol` | CMTAT + `RuleEngine` + 2 rules | A (engine) | 18 |
-| `DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply.s.sol` | CMTAT + `RuleEngine` + 3 rules | A (engine) | 19 |
+| `DeployCMTATWithReceiverWhitelist.s.sol` | CMTAT + `RuleReceiverWhitelist` | B (direct) | 8 |
+| `DeployCMTATWithSpenderWhitelist.s.sol` | CMTAT + `RuleSpenderWhitelist` | B (direct) | 7 |
+| `DeployCMTATWithWhitelistWrapper.s.sol` | CMTAT + `RuleWhitelistWrapper` + 2 child `RuleWhitelist` | B (direct) | 7 |
+| `DeployCMTATWithSanctionsList.s.sol` | CMTAT + `RuleSanctionsList` | B (direct) | 9 |
+| `DeployCMTATWithERC2980.s.sol` | CMTAT + `RuleERC2980` | B (direct) | 8 |
+| `DeployCMTATWithIdentityRegistry.s.sol` | CMTAT + `IdentityRegistryWhitelist` + `RuleIdentityRegistry` | B (direct) | 7 |
+| `DeployCMTATWithMaxBalance.s.sol` | CMTAT + `RuleMaxBalance` | B (direct) | 8 |
+| `DeployCMTATWithChainlinkPoR.s.sol` | CMTAT + `RuleChainlinkPoR` | B (direct) | 8 |
+| `DeployCMTATWithConditionalTransferLight.s.sol` | CMTAT + `RuleConditionalTransferLight` | B (direct) | 8 |
+| `DeployCMTATWithConditionalTransferLightMultiToken.s.sol` | CMTAT + `RuleConditionalTransferLightMultiToken` | B (direct) | 7 |
+| `DeployCMTATWithMintAllowance.s.sol` | CMTAT + `RuleMintAllowance` | B (direct) | 7 |
+| `DeployCMTATWithIssuanceCap.s.sol` | CMTAT + `RuleIssuanceCap` | B (direct) | 7 |
+| `DeployCMTATWithBlacklistAndSanctionsList.s.sol` | CMTAT + `RuleEngine` + 2 rules | A (engine) | 20 |
+| `DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply.s.sol` | CMTAT + `RuleEngine` + 3 rules | A (engine) | 21 |
 
-All five share [`script/base/CMTATDeploymentBase.sol`](../../../script/base/CMTATDeploymentBase.sol), which holds the token metadata, the environment configuration, and the address-logging helper.
+All seventeen share [`script/base/CMTATDeploymentBase.sol`](../../../script/base/CMTATDeploymentBase.sol), which holds the token metadata, the environment configuration, and the address-logging helper.
 
 ## The shape every script shares
 
@@ -65,7 +89,8 @@ The token and the RuleEngine are constructed with `deployer` as admin, because t
 | --- | --- | --- | --- |
 | CMTAT token | `deployer` | Yes | Yes |
 | `RuleEngine` | `deployer` | Yes | Yes |
-| Each rule | `admin` | No | Not needed |
+| Each rule the script never configures | `admin` | No | Not needed |
+| A rule the script configures (`bindToken` on the operation rules, `addRule` on the wrapper) | `deployer` | Yes | Yes |
 
 The hand-over is a grant followed by a renounce, in that order, because `AccessControl` has no atomic transfer and renouncing first would leave nobody able to grant:
 
@@ -86,7 +111,7 @@ Both CMTAT and `RuleEngine` grant exactly one role at construction, `DEFAULT_ADM
 
 The scripts deliberately use both integration models described in `CLAUDE.md`, and the choice changes what `msg.sender` is inside a rule:
 
-- **Topology B, direct binding** (`DeployCMTATWithWhitelist`, `DeployCMTATWithBlacklist`, `DeployCMTATWithMaxTotalSupply`). The rule is passed straight to `token.setRuleEngine(rule)`, with no engine in between, so inside the rule `msg.sender` is the token. Fine for a single validation rule, and cheaper: one contract fewer and no engine hop per transfer.
+- **Topology B, direct binding** (every single-rule script). The rule is passed straight to `token.setRuleEngine(rule)`, with no engine in between, so inside the rule `msg.sender` is the token. Fine for a single validation rule, and cheaper: one contract fewer and no engine hop per transfer.
 - **Topology A, RuleEngine** (the two others). Required as soon as there is more than one rule.
 
 This matters if you copy a script as a starting point. An operation rule such as `RuleConditionalTransferLightMultiToken` is direct-binding only, while `RuleMintAllowance` is not, so the two are not interchangeable. Each script states its topology in its NatSpec header.
@@ -106,8 +131,12 @@ Values come from the environment, with the previous hard-coded constants as defa
 | `CMTAT_TERMS_HASH` | example document hash | all |
 | `CMTAT_INFORMATION` | `CMTAT_info` | all |
 | `CMTAT_FORWARDER` | `address(0)` | all |
-| `SANCTIONS_ORACLE` | `address(0)` | the two sanctions scripts |
+| `SANCTIONS_ORACLE` | `address(0)` | the three sanctions scripts |
 | `CMTAT_MAX_SUPPLY` | `1000000` | the two scripts deploying `RuleMaxTotalSupply` |
+| `CMTAT_MAX_BALANCE` | `100000` | `DeployCMTATWithMaxBalance` |
+| `CMTAT_ISSUANCE_CAP` | `1000000` | `DeployCMTATWithIssuanceCap` |
+| `CHAINLINK_POR_FEED` | `address(0)`: a mock feed on chain 31337, a revert elsewhere | `DeployCMTATWithChainlinkPoR` |
+| `CHAINLINK_POR_MAX_STALENESS` | `86400` | `DeployCMTATWithChainlinkPoR` |
 
 A script needing different metadata overrides `_erc20Attributes()` or `_extraInformationAttributes()` rather than copying the block again.
 
@@ -163,6 +192,78 @@ Caps mints so that `totalSupply()` never exceeds `maxTotalSupply` (code `50`, or
 
 To combine the cap with other rules, use the three-rule script below, which puts it behind a RuleEngine. For the order that leaves no unscreened window (a RuleEngine passed in the token constructor, token bound last), see [`DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md`](./DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md).
 
+### DeployCMTATWithReceiverWhitelist
+
+Signature: `deploy(admin, deployer, forwarder)`.
+
+Screens only the receiver, as ERC-3643 eligibility does (code `81`). The sender and spender are never checked, so a holder removed from the list can still send to a listed receiver. Mints are screened on the receiver, with no `allowMint` flag; burns always pass. The list starts empty, so nothing can be minted until investors are added.
+
+### DeployCMTATWithSpenderWhitelist
+
+Signature: `deploy(admin, deployer, forwarder)`.
+
+Acts only on `transferFrom`: the spender must be listed (code `66`). Direct transfers, mints and burns always pass, so on its own the token screens no holder. In production, combine it behind a RuleEngine with a rule that screens holders (`RuleWhitelist`, `RuleReceiverWhitelist` or `RuleIdentityRegistry`).
+
+### DeployCMTATWithWhitelistWrapper
+
+Signature: `deploy(admin, deployer, forwarder, checkSpender, allowMintBurn)`, returning the token, the wrapper and both children. `run()` passes `checkSpender = false`, `allowMintBurn = true`.
+
+Two child whitelists, one per operator, are owned by `admin` from the start. The wrapper is constructed with `deployer` as temporary admin so that it can `addRule` both children, then it is set on the token and handed over. An address listed in **either** child is eligible. The children are never set on the token or added to a RuleEngine. Mint and burn depend on the wrapper's own `allowMintBurn`, not on the children's flags; with `false`, every mint is rejected with code `24`.
+
+### DeployCMTATWithSanctionsList
+
+Signature: `deploy(admin, deployer, forwarder, sanctionsOracle)`. `run()` reads the oracle from `SANCTIONS_ORACLE`.
+
+The sanctions rule alone, set directly on the token (codes `30` to `32`). On CMTAT v3.3 the minter and burner are screened too. **An unset oracle fails open**, as in the engine scripts. An oracle address without code, or a reverting oracle, makes every operation revert.
+
+### DeployCMTATWithERC2980
+
+Signature: `deploy(admin, deployer, forwarder, allowMintBurn)`. `run()` passes `allowMintBurn = true`.
+
+ERC-2980 whitelist (receiver only) plus frozenlist (sender, receiver and `transferFrom` spender; frozen takes priority), codes `60` to `65`. The rule's frozenlist is separate from the token's own freeze. On CMTAT v3.3 the minter is also checked against the frozenlist.
+
+### DeployCMTATWithIdentityRegistry
+
+Signature: `deploy(admin, deployer, forwarder, checkSender, checkSpender)`, returning the token, the registry and the rule. `run()` passes `false, false`: receiver only, as ERC-3643 requires.
+
+Deploys an `IdentityRegistryWhitelist` owned by `admin` as the registry, and `RuleIdentityRegistry` pointing at it, set directly on the token (codes `55` to `57`). CMTAT has no identity-registry slot, so the token never calls the registry and needs no role on it. A de-listed holder can still send.
+
+### DeployCMTATWithMaxBalance
+
+Signature: `deploy(admin, deployer, forwarder, maxBalance)`. `run()` reads the cap from `CMTAT_MAX_BALANCE`, default `100000` base units.
+
+Caps what one address may hold (codes `82`, `83`), screening the receiver; burns are exempt. Deployed after the token, which its constructor validates. **Bypassable by splitting a position across wallets**: in production combine it behind a RuleEngine with a one-address-per-investor rule. `maxBalance = 0` forbids holding, it does not disable the rule.
+
+### DeployCMTATWithChainlinkPoR
+
+Signature: `deploy(admin, deployer, forwarder, feed, maxStalenessSeconds)`. `run()` reads `CHAINLINK_POR_FEED` and `CHAINLINK_POR_MAX_STALENESS` (default `86400`).
+
+Caps mints at the reserves reported by a Chainlink Proof of Reserve feed (codes `75` to `79`); transfers and burns always pass. Deployed after the token; the token decimals are read from the token. **Without a feed**, `run()` deploys an `AggregatorV3Mock` on the local chain (31337) so that the CI dry run succeeds, and logs a warning; on any other chain it reverts with `DeployCMTATWithChainlinkPoR_FeedNotConfigured`. The rule admin can repoint the feed, so it controls how much can be minted.
+
+### DeployCMTATWithConditionalTransferLight
+
+Signature: `deploy(admin, deployer, forwarder)`.
+
+An operation rule: each transfer needs an operator approval of the exact `(from, to, value)`, consumed by the transfer (code `46` without one, `85` while unbound). Mints and burns need no approval. The rule is constructed with `deployer` as temporary admin so that it can `bindToken(token)`, then both the rule and the token are handed over. One token per rule.
+
+### DeployCMTATWithConditionalTransferLightMultiToken
+
+Signature: `deploy(admin, deployer, forwarder)`.
+
+The same approval flow, keyed per token, so one rule can serve several tokens (one `bindToken` each). **Direct binding only: never add it to a RuleEngine.** Off-chain checks use `detectTransferRestrictionForToken(token, ...)`: called by anyone other than the bound token, the plain `detectTransferRestriction` always answers `46`. Same temporary-admin and hand-over pattern as the previous script.
+
+### DeployCMTATWithMintAllowance
+
+Signature: `deploy(admin, deployer, forwarder)`.
+
+A per-minter quota debited on each mint (code `70`), needing CMTAT v3.3 or later. The script sets **no quota**, so every mint is refused until the operator sets one, **including the admin's**: the admin is not exempt. Pre-check a mint with `detectTransferRestrictionFrom(minter, address(0), to, value)`; the 3-argument view always answers `0`. Same temporary-admin and hand-over pattern as the conditional-transfer scripts.
+
+### DeployCMTATWithIssuanceCap
+
+Signature: `deploy(admin, deployer, forwarder, issuanceCap)`. `run()` reads the cap from `CMTAT_ISSUANCE_CAP`, default `1000000` base units; `initialIssued` is `0` (new token).
+
+Caps cumulative issuance: burns never free room (code `71`, and `50` / `51` from the inherited supply check). Deployed after the token and bound to it, with the same temporary-admin and hand-over pattern. The observed token is locked and the rule accepts one binding, so it serves one token. Not for bridged tokens: each bridge round trip uses up the cap.
+
 ### DeployCMTATWithBlacklistAndSanctionsList
 
 Signature: `deploy(admin, deployer, forwarder, sanctionsOracle)`.
@@ -190,6 +291,18 @@ Nothing below can be done by the script, because only the operator knows the val
 | Whitelist | Add every participant with `addAddress` / `addAddresses`. Until then transfers fail, including to the admin, who is not whitelisted by deployment. |
 | Blacklist | Nothing to make it work. Add addresses as needed. Review that an open-by-default token is what you want. |
 | Max total supply | Confirm `CMTAT_MAX_SUPPLY` is the real cap, in base units, and not the `1000000` default. Check `remainingMintable()`. |
+| Receiver whitelist | Add investors with `addAddress` / `addAddresses`. |
+| Spender whitelist | List the permitted spenders with `addAddress`; until then every `transferFrom` is rejected. |
+| Whitelist wrapper | Grant each operator `ADDRESS_LIST_ADD_ROLE` / `ADDRESS_LIST_REMOVE_ROLE` on its own child, then list investors there. |
+| Sanctions list | **Set the oracle** with `setSanctionListOracle`, unless `SANCTIONS_ORACLE` was set. |
+| ERC-2980 | Whitelist receivers with `addWhitelistAddresses`; until then every mint and transfer fails with code `63`. |
+| Identity registry | Register investors with `registry.registerIdentity(wallet, address(0), 0)` (`IDENTITY_REGISTRAR_ROLE`). |
+| Max balance | Confirm `CMTAT_MAX_BALANCE`, and exempt the treasury or custodian with `addExemptAddresses`. |
+| Chainlink PoR | Check `rule.maxBackedSupply()` against the expected reserves, and set the staleness to the feed's heartbeat. |
+| Conditional transfer | Grant `OPERATOR_ROLE` to whoever approves transfers. |
+| Conditional transfer, multi-token | Grant `OPERATOR_ROLE`; approvals are `approveTransfer(token, from, to, value)`. |
+| Mint allowance | Set each minter's quota with `setMintAllowance` (`ALLOWANCE_OPERATOR_ROLE`). |
+| Issuance cap | Confirm `CMTAT_ISSUANCE_CAP`; raise it later with `increaseMaxTotalSupply`. |
 | Blacklist + sanctions | **Set the oracle** with `setSanctionListOracle`, unless `SANCTIONS_ORACLE` was set. |
 | The three-rule script | The same oracle step, plus confirm `CMTAT_MAX_SUPPLY` is the real cap and not the `1000000` default. |
 | All | Grant operational roles (minter, pauser, list managers) to whoever needs them. The admin implicitly holds all roles, so nothing is blocked, but relying on that means a single key does everything. |
@@ -217,7 +330,7 @@ Nothing below can be done by the script, because only the operator knows the val
 
 Two layers, and they cover different things.
 
-**Unit tests**, in [`test/DeploymentScripts/`](../../../test/DeploymentScripts/), call `deploy()` directly and assert the wiring, the role hand-over, and the resulting compliance behaviour end to end: 58 tests across the five scripts, including that the admin owns everything and the deployer owns nothing.
+**Unit tests**, in [`test/DeploymentScripts/`](../../../test/DeploymentScripts/), call `deploy()` directly and assert the wiring, the role hand-over, and the resulting compliance behaviour end to end: 145 tests across the seventeen scripts, including that the admin owns everything and the deployer owns nothing.
 
 **A `forge script` dry run in CI**, one per script, in `.github/workflows/test.yml`.
 
