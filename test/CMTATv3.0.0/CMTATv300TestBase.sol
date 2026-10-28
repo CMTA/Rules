@@ -5,7 +5,12 @@ import {Test} from "forge-std/Test.sol";
 import {HelperContract} from "../HelperContract.sol";
 import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
-import {CMTATDeploymentV300} from "test/utils/CMTATDeploymentV300.sol";
+import {ICMTATConstructor, CMTATStandalone} from "CMTATv3.0.0/deployment/CMTATStandalone.sol";
+import {CMTATStandaloneDebt} from "CMTATv3.0.0/deployment/debt/CMTATStandaloneDebt.sol";
+import {IRuleEngine} from "CMTATv3.0.0/interfaces/engine/IRuleEngine.sol";
+import {ISnapshotEngine} from "CMTATv3.0.0/interfaces/engine/ISnapshotEngine.sol";
+import {IERC1643} from "CMTATv3.0.0/interfaces/engine/IDocumentEngine.sol";
+import {IERC1643CMTAT} from "CMTATv3.0.0/interfaces/tokenization/draft-IERC1643CMTAT.sol";
 
 /**
  * @notice The CMTAT v3.0.0 surface the tests drive, common to the Standard and Debt variants.
@@ -57,11 +62,25 @@ abstract contract CMTATv300TestBase is Test, HelperContract {
 
     function _viaEngine() internal pure virtual returns (bool);
 
+    /**
+     * @dev Deploys the token directly from the test contract. A separate deployer holding the creation code of
+     * both variants exceeds the EIP-170 size limit, which `forge build --sizes` enforces on every non-test
+     * contract; test contracts are exempt.
+     */
     function _deployToken() internal {
-        CMTATDeploymentV300 deployer = new CMTATDeploymentV300();
+        ICMTATConstructor.ERC20Attributes memory erc20 = ICMTATConstructor.ERC20Attributes("CMTA Token", "CMTAT", 0);
+        ICMTATConstructor.ExtraInformationAttributes memory info = ICMTATConstructor.ExtraInformationAttributes(
+            "CMTAT_ISIN",
+            IERC1643CMTAT.DocumentInfo(
+                "Terms", "https://cmta.ch", 0x9ff867f6592aa9d6d039e7aad6bd71f1659720cbc4dd9eae1554f6eab490098b
+            ),
+            "CMTAT_info"
+        );
+        ICMTATConstructor.Engine memory engines =
+            ICMTATConstructor.Engine(IRuleEngine(address(0)), ISnapshotEngine(address(0)), IERC1643(address(0)));
         token = _isDebt()
-            ? ICMTATv300(address(deployer.deployDebt(DEFAULT_ADMIN_ADDRESS)))
-            : ICMTATv300(address(deployer.deployStandard(DEFAULT_ADMIN_ADDRESS)));
+            ? ICMTATv300(address(new CMTATStandaloneDebt(DEFAULT_ADMIN_ADDRESS, erc20, info, engines)))
+            : ICMTATv300(address(new CMTATStandalone(address(0), DEFAULT_ADMIN_ADDRESS, erc20, info, engines)));
     }
 
     /**

@@ -126,6 +126,11 @@ Commit:
   - Their `transferred` accepts only a bound caller, so until `bindToken` (or `bindRuleEngine` for `RuleConditionalTransferLight`) is called every operation reverts, while the views said it would succeed. Every view now reports 85 for every operation, the `can*` views return `false`, and `RuleIssuanceCap.remainingMintable()` returns `(85, 0)`.
   - One code and one message for the three rules, declared once in the new `RuleBindingInvariantStorage`. It is the one code shared across unrelated rules.
   - Behaviour change for integrators: a pre-flight on an unbound rule now fails instead of passing. Once bound, every view answers exactly as before. `RuleConditionalTransferLight` counts as bound when either a token or a RuleEngine is bound.
+- CI: `forge build --sizes` failed because the test helper `test/utils/CMTATDeploymentV300.sol` held the creation code of both CMTAT v3.0.0 variants (54 KB, over the EIP-170 limit). The helper is removed and `CMTATv300TestBase` deploys the token itself; test contracts are exempt from the size check.
+- CI warnings removed.
+  - `foundry.lock` recorded the previous dependency commits, so every Foundry command printed a revision mismatch for five submodules. It now records the pinned commits and tags of all nine (OpenZeppelin `v5.7.0`, CMTAT `v3.3.0-rc4` and `v3.0.0`, RuleEngine `v3.0.0-rc7`, forge-std `v1.12.0`, ERC-3643 `4.2.0-beta1`, and the two Chainlink reference repositories).
+  - The workflow installs Foundry `v1.5.0` instead of `nightly`.
+  - `foundry.toml` sets `ignored_warnings_from = ['lib']`, so compiler warnings from vendored dependencies (deprecated `pragma experimental ABIEncoderV2`, `at` and `error` becoming keywords) no longer flood the log.
 
 ### Breaking change
 
@@ -226,7 +231,7 @@ Commit:
 - `test/InterfaceId/RuleInterfaceIdCompatibility.t.sol` (3 tests): pins the two `IRule` id literals and checks that each distinct `supportsInterface` implementation advertises the new id, the legacy id and `IRuleEngine`.
 - Deployment-script tests: one test per engine script for each branch of the forwarder choice (4 tests).
 - **CMTAT v3.0.0 integration suites** (`test/CMTATv3.0.0/`, 320 tests): one suite per rule, each run on the Standard and Debt variants, set directly on the token and behind a `RuleEngine` (`RuleConditionalTransferLightMultiToken`: direct only).
-  - Shared harness: `CMTATv300TestBase`, which provides a variant-neutral token interface, installs the rule directly or behind a RuleEngine, and holds view assertions that check `canTransfer` and, on Standard, `detectTransferRestriction*`; the four variant/topology mixins in `CMTATv300Variants.sol`; and `test/utils/CMTATDeploymentV300.sol`.
+  - Shared harness: `CMTATv300TestBase`, which provides a variant-neutral token interface, installs the rule directly or behind a RuleEngine, and holds view assertions that check `canTransfer` and, on Standard, `detectTransferRestriction*`; and the four variant/topology mixins in `CMTATv300Variants.sol`. The base deploys the v3.0.0 token itself: a separate deployer holding the creation code of both variants (54 KB) exceeded the EIP-170 limit and failed the CI size check (`forge build --sizes`).
   - Pinned v3.0.0 differences: a blacklisted, sanctioned or frozen **minter** is not screened by `RuleBlacklist`, `RuleSanctionsList` and `RuleERC2980` (v3.0.0 sends mint and burn without a spender); `RuleMintAllowance` is inert (every mint passes, no quota debited).
   - Pinned `RuleMaxTotalSupply` behaviours: `burnAndMint` needs room only for the net increase, a forced burn frees room, `crosschainMint` / `crosschainBurn` are capped / free room, and supply minted while the rule is detached is counted on re-attach.
 - `RuleIssuanceCap`:

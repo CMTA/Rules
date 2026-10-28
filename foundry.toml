@@ -11,6 +11,9 @@ evm_version = 'osaka'
 # and are built by the `erc3643` profile below. Run them with:
 #   FOUNDRY_PROFILE=erc3643 forge test
 skip = ['test/ERC3643Real/**']
+# Compiler warnings from vendored dependencies (forge-std, OpenZeppelin, CMTAT) are not actionable here and
+# flooded the CI log past solc's 256-warning cap, hiding any warning from our own sources.
+ignored_warnings_from = ['lib']
 
 # Builds the whole project at solc 0.8.30 so the vendored ERC-3643 `Token.sol` compiles alongside
 # our own contracts (which are `^0.8.20`, so 0.8.30 satisfies them). Nothing else changes.
