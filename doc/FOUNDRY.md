@@ -1,6 +1,6 @@
 # Foundry Toolchain Guide
 
-Full development-toolchain reference for the **Rules** project. For a quick command summary, see the [Toolchains and Usage](../README.md#toolchains-and-usage) section of the README.
+Full development-toolchain reference for the **Rules** project. For a quick command summary, see the [Toolchains and Usage](./README.md#toolchains-and-usage) section of the full reference.
 
 ## Configuration
 
@@ -136,9 +136,7 @@ Gas usage is tracked in two complementary files:
 
 ## Coverage
 
-![coverage](./coverage/coverage.png)
-
-A code coverage is available in [index.html](./coverage/coverage/index.html).
+Coverage of `src/` for v0.7.0: 100% of lines and functions, 353 of 354 branches (the missing branch is the passing side of a `require(false, …)` and cannot run). The full report is in [index.html](./coverage/coverage/index.html), from [`lcov.info`](./coverage/lcov.info).
 
 * Perform a code coverage
 

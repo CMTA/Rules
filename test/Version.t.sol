@@ -35,6 +35,23 @@ import {IdentityRegistryWhitelist} from "src/registry/IdentityRegistryWhitelist.
 import {AggregatorV3Interface} from "src/rules/interfaces/AggregatorV3Interface.sol";
 import {AggregatorV3Mock} from "src/mocks/AggregatorV3Mock.sol";
 import {TotalSupplyDecimalsMock} from "src/mocks/TotalSupplyDecimalsMock.sol";
+import {RuleWhitelistOwnable2Step} from "src/rules/validation/deployment/RuleWhitelistOwnable2Step.sol";
+import {RuleBlacklistOwnable2Step} from "src/rules/validation/deployment/RuleBlacklistOwnable2Step.sol";
+import {RuleSanctionsListOwnable2Step} from "src/rules/validation/deployment/RuleSanctionsListOwnable2Step.sol";
+import {RuleMaxTotalSupplyOwnable2Step} from "src/rules/validation/deployment/RuleMaxTotalSupplyOwnable2Step.sol";
+import {RuleWhitelistWrapperOwnable2Step} from "src/rules/validation/deployment/RuleWhitelistWrapperOwnable2Step.sol";
+import {RuleERC2980Ownable2Step} from "src/rules/validation/deployment/RuleERC2980Ownable2Step.sol";
+import {RuleSpenderWhitelistOwnable2Step} from "src/rules/validation/deployment/RuleSpenderWhitelistOwnable2Step.sol";
+import {RuleReceiverWhitelistOwnable2Step} from "src/rules/validation/deployment/RuleReceiverWhitelistOwnable2Step.sol";
+import {RuleIdentityRegistryOwnable2Step} from "src/rules/validation/deployment/RuleIdentityRegistryOwnable2Step.sol";
+import {RuleChainlinkPoROwnable2Step} from "src/rules/validation/deployment/RuleChainlinkPoROwnable2Step.sol";
+import {
+    RuleConditionalTransferLightOwnable2Step
+} from "src/rules/operation/RuleConditionalTransferLightOwnable2Step.sol";
+import {
+    RuleConditionalTransferLightMultiTokenOwnable2Step
+} from "src/rules/operation/RuleConditionalTransferLightMultiTokenOwnable2Step.sol";
+import {RuleMintAllowanceOwnable2Step} from "src/rules/operation/RuleMintAllowanceOwnable2Step.sol";
 
 contract VersionTest is Test, HelperContract {
     string constant EXPECTED_VERSION = "0.7.0";
@@ -169,5 +186,84 @@ contract VersionTest is Test, HelperContract {
     function testVersionIdentityRegistryWhitelist() public {
         IdentityRegistryWhitelist registry = new IdentityRegistryWhitelist(DEFAULT_ADMIN_ADDRESS);
         assertEq(registry.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleWhitelistOwnable2Step() public {
+        RuleWhitelistOwnable2Step rule = new RuleWhitelistOwnable2Step(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, true, false);
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleBlacklistOwnable2Step() public {
+        RuleBlacklistOwnable2Step rule = new RuleBlacklistOwnable2Step(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleSanctionsListOwnable2Step() public {
+        RuleSanctionsListOwnable2Step rule =
+            new RuleSanctionsListOwnable2Step(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, ISanctionsList(ZERO_ADDRESS));
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleMaxTotalSupplyOwnable2Step() public {
+        RuleMaxTotalSupplyOwnable2Step rule =
+            new RuleMaxTotalSupplyOwnable2Step(DEFAULT_ADMIN_ADDRESS, address(new TotalSupplyMock()), 0);
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleWhitelistWrapperOwnable2Step() public {
+        RuleWhitelistWrapperOwnable2Step rule =
+            new RuleWhitelistWrapperOwnable2Step(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, false, true);
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleERC2980Ownable2Step() public {
+        RuleERC2980Ownable2Step rule = new RuleERC2980Ownable2Step(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, false);
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleSpenderWhitelistOwnable2Step() public {
+        RuleSpenderWhitelistOwnable2Step rule =
+            new RuleSpenderWhitelistOwnable2Step(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleReceiverWhitelistOwnable2Step() public {
+        RuleReceiverWhitelistOwnable2Step rule =
+            new RuleReceiverWhitelistOwnable2Step(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleIdentityRegistryOwnable2Step() public {
+        RuleIdentityRegistryOwnable2Step rule =
+            new RuleIdentityRegistryOwnable2Step(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, false, false);
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleChainlinkPoROwnable2Step() public {
+        RuleChainlinkPoROwnable2Step rule = new RuleChainlinkPoROwnable2Step(
+            DEFAULT_ADMIN_ADDRESS,
+            address(new TotalSupplyDecimalsMock(18)),
+            18,
+            AggregatorV3Interface(address(new AggregatorV3Mock(8, 1000 * 1e8))),
+            1 days
+        );
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleConditionalTransferLightOwnable2Step() public {
+        RuleConditionalTransferLightOwnable2Step rule =
+            new RuleConditionalTransferLightOwnable2Step(DEFAULT_ADMIN_ADDRESS);
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleConditionalTransferLightMultiTokenOwnable2Step() public {
+        RuleConditionalTransferLightMultiTokenOwnable2Step rule =
+            new RuleConditionalTransferLightMultiTokenOwnable2Step(DEFAULT_ADMIN_ADDRESS);
+        assertEq(rule.version(), EXPECTED_VERSION);
+    }
+
+    function testVersionRuleMintAllowanceOwnable2Step() public {
+        RuleMintAllowanceOwnable2Step rule = new RuleMintAllowanceOwnable2Step(DEFAULT_ADMIN_ADDRESS);
+        assertEq(rule.version(), EXPECTED_VERSION);
     }
 }

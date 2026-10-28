@@ -43,7 +43,7 @@ Every step below is tested against a real v3.3.0-rc4 token:
 - `test/RuleBlacklist/RuleBlacklistCMTATDeployment.t.sol`: rule or RuleEngine passed in the token constructor (§4.1, §4.3), blacklisted minter and burner rejected with code 38, blacklisted holder trapped until `forcedTransfer`;
 - `test/RuleBlacklist/CMTATIntegrationDirect.t.sol`: rule set directly on the token after deployment (§4.2);
 - `test/RuleBlacklist/CMTATIntegration.t.sol`: rule behind a RuleEngine bound in its constructor, set after deployment (§4.4);
-- `test/DeploymentScripts/DeployCMTATWithBlacklist.t.sol` and `DeployCMTATWithBlacklistAndSanctionsList.t.sol`: the repository scripts for §4.2 and §4.4.
+- `test/DeploymentScripts/DeployCMTATWithBlacklist.t.sol` and `DeployCMTATWithBlacklistAndSanctionsList.t.sol`: the repository scripts for §4.1 and §4.3.
 
 ## 1. What the rule enforces
 

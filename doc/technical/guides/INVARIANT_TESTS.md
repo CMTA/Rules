@@ -17,7 +17,7 @@
 
 This document describes the **stateful invariant suite** in [`test/invariant/`](../../../test/invariant/): what each invariant asserts, why it matters, how the handlers are built, and how the suite was verified to catch bugs.
 
-Invariant tests differ from the unit and fuzz tests elsewhere in `test/`: instead of exercising a fixed call sequence, Foundry drives a **handler** contract with long, randomly-ordered sequences of calls and re-checks every `invariant_*` function after each step. They are the right tool for the two **stateful (operation) rules**, whose storage evolves across calls.
+Invariant tests differ from the unit and fuzz tests elsewhere in `test/`: instead of exercising a fixed call sequence, Foundry drives a **handler** contract with long, randomly-ordered sequences of calls and re-checks every `invariant_*` function after each step. They are the right tool for the **stateful (operation) rules** (`RuleConditionalTransferLight`, `RuleMintAllowance`, `RuleIssuanceCap`), whose storage evolves across calls.
 
 Validation rules are read-only and hold no per-transfer state, so most have nothing to conserve across a call sequence, and unit and fuzz tests cover them instead. **`RuleMaxTotalSupply` is the exception.** It holds no state, but the supply it guards does, and that supply is changed by operations the rule never sees (forced burns). Its suite therefore drives a **real CMTAT token** rather than calling the rule directly (§3.3).
 
@@ -207,11 +207,11 @@ Cumulative issuance can never be below the outstanding supply while every mint i
 
 ## 4. Negative controls — proving the suite can fail
 
-An invariant suite that cannot fail is worthless. Both invariants were **mutation-tested**: a real bug was injected into the rule, the suite was run, and the failure was confirmed. The mutations were then reverted.
+An invariant suite that cannot fail is worthless. The suites were **mutation-tested**: a real bug was injected into the rule, the suite was run, and the failure was confirmed. The mutations were then reverted.
 
 | Mutation | Injected bug | Result |
 |---|---|---|
-| `RuleConditionalTransferLightApprovalBase._transferred` — remove `approvalCounts[hash] = count - 1` | Approval **double-spend**: one approval can be consumed forever | ❌ `invariant_approvalConservation` fails: `approval accounting drifted: 0 != 1` |
+| `RuleConditionalTransferLightApprovalBase._transferred` — remove `approvalCounts[transferHash] = count - 1` | Approval **double-spend**: one approval can be consumed forever | ❌ `invariant_approvalConservation` fails: `approval accounting drifted: 0 != 1` |
 | `RuleMintAllowanceBase._transferredFrom` — `current - value` → `current - value + 1` | **Off-by-one** quota deduction: minters slowly gain free quota | ❌ `invariant_allowanceMatchesGhost` fails: `mint allowance drifted from expected: 1938542 != 1938541` |
 | `CapAccounting._capExceededBy` — `value > cap - observed` → `value > cap - observed + 1` | **Off-by-one** cap: one unit above the cap gets through | ❌ `invariant_noMintBreachedTheCap` fails: `a mint went through above the cap: 1 != 0` (and `invariant_preflightAgreesWithHeadroom`). Before `mintAtBoundary` was added, only the pre-flight invariant caught it |
 | `CapAccounting._capExceededBy` — `>` → `>=` | **Over-strict** cap: a mint landing exactly on the cap is rejected | ❌ `invariant_noFittingMintWasRejected` fails: `a mint that fitted was rejected: 1 != 0` (and `invariant_preflightAgreesWithHeadroom`) |

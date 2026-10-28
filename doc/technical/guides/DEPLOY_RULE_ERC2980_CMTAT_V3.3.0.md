@@ -211,7 +211,7 @@ sequenceDiagram
 
 A RuleEngine serving one token is the intended setup. `RuleERC2980` itself would work for several tokens, since it reads no token state, but every token would then share one whitelist and one frozenlist.
 
-The repository script `script/DeployCMTATWithERC2980.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+The repository script `script/DeployCMTATWithERC2980.s.sol` deploys this rule on a v3.3.0 token, passed in the token constructor (setup 4.1, with an empty whitelist), in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
 
 ## 5. Mint workflow
 

@@ -62,19 +62,13 @@ npm run-script uml:test
 
 Or only specified contracts
 
-RuleEngine
+RuleWhitelist
 
 ```
-npx sol2uml class -i -c src/RuleEngine.sol
+npx sol2uml class src/rules/validation/deployment/RuleWhitelist.sol
 ```
 
-Whitelist
-
-```
-npx sol2uml class src/Whitelist.sol
-```
-
-The related component can be installed with `npm install` (see [package.json](./package.json)).
+The related component can be installed with `npm install` (see [package.json](../package.json)).
 
 ### [Surya](https://github.com/ConsenSys/surya)
 
@@ -83,7 +77,7 @@ The related component can be installed with `npm install` (see [package.json](./
 To generate graphs with Surya, you can run the following command
 
 ```bash
-npm run-script surya:graph
+cd doc/script && bash script_surya_graph.sh
 ```
 
 OR
@@ -93,16 +87,11 @@ OR
 ```bash
  npx surya graph  src/rules/validation/deployment/RuleWhitelist.sol | dot -Tpng > surya_graph_Whitelist.png
 ```
-- RuleEngine
-
-```bash
-npx surya graph  src/RuleEngine.sol | dot -Tpng > surya_graph_RuleEngine.png
-```
 
 #### Report
 
 ```bash
-npm run-script surya:report
+cd doc/script && bash script_surya_report.sh
 ```
 
 

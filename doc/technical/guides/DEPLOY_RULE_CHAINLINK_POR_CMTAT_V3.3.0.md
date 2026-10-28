@@ -82,7 +82,7 @@ A mint made before the rule is installed is **not lost**: the rule reads the liv
 | `RuleChainlinkPoR` (or `RuleChainlinkPoROwnable2Step`) | `(admin, tokenContract, tokenDecimals, reservesFeed, maxStalenessSeconds)`; `tokenContract` must be non-zero, have code and answer `totalSupply()`; `tokenDecimals` at most 18 and equal to the token's `decimals()`; `reservesFeed` must be a contract whose `decimals()` answers with at most 36 | `DEFAULT_ADMIN_ROLE` (`setReservesFeed`, `setTokenMetadata`, `setMaxStalenessSeconds`, roles). The Ownable2Step variant gives all of it to the owner |
 | Chainlink Proof of Reserve feed | deployed and run by Chainlink, or any contract implementing `AggregatorV3Interface` | none: the rule only reads `decimals()` and `latestRoundData()` |
 | `RuleEngine` (RuleEngine `v3.0.0-rc7`, optional) | `(admin, tokenContract)`; `tokenContract` may be `address(0)` | `RULES_MANAGEMENT_ROLE` (`addRule`), `COMPLIANCE_MANAGER_ROLE` (`bindToken`) |
-| CMTAT v3.3.0 `CMTATStandardStandalone` (or `CMTATStandaloneDebt`, or a proxy variant) | `(forwarder, admin, ERC20Attributes, ExtraInformationAttributes, `Engine{ruleEngine}`)`. `CMTATStandaloneDebt` takes no forwarder | `DEFAULT_ADMIN_ROLE` (`setRuleEngine`, all roles), `MINTER_ROLE`, `BURNER_ROLE` |
+| CMTAT v3.3.0 `CMTATStandardStandalone` (or `CMTATStandaloneDebt`, or a proxy variant) | `(forwarder, admin, ERC20Attributes, ExtraInformationAttributes, Engine{ruleEngine})`. `CMTATStandaloneDebt` takes no forwarder | `DEFAULT_ADMIN_ROLE` (`setRuleEngine`, all roles), `MINTER_ROLE`, `BURNER_ROLE` |
 
 On both CMTAT and the AccessControl rule, the default admin implicitly holds every role. The rule has no separate operator role: whoever holds its `DEFAULT_ADMIN_ROLE` can repoint the feed, and so decides how much can be minted.
 
@@ -189,7 +189,7 @@ sequenceDiagram
     Admin->>Rule: maxBackedSupply() returns (0, backed)
 ```
 
-The repository script `script/DeployCMTATWithChainlinkPoR.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+The repository script `script/DeployCMTATWithChainlinkPoR.s.sol` deploys this rule on a v3.3.0 token, set directly on it after deployment (setup 4.2), in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
 
 ## 5. Mint workflow
 

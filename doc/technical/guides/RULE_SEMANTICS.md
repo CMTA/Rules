@@ -134,7 +134,7 @@ Every adapter entrypoint normalises `spender == from` to the **direct** hook. Th
 
 6. **`RuleMintAllowance` is the only rule that *uses* the mint spender.** On the 4-arg path with `from == address(0)`, it debits `mintAllowance[spender]`. On the 3-arg path (no spender) it performs no deduction, so it must be deployed against the CMTAT/RuleEngine v3.3+ spender-aware path.
 
-7. **Stateful** means the rule writes storage inside the `transferred` callback. Validation rules are read-only; the three operation rules (`RuleConditionalTransferLight`, `…MultiToken`, `RuleMintAllowance`) mutate state and require `bindToken`.
+7. **Stateful** means the rule writes storage inside the `transferred` callback. Validation rules are read-only; the four operation rules (`RuleConditionalTransferLight`, `…MultiToken`, `RuleMintAllowance`, `RuleIssuanceCap`) mutate state and require `bindToken`.
 
 8. **Fail-open when unset.** `RuleSanctionsList` (oracle == `address(0)`) and `RuleIdentityRegistry` (registry == `address(0)`) return `TRANSFER_OK` for everything — screening is disabled, not fail-closed (threats `SL-1`/`SL-2`). `clearSanctionListOracle()` / `clearIdentityRegistry()` are single-call kill switches for that screening. Compose with another rule if a hard floor is required.
 

@@ -33,7 +33,9 @@ v3.3.0 is not final yet: this library is validated against **`v3.3.0-rc4`**, the
 Every step below is tested against a real v3.3.0-rc4 token:
 
 - `test/RuleMaxTotalSupply/RuleMaxTotalSupplyCMTATIntegration.t.sol`: rule set directly on the token after deployment, and RuleEngine passed in the token constructor;
-- `test/DeploymentScripts/DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply.t.sol`: rule behind a RuleEngine set after deployment, through the repository script.
+- `test/DeploymentScripts/DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply.t.sol`: RuleEngine passed in the token constructor, rule added and token bound last (setup 4.1), through the repository script.
+
+The RuleEngine set after deployment (§4.3) is not tested on a v3.3.0 token; it is on v3.0.0, with the same calls.
 
 ## 1. What the rule enforces
 
@@ -74,7 +76,7 @@ A mint made before the rule is installed is **not lost**: the rule reads the liv
 | --- | --- | --- |
 | `RuleMaxTotalSupply` (or `RuleMaxTotalSupplyOwnable2Step`) | `(admin, tokenContract, maxTotalSupply)`; `tokenContract` must be non-zero, have code and answer `totalSupply()` | `MAX_TOTAL_SUPPLY_ROLE` (`setMaxTotalSupply`, `increaseMaxTotalSupply`, `decreaseMaxTotalSupply`), `DEFAULT_ADMIN_ROLE` (`setTokenContract`, roles, and everything the cap role may call). The Ownable2Step variant gives all of it to the owner |
 | `RuleEngine` (RuleEngine `v3.0.0-rc7`, optional) | `(admin, tokenContract)`; `tokenContract` may be `address(0)` | `RULES_MANAGEMENT_ROLE` (`addRule`), `COMPLIANCE_MANAGER_ROLE` (`bindToken`) |
-| CMTAT v3.3.0 `CMTATStandardStandalone` (or `CMTATStandaloneDebt`, or a proxy variant) | `(forwarder, admin, ERC20Attributes, ExtraInformationAttributes, `Engine{ruleEngine}`)`. `CMTATStandaloneDebt` takes no forwarder | `DEFAULT_ADMIN_ROLE` (`setRuleEngine`, all roles), `MINTER_ROLE`, `BURNER_ROLE` |
+| CMTAT v3.3.0 `CMTATStandardStandalone` (or `CMTATStandaloneDebt`, or a proxy variant) | `(forwarder, admin, ERC20Attributes, ExtraInformationAttributes, Engine{ruleEngine})`. `CMTATStandaloneDebt` takes no forwarder | `DEFAULT_ADMIN_ROLE` (`setRuleEngine`, all roles), `MINTER_ROLE`, `BURNER_ROLE` |
 
 On both CMTAT and the AccessControl rule, the default admin implicitly holds every role. The cap role can be given to a separate key, for example the one that records each capital increase, without giving it the admin role: the admin keeps `setTokenContract`, which changes the protected supply as much as the cap does.
 

@@ -266,7 +266,7 @@ Negative results: a holder of `MAX_TOTAL_SUPPLY_ROLE` cannot repoint the observe
 
 No runtime code changed. The NatSpec change is recorded in `CLAUDE_ANALYSIS_SUMMARY.md`, as production comments do not cite this report.
 
-What the review added: 16 tests in `test/ThreatModel/ThreatModelV070Tests.t.sol` (12 unit and integration tests, the integration ones on a real CMTAT `v3.3` token and RuleEngine `rc7`; 4 fuzz tests). After adding them and after the documentation changes for F-1, F-3 and F-4 (plus two integration tests for F-4): `forge test` 1310 passed, 0 failed; `FOUNDRY_PROFILE=erc3643 forge test` 53 passed, 0 failed; `forge fmt --check` clean.
+What the review added: 16 tests in `test/ThreatModel/ThreatModelV070Tests.t.sol` (13 unit and integration tests, the integration ones on a real CMTAT `v3.3` token and RuleEngine `rc7`; 3 fuzz tests). After adding them and after the documentation changes for F-1, F-3 and F-4 (plus two integration tests for F-4): `forge test` 1310 passed, 0 failed; `FOUNDRY_PROFILE=erc3643 forge test` 53 passed, 0 failed; `forge fmt --check` clean.
 
 ---
 

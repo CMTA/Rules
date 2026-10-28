@@ -216,7 +216,7 @@ sequenceDiagram
 
 If `bindRuleEngine` is forgotten, nothing on the read path shows it: the views return 46 or 0 as usual (code 85 appears only when neither a token nor an engine is bound), but every mint, burn and transfer reverts with `RuleConditionalTransferLight_TransferExecutorUnauthorized(engine)`. A test mint after step 4 catches it.
 
-The repository script `script/DeployCMTATWithConditionalTransferLight.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+The repository script `script/DeployCMTATWithConditionalTransferLight.s.sol` deploys this rule on a v3.3.0 token, passed in the token constructor and then bound (setup 4.1), in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
 
 ## 5. Transfer workflows
 

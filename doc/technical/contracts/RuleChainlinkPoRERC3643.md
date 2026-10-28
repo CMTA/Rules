@@ -38,7 +38,7 @@ function _detectTransferRestrictionOnNotify(address from, address to, uint256 /*
 }
 ```
 
-The **read** path is deliberately untouched: `detectTransferRestriction`, `canTransfer` and `maxBackedSupply` still project the pending amount, because a pre-flight query always runs *before* the movement — as the `require(... canTransfer ...)` line above shows, the ERC-3643 token depends on it. Re-phasing the views too would make the pre-flight answer disagree with enforcement.
+The **read** path is deliberately untouched (`maxBackedSupply` included): `detectTransferRestriction` and `canTransfer` still project the pending amount, because a pre-flight query always runs *before* the movement — as the `require(... canTransfer ...)` line above shows, the ERC-3643 token depends on it. Re-phasing the views too would make the pre-flight answer disagree with enforcement.
 
 The two consultations therefore reduce to the same condition, which is the property that makes the variant correct: `canTransfer` asks `supply + amount <= reserves` before the mint, and `created` asks `supply' <= reserves` after it, where `supply' == supply + amount`.
 

@@ -34,7 +34,7 @@ It is an **operation rule**: it modifies state during the transfer call (deducti
 
 Regular transfers and burns are **not restricted** by this rule — it only acts on minting operations (`from == address(0)`).
 
-`detectTransferRestriction(from, to, value)` (the 3-arg form without a spender) always returns `TRANSFER_OK` because the minter's identity is not available in that call path. Use `detectTransferRestrictionFrom(minter, address(0), to, amount)` to query a minter's allowance.
+`detectTransferRestriction(from, to, value)` (the 3-arg form without a spender) always returns `TRANSFER_OK` once the rule is bound (code 85 before) because the minter's identity is not available in that call path. Use `detectTransferRestrictionFrom(minter, address(0), to, amount)` to query a minter's allowance.
 
 > ⚠️ **`canTransfer` and `detectTransferRestriction` are NOT authoritative for this rule.** Once the rule is bound they always answer "allowed" (`true` / `TRANSFER_OK`; before binding they report code 85), because the 3-arg signature carries no minter identity, so a pre-flight that gates on them will disagree with enforcement: the mint still reverts with `RuleMintAllowance_AllowanceExceeded` if the quota is insufficient. **For a mint pre-flight, always use the spender-aware view** `canTransferFrom(minter, address(0), to, value)` (or `detectTransferRestrictionFrom(minter, address(0), to, value)`), which returns the real answer.
 

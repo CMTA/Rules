@@ -191,7 +191,7 @@ sequenceDiagram
 
 **For a token that is already live,** use 4.2 or 4.3 and pass as `initialIssued` the issuance at the moment the rule is installed: at least `totalSupply()`, and more if tokens were already burned. Do not mint between the rule's deployment and its installation.
 
-The repository script `script/DeployCMTATWithIssuanceCap.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+The repository script `script/DeployCMTATWithIssuanceCap.s.sol` deploys this rule on a v3.3.0 token, bound to the token and set directly on it after deployment (setup 4.2), in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
 
 ## 5. Mint workflow
 

@@ -89,7 +89,7 @@ The **Graph** and **Inheritance** diagrams are generated from the source code wi
 | Parameter | Description |
 | --- | --- |
 | `admin` / `owner` | Address granted `DEFAULT_ADMIN_ROLE` (AccessControl variant) or set as owner (Ownable2Step variant) |
-| `tokenContract_` | Address of the protected token; must expose `totalSupply()` and be non-zero |
+| `tokenContract_` | Address of the protected token; must be non-zero, have code and expose a callable `totalSupply()` |
 | `tokenDecimals_` | Decimals of that token, `0` to `18`; validated against `decimals()` when the token exposes it |
 | `reservesFeed_` | Proof of Reserve data feed implementing `AggregatorV3Interface`; must be a contract |
 | `maxStalenessSeconds_` | Maximum accepted age of the reserve data, in seconds; `0` disables the check |
@@ -179,7 +179,7 @@ Replaces the data feed. Reverts on the zero address, on an address with no code,
 
 ### `setTokenMetadata(address newTokenContract, uint8 newTokenDecimals)`
 
-Replaces the protected token and its decimals. Reverts on the zero address, on decimals above 18, and on a mismatch with the token's own `decimals()` when exposed. Emits `TokenMetadataUpdated`.
+Replaces the protected token and its decimals. Reverts on the zero address, on an address with no code, on decimals above 18, on a mismatch with the token's own `decimals()` when exposed, and when `totalSupply()` is not callable. Emits `TokenMetadataUpdated`.
 
 ### `setMaxStalenessSeconds(uint256 newMaxStalenessSeconds)`
 
@@ -249,7 +249,7 @@ There is deliberately **no runtime code-length re-check**: it would be unreachab
 
 > **If you deploy to a chain without EIP-6780** (post-Shanghai but pre-Cancun, as some L2s were for a period), this guarantee does not hold: a `SELFDESTRUCT`ed feed or token would make the ERC-1404 views revert instead of returning a code. Re-introduce an `address(x).code.length == 0` guard before each `try` if you target such a chain — it costs about 100 gas per call site, not the 2,600 a cold `EXTCODESIZE` suggests, because the account is warmed either way.
 
-The trust placed in `tokenContract` is narrower than it looks: it is trusted to report an **accurate** supply, which nothing on-chain can verify, but it is **not** trusted to stay callable. A token that is upgraded to something that reverts, or that reverts while paused, degrades to a restriction code rather than breaking the ERC-1404 contract. This is stricter than `RuleMaxTotalSupply`, which calls `totalSupply()` unguarded.
+The trust placed in `tokenContract` is narrower than it looks: it is trusted to report an **accurate** supply, which nothing on-chain can verify, but it is **not** trusted to stay callable. A token that is upgraded to something that reverts, or that reverts while paused, degrades to a restriction code rather than breaking the ERC-1404 contract. `RuleMaxTotalSupply` reads `totalSupply()` the same way, through the shared `TokenSupplyReader`, and returns its own code `51`.
 
 ### Failure modes are fail-closed for mints only
 
@@ -284,10 +284,10 @@ The decisive difference is **how a rejection is signalled**. `SecureMintPolicy.r
 | Dimension | Chainlink `SecureMintPolicy` 1.2.0 | `RuleChainlinkPoR` |
 | --- | --- | --- |
 | Integration model | ACE `PolicyEngine`, bound to one selector | ERC-1404 / ERC-3643 rule, via `RuleEngine` or bound directly |
-| Rejection signalling | Reverts (`PolicyRejected`) | Returns restriction code `75` / `76` / `77`; reverts only on the write path |
+| Rejection signalling | Reverts (`PolicyRejected`) | Returns restriction code `75` to `79`; reverts only on the write path |
 | Feed decimals | Read **live** on every `run()` | Read **live** on every check (same approach) |
 | Feed decimals bound | Unbounded (`uint8`) | `<= MAX_FEED_DECIMALS` (36), checked at configuration **and** at read time |
-| Feed call reverts (`decimals` or `latestRoundData`) | Propagates — mint reverts | `try/catch` → code `77` |
+| Feed call reverts (`decimals` or `latestRoundData`) | Propagates — mint reverts | `try/catch` → code `79` |
 | Incomplete round (`updatedAt == 0`) | Not checked | Code `77` |
 | Future-dated round (`updatedAt > block.timestamp`) | Not checked; `block.timestamp - updatedAt` underflow-panics the whole call | Code `77`, unconditionally — not gated on `maxStalenessSeconds` |
 | Token decimals accepted | `1` to `18` | `0` to `18` (CMTAT equity tokens report 0) |
@@ -304,7 +304,7 @@ The decisive difference is **how a rejection is signalled**. `SecureMintPolicy.r
 
 ### Where this rule is stricter
 
-- **Feed failures degrade to a code, not a revert.** A feed with no code, a reverting `latestRoundData()`, a negative answer or an incomplete round all yield code `77`. ACE has no `updatedAt == 0` check at all, so with `maxStalenessSeconds == 0` an incomplete round is accepted at face value.
+- **Feed failures degrade to a code, not a revert.** A reverting `decimals()` or `latestRoundData()` yields code `79`; a negative answer or an incomplete round yields code `77`. ACE has no `updatedAt == 0` check at all, so with `maxStalenessSeconds == 0` an incomplete round is accepted at face value.
 - **A future `updatedAt` is rejected, not merely survived.** ACE computes `block.timestamp - updatedAt` unguarded, so a feed reporting a timestamp ahead of the block panics the whole call — fail-closed, but as a panic rather than a clean rejection. This rule returns code `77`, and does so **regardless of `maxStalenessSeconds`**: a timestamp no aggregator on this chain could have written is a malformed answer, and an operator who disables freshness checking must not thereby accept forged timestamps. Reported as Nethermind AuditAgent NM-10: before the fix the underflow guard `block.timestamp > updatedAt` silently accepted any future stamp, so a feed frozen on an old reserve answer could keep authorising mints until that timestamp elapsed.
 - **Feed decimals are bounded at configuration time**, so the scaling exponent can never overflow. ACE accepts any `uint8`, where a feed reporting e.g. 78 decimals makes `10 ** 78` revert on every mint.
 - **`0`-decimals tokens are supported.** ACE requires `decimals > 0`, which excludes CMTAT equity tokens outright.

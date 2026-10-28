@@ -120,6 +120,8 @@ sequenceDiagram
     Admin->>Token: detectTransferRestrictionFrom(spender1, holder, to, 1) returns 0
 ```
 
+The repository script `script/DeployCMTATWithSpenderWhitelist.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+
 ### 4.2 Rule set directly, after deployment
 
 1. **Deploy the token** with `Engine(ruleEngine = address(0))`. Do not mint yet.
@@ -208,8 +210,6 @@ sequenceDiagram
 ```
 
 A RuleEngine serving one token is the intended setup. `RuleSpenderWhitelist` itself would work for several tokens (it reads no token state), but every token would then share one spender list.
-
-The repository script `script/DeployCMTATWithSpenderWhitelist.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
 
 ## 5. `transferFrom` workflow
 

@@ -163,7 +163,7 @@ Every rule and the registry implement `IERC3643Version`, so `version()` is query
 
 ### Tested against a real ERC-3643 token
 
-`test/ERC3643Real/` runs against the actual ERC-3643 `Token.sol` and `IdentityRegistry.sol`, not mocks: the RuleEngine integration, the identity rule against a real registry, and receiver-whitelist parity with the spec's eligibility. 31 tests, run with `FOUNDRY_PROFILE=erc3643 forge test`.
+`test/ERC3643Real/` runs against the actual ERC-3643 `Token.sol` and `IdentityRegistry.sol`, not mocks: the RuleEngine integration, the identity rule against a real registry, receiver-whitelist parity with the spec's eligibility, and the two `…ERC3643` supply-cap variants. 53 tests, run with `FOUNDRY_PROFILE=erc3643 forge test`.
 
 ## Quick start
 

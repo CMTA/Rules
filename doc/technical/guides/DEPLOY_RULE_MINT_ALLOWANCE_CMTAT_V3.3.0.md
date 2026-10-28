@@ -206,7 +206,7 @@ sequenceDiagram
 
 **Use a RuleEngine that serves only this token.** The quota is keyed on the minter address alone. If the engine bound several tokens, a minter's quota would be spent by its mints on any of them.
 
-The repository script `script/DeployCMTATWithMintAllowance.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+The repository script `script/DeployCMTATWithMintAllowance.s.sol` deploys this rule on a v3.3.0 token, passed in the token constructor and then bound (setup 4.1, with no quota set), in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
 
 ## 5. Mint workflow
 

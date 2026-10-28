@@ -44,7 +44,8 @@ v3.3.0 is not final yet: this library is validated against **`v3.3.0-rc4`**, the
 Every step below is tested against a real v3.3.0-rc4 token:
 
 - `test/RuleSanctionsList/RuleSanctionsListCMTATDeployment.t.sol`: rule or RuleEngine passed in the token constructor (§4.1, §4.3), sanctioned minter and burner rejected with code 32, the fail-open state of a rule without oracle, and an oracle address without code;
-- `test/DeploymentScripts/DeployCMTATWithBlacklistAndSanctionsList.t.sol`: rule behind a RuleEngine bound in its constructor, set after deployment, next to a blacklist, through the repository script (§4.4).
+- `test/DeploymentScripts/DeployCMTATWithBlacklistAndSanctionsList.t.sol`: rule behind a RuleEngine passed in the token constructor and bound to the token afterwards, next to a blacklist, through the repository script (§4.3).
+- `test/DeploymentScripts/DeployCMTATWithSanctionsList.t.sol`: the rule alone passed in the token constructor (§4.1), through the repository script, including an unset oracle that lets every operation through.
 
 No test installs the rule directly on a v3.3.0 token after deployment (§4.2). That setup differs from §4.1 only by the `setRuleEngine` call, which `test/RuleBlacklist/CMTATIntegrationDirect.t.sol` covers for `RuleBlacklist`.
 
@@ -141,6 +142,8 @@ sequenceDiagram
     Admin->>Rule: sanctionsList() returns oracle
 ```
 
+The repository script `script/DeployCMTATWithSanctionsList.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+
 ### 4.2 Rule set directly, after deployment
 
 1. **Deploy the token** with `Engine(ruleEngine = address(0))`. Do not mint yet.
@@ -221,8 +224,6 @@ sequenceDiagram
 ```
 
 A RuleEngine serving one token is the intended setup. `RuleSanctionsList` itself would work for several tokens (it reads no token state), and they would all follow the same oracle.
-
-The repository script `script/DeployCMTATWithSanctionsList.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
 
 ## 5. Mint workflow
 
