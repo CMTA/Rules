@@ -237,6 +237,7 @@ Commit:
 - Static analysis re-run before tagging (2026-10-28, solc `0.8.38`, EVM `osaka`): Slither 47 results (one more `dead-code` false positive), Aderyn 383 instances (+6 one-per-file for the three new storage contracts). Nothing to fix.
 - First static analysis of the deployment scripts: `slither-report-script.md`, `aderyn-report-script.md` and `script-report-feedback.md` in `doc/security/audits/tools/v0.7.0/`. Slither's default build skips `script/` and Aderyn does not accept it as a source folder; both reports record the command that brings the scripts into scope.
 - `doc/README.md` code list: each row now names every rule that can return the code (the whitelist wrapper for 21-25, both conditional-transfer rules for 46, the `…ERC3643` variants for 50-51 and 75-79, `RuleIssuanceCap` for 50-51), and the note on unique codes lists the shared exceptions. A new note names the one rule left with no reserved slot (`RuleERC2980`) and where a future code for it would go.
+- Root `README.md` rules table: `RuleWhitelistWrapper` returns 21-25, not 21-23 (its own `allowMint` / `allowBurn` flags use 24 and 25); `RuleConditionalTransferLightMultiToken` (code 46) was missing. The topology note no longer says `RuleMintAllowance` requires a RuleEngine: like `RuleConditionalTransferLight` and `RuleIssuanceCap`, it works either way once bound to its caller.
 
 ### Testing
 
