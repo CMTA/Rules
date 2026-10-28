@@ -135,6 +135,10 @@ Commit:
   - `foundry.lock` recorded the previous dependency commits, so every Foundry command printed a revision mismatch for five submodules. It now records the pinned commits and tags of all nine (OpenZeppelin `v5.7.0`, CMTAT `v3.3.0-rc4` and `v3.0.0`, RuleEngine `v3.0.0-rc7`, forge-std `v1.17.0`, ERC-3643 `4.2.0-beta1`, and the two Chainlink reference repositories).
   - The workflow installs Foundry `v1.5.0` instead of `nightly`.
   - `foundry.toml` sets `ignored_warnings_from = ['lib']`, so compiler warnings from vendored dependencies (deprecated `pragma experimental ABIEncoderV2`, `at` and `error` becoming keywords) no longer flood the log.
+- Restriction code 46 had two messages: `RuleConditionalTransferLight` returned `"ConditionalTransferLight: The request is not approved"` and `RuleConditionalTransferLightMultiToken` `"ConditionalTransferLightMultiToken: …"`.
+  - A RuleEngine answers `messageForTransferRestriction` from the first rule claiming a code, so with both rules in one engine the first-added rule's text was returned for the other's rejections. The code and the rejection itself were always correct.
+  - Both now inherit code 46 and one message, `"ConditionalTransfer: The request is not approved"`, from a new shared `RuleConditionalTransferInvariantStorage`, as code 85 already does from `RuleBindingInvariantStorage`. **The message text changes for both rules**; the code is unchanged.
+  - Pinned by `testSharedCode46HasOneMessageWhicheverRuleAnswers`.
 
 ### Breaking change
 
@@ -224,7 +228,7 @@ Commit:
   - `RuleSanctionsList.md`: warns that an oracle without code, or a reverting one, makes every operation and view revert. `IdentityRegistryWhitelist.md`: `RuleIdentityRegistry` can also be set directly on the token.
   - NatSpec: `RuleWhitelistWrapperBase` no longer says polarity is unchecked; the `ReservesFeedUpdated` event no longer says the feed decimals are cached.
 - Tables of contents: the `[TOC]` placeholder, which GitHub shows as plain text, is replaced in 51 documents (`doc/technical/`, `doc/TOOLCHAIN.md`) by a generated list of links to the level-2 and level-3 headings, between `<!-- toc -->` markers so it can be regenerated.
-- Static analysis re-run before tagging (2026-10-28, solc `0.8.38`, EVM `osaka`): Slither 47 results (one more `dead-code` false positive), Aderyn 381 instances (+4 one-per-file for the two new storage contracts). Nothing to fix.
+- Static analysis re-run before tagging (2026-10-28, solc `0.8.38`, EVM `osaka`): Slither 47 results (one more `dead-code` false positive), Aderyn 383 instances (+6 one-per-file for the three new storage contracts). Nothing to fix.
 - First static analysis of the deployment scripts: `slither-report-script.md`, `aderyn-report-script.md` and `script-report-feedback.md` in `doc/security/audits/tools/v0.7.0/`. Slither's default build skips `script/` and Aderyn does not accept it as a source folder; both reports record the command that brings the scripts into scope.
 
 ### Testing
@@ -254,7 +258,7 @@ Commit:
   - Negative controls: three mutations (off-by-one cap, over-strict cap, wrong headroom view) each fail the suite. A first version missed the off-by-one on the safety invariant, because random amounts never hit `headroom + 1`; the `mintAtBoundary` action fixes that. Recorded in `INVARIANT_TESTS.md` §4.
   - Documented in `INVARIANT_TESTS.md` §3.3 and in the "Invariant testing" section of `doc/README.md`.
 - `remainingMintable()`: unit tests (headroom, exact fit, cap below supply, unreadable supply), a fuzz property that the headroom is exactly the largest mint the pre-flight check accepts, the ERC-3643 variant, and a real CMTAT v3.0.0 token across mints and burns.
-- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,491 tests pass in the default profile and 53 in the `erc3643` profile.
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,492 tests pass in the default profile and 53 in the `erc3643` profile.
 - **Security-review tests** (`CLAUDE_AUDIT.md` v0.7.0):
   - 16 proof-of-concept tests in `test/ThreatModel/ThreatModelV070Tests.t.sol` (4 fuzz). Tests suffixed `_CurrentBehaviour` must fail once a finding is fixed.
   - `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow` (`RuleIssuanceCapCMTATIntegration`): the gap-free deployment order of F-4 on a real CMTAT `v3.3` token and RuleEngine `rc7`; every mint, the admin's included, reverts until the cap rule is installed.

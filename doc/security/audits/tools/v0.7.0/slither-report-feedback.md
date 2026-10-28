@@ -17,7 +17,7 @@ One **analysis blind spot**, present in both versions and in earlier releases wi
 
 The report was re-run before tagging, after the code-quality changes made since the first run (37 files under `src/`: code 85 on the conditional-transfer rule, `RuleBindingInvariantStorage`, `RuleMaxTotalSupplyRolesStorage`, 63 functions marked `virtual`, comment fixes) and the compiler and EVM bump (solc `0.8.36` → `0.8.38`, `prague` → `osaka`).
 
-**46 → 47 results.** The only new result is `dead-code` on `RuleIssuanceCapBase._remainingMintable()`. **False positive:** it overrides `TotalSupplyCapManager._remainingMintable()` and is reached through virtual dispatch from `RuleMaxTotalSupplyBase.remainingMintable()` (line 59), which `RuleIssuanceCap` inherits; the issuance-cap tests call that view and check it returns the smaller of the counter room and the supply room. Every other detector reports the same results as the first run.
+**46 → 47 results.** The only new result is `dead-code` on `RuleIssuanceCapBase._remainingMintable()`. **False positive:** it overrides `TotalSupplyCapManager._remainingMintable()` and is reached through virtual dispatch from `RuleMaxTotalSupplyBase.remainingMintable()` (line 59), which `RuleIssuanceCap` inherits; the issuance-cap tests call that view and check it returns the smaller of the counter room and the supply room. Every other detector reports the same results as the first run. A last re-run after `RuleConditionalTransferInvariantStorage` was added (shared code 46) still gives 47 results, on 232 contracts.
 
 The blind spot below is unchanged: the same three contracts' `_addAddresses` / `_removeAddresses` are reported as "Impossible to generate IR" in the stderr log.
 

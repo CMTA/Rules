@@ -2038,13 +2038,13 @@ Run **2026-10-26** for the v0.7.0 release and **re-run 2026-10-28** before taggi
 | Tool | High | Medium | Low | Info | Anything to fix? |
 |---|---|---|---|---|---|
 | [Slither](https://github.com/crytic/slither) 0.11.6 | 2 | 5 | 18 | 22 | **No** — [feedback](./security/audits/tools/v0.7.0/slither-report-feedback.md) |
-| [Aderyn](https://github.com/Cyfrin/aderyn) 0.6.5 | 0 | 0 | 10 categories (381 instances) | 0 | **No** — [feedback](./security/audits/tools/v0.7.0/aderyn-report-feedback.md) |
+| [Aderyn](https://github.com/Cyfrin/aderyn) 0.6.5 | 0 | 0 | 10 categories (383 instances) | 0 | **No** — [feedback](./security/audits/tools/v0.7.0/aderyn-report-feedback.md) |
 | Slither 0.11.6 and Aderyn 0.6.5 on `script/` | 0 | 0 | 2 categories (36 instances, Aderyn) | 0 | **No** after one fix — [feedback](./security/audits/tools/v0.7.0/script-report-feedback.md) |
 
 **Nothing to fix.**
 - Slither: on 0.11.5 the code delta is nil, identical to v0.6.0 result for result, although this release added `RuleIssuanceCap`. The upgrade to 0.11.6 keeps 46 results but trades six `unused-return` hits for six `dead-code` false positives.
 - Slither cannot analyse `_addAddresses` / `_removeAddresses` in `RuleMaxBalance` and `IdentityRegistryWhitelist` (no IR, both versions). The same inherited code is analysed elsewhere; see the feedback.
-- Aderyn's +31 is fully attributed to the new rule and the `RuleMaxTotalSupply` hooks. The pre-release re-run adds one Slither `dead-code` false positive and four Aderyn one-per-file instances for the two new storage contracts.
+- Aderyn's +31 is fully attributed to the new rule and the `RuleMaxTotalSupply` hooks. The pre-release re-run adds one Slither `dead-code` false positive and six Aderyn one-per-file instances for the three new storage contracts.
 - Deployment scripts, analysed separately for the first time: Slither reports nothing. Aderyn's large-numeric-literal finding on the default caps was fixed; the fix also made the defaults whole tokens scaled by `CMTAT_DECIMALS`, where they had been base units.
 - Its one new category, `State Change Without Event` on the now non-`view` `RuleMaxTotalSupplyBase.transferred`, is a false positive pinned by a no-write test.
 - The first Aderyn run also found nine unused `IRuleEngine` imports left by the RuleEngine rc7 migration; they were removed before the committed run.

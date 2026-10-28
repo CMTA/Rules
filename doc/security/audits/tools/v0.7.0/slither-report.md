@@ -8,7 +8,7 @@ slither . --checklist --filter-paths "node_modules,lib,test,forge-std,mocks" \
 Tool: **Slither 0.11.6** (latest release; run through `uvx --from slither-analyzer==0.11.6`) · Compiler: solc `0.8.38`, EVM `osaka`
 · Run date: **2026-10-28** (pre-release re-run; the first run, 2026-10-26 at solc `0.8.36`, is superseded)
 Scope: production contracts only — **mocks excluded**, vendored dependencies (including the test-only
-`lib/CMTATv3.0.0`) excluded via the `lib` filter. 231 contracts, 102 detectors, **47 results**.
+`lib/CMTATv3.0.0`) excluded via the `lib` filter. 232 contracts, 102 detectors, **47 results**.
 
 **0 High\* · 2 High-impact (both false positives) · 5 Medium · 18 Low · 21 Informational.**
 

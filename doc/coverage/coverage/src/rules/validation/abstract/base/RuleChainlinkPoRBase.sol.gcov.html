@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-28 09:57:31</td>
+            <td class="headerValue">2026-10-28 13:18:27</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">10</td>
@@ -206,19 +206,19 @@
 <a name="135"><span class="lineNum">     135 </span>                :<span class="lineCov">         20 :             return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
 <a name="136"><span class="lineNum">     136 </span>                :            :         }</a>
 <a name="137"><span class="lineNum">     137 </span>                :<span class="lineCov">        678 :         (uint8 restrictionCode, uint256 backedSupply) = _maxBackedSupply();</span></a>
-<a name="138"><span class="lineNum">     138 </span>           [<span class="branchCov" title="Branch 0 was taken 264 times"> + </span>]:<span class="lineCov">        678 :         if (restrictionCode != uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK)) {</span></a>
-<a name="139"><span class="lineNum">     139 </span>                :<span class="lineCov">        264 :             return restrictionCode;</span></a>
+<a name="138"><span class="lineNum">     138 </span>           [<span class="branchCov" title="Branch 0 was taken 265 times"> + </span>]:<span class="lineCov">        678 :         if (restrictionCode != uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK)) {</span></a>
+<a name="139"><span class="lineNum">     139 </span>                :<span class="lineCov">        265 :             return restrictionCode;</span></a>
 <a name="140"><span class="lineNum">     140 </span>                :            :         }</a>
-<a name="141"><span class="lineNum">     141 </span>                :<span class="lineCov">        414 :         (bool supplyAvailable, uint256 currentSupply) = _currentSupply();</span></a>
-<a name="142"><span class="lineNum">     142 </span>           [<span class="branchCov" title="Branch 0 was taken 4 times"> + </span>]:<span class="lineCov">        414 :         if (!supplyAvailable) {</span></a>
+<a name="141"><span class="lineNum">     141 </span>                :<span class="lineCov">        413 :         (bool supplyAvailable, uint256 currentSupply) = _currentSupply();</span></a>
+<a name="142"><span class="lineNum">     142 </span>           [<span class="branchCov" title="Branch 0 was taken 4 times"> + </span>]:<span class="lineCov">        413 :         if (!supplyAvailable) {</span></a>
 <a name="143"><span class="lineNum">     143 </span>                :<span class="lineCov">          4 :             return CODE_TOTAL_SUPPLY_UNAVAILABLE;</span></a>
 <a name="144"><span class="lineNum">     144 </span>                :            :         }</a>
 <a name="145"><span class="lineNum">     145 </span>                :            :         // The comparison, the overflow-safety and the pre-update accounting assumption all live in</a>
 <a name="146"><span class="lineNum">     146 </span>                :            :         // {CapAccounting}; the reserve figure is simply this rule's cap.</a>
-<a name="147"><span class="lineNum">     147 </span>           [<span class="branchCov" title="Branch 0 was taken 221 times"> + </span>]:<span class="lineCov">        410 :         if (_capExceededBy(currentSupply, backedSupply, value)) {</span></a>
-<a name="148"><span class="lineNum">     148 </span>                :<span class="lineCov">        221 :             return CODE_RESERVES_EXCEEDED;</span></a>
+<a name="147"><span class="lineNum">     147 </span>           [<span class="branchCov" title="Branch 0 was taken 212 times"> + </span>]:<span class="lineCov">        409 :         if (_capExceededBy(currentSupply, backedSupply, value)) {</span></a>
+<a name="148"><span class="lineNum">     148 </span>                :<span class="lineCov">        212 :             return CODE_RESERVES_EXCEEDED;</span></a>
 <a name="149"><span class="lineNum">     149 </span>                :            :         }</a>
-<a name="150"><span class="lineNum">     150 </span>                :<span class="lineCov">        189 :         return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
+<a name="150"><span class="lineNum">     150 </span>                :<span class="lineCov">        197 :         return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
 <a name="151"><span class="lineNum">     151 </span>                :            :     }</a>
 <a name="152"><span class="lineNum">     152 </span>                :            : </a>
 <a name="153"><span class="lineNum">     153 </span>                :            :     /**</a>

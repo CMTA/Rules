@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-28 09:57:31</td>
+            <td class="headerValue">2026-10-28 13:18:27</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">12</td>
@@ -178,8 +178,8 @@
 <a name="107"><span class="lineNum">     107 </span>                :            :      * @return backedSupply The backed supply expressed in token units; meaningless when</a>
 <a name="108"><span class="lineNum">     108 </span>                :            :      * `restrictionCode` is non-zero.</a>
 <a name="109"><span class="lineNum">     109 </span>                :            :      */</a>
-<a name="110"><span class="lineNum">     110 </span>                :<span class="lineCov">        559 :     function maxBackedSupply() public view virtual returns (uint8 restrictionCode, uint256 backedSupply) {</span></a>
-<a name="111"><span class="lineNum">     111 </span>                :<span class="lineCov">        559 :         return _maxBackedSupply();</span></a>
+<a name="110"><span class="lineNum">     110 </span>                :<span class="lineCov">        558 :     function maxBackedSupply() public view virtual returns (uint8 restrictionCode, uint256 backedSupply) {</span></a>
+<a name="111"><span class="lineNum">     111 </span>                :<span class="lineCov">        558 :         return _maxBackedSupply();</span></a>
 <a name="112"><span class="lineNum">     112 </span>                :            :     }</a>
 <a name="113"><span class="lineNum">     113 </span>                :            : </a>
 <a name="114"><span class="lineNum">     114 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
@@ -263,39 +263,39 @@
 <a name="192"><span class="lineNum">     192 </span>                :            :      * @return restrictionCode `0` when the answer is usable, otherwise the reason it is not.</a>
 <a name="193"><span class="lineNum">     193 </span>                :            :      * @return backedSupply The backed supply in token units; `0` when `restrictionCode` is non-zero.</a>
 <a name="194"><span class="lineNum">     194 </span>                :            :      */</a>
-<a name="195"><span class="lineNum">     195 </span>                :<span class="lineCov">       1237 :     function _maxBackedSupply() internal view virtual returns (uint8 restrictionCode, uint256 backedSupply) {</span></a>
-<a name="196"><span class="lineNum">     196 </span>                :<span class="lineCov">       1237 :         AggregatorV3Interface feed = reservesFeed;</span></a>
+<a name="195"><span class="lineNum">     195 </span>                :<span class="lineCov">       1236 :     function _maxBackedSupply() internal view virtual returns (uint8 restrictionCode, uint256 backedSupply) {</span></a>
+<a name="196"><span class="lineNum">     196 </span>                :<span class="lineCov">       1236 :         AggregatorV3Interface feed = reservesFeed;</span></a>
 <a name="197"><span class="lineNum">     197 </span>                :            :         // Read live, never cached: see the contract-level note on why the extra call is worth it.</a>
 <a name="198"><span class="lineNum">     198 </span>                :            :         // No code-length guard: `_setReservesFeed` requires code and EIP-6780 makes that permanent.</a>
-<a name="199"><span class="lineNum">     199 </span>                :<span class="lineCov">       1237 :         uint8 currentFeedDecimals;</span></a>
-<a name="200"><span class="lineNum">     200 </span>           [<span class="branchCov" title="Branch 0 was taken 1237 times"> + </span>]:<span class="lineCov">       1237 :         try feed.decimals() returns (uint8 decimals_) {</span></a>
-<a name="201"><span class="lineNum">     201 </span>                :<span class="lineCov">       1235 :             currentFeedDecimals = decimals_;</span></a>
+<a name="199"><span class="lineNum">     199 </span>                :<span class="lineCov">       1236 :         uint8 currentFeedDecimals;</span></a>
+<a name="200"><span class="lineNum">     200 </span>           [<span class="branchCov" title="Branch 0 was taken 1236 times"> + </span>]:<span class="lineCov">       1236 :         try feed.decimals() returns (uint8 decimals_) {</span></a>
+<a name="201"><span class="lineNum">     201 </span>                :<span class="lineCov">       1234 :             currentFeedDecimals = decimals_;</span></a>
 <a name="202"><span class="lineNum">     202 </span>           [<span class="branchCov" title="Branch 1 was taken 2 times"> + </span>]:<span class="lineCov">          2 :         } catch {</span></a>
 <a name="203"><span class="lineNum">     203 </span>                :<span class="lineCov">          2 :             return (CODE_RESERVES_FEED_UNAVAILABLE, 0);</span></a>
 <a name="204"><span class="lineNum">     204 </span>                :            :         }</a>
 <a name="205"><span class="lineNum">     205 </span>                :            :         // Re-checked at read time, not just at configuration: a feed that raised its decimals past</a>
 <a name="206"><span class="lineNum">     206 </span>                :            :         // the bound would otherwise overflow the scaling exponent and revert this view.</a>
-<a name="207"><span class="lineNum">     207 </span>           [<span class="branchCov" title="Branch 0 was taken 3 times"> + </span>]:<span class="lineCov">       1235 :         if (currentFeedDecimals &gt; MAX_FEED_DECIMALS) {</span></a>
+<a name="207"><span class="lineNum">     207 </span>           [<span class="branchCov" title="Branch 0 was taken 3 times"> + </span>]:<span class="lineCov">       1234 :         if (currentFeedDecimals &gt; MAX_FEED_DECIMALS) {</span></a>
 <a name="208"><span class="lineNum">     208 </span>                :<span class="lineCov">          3 :             return (CODE_RESERVES_FEED_UNAVAILABLE, 0);</span></a>
 <a name="209"><span class="lineNum">     209 </span>                :            :         }</a>
-<a name="210"><span class="lineNum">     210 </span>           [<span class="branchCov" title="Branch 0 was taken 1232 times"> + </span>]:<span class="lineCov">       1232 :         try feed.latestRoundData() returns (uint80, int256 answer, uint256, uint256 updatedAt, uint80) {</span></a>
+<a name="210"><span class="lineNum">     210 </span>           [<span class="branchCov" title="Branch 0 was taken 1231 times"> + </span>]:<span class="lineCov">       1231 :         try feed.latestRoundData() returns (uint80, int256 answer, uint256, uint256 updatedAt, uint80) {</span></a>
 <a name="211"><span class="lineNum">     211 </span>                :            :             // Three malformed answers, not stale ones: a negative reserve is meaningless, `updatedAt == 0`</a>
 <a name="212"><span class="lineNum">     212 </span>                :            :             // marks a round that never completed, and a round stamped in the FUTURE cannot have been written</a>
 <a name="213"><span class="lineNum">     213 </span>                :            :             // by an aggregator on this chain. Rejecting the future stamp here rather than as a staleness case</a>
 <a name="214"><span class="lineNum">     214 </span>                :            :             // is deliberate -- `maxStalenessSeconds == 0` disables freshness checking, and a forged timestamp</a>
 <a name="215"><span class="lineNum">     215 </span>                :            :             // must not become acceptable because an operator chose not to police staleness.</a>
-<a name="216"><span class="lineNum">     216 </span>           [<span class="branchCov" title="Branch 0 was taken 245 times"> + </span>]:<span class="lineCov">       1229 :             if (answer &lt; 0 || updatedAt == 0 || updatedAt &gt; block.timestamp) {</span></a>
-<a name="217"><span class="lineNum">     217 </span>                :<span class="lineCov">        245 :                 return (CODE_RESERVES_ANSWER_INVALID, 0);</span></a>
+<a name="216"><span class="lineNum">     216 </span>           [<span class="branchCov" title="Branch 0 was taken 246 times"> + </span>]:<span class="lineCov">       1228 :             if (answer &lt; 0 || updatedAt == 0 || updatedAt &gt; block.timestamp) {</span></a>
+<a name="217"><span class="lineNum">     217 </span>                :<span class="lineCov">        246 :                 return (CODE_RESERVES_ANSWER_INVALID, 0);</span></a>
 <a name="218"><span class="lineNum">     218 </span>                :            :             }</a>
-<a name="219"><span class="lineNum">     219 </span>                :<span class="lineCov">        984 :             uint256 staleness = maxStalenessSeconds;</span></a>
+<a name="219"><span class="lineNum">     219 </span>                :<span class="lineCov">        982 :             uint256 staleness = maxStalenessSeconds;</span></a>
 <a name="220"><span class="lineNum">     220 </span>                :            :             // `updatedAt &lt;= block.timestamp` is guaranteed above, so the subtraction cannot underflow.</a>
-<a name="221"><span class="lineNum">     221 </span>           [<span class="branchCov" title="Branch 0 was taken 16 times"> + </span>]:<span class="lineCov">        984 :             if (staleness != 0 &amp;&amp; block.timestamp - updatedAt &gt; staleness) {</span></a>
+<a name="221"><span class="lineNum">     221 </span>           [<span class="branchCov" title="Branch 0 was taken 16 times"> + </span>]:<span class="lineCov">        982 :             if (staleness != 0 &amp;&amp; block.timestamp - updatedAt &gt; staleness) {</span></a>
 <a name="222"><span class="lineNum">     222 </span>                :<span class="lineCov">         16 :                 return (CODE_RESERVES_FEED_STALE, 0);</span></a>
 <a name="223"><span class="lineNum">     223 </span>                :            :             }</a>
 <a name="224"><span class="lineNum">     224 </span>                :            :             // `answer &gt;= 0` was just checked, so the cast to uint256 preserves the value.</a>
 <a name="225"><span class="lineNum">     225 </span>                :            :             // forge-lint: disable-next-line(unsafe-typecast)</a>
-<a name="226"><span class="lineNum">     226 </span>                :<span class="lineCov">        968 :             uint256 backed = _scaleReserve(uint256(answer), currentFeedDecimals);</span></a>
-<a name="227"><span class="lineNum">     227 </span>                :<span class="lineCov">        968 :             return (uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK), backed);</span></a>
+<a name="226"><span class="lineNum">     226 </span>                :<span class="lineCov">        966 :             uint256 backed = _scaleReserve(uint256(answer), currentFeedDecimals);</span></a>
+<a name="227"><span class="lineNum">     227 </span>                :<span class="lineCov">        966 :             return (uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK), backed);</span></a>
 <a name="228"><span class="lineNum">     228 </span>           [<span class="branchCov" title="Branch 1 was taken 3 times"> + </span>]:<span class="lineCov">          3 :         } catch {</span></a>
 <a name="229"><span class="lineNum">     229 </span>                :<span class="lineCov">          3 :             return (CODE_RESERVES_FEED_UNAVAILABLE, 0);</span></a>
 <a name="230"><span class="lineNum">     230 </span>                :            :         }</a>
@@ -304,8 +304,8 @@
 <a name="233"><span class="lineNum">     233 </span>                :            :     /**</a>
 <a name="234"><span class="lineNum">     234 </span>                :            :      * @inheritdoc TokenSupplyReader</a>
 <a name="235"><span class="lineNum">     235 </span>                :            :      */</a>
-<a name="236"><span class="lineNum">     236 </span>                :<span class="lineCov">        414 :     function _supplyToken() internal view virtual override returns (ITotalSupply) {</span></a>
-<a name="237"><span class="lineNum">     237 </span>                :<span class="lineCov">        414 :         return tokenContract;</span></a>
+<a name="236"><span class="lineNum">     236 </span>                :<span class="lineCov">        413 :     function _supplyToken() internal view virtual override returns (ITotalSupply) {</span></a>
+<a name="237"><span class="lineNum">     237 </span>                :<span class="lineCov">        413 :         return tokenContract;</span></a>
 <a name="238"><span class="lineNum">     238 </span>                :            :     }</a>
 <a name="239"><span class="lineNum">     239 </span>                :            : </a>
 <a name="240"><span class="lineNum">     240 </span>                :            :     /**</a>
@@ -317,21 +317,21 @@
 <a name="246"><span class="lineNum">     246 </span>                :            :      * @param from The feed's decimals, as read live for this check.</a>
 <a name="247"><span class="lineNum">     247 </span>                :            :      * @return The reserve expressed with {tokenDecimals} decimals.</a>
 <a name="248"><span class="lineNum">     248 </span>                :            :      */</a>
-<a name="249"><span class="lineNum">     249 </span>                :<span class="lineCov">        968 :     function _scaleReserve(uint256 answer, uint8 from) internal view virtual returns (uint256) {</span></a>
-<a name="250"><span class="lineNum">     250 </span>                :<span class="lineCov">        968 :         uint8 to = tokenDecimals;</span></a>
-<a name="251"><span class="lineNum">     251 </span>           [<span class="branchCov" title="Branch 0 was taken 82 times"> + </span>]:<span class="lineCov">        968 :         if (to == from) {</span></a>
-<a name="252"><span class="lineNum">     252 </span>                :<span class="lineCov">         82 :             return answer;</span></a>
+<a name="249"><span class="lineNum">     249 </span>                :<span class="lineCov">        966 :     function _scaleReserve(uint256 answer, uint8 from) internal view virtual returns (uint256) {</span></a>
+<a name="250"><span class="lineNum">     250 </span>                :<span class="lineCov">        966 :         uint8 to = tokenDecimals;</span></a>
+<a name="251"><span class="lineNum">     251 </span>           [<span class="branchCov" title="Branch 0 was taken 76 times"> + </span>]:<span class="lineCov">        966 :         if (to == from) {</span></a>
+<a name="252"><span class="lineNum">     252 </span>                :<span class="lineCov">         76 :             return answer;</span></a>
 <a name="253"><span class="lineNum">     253 </span>                :            :         }</a>
-<a name="254"><span class="lineNum">     254 </span>           [<span class="branchCov" title="Branch 0 was taken 486 times"> + </span>]:<span class="lineCov">        886 :         if (to &gt; from) {</span></a>
+<a name="254"><span class="lineNum">     254 </span>           [<span class="branchCov" title="Branch 0 was taken 500 times"> + </span>]:<span class="lineCov">        890 :         if (to &gt; from) {</span></a>
 <a name="255"><span class="lineNum">     255 </span>                :            :             // to &lt;= MAX_TOKEN_DECIMALS, so the factor is at most 10 ** 18.</a>
-<a name="256"><span class="lineNum">     256 </span>                :<span class="lineCov">        486 :             uint256 factor = 10 ** uint256(to - from);</span></a>
-<a name="257"><span class="lineNum">     257 </span>           [<span class="branchCov" title="Branch 0 was taken 28 times"> + </span>]:<span class="lineCov">        486 :             if (answer &gt; type(uint256).max / factor) {</span></a>
+<a name="256"><span class="lineNum">     256 </span>                :<span class="lineCov">        500 :             uint256 factor = 10 ** uint256(to - from);</span></a>
+<a name="257"><span class="lineNum">     257 </span>           [<span class="branchCov" title="Branch 0 was taken 28 times"> + </span>]:<span class="lineCov">        500 :             if (answer &gt; type(uint256).max / factor) {</span></a>
 <a name="258"><span class="lineNum">     258 </span>                :<span class="lineCov">         28 :                 return type(uint256).max;</span></a>
 <a name="259"><span class="lineNum">     259 </span>                :            :             }</a>
-<a name="260"><span class="lineNum">     260 </span>                :<span class="lineCov">        458 :             return answer * factor;</span></a>
+<a name="260"><span class="lineNum">     260 </span>                :<span class="lineCov">        472 :             return answer * factor;</span></a>
 <a name="261"><span class="lineNum">     261 </span>                :            :         }</a>
 <a name="262"><span class="lineNum">     262 </span>                :            :         // `from` was bounded by MAX_FEED_DECIMALS above, so the divisor cannot overflow.</a>
-<a name="263"><span class="lineNum">     263 </span>                :<span class="lineCov">        400 :         return answer / (10 ** uint256(from - to));</span></a>
+<a name="263"><span class="lineNum">     263 </span>                :<span class="lineCov">        390 :         return answer / (10 ** uint256(from - to));</span></a>
 <a name="264"><span class="lineNum">     264 </span>                :            :     }</a>
 <a name="265"><span class="lineNum">     265 </span>                :            : }</a>
 </pre>

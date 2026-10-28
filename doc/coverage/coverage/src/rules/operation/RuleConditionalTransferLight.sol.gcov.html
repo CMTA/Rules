@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-28 09:57:31</td>
+            <td class="headerValue">2026-10-28 13:18:27</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">4</td>
@@ -109,20 +109,20 @@
 <a name="38"><span class="lineNum">      38 </span>                :            :     /**</a>
 <a name="39"><span class="lineNum">      39 </span>                :            :      * @inheritdoc IERC165</a>
 <a name="40"><span class="lineNum">      40 </span>                :            :      */</a>
-<a name="41"><span class="lineNum">      41 </span>                :<span class="lineCov">         87 :     function supportsInterface(bytes4 interfaceId)</span></a>
+<a name="41"><span class="lineNum">      41 </span>                :<span class="lineCov">         90 :     function supportsInterface(bytes4 interfaceId)</span></a>
 <a name="42"><span class="lineNum">      42 </span>                :            :         public</a>
 <a name="43"><span class="lineNum">      43 </span>                :            :         view</a>
 <a name="44"><span class="lineNum">      44 </span>                :            :         virtual</a>
 <a name="45"><span class="lineNum">      45 </span>                :            :         override(AccessControlEnumerable, IERC165)</a>
 <a name="46"><span class="lineNum">      46 </span>                :            :         returns (bool)</a>
 <a name="47"><span class="lineNum">      47 </span>                :            :     {</a>
-<a name="48"><span class="lineNum">      48 </span>                :<span class="lineCov">         87 :         return interfaceId == RuleEngineInterfaceId.RULE_ENGINE_INTERFACE_ID</span></a>
-<a name="49"><span class="lineNum">      49 </span>                :<span class="lineCov">         85 :             || interfaceId == ERC1404ExtendInterfaceId.ERC1404EXTEND_INTERFACE_ID</span></a>
-<a name="50"><span class="lineNum">      50 </span>                :<span class="lineCov">         84 :             || interfaceId == RuleInterfaceId.IRULE_INTERFACE_ID</span></a>
-<a name="51"><span class="lineNum">      51 </span>                :<span class="lineCov">         56 :             || interfaceId == RuleInterfaceId.IRULE_LEGACY_INTERFACE_ID</span></a>
-<a name="52"><span class="lineNum">      52 </span>                :<span class="lineCov">         55 :             || interfaceId == type(IERC7551Compliance).interfaceId</span></a>
-<a name="53"><span class="lineNum">      53 </span>                :<span class="lineCov">         54 :             || interfaceId == ComplianceInterfaceId.ERC3643_COMPLIANCE_INTERFACE_ID</span></a>
-<a name="54"><span class="lineNum">      54 </span>                :<span class="lineCov">         53 :             || AccessControlEnumerable.supportsInterface(interfaceId);</span></a>
+<a name="48"><span class="lineNum">      48 </span>                :<span class="lineCov">         90 :         return interfaceId == RuleEngineInterfaceId.RULE_ENGINE_INTERFACE_ID</span></a>
+<a name="49"><span class="lineNum">      49 </span>                :<span class="lineCov">         88 :             || interfaceId == ERC1404ExtendInterfaceId.ERC1404EXTEND_INTERFACE_ID</span></a>
+<a name="50"><span class="lineNum">      50 </span>                :<span class="lineCov">         87 :             || interfaceId == RuleInterfaceId.IRULE_INTERFACE_ID</span></a>
+<a name="51"><span class="lineNum">      51 </span>                :<span class="lineCov">         58 :             || interfaceId == RuleInterfaceId.IRULE_LEGACY_INTERFACE_ID</span></a>
+<a name="52"><span class="lineNum">      52 </span>                :<span class="lineCov">         57 :             || interfaceId == type(IERC7551Compliance).interfaceId</span></a>
+<a name="53"><span class="lineNum">      53 </span>                :<span class="lineCov">         56 :             || interfaceId == ComplianceInterfaceId.ERC3643_COMPLIANCE_INTERFACE_ID</span></a>
+<a name="54"><span class="lineNum">      54 </span>                :<span class="lineCov">         55 :             || AccessControlEnumerable.supportsInterface(interfaceId);</span></a>
 <a name="55"><span class="lineNum">      55 </span>                :            :     }</a>
 <a name="56"><span class="lineNum">      56 </span>                :            : </a>
 <a name="57"><span class="lineNum">      57 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
@@ -137,7 +137,7 @@
 <a name="66"><span class="lineNum">      66 </span>                :            :     /**</a>
 <a name="67"><span class="lineNum">      67 </span>                :            :      * @notice Reverts unless the caller holds `OPERATOR_ROLE`.</a>
 <a name="68"><span class="lineNum">      68 </span>                :            :      */</a>
-<a name="69"><span class="lineNum">      69 </span>                :<span class="lineCov">       7774 :     function _authorizeTransferApproval() internal view virtual override onlyRole(OPERATOR_ROLE) {}</span></a>
+<a name="69"><span class="lineNum">      69 </span>                :<span class="lineCov">       7768 :     function _authorizeTransferApproval() internal view virtual override onlyRole(OPERATOR_ROLE) {}</span></a>
 <a name="70"><span class="lineNum">      70 </span>                :            : </a>
 <a name="71"><span class="lineNum">      71 </span>                :            :     /**</a>
 <a name="72"><span class="lineNum">      72 </span>                :            :      * @notice Reverts unless the caller holds `COMPLIANCE_MANAGER_ROLE`.</a>

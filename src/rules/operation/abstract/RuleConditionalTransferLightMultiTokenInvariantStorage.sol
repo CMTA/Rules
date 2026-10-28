@@ -2,27 +2,20 @@
 pragma solidity ^0.8.27;
 
 import {RuleSharedInvariantStorage} from "../../validation/abstract/invariant/RuleSharedInvariantStorage.sol";
+import {RuleConditionalTransferInvariantStorage} from "./RuleConditionalTransferInvariantStorage.sol";
 
 /**
  * @title RuleConditionalTransferLightMultiTokenInvariantStorage — constants, events and errors for the multi-token conditional-transfer rule
  */
-abstract contract RuleConditionalTransferLightMultiTokenInvariantStorage is RuleSharedInvariantStorage {
+abstract contract RuleConditionalTransferLightMultiTokenInvariantStorage is
+    RuleSharedInvariantStorage,
+    RuleConditionalTransferInvariantStorage
+{
     /* ============ Role ============ */
     /**
      * @notice Role allowed to approve, cancel and execute conditional transfers
      */
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
-
-    /* ============ State variables ============ */
-    /**
-     * @notice Human-readable message returned when a transfer has not been approved
-     */
-    string constant TEXT_TRANSFER_REQUEST_NOT_APPROVED =
-        "ConditionalTransferLightMultiToken: The request is not approved";
-    /**
-     * @notice Restriction code returned when a transfer request has not been approved
-     */
-    uint8 public constant CODE_TRANSFER_REQUEST_NOT_APPROVED = 46;
 
     /* ============ Events ============ */
     /**
