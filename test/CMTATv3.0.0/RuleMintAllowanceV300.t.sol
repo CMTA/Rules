@@ -30,6 +30,14 @@ abstract contract RuleMintAllowanceV300Test is CMTATv300TestBase {
         assertEq(token.balanceOf(ADDRESS1), 100);
         assertEq(rule.mintAllowance(DEFAULT_ADMIN_ADDRESS), 5, "quota never debited");
     }
+
+    /// @notice The token's own 4-argument view forwards to the rule, so it reports code 70 for a mint that then
+    /// passes: on v3.0.0 the pre-flight answer and the enforcement disagree.
+    function testTokenViewReportsTheQuotaButTheMintPassesOnV300() public {
+        _assertCodeFrom(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, ADDRESS1, 100, CODE_MINTER_ALLOWANCE_EXCEEDED);
+        _mint(ADDRESS1, 100);
+        assertEq(token.balanceOf(ADDRESS1), 100);
+    }
 }
 
 contract RuleMintAllowanceV300StandardDirectTest is RuleMintAllowanceV300Test, V300StandardDirect {}
