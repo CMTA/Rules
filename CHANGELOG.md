@@ -191,9 +191,22 @@ Commit:
   - Mermaid diagrams of the three deployment setups, of a mint (rule on the token, behind a RuleEngine, and a happy path with numbers), of a transfer and of a burn.
 - Contract pages (`doc/technical/contracts/`): the Schema section now opens with a short explanation of the Surya call graph and inheritance diagrams, and of the CMTAT flow diagram where there is one.
 - `RuleWhitelist` / `RuleWhitelistOwnable2Step` NatSpec: the `allowMintBurn` constructor parameter said it pre-lists `address(0)`; it sets the `allowMint` and `allowBurn` flags, and the zero address is never listed.
+- Deployment guides for every other rule, one for CMTAT `v3.0.0` and one for `v3.3.0` each (26 new files in `doc/technical/guides/`, listed in `doc/README.md` under "Deployment guide per rule" and linked from each contract page).
+  - Covered: `RuleReceiverWhitelist`, `RuleSpenderWhitelist`, `RuleWhitelistWrapper`, `RuleBlacklist`, `RuleSanctionsList`, `RuleERC2980`, `RuleIdentityRegistry`, `RuleMaxBalance`, `RuleChainlinkPoR`, `RuleConditionalTransferLight`, `RuleConditionalTransferLightMultiToken`, `RuleMintAllowance`, `RuleIssuanceCap`.
+  - Each states which setups the rule allows (rules needing the token address cannot go in the token constructor; operation rules must be bound; `RuleConditionalTransferLightMultiToken` is direct-only) and draws each setup and each operation the rule acts on, with a happy path.
+  - The `RuleMintAllowance` v3.0.0 guide states that the rule is inert there (no minter is forwarded) and points to v3.3.0.
+- Documentation corrected against the code while writing the guides.
+  - `RuleChainlinkPoR.md`: a reverting feed `decimals()` returns code 79, not 77, and `maxBackedSupply()` can return 79. `RULE_SEMANTICS.md` and `CLAUDE.md` no longer claim a read-time `code.length` check on the feed.
+  - `RuleMintAllowance.md`: the allowance is debited before the tokens are created, not after; in direct mode the token, not a RuleEngine, is bound.
+  - `RuleConditionalTransferLight.md`: `COMPLIANCE_MANAGER_ROLE` also binds the RuleEngine, the bound RuleEngine may call `transferred`, and CMTAT calls `transferred` (not `detectTransferRestriction`) on the write path. `CLAUDE.md`: `approveAndTransferIfAllowed` also works behind a RuleEngine for `RuleConditionalTransferLight`.
+  - `RULE_SEMANTICS.md`: batch adds revert on `address(0)`, and the `RuleERC2980` mint and burn note now describes the `allowMint` / `allowBurn` flags.
+  - `RuleWhitelistWrapper.md`: polarity is enforced by `addRule`; the constructor table gains `allowMintBurn` and the code table gains 24 and 25.
+  - `RuleSanctionsList.md`: warns that an oracle without code, or a reverting one, makes every operation and view revert. `IdentityRegistryWhitelist.md`: `RuleIdentityRegistry` can also be set directly on the token.
+  - NatSpec: `RuleWhitelistWrapperBase` no longer says polarity is unchecked; the `ReservesFeedUpdated` event no longer says the feed decimals are cached.
 
 ### Testing
 
+- Deployment tests backing the per-rule guides, on real CMTAT `v3.0.0` and `v3.3.0-rc4` tokens: 24 new files (`*V300Deployment.t.sol` in `test/CMTATv3.0.0/`, `*CMTATDeployment.t.sol` in each rule folder), 61 tests. They cover each guide's recommended setup, typically the rule or a RuleEngine passed in the token constructor, plus rule-specific cases (a frozen or blacklisted minter refused on v3.3 only, a sanctions oracle without code, polarity refusal of wrapper children). `RuleReceiverWhitelist`, `RuleSpenderWhitelist` and `RuleERC2980` had no test on a v3.3 token before.
 - `RuleMaxTotalSupplyCMTATIntegration.t.sol` (CMTAT `v3.3.0-rc4`): `RuleMaxTotalSupply` set directly on the token after deployment, and a RuleEngine passed in the token constructor that binds the token last. `RuleMaxTotalSupplyV300Deployment.t.sol` covers the RuleEngine order on CMTAT `v3.0.0`, and that the rule cannot be deployed before its token.
 - `RuleWhitelistCMTATConstructor.t.sol` (CMTAT `v3.3.0-rc4`): `RuleWhitelist`, or a RuleEngine holding it, passed in the token constructor; a non-whitelisted minter can still issue to a whitelisted receiver with `checkSpender` on, a non-whitelisted `transferFrom` spender cannot, and with a RuleEngine nothing moves until the engine binds the token.
 - `RuleWhitelistV300Deployment.t.sol` (CMTAT `v3.0.0`): `RuleWhitelist`, or a RuleEngine holding it, passed in the token constructor; the first mint is screened, and with a RuleEngine nothing moves until the engine binds the token.
@@ -217,7 +230,7 @@ Commit:
   - Negative controls: three mutations (off-by-one cap, over-strict cap, wrong headroom view) each fail the suite. A first version missed the off-by-one on the safety invariant, because random amounts never hit `headroom + 1`; the `mintAtBoundary` action fixes that. Recorded in `INVARIANT_TESTS.md` §4.
   - Documented in `INVARIANT_TESTS.md` §3.3 and in the "Invariant testing" section of `doc/README.md`.
 - `remainingMintable()`: unit tests (headroom, exact fit, cap below supply, unreadable supply), a fuzz property that the headroom is exactly the largest mint the pre-flight check accepts, the ERC-3643 variant, and a real CMTAT v3.0.0 token across mints and burns.
-- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,326 tests pass in the default profile and 53 in the `erc3643` profile.
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,387 tests pass in the default profile and 53 in the `erc3643` profile.
 - **Security-review tests** (`CLAUDE_AUDIT.md` v0.7.0):
   - 16 proof-of-concept tests in `test/ThreatModel/ThreatModelV070Tests.t.sol` (4 fuzz). Tests suffixed `_CurrentBehaviour` must fail once a finding is fixed.
   - `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow` (`RuleIssuanceCapCMTATIntegration`): the gap-free deployment order of F-4 on a real CMTAT `v3.3` token and RuleEngine `rc7`; every mint, the admin's included, reverts until the cap rule is installed.

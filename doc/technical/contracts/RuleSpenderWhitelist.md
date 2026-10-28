@@ -77,6 +77,10 @@ Owner can manage the spender list and transfer ownership with two-step acceptanc
 - The rule also supports ERC-7943 tokenId/context overloads through `RuleNFTAdapter`.
 - Batch add/remove follows the project convention: skips duplicates/missing entries without reverting.
 
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_SPENDER_WHITELIST_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_SPENDER_WHITELIST_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_SPENDER_WHITELIST_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_SPENDER_WHITELIST_CMTAT_V3.3.0.md) for v3.3.0.
+
 ## CMTAT v3.0.0
 
 ✅ Supported, identical to v3.3.

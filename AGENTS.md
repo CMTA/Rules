@@ -20,7 +20,7 @@ Topology B — "direct mode" (CMTAT.setRuleEngine(rule))
                                                  msg.sender == CMTAT token
   ⇒ bind the token.
 ```
-Operation rules that treat `msg.sender` or `getTokenBound()` as a *token identity* behave differently in the two topologies. `approveAndTransferIfAllowed` only works in Topology B.
+Operation rules that treat `msg.sender` or `getTokenBound()` as a *token identity* behave differently in the two topologies. `approveAndTransferIfAllowed` needs the token as caller: on `RuleConditionalTransferLightMultiToken` it only works in Topology B; `RuleConditionalTransferLight` also supports it behind a RuleEngine once the rule is bound to both (`bindToken` and `bindRuleEngine`).
 
 ### The mint/burn `spender` convention (CMTAT v3.3+)
 `CMTAT._mintOverride` calls `_checkTransferred(_msgSender(), address(0), to, value)`, so **on every mint the minter's address arrives at each rule as `spender`** via the 4-arg `transferred` overload. Plain `transfer()` passes `spender == address(0)` and takes the 3-arg path. **On CMTAT v3.0.0 mint and burn carry no spender** (3-arg path): the minter-screening legs of `RuleBlacklist` / `RuleSanctionsList` / `RuleERC2980` are inert there and `RuleMintAllowance` blocks nothing — pinned by `test/CMTATv3.0.0/`.
@@ -49,7 +49,7 @@ Rules that implement a standardized interface must match that standard's semanti
 | `src/registry/` | Contracts filling a token's **identity registry** slot, not its compliance slot (`IdentityRegistryWhitelist`). Not rules: no `IRule`, never added to a RuleEngine |
 | `src/modules/` | Reusable modules (`AccessControlModuleStandalone`, `MetaTxModuleStandalone`, `VersionModule`, `Ownable2StepERC165Module`) |
 | `doc/technical/contracts/` | One documentation page per deployable contract |
-| `doc/technical/guides/` | Cross-cutting docs: `RULE_SEMANTICS.md`, `INVARIANT_TESTS.md`, `DEPLOYMENT_SCRIPTS.md`, `DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md`, `DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md`, `DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.0.0.md`, `DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md` |
+| `doc/technical/guides/` | Cross-cutting docs: `RULE_SEMANTICS.md`, `INVARIANT_TESTS.md`, `DEPLOYMENT_SCRIPTS.md`, `DEPLOY_<RULE>_CMTAT_V3.0.0.md` / `_V3.3.0.md` (one pair per rule: step-by-step deployment with a CMTAT token, with sequence diagrams) |
 | `test/` | Foundry tests, one folder per rule |
 | `lib/` | Git submodule dependencies (do not edit) |
 

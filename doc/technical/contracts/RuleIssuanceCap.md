@@ -143,6 +143,10 @@ WARNING: detaching the rule (`setRuleEngine(address(0))`, or `removeRule` on the
 
 **Not supported in v1.** The counter is enforced in `_afterMintChecked` with the real amount, so it would stay correct on an ERC-3643 token, whose write path is re-phased to `value = 0` (a unit test pins this). But the inherited live-supply check double-counts on ERC-3643's post-update notification, exactly as the stock `RuleMaxTotalSupply` does. An ERC-3643 variant needs only the one-line re-phasing override that `RuleMaxTotalSupplyERC3643` already has; it is not shipped.
 
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_ISSUANCE_CAP_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_ISSUANCE_CAP_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_ISSUANCE_CAP_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_ISSUANCE_CAP_CMTAT_V3.3.0.md) for v3.3.0.
+
 ## CMTAT v3.0.0
 
 ✅ Supported. Every mint calls the rule through the 3-argument path with no minter, and the cap is per token, not per minter, so the missing spender changes nothing. This is the use case of CMTA/Rules#16, unlike `RuleMintAllowance`, which is inert on v3.0.0.

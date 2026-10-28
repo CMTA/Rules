@@ -190,6 +190,7 @@ Five scripts cover the common combinations. See [`DEPLOYMENT_SCRIPTS.md`](./doc/
 | Per-rule detail | [`doc/technical/`](./doc/technical/) |
 | Cross-rule semantics | [`RULE_SEMANTICS.md`](./doc/technical/guides/RULE_SEMANTICS.md) |
 | Deployment scripts | [`DEPLOYMENT_SCRIPTS.md`](./doc/technical/guides/DEPLOYMENT_SCRIPTS.md) |
+| Deployment guide per rule, CMTAT v3.0.0 and v3.3.0 | [Deployment guide per rule](./doc/README.md#deployment-guide-per-rule) |
 | Invariant tests | [`INVARIANT_TESTS.md`](./doc/technical/guides/INVARIANT_TESTS.md) |
 | Audits and static analysis | [`doc/security/audits/`](./doc/security/audits/) |
 | Release history | [`CHANGELOG.md`](./CHANGELOG.md) |

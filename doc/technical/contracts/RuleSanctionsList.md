@@ -100,6 +100,8 @@ The default admin is the address passed as `admin` in the constructor. It is gra
 
 Sets the Chainalysis oracle contract. Reverts if the address is zero. Restricted to `SANCTIONLIST_ROLE`.
 
+WARNING: the oracle is trusted to stay callable. Neither this setter nor the constructor checks that the address has code, and the rule calls `isSanctioned` without `try/catch`. An oracle address with no code, or an oracle that reverts, makes every mint, burn and transfer revert, and the ERC-1404 views revert too instead of returning a code.
+
 ### `clearSanctionListOracle()`
 
 Removes the oracle (sets it to `address(0)`), effectively disabling sanctions checks. Restricted to `SANCTIONLIST_ROLE`.
@@ -111,6 +113,10 @@ Returns the current oracle address. Returns `address(0)` if no oracle is set.
 ## Usage scenario
 
 The operator deploys `RuleSanctionsList` with the Chainalysis oracle address and registers it in the `RuleEngine`. When the CMTAT token triggers a transfer, the rule calls `isSanctioned(from)` and `isSanctioned(to)` on the oracle. If either returns `true`, the transfer is rejected. The operator can later point to an updated oracle by calling `setSanctionListOracle`.
+
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_SANCTIONS_LIST_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_SANCTIONS_LIST_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_SANCTIONS_LIST_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_SANCTIONS_LIST_CMTAT_V3.3.0.md) for v3.3.0.
 
 ## CMTAT v3.0.0
 

@@ -83,7 +83,7 @@ The feed's `decimals()` is read **on every check** and never cached. The value v
 
 Roughly 2.6% of a mint, paid only on the mint path; transfers and burns short-circuit before any feed access and are completely unaffected.
 
-**Why this is safe for a MUST-NOT-revert view.** Reading live adds a second external call that could fail, so both feed calls are guarded identically: each is wrapped in `try/catch`, and a reverting `decimals()` returns `CODE_RESERVES_ANSWER_INVALID`. A `try` to a codeless address would revert *uncatchably*, so `try/catch` alone is enough only because the feed is checked to have code at configuration and EIP-6780 keeps it there; the deployment-precondition section explains this, and why the mechanism is the ABI decoder rather than `extcodesize`. The `MAX_FEED_DECIMALS` bound is additionally **re-checked at read time**, not just at configuration — otherwise a feed that raised its decimals past the bound would overflow the scaling exponent and revert the view.
+**Why this is safe for a MUST-NOT-revert view.** Reading live adds a second external call that could fail, so both feed calls are guarded identically: each is wrapped in `try/catch`, and a reverting `decimals()` returns `CODE_RESERVES_FEED_UNAVAILABLE` (79). A `try` to a codeless address would revert *uncatchably*, so `try/catch` alone is enough only because the feed is checked to have code at configuration and EIP-6780 keeps it there; the deployment-precondition section explains this, and why the mechanism is the ABI decoder rather than `extcodesize`. The `MAX_FEED_DECIMALS` bound is additionally **re-checked at read time**, not just at configuration — otherwise a feed that raised its decimals past the bound would overflow the scaling exponent and revert the view.
 
 **Residual risk.** The scaling now always agrees with what the feed reports *at the moment of the check*, so there is no stale-cache window. What remains is that a feed changing decimals mid-life still changes the meaning of the reserve figure between one block and the next; the rule follows it faithfully rather than silently using an outdated scale, but an operator monitoring a feed migration should still confirm the new aggregator reports the reserve they expect.
 
@@ -152,7 +152,7 @@ Updates the staleness threshold. Emits `MaxStalenessSecondsUpdated`.
 
 ### `maxBackedSupply() → (uint8 restrictionCode, uint256 backedSupply)`
 
-Previews the limit a mint is measured against, without simulating one. `restrictionCode` is `0` when the feed answer is usable, otherwise it is the code a mint would return (76 or 77) and `backedSupply` is `0`. Never reverts.
+Previews the limit a mint is measured against, without simulating one. `restrictionCode` is `0` when the feed answer is usable, otherwise it is the code a mint would return (76, 77 or 79) and `backedSupply` is `0`. Never reverts.
 
 ### `feedDecimals() → uint8`
 
@@ -311,6 +311,10 @@ Y's own supply and Y's own reserves never enter the calculation. Both failure di
 **Why there is no guard.** Adding one would mean giving a validation rule a binding and a stateful install/uninstall lifecycle, which is how the *operation* rules (`RuleConditionalTransferLight`, `RuleMintAllowance`) work but not the validation rules — those are deliberately stateless and shareable. `RuleMaxTotalSupply` has the identical exposure for the same reason. Changing that is a library-wide decision about whether supply-capping validation rules should be bindable, not something to special-case here.
 
 **Operational rule.** One `RuleChainlinkPoR` instance per protected token, and re-verify `tokenContract` whenever an instance is added to an additional RuleEngine or bound to an additional token. If a token is backed by several reserve sources, deploying one instance per feed (as described under [Proof of Reserve feed](#proof-of-reserve-feed)) is safe — those instances all share the same `tokenContract`, which is the intended configuration.
+
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_CHAINLINK_POR_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_CHAINLINK_POR_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_CHAINLINK_POR_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_CHAINLINK_POR_CMTAT_V3.3.0.md) for v3.3.0.
 
 ## CMTAT v3.0.0
 

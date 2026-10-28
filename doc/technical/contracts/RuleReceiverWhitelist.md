@@ -116,6 +116,10 @@ The parity suite is the one that matters for the conformance claim. It runs the 
 
 Run it with `FOUNDRY_PROFILE=erc3643 forge test`; see `foundry.toml` for why that suite needs its own profile.
 
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_RECEIVER_WHITELIST_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_RECEIVER_WHITELIST_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_RECEIVER_WHITELIST_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_RECEIVER_WHITELIST_CMTAT_V3.3.0.md) for v3.3.0.
+
 ## CMTAT v3.0.0
 
 ✅ Supported, identical to v3.3.

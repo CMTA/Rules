@@ -109,6 +109,10 @@ Until `v0.6.0` the function returned `TRANSFER_OK` directly in those two cases, 
 
 The operator deploys `RuleIdentityRegistry` and calls `setIdentityRegistry(registry)`. The registry is maintained by a compliance provider who verifies investor identities. When Alice (unverified) attempts to receive tokens, `isVerified(alice)` returns `false` and the transfer is rejected with code 56. After the registry marks Alice as verified, the transfer succeeds. Calling `clearIdentityRegistry()` disables checks entirely.
 
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_IDENTITY_REGISTRY_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_IDENTITY_REGISTRY_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_IDENTITY_REGISTRY_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_IDENTITY_REGISTRY_CMTAT_V3.3.0.md) for v3.3.0.
+
 ## CMTAT v3.0.0
 
 ✅ Supported, identical to v3.3.

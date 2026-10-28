@@ -496,7 +496,29 @@ forge test
 3. Add rules to the RuleEngine, or set the rule directly on the CMTAT token.
 4. Verify the transfer flow end-to-end with a small test transfer before enabling production flows.
 
-Full technical documentation for these scripts, including limitations, is in [`doc/technical/guides/DEPLOYMENT_SCRIPTS.md`](./technical/guides/DEPLOYMENT_SCRIPTS.md). For a step-by-step deployment of `RuleWhitelist` with a CMTAT **v3.0.0** token (rule set at deployment or after, directly or behind a RuleEngine), see [`DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md`](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md); for CMTAT **v3.3.0**, [`DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md`](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md). The same guides exist for `RuleMaxTotalSupply`: [`DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.0.0.md`](./technical/guides/DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.0.0.md) and [`DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md`](./technical/guides/DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md).
+Full technical documentation for these scripts, including limitations, is in [`doc/technical/guides/DEPLOYMENT_SCRIPTS.md`](./technical/guides/DEPLOYMENT_SCRIPTS.md).
+
+#### Deployment guide per rule
+
+Each rule has a step-by-step guide for a CMTAT v3.0.0 token and one for CMTAT v3.3.0 (validated against `v3.3.0-rc4`). Each covers the possible setups (rule on the token or behind a RuleEngine, installed in the token constructor or after), with a sequence diagram per setup and per operation the rule acts on, including a happy path.
+
+| Rule | CMTAT v3.0.0 | CMTAT v3.3.0 | Recommended setup |
+| --- | --- | --- | --- |
+| `RuleWhitelist` | [v3.0.0](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md) | Rule on the token at deployment; a RuleEngine at deployment with other rules |
+| `RuleReceiverWhitelist` | [v3.0.0](./technical/guides/DEPLOY_RULE_RECEIVER_WHITELIST_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_RECEIVER_WHITELIST_CMTAT_V3.3.0.md) | Same as `RuleWhitelist`. Screens only the receiver; no mint flag |
+| `RuleSpenderWhitelist` | [v3.0.0](./technical/guides/DEPLOY_RULE_SPENDER_WHITELIST_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_SPENDER_WHITELIST_CMTAT_V3.3.0.md) | A RuleEngine at deployment, next to a rule that screens holders. Acts only on `transferFrom` |
+| `RuleWhitelistWrapper` | [v3.0.0](./technical/guides/DEPLOY_RULE_WHITELIST_WRAPPER_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_WHITELIST_WRAPPER_CMTAT_V3.3.0.md) | Children deployed and added to the wrapper first, then the wrapper on the token (or in a RuleEngine). Children never go in the engine |
+| `RuleBlacklist` | [v3.0.0](./technical/guides/DEPLOY_RULE_BLACKLIST_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_BLACKLIST_CMTAT_V3.3.0.md) | Rule on the token at deployment. Screens the minter and burner on v3.3.0 only |
+| `RuleSanctionsList` | [v3.0.0](./technical/guides/DEPLOY_RULE_SANCTIONS_LIST_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_SANCTIONS_LIST_CMTAT_V3.3.0.md) | Same as `RuleBlacklist`. Lets everything through while no oracle is set |
+| `RuleERC2980` | [v3.0.0](./technical/guides/DEPLOY_RULE_ERC2980_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_ERC2980_CMTAT_V3.3.0.md) | Rule on the token at deployment. Frozen minter screened on v3.3.0 only |
+| `RuleIdentityRegistry` | [v3.0.0](./technical/guides/DEPLOY_RULE_IDENTITY_REGISTRY_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_IDENTITY_REGISTRY_CMTAT_V3.3.0.md) | Registry first (e.g. `IdentityRegistryWhitelist`), then the rule on the token at deployment. Receiver only by default |
+| `RuleMaxTotalSupply` | [v3.0.0](./technical/guides/DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md) | The rule needs the token address: a RuleEngine at deployment, rule added, token bound last |
+| `RuleMaxBalance` | [v3.0.0](./technical/guides/DEPLOY_RULE_MAX_BALANCE_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_MAX_BALANCE_CMTAT_V3.3.0.md) | Same as `RuleMaxTotalSupply`. Pair with a one-address-per-investor rule |
+| `RuleChainlinkPoR` | [v3.0.0](./technical/guides/DEPLOY_RULE_CHAINLINK_POR_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_CHAINLINK_POR_CMTAT_V3.3.0.md) | Same as `RuleMaxTotalSupply`. Needs the feed, the token decimals and a staleness threshold |
+| `RuleConditionalTransferLight` | [v3.0.0](./technical/guides/DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_CMTAT_V3.3.0.md) | Rule on the token at deployment, then `bindToken`. One token per rule |
+| `RuleConditionalTransferLightMultiToken` | [v3.0.0](./technical/guides/DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_MULTI_TOKEN_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_MULTI_TOKEN_CMTAT_V3.3.0.md) | Rule on each token at deployment, then `bindToken` for each. Never behind a RuleEngine |
+| `RuleMintAllowance` | [v3.0.0](./technical/guides/DEPLOY_RULE_MINT_ALLOWANCE_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_MINT_ALLOWANCE_CMTAT_V3.3.0.md) | v3.3.0 only (inert on v3.0.0): rule on the token at deployment, then `bindToken` |
+| `RuleIssuanceCap` | [v3.0.0](./technical/guides/DEPLOY_RULE_ISSUANCE_CAP_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_ISSUANCE_CAP_CMTAT_V3.3.0.md) | A RuleEngine at deployment, rule bound to it and added, token bound last |
 
 Deployment scripts:
 - `script/DeployCMTATWithWhitelist.s.sol` — CMTAT + whitelist rule, bound directly to the token
@@ -609,7 +631,7 @@ Technical documentation lives in [`doc/technical/`](./technical/), split in two:
 | Directory | Contents |
 | --- | --- |
 | [`technical/contracts/`](./technical/contracts/) | One page per deployable contract: what it enforces, its restriction codes, roles, methods and caveats |
-| [`technical/guides/`](./technical/guides/) | Cross-cutting material that spans several contracts: [`RULE_SEMANTICS.md`](./technical/guides/RULE_SEMANTICS.md) (how the rules differ from one another), [`INVARIANT_TESTS.md`](./technical/guides/INVARIANT_TESTS.md) (the stateful invariant suite), [`DEPLOYMENT_SCRIPTS.md`](./technical/guides/DEPLOYMENT_SCRIPTS.md) (the `script/` deployment scripts), [`DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md`](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md) and [`DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md`](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md) (step-by-step `RuleWhitelist` deployment with a CMTAT v3.0.0 or v3.3.0 token, with mint and transfer workflows), [`DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.0.0.md`](./technical/guides/DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.0.0.md) and [`DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md`](./technical/guides/DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md) (the same for `RuleMaxTotalSupply`) |
+| [`technical/guides/`](./technical/guides/) | Cross-cutting material that spans several contracts: [`RULE_SEMANTICS.md`](./technical/guides/RULE_SEMANTICS.md) (how the rules differ from one another), [`INVARIANT_TESTS.md`](./technical/guides/INVARIANT_TESTS.md) (the stateful invariant suite), [`DEPLOYMENT_SCRIPTS.md`](./technical/guides/DEPLOYMENT_SCRIPTS.md) (the `script/` deployment scripts), and `DEPLOY_<RULE>_CMTAT_V3.0.0.md` / `_V3.3.0.md`, one pair per rule (step-by-step deployment with a CMTAT token; see [Deployment guide per rule](#deployment-guide-per-rule)) |
 
 Per-contract pages:
 
@@ -633,10 +655,7 @@ Per-contract pages:
 | RuleIssuanceCap | [RuleIssuanceCap.md](./technical/contracts/RuleIssuanceCap.md) |
 | RuleConditionalTransfer | [RuleConditionalTransfer.md](./technical/contracts/RuleConditionalTransfer.md) — **maintained in a separate repository**, kept here for reference |
 | Deployment scripts | [DEPLOYMENT_SCRIPTS.md](./technical/guides/DEPLOYMENT_SCRIPTS.md) |
-| Deploy `RuleWhitelist` with CMTAT v3.0.0 | [DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md) |
-| Deploy `RuleWhitelist` with CMTAT v3.3.0 | [DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md) |
-| Deploy `RuleMaxTotalSupply` with CMTAT v3.0.0 | [DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.0.0.md](./technical/guides/DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.0.0.md) |
-| Deploy `RuleMaxTotalSupply` with CMTAT v3.3.0 | [DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md](./technical/guides/DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md) |
+| Deployment guide per rule | [Deployment guide per rule](#deployment-guide-per-rule) |
 
 ### Operational Notes
 

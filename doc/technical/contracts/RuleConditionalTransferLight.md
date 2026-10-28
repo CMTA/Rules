@@ -47,9 +47,9 @@ Code 85 detects only the fully unbound state. A rule bound to a token but used b
 | --- | --- |
 | `DEFAULT_ADMIN_ROLE` | Manages all roles; implicitly holds all roles below |
 | `OPERATOR_ROLE` | May approve or cancel transfer approvals, and call `approveAndTransferIfAllowed` |
-| `COMPLIANCE_MANAGER_ROLE` | May bind and unbind token contracts (`bindToken`, `unbindToken`) |
+| `COMPLIANCE_MANAGER_ROLE` | May bind and unbind the token (`bindToken`, `unbindToken`) and the RuleEngine (`bindRuleEngine`, `unbindRuleEngine`) |
 
-Token execution (`transferred`) is restricted to bound token contracts only.
+Token execution (`transferred`) is restricted to the bound token and the bound RuleEngine (`isTransferExecutor`).
 
 
 ## Methods
@@ -66,7 +66,7 @@ Decrements the approval count for the `(from, to, value)` hash by 1. Reverts if 
 
 Discards **every** outstanding approval for the `(from, to, value)` hash in one call and returns the count that was cleared. Reverts if no approval exists. Restricted to `OPERATOR_ROLE`. Emits `TransferApprovalReset`.
 
-Unlike `approveTransfer`, this deliberately does **not** require a token to be bound — its main use is discarding approvals that survived an `unbindToken` (see below), at which point nothing is bound.
+Like `approveTransfer`, this does **not** require a token to be bound — its main use is discarding approvals that survived an `unbindToken` (see below), at which point nothing is bound.
 
 ### `approveAndTransferIfAllowed(address from, address to, uint256 value) → bool`
 
@@ -156,9 +156,9 @@ Returns `true` if `caller` is the bound token or the bound RuleEngine — i.e. w
 ### Token holder initiates
 
 1. The token holder calls the CMTAT `transfer(to, value)`.
-2. The CMTAT calls `detectTransferRestriction` via the RuleEngine — returns code 46 if no approval exists.
+2. The CMTAT calls `transferred` via the RuleEngine, which reverts while no approval exists; a front end can check beforehand with `detectTransferRestriction`, which returns code 46.
 3. The operator (off-chain or via contract) calls `approveTransfer(from, to, value)`.
-4. The token holder retries the transfer. `detectTransferRestriction` returns 0 (OK).
+4. The token holder retries the transfer. `detectTransferRestriction` now returns 0 (OK).
 5. The CMTAT calls `transferred(from, to, value)` which consumes one approval count.
 
 ### Operator initiates
@@ -211,6 +211,10 @@ Multiple approvals for the same `(from, to, value)` tuple are allowed and stack.
 ## Usage scenario
 
 The issuer deploys `RuleConditionalTransferLight`, grants `OPERATOR_ROLE` to a compliance officer, and calls `bindToken(cmtat)` with `COMPLIANCE_MANAGER_ROLE`. Investor Alice wants to transfer 1,000 tokens to Bob. The compliance officer reviews the request off-chain and calls `approveTransfer(alice, bob, 1000)`. Alice's transfer then succeeds, and the approval is consumed. A subsequent transfer of the same amount requires a new approval.
+
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_CMTAT_V3.3.0.md) for v3.3.0.
 
 ## CMTAT v3.0.0
 

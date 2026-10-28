@@ -151,6 +151,10 @@ The standardized signatures are kept as-is (the token cannot be added to them wi
 - **Do not deploy this rule behind a `RuleEngine`.** Approvals are consumed under `msg.sender`, so token scoping is lost (or the rule breaks outright) in that topology — the full case analysis is in [Deployment topology](#deployment-topology--why-a-ruleengine-does-not-work). If you need a conditional-transfer rule for a single token behind a RuleEngine, use [`RuleConditionalTransferLight`](./RuleConditionalTransferLight.md) instead.
 - `unbindToken` does **not** clear `approvalCounts`. Approvals recorded for a previously bound token remain in storage and become consumable again if that token is rebound. Use `resetApproval(token, from, to, value)` to discard them before rebinding — it works on an unbound token precisely for this reason.
 
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_MULTI_TOKEN_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_MULTI_TOKEN_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_MULTI_TOKEN_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_MULTI_TOKEN_CMTAT_V3.3.0.md) for v3.3.0.
+
 ## CMTAT v3.0.0
 
 ✅ Supported, direct binding only.

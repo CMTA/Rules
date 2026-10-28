@@ -152,6 +152,10 @@ The ERC-2980 example `Whitelistable` and `Freezable` interfaces return `false` o
 
 The compliance manager deploys `RuleERC2980` and grants separate roles for whitelist and frozenlist management. Investor Alice is added to the whitelist. Bob, a sanctioned actor, is added to the frozenlist. When Bob tries to send tokens, the frozenlist check fires first and rejects with code 60. When an unlisted address tries to receive tokens, the whitelist check rejects with code 63.
 
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_ERC2980_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_ERC2980_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_ERC2980_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_ERC2980_CMTAT_V3.3.0.md) for v3.3.0.
+
 ## CMTAT v3.0.0
 
 ✅ Supported, with one difference.

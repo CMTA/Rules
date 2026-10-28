@@ -6,7 +6,7 @@
 
 > **This is not a compliance rule.** It implements no `IRule` surface, has no restriction codes, and **must not be added to a `RuleEngine`**. It sits on the token's *identity registry* slot, not its *compliance* slot. Do not confuse it with [`RuleIdentityRegistry`](./RuleIdentityRegistry.md), which is the mirror image: a compliance rule that *consults* an external identity registry. This contract *is* the registry.
 
-> **Using it with a CMTAT token.** CMTAT has **no** `setIdentityRegistry` slot — that is ERC-3643 only — so this contract cannot be installed on a CMTAT token directly. Use it through [`RuleIdentityRegistry`](./RuleIdentityRegistry.md) in a `RuleEngine`, which consults this registry over `isVerified`. The two are coupled by interface, not inheritance, and that pairing is pinned by [`CMTATRuleIdentityRegistryComposition.t.sol`](../../../test/IdentityRegistryWhitelist/CMTATRuleIdentityRegistryComposition.t.sol).
+> **Using it with a CMTAT token.** CMTAT has **no** `setIdentityRegistry` slot — that is ERC-3643 only — so this contract cannot be installed on a CMTAT token directly. Use it through [`RuleIdentityRegistry`](./RuleIdentityRegistry.md), set directly on the token or added to a `RuleEngine`, which consults this registry over `isVerified`. The two are coupled by interface, not inheritance, and that pairing is pinned by [`CMTATRuleIdentityRegistryComposition.t.sol`](../../../test/IdentityRegistryWhitelist/CMTATRuleIdentityRegistryComposition.t.sol).
 
 ### Where the whitelist comes from
 

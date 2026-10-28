@@ -85,6 +85,10 @@ Single-item operations (`addAddress`, `removeAddress`) revert on duplicate/missi
 
 The operator deploys `RuleBlacklist`, grants `ADDRESS_LIST_ADD_ROLE` to a compliance manager, and registers the rule in the `RuleEngine`. The compliance manager calls `addAddresses([badActor])`. Any transfer from, to, or by the blacklisted address is rejected with codes 36, 37, or 38.
 
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_BLACKLIST_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_BLACKLIST_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_BLACKLIST_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_BLACKLIST_CMTAT_V3.3.0.md) for v3.3.0.
+
 ## CMTAT v3.0.0
 
 ✅ Supported, with one difference.

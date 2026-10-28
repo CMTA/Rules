@@ -34,7 +34,7 @@ The **Graph** and **Inheritance** diagrams are generated from the source code wi
 
 ### Flow with a CMTAT token
 
-The sequence below shows how the rule participates when a CMTAT token (with this rule configured in its RuleEngine) processes a mint. As an operation rule, it decrements the minter's allowance in the `transferred` callback after balances are updated.
+The sequence below shows how the rule participates when a CMTAT token (with this rule configured in its RuleEngine) processes a mint. As an operation rule, it decrements the minter's allowance in the `transferred` callback, which CMTAT calls before the tokens are created; a mint above the remaining allowance reverts before any balance changes.
 
 ![RuleMintAllowance flow with a CMTAT token](../../img/rule-mint-allowance-flow.png)
 
@@ -85,7 +85,7 @@ Returns the remaining mint allowance for `minter`. Default is `0`.
 
 ### `bindToken(address token)` / `unbindToken(address token)`
 
-Binds or unbinds the caller address. Only the bound address is authorised to call `transferred`. In practice, bind the RuleEngine address. Restricted to `COMPLIANCE_MANAGER_ROLE`. A second `bindToken` call reverts until the current binding is removed.
+Binds or unbinds the caller address. Only the bound address is authorised to call `transferred`. Bind the token when the rule is set directly on it, or the RuleEngine when the rule sits behind one. Restricted to `COMPLIANCE_MANAGER_ROLE`. A second `bindToken` call reverts until the current binding is removed.
 
 > ⚠️ **`unbindToken` does not clear `mintAllowance`.** Quotas granted while the previous RuleEngine/token was bound remain in storage and are spendable by the same minters as soon as a new caller is bound. The operator who controls rebinding also controls allowances, so the trust model is preserved — but when migrating, call `clearMintAllowances` **before** rebinding if the old quotas must not carry over.
 
@@ -150,6 +150,10 @@ This is pinned by `test_MA1_EngineAndTokenInheritTheHardcodedAllowedView_Current
 ## Usage scenario
 
 An issuer deploys `RuleMintAllowance` and grants `ALLOWANCE_OPERATOR_ROLE` to a compliance officer. The officer assigns `setMintAllowance(alice, 100_000e18)` — Alice may mint up to 100 000 tokens. Each `cmtat.mint(recipient, amount)` call by Alice reduces her quota. Once exhausted, further mints by Alice revert. The officer can call `increaseMintAllowance(alice, 50_000e18)` to extend Alice's quota or `setMintAllowance(alice, 0)` to revoke it entirely.
+
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_MINT_ALLOWANCE_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_MINT_ALLOWANCE_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_MINT_ALLOWANCE_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_MINT_ALLOWANCE_CMTAT_V3.3.0.md) for v3.3.0.
 
 ## CMTAT v3.0.0
 

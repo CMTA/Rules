@@ -1,0 +1,469 @@
+# Deploy `RuleIdentityRegistry` with a CMTAT v3.0.0 token
+
+[TOC]
+
+This guide deploys a CMTAT **v3.0.0** token whose receivers must be verified in an ERC-3643 identity registry, checked by `RuleIdentityRegistry`. It covers:
+
+- which registry the rule consults: `IdentityRegistryWhitelist` from this library, or an existing ERC-3643 identity registry;
+- where the rule sits: on the token directly, or inside a RuleEngine;
+- when it is installed: in the token constructor, or later with `setRuleEngine`;
+- what happens on a mint, a transfer, a `transferFrom` and a burn once it is active.
+
+CMTAT v3.0.0 is the last audited CMTAT release. For CMTAT v3.3.0, validated against `v3.3.0-rc4`, see the [v3.3.0 guide](./DEPLOY_RULE_IDENTITY_REGISTRY_CMTAT_V3.3.0.md), which also lists the differences between the two versions. For this rule they are small: the minter is exempt on both versions.
+
+Every step below is tested against a real v3.0.0 token:
+
+- `test/CMTATv3.0.0/RuleIdentityRegistryV300.t.sol`: rule installed after deployment, on the Standard and Debt variants, directly and behind a RuleEngine, against a mock registry (`IdentityRegistryMock`) with `checkSpender = true`;
+- `test/CMTATv3.0.0/RuleIdentityRegistryV300Deployment.t.sol`: rule or RuleEngine passed in the token constructor, consulting an `IdentityRegistryWhitelist`.
+
+## 1. What the rule enforces
+
+`RuleIdentityRegistry` follows ERC-3643: by default **only the receiver** must be verified, which the rule asks the registry with `isVerified(to)`. Two flags, both off by default, add checks that ERC-3643 does not require.
+
+| Operation | Checked by `RuleIdentityRegistry` | Rejected with |
+| --- | --- | --- |
+| Transfer `from → to` | `to` is verified; `from` too if `checkSender` is `true` | 56 (receiver), 55 (sender) |
+| `transferFrom` by a spender | as above, plus the spender if `checkSpender` is `true` | 57 (spender) |
+| Mint to `to` | `to` is verified. The minter is never checked | 56 |
+| Burn from `from` | nothing: a burn bypasses every eligibility check | never |
+
+**Leave `checkSender` off unless you mean to trap holders.** ERC-3643 checks only the receiver so that an investor whose identity lapses, or who is removed from the registry, can still sell to a verified counterparty. With `checkSender = true` that holder can no longer send, and only `forcedTransfer` or a burn can move the tokens.
+
+**An unset registry disables the rule.** If the rule's `identityRegistry` is `address(0)`, every operation passes. The constructor accepts `address(0)` without reverting, so check `rule.identityRegistry()` after deployment.
+
+On v3.0.0 mint and burn call the rule through the 3-argument `transferred(from, to, value)`, with no minter or burner. This changes nothing for this rule: it does not check the minter on either version.
+
+## 2. Choose the registry
+
+The rule needs a contract that answers `isVerified(address) returns (bool)`. It holds no list of its own.
+
+| Registry | Deploy it when | Who maintains it |
+| --- | --- | --- |
+| **`IdentityRegistryWhitelist`** (this library, `src/registry/`) | you want ERC-3643 semantics on a CMTAT token without ONCHAINID or claims. `isVerified` means "this wallet is on the list" | `IDENTITY_REGISTRAR_ROLE` holders, with `registerIdentity` / `deleteIdentity` |
+| **An existing ERC-3643 `IdentityRegistry`** (for example one already used by an ERC-3643 token) | investors are already onboarded with ONCHAINID claims and you want one source of truth for several tokens | whoever runs that registry |
+
+`IdentityRegistryWhitelist` is not a rule: do not add it to a RuleEngine and do not pass it as the token's rule engine. CMTAT has no identity registry slot of its own, so on a CMTAT token the registry is only consulted through `RuleIdentityRegistry`. This guide uses `IdentityRegistryWhitelist`; with another registry, skip its deployment steps and pass that registry's address to the rule.
+
+The rule calls `isVerified` directly. If the registry reverts, every mint and transfer reverts too, and so do the ERC-1404 queries; burns are not affected, since the rule does not call the registry for them.
+
+## 3. Choose the setup
+
+**Where the rule sits.**
+
+| Topology | Token calls | Use it when |
+| --- | --- | --- |
+| **Direct** | the rule itself (`token.ruleEngine() == rule`) | identity is the only rule. Fewer contracts to deploy, and one external call less per transfer |
+| **RuleEngine** | a `RuleEngine`, which calls each of its rules | you need several rules (for example identity and a supply cap), or want to add rules later without touching the token |
+
+`RuleIdentityRegistry` reads no token state, so it behaves identically in both. It needs no binding to the token.
+
+**When the rule is installed.**
+
+| Moment | How | Effect |
+| --- | --- | --- |
+| **At deployment** | pass the rule (or the RuleEngine) in the token constructor's `Engine.ruleEngine` field | the token is never unrestricted, the very first mint is screened |
+| **After deployment** | deploy the token with `Engine.ruleEngine = address(0)`, then `token.setRuleEngine(...)` | between the two transactions the token has **no compliance**: any mint or transfer goes through. Do not mint or grant `MINTER_ROLE` before `setRuleEngine` |
+
+Installing at deployment is recommended. Installing afterwards is the right choice for a token already live, or to change or replace the compliance later.
+
+## 4. Contracts and roles
+
+| Contract | Constructor | Roles that matter here |
+| --- | --- | --- |
+| `IdentityRegistryWhitelist` (optional, see §2) | `(admin)` | `DEFAULT_ADMIN_ROLE` (all roles), `IDENTITY_REGISTRAR_ROLE` (`registerIdentity`, `deleteIdentity`) |
+| `RuleIdentityRegistry` | `(admin, identityRegistry, checkSender, checkSpender)` | `DEFAULT_ADMIN_ROLE`: `setIdentityRegistry`, `clearIdentityRegistry`, `setCheckSender`, `setCheckSpender` |
+| `RuleIdentityRegistryOwnable2Step` | `(owner, identityRegistry, checkSender, checkSpender)` | the owner does everything the admin role above allows |
+| `RuleEngine` (RuleEngine `v3.0.0-rc7`, optional) | `(admin, tokenContract)`; `tokenContract` may be `address(0)` | `RULES_MANAGEMENT_ROLE` (`addRule`), `COMPLIANCE_MANAGER_ROLE` (`bindToken`) |
+| CMTAT v3.0.0 `CMTATStandalone` (or `CMTATStandaloneDebt`, or a proxy variant) | `(forwarder, admin, ERC20Attributes, ExtraInformationAttributes, Engine{ruleEngine, snapshotEngine, documentEngine})`. `CMTATStandaloneDebt` takes no forwarder | `DEFAULT_ADMIN_ROLE` (`setRuleEngine`, `forcedTransfer`, all roles), `MINTER_ROLE`, `BURNER_ROLE`, `PAUSER_ROLE`, `ENFORCER_ROLE` (freeze an address), `ERC20ENFORCER_ROLE` (freeze part of a balance) |
+
+On CMTAT, on the AccessControl rule and on `IdentityRegistryWhitelist`, the default admin implicitly holds every role.
+
+Constructor arguments of the rule:
+
+- `identityRegistry`: the registry's address. `address(0)` deploys a rule that blocks nothing (§1).
+- `checkSender = false` for ERC-3643 behaviour. `true` also requires the sender to be verified.
+- `checkSpender`: `true` also requires the spender of a `transferFrom` to be verified. It never applies to the minter or burner. Both flags can be changed later with `setCheckSender` / `setCheckSpender`.
+
+`IdentityRegistryWhitelist.registerIdentity(wallet, identity, country)` keeps only the wallet: `identity` is echoed in the `IdentityRegistered` event and `country` is ignored, so `address(0)` and `0` are fine on a CMTAT deployment. On CMTAT the token never calls the registry, so the token does not need `IDENTITY_REGISTRAR_ROLE` (an ERC-3643 token does, for `recoveryAddress`).
+
+## 5. Deployment steps
+
+Each setup lists its steps, then draws them as a sequence diagram. The calls are shown from a single admin; in production the registrar, rule and minting roles can be held by different addresses (§4). Every setup starts with the registry; with an existing ERC-3643 registry, skip steps 1 and 2.
+
+### 5.1 Rule set directly, at deployment (recommended for identity alone)
+
+1. **Deploy the registry:** `IdentityRegistryWhitelist(admin)`, and grant `IDENTITY_REGISTRAR_ROLE` to the onboarding key.
+2. **Register investors:** `registerIdentity(investor, address(0), 0)` for each. This can also happen after step 4; until then every mint is rejected with code 56.
+3. **Deploy the rule:** `RuleIdentityRegistry(admin, registry, false, checkSpender)`. It needs no token address.
+4. **Deploy the token** with `Engine(ruleEngine = rule, snapshotEngine = 0, documentEngine = 0)`.
+5. **Grant `MINTER_ROLE`** to the issuer's minting address, if it is not the admin. It does not need to be registered.
+6. **Check the setup:** `rule.identityRegistry() == registry`, `token.ruleEngine() == rule`; on the Standard variant, `token.detectTransferRestriction(address(0), investor1, 1) == 0` and the same call to an unregistered address returns 56. A small test mint confirms it end to end.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Admin (deployer)
+    participant Registry as IdentityRegistryWhitelist
+    participant Rule as RuleIdentityRegistry
+    participant Token as CMTAT v3.0.0
+
+    Admin->>Registry: deploy IdentityRegistryWhitelist(admin)
+    Admin->>Registry: grantRole(IDENTITY_REGISTRAR_ROLE, registrar)
+    Admin->>Registry: registerIdentity(investor1, 0, 0), ...
+    Admin->>Rule: deploy RuleIdentityRegistry(admin, registry, false, checkSpender)
+    Admin->>Token: deploy CMTATStandalone(..., Engine(rule, 0, 0))
+    Note over Token,Rule: compliance active from the first block: token.ruleEngine() == rule
+    Admin->>Token: grantRole(MINTER_ROLE, minter)
+    Admin->>Token: detectTransferRestriction(0, investor1, 1) returns 0
+```
+
+### 5.2 Rule set directly, after deployment
+
+1. **Deploy the token** with `Engine(ruleEngine = address(0), ...)`. Do not mint yet.
+2. **Deploy the registry, register investors and deploy the rule**, as in 5.1 steps 1 to 3.
+3. **Install it:** `token.setRuleEngine(rule)`, as the token's `DEFAULT_ADMIN_ROLE`. It emits `RuleEngine(rule)` and reverts with `CMTAT_ValidationModule_SameValue` if that rule is already set.
+4. **Grant `MINTER_ROLE`**, then check as in 5.1 step 6.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Admin (deployer)
+    participant Token as CMTAT v3.0.0
+    participant Registry as IdentityRegistryWhitelist
+    participant Rule as RuleIdentityRegistry
+
+    Admin->>Token: deploy CMTATStandalone(..., Engine(0, 0, 0))
+    Note over Token: no compliance yet: do not mint
+    Admin->>Registry: deploy IdentityRegistryWhitelist(admin)
+    Admin->>Registry: registerIdentity(investor1, 0, 0), ...
+    Admin->>Rule: deploy RuleIdentityRegistry(admin, registry, false, checkSpender)
+    Admin->>Token: setRuleEngine(rule)
+    Token-->>Admin: event RuleEngine(rule)
+    Admin->>Token: grantRole(MINTER_ROLE, minter)
+    Admin->>Token: detectTransferRestriction(0, investor1, 1) returns 0
+```
+
+### 5.3 Behind a RuleEngine, at deployment
+
+The token address does not exist yet when the engine is deployed, so the engine is deployed without a token and binds it afterwards. Until that binding, the engine rejects every call from the token (`TokenBinding_UnauthorizedCaller`): no mint or transfer can happen unscreened.
+
+1. **Deploy the registry, register investors and deploy the rule**, as in 5.1 steps 1 to 3.
+2. **Deploy the RuleEngine:** `RuleEngine(admin, address(0))`, and add the rule: `engine.addRule(rule)` (`RULES_MANAGEMENT_ROLE`).
+3. **Deploy the token** with `Engine(ruleEngine = engine, ...)`.
+4. **Bind the token:** `engine.bindToken(token)` (`COMPLIANCE_MANAGER_ROLE`). From now on the token works.
+5. **Grant `MINTER_ROLE`** and check as in 5.1 step 6.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Admin (deployer)
+    participant Registry as IdentityRegistryWhitelist
+    participant Rule as RuleIdentityRegistry
+    participant Engine as RuleEngine
+    participant Token as CMTAT v3.0.0
+
+    Admin->>Registry: deploy IdentityRegistryWhitelist(admin)
+    Admin->>Registry: registerIdentity(investor1, 0, 0), ...
+    Admin->>Rule: deploy RuleIdentityRegistry(admin, registry, false, checkSpender)
+    Admin->>Engine: deploy RuleEngine(admin, 0)
+    Admin->>Engine: addRule(rule)
+    Admin->>Token: deploy CMTATStandalone(..., Engine(engine, 0, 0))
+    Note over Token,Engine: token not bound yet: every mint and transfer reverts (TokenBinding_UnauthorizedCaller)
+    Admin->>Engine: bindToken(token)
+    Admin->>Token: grantRole(MINTER_ROLE, minter)
+    Admin->>Token: detectTransferRestriction(0, investor1, 1) returns 0
+```
+
+### 5.4 Behind a RuleEngine, after deployment
+
+1. **Deploy the token** with `Engine(ruleEngine = address(0), ...)`. Do not mint yet.
+2. **Deploy the RuleEngine** with the token already known: `RuleEngine(admin, token)` binds it in the constructor.
+3. **Deploy the registry, register investors, deploy the rule** as in 5.1 steps 1 to 3, then `engine.addRule(rule)`.
+4. **Install it:** `token.setRuleEngine(engine)`.
+5. **Grant `MINTER_ROLE`** and check as in 5.1 step 6.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Admin (deployer)
+    participant Token as CMTAT v3.0.0
+    participant Engine as RuleEngine
+    participant Registry as IdentityRegistryWhitelist
+    participant Rule as RuleIdentityRegistry
+
+    Admin->>Token: deploy CMTATStandalone(..., Engine(0, 0, 0))
+    Note over Token: no compliance yet: do not mint
+    Admin->>Engine: deploy RuleEngine(admin, token): binds the token
+    Admin->>Registry: deploy IdentityRegistryWhitelist(admin)
+    Admin->>Registry: registerIdentity(investor1, 0, 0), ...
+    Admin->>Rule: deploy RuleIdentityRegistry(admin, registry, false, checkSpender)
+    Admin->>Engine: addRule(rule)
+    Admin->>Token: setRuleEngine(engine)
+    Admin->>Token: grantRole(MINTER_ROLE, minter)
+    Admin->>Token: detectTransferRestriction(0, investor1, 1) returns 0
+```
+
+One registry, and one rule, can serve several tokens: the rule reads no token state, so every token consulting it shares the same set of verified wallets.
+
+## 6. Mint workflow
+
+`mint(to, value)` by a `MINTER_ROLE` holder, with the rule active. On v3.0.0 the token runs its own checks first (contract deactivated, receiver frozen), then notifies the compliance contract **before** creating the tokens, on the 3-argument `transferred(address(0), to, value)`. Pause does not stop a mint on v3.0.0.
+
+### 6.1 Rule plugged directly into the token
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Minter as Minter (MINTER_ROLE)
+    participant Token as CMTAT v3.0.0
+    participant Rule as RuleIdentityRegistry
+    participant Registry as Identity registry
+
+    Minter->>Token: mint(to, value)
+    Token->>Token: onlyRole(MINTER_ROLE)
+    Token->>Token: deactivated? receiver frozen?
+    alt token check fails
+        Token-->>Minter: revert CMTAT_InvalidTransfer
+    end
+    Token->>Rule: transferred(address(0), to, value)
+    Rule->>Registry: isVerified(to)
+    Registry-->>Rule: true or false
+    alt not verified
+        Rule-->>Token: revert RuleIdentityRegistry_InvalidTransfer(rule, 0, to, value, 56)
+        Token-->>Minter: whole mint reverts
+    else verified
+        Rule-->>Token: return
+        Token->>Token: _mint(to, value): balance and totalSupply increase
+        Token-->>Minter: Transfer(address(0), to, value)
+    end
+```
+
+### 6.2 Rule behind a RuleEngine
+
+The token calls the RuleEngine, which accepts only its bound token and then calls each of its rules in order. The first rule that reverts stops the mint, and the engine passes the revert back to the token.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Minter as Minter (MINTER_ROLE)
+    participant Token as CMTAT v3.0.0
+    participant Engine as RuleEngine
+    participant Rule as RuleIdentityRegistry
+    participant Registry as Identity registry
+
+    Minter->>Token: mint(to, value)
+    Token->>Token: onlyRole(MINTER_ROLE)
+    Token->>Token: deactivated? receiver frozen?
+    alt token check fails
+        Token-->>Minter: revert CMTAT_InvalidTransfer
+    end
+    Token->>Engine: transferred(address(0), to, value)
+    Engine->>Engine: onlyBoundToken (caller is the bound token?)
+    Engine->>Rule: transferred(address(0), to, value)
+    Rule->>Registry: isVerified(to)
+    Registry-->>Rule: true or false
+    alt not verified
+        Rule-->>Engine: revert RuleIdentityRegistry_InvalidTransfer(rule, 0, to, value, 56)
+        Engine-->>Token: revert bubbles up
+        Token-->>Minter: whole mint reverts
+    else verified
+        Rule-->>Engine: return
+        Engine-->>Token: return
+        Token->>Token: _mint(to, value): balance and totalSupply increase
+        Token-->>Minter: Transfer(address(0), to, value)
+    end
+```
+
+### 6.3 Happy path: a mint to a registered investor
+
+Alice is registered in the registry, the contract is not deactivated and Alice is not frozen on the token. The minter is not registered, which does not matter. The rule is plugged directly into the token; behind a RuleEngine the engine sits between them, as in §6.2.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Minter as Minter (MINTER_ROLE)
+    participant Token as CMTAT v3.0.0
+    participant Rule as RuleIdentityRegistry
+    participant Registry as IdentityRegistryWhitelist
+
+    Minter->>Token: mint(alice, 1000)
+    Token->>Token: deactivated, Alice frozen: no
+    Token->>Rule: transferred(address(0), alice, 1000)
+    Rule->>Registry: isVerified(alice)
+    Registry-->>Rule: true
+    Rule-->>Token: return, no revert (restriction code 0)
+    Token->>Token: _mint(alice, 1000)
+    Token-->>Minter: Transfer(address(0), alice, 1000)
+```
+
+## 7. Transfer and burn workflows
+
+`transfer(to, value)` by a holder. The token first checks that the tokens are not frozen (active balance), then that nobody involved is frozen and that the token is not paused, then notifies the compliance contract **before** moving the balance. A `transfer` has no spender and takes the 3-argument path; `transferFrom` takes the 4-argument path with the caller as spender (§7.3).
+
+### 7.1 Rule plugged directly into the token
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Holder as Holder (from)
+    participant Token as CMTAT v3.0.0
+    participant Rule as RuleIdentityRegistry
+    participant Registry as Identity registry
+
+    Holder->>Token: transfer(to, value)
+    Token->>Token: active balance >= value? paused? sender or receiver frozen?
+    alt token check fails
+        Token-->>Holder: revert
+    end
+    Token->>Rule: transferred(from, to, value)
+    opt checkSender is true
+        Rule->>Registry: isVerified(from) (else code 55)
+    end
+    Rule->>Registry: isVerified(to)
+    Registry-->>Rule: true or false
+    alt rejected
+        Rule-->>Token: revert RuleIdentityRegistry_InvalidTransfer(rule, from, to, value, code)
+        Token-->>Holder: whole transfer reverts
+    else accepted
+        Rule-->>Token: return
+        Token->>Token: _transfer(from, to, value)
+        Token-->>Holder: Transfer(from, to, value)
+    end
+```
+
+### 7.2 Rule behind a RuleEngine
+
+Same path through the engine as for a mint (§6.2), on the 3-argument `transferred`.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Holder as Holder (from)
+    participant Token as CMTAT v3.0.0
+    participant Engine as RuleEngine
+    participant Rule as RuleIdentityRegistry
+    participant Registry as Identity registry
+
+    Holder->>Token: transfer(to, value)
+    Token->>Token: active balance >= value? paused? sender or receiver frozen?
+    alt token check fails
+        Token-->>Holder: revert
+    end
+    Token->>Engine: transferred(from, to, value)
+    Engine->>Engine: onlyBoundToken
+    Engine->>Rule: transferred(from, to, value)
+    opt checkSender is true
+        Rule->>Registry: isVerified(from) (else code 55)
+    end
+    Rule->>Registry: isVerified(to)
+    Registry-->>Rule: true or false
+    alt rejected
+        Rule-->>Engine: revert RuleIdentityRegistry_InvalidTransfer(rule, from, to, value, code)
+        Engine-->>Token: revert bubbles up
+        Token-->>Holder: whole transfer reverts
+    else accepted
+        Rule-->>Engine: return
+        Engine-->>Token: return
+        Token->>Token: _transfer(from, to, value)
+        Token-->>Holder: Transfer(from, to, value)
+    end
+```
+
+### 7.3 `transferFrom`
+
+The token calls the 4-argument `transferred(spender, from, to, value)` with the caller as spender, before it checks and spends the allowance. With `checkSpender = true` the rule first asks the registry about the spender (code 57), then runs the checks of §7.1. With `checkSpender = false`, the ERC-3643 default, the spender is not checked. Behind a RuleEngine the engine forwards the same 4-argument call.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Spender as Spender (approved)
+    participant Token as CMTAT v3.0.0
+    participant Rule as RuleIdentityRegistry
+    participant Registry as Identity registry
+
+    Spender->>Token: transferFrom(from, to, value)
+    Token->>Token: active balance, paused, spender, sender or receiver frozen?
+    Token->>Rule: transferred(spender, from, to, value)
+    opt checkSpender is true
+        Rule->>Registry: isVerified(spender) (else code 57)
+    end
+    Rule->>Registry: isVerified(to) (else code 56)
+    alt rejected
+        Rule-->>Token: revert RuleIdentityRegistry_InvalidTransferFrom(rule, spender, from, to, value, code)
+        Token-->>Spender: whole transferFrom reverts
+    else accepted
+        Rule-->>Token: return
+        Token->>Token: spend allowance, _transfer(from, to, value)
+        Token-->>Spender: Transfer(from, to, value)
+    end
+```
+
+### 7.4 Happy path: a de-listed holder sells to a registered investor
+
+The case the ERC-3643 default exists for. Alice was registered, bought tokens, and has since been removed with `deleteIdentity`. Bob is registered. `checkSender` is `false`, Alice holds at least 100 unfrozen tokens, and the token is not paused.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Alice as Alice (de-listed holder)
+    participant Token as CMTAT v3.0.0
+    participant Rule as RuleIdentityRegistry
+    participant Registry as IdentityRegistryWhitelist
+
+    Alice->>Token: transfer(bob, 100)
+    Token->>Token: active balance >= 100: yes
+    Token->>Token: paused, Alice or Bob frozen: no
+    Token->>Rule: transferred(alice, bob, 100)
+    Note over Rule: checkSender is false: Alice is not checked
+    Rule->>Registry: isVerified(bob)
+    Registry-->>Rule: true
+    Rule-->>Token: return, no revert (restriction code 0)
+    Token->>Token: _transfer(alice, bob, 100)
+    Token-->>Alice: Transfer(alice, bob, 100), returns true
+```
+
+### 7.5 Burn
+
+A burn bypasses every eligibility check, as ERC-3643 requires: the rule returns at once without asking the registry, so an issuer can always burn the tokens of a holder who is no longer verified. Behind a RuleEngine the engine sits between the token and the rule, as in §6.2.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Burner as Burner (BURNER_ROLE)
+    participant Token as CMTAT v3.0.0
+    participant Rule as RuleIdentityRegistry
+
+    Burner->>Token: burn(from, value)
+    Token->>Token: deactivated? holder frozen? active balance >= value?
+    alt token check fails
+        Token-->>Burner: revert CMTAT_InvalidTransfer
+    end
+    Token->>Rule: transferred(from, address(0), value)
+    Rule->>Rule: to == address(0): burn, registry not called
+    Rule-->>Token: return
+    Token->>Token: _burn(from, value): totalSupply decreases
+    Token-->>Burner: Transfer(from, address(0), value)
+```
+
+Before sending, a wallet or a front end can ask the same question without a transaction: `token.canTransfer(from, to, value)` and `token.canTransferFrom(spender, from, to, value)` on both variants, and `token.detectTransferRestriction(from, to, value)` plus `messageForTransferRestriction(code)` on the Standard variant (the Debt variant has no ERC-1404 layer).
+
+## 8. Operating the token
+
+| Task | Call | Role |
+| --- | --- | --- |
+| Onboard an investor | `registry.registerIdentity(wallet, identity, country)` (reverts if already registered) | registry `IDENTITY_REGISTRAR_ROLE` |
+| Offboard | `registry.deleteIdentity(wallet)`: the wallet can no longer receive, but can still send and be burned from | registry `IDENTITY_REGISTRAR_ROLE` |
+| Point the rule at another registry | `rule.setIdentityRegistry(newRegistry)` (reverts on `address(0)`) | rule `DEFAULT_ADMIN_ROLE` |
+| Turn identity checks off | `rule.clearIdentityRegistry()`: every operation passes the rule | rule `DEFAULT_ADMIN_ROLE` |
+| Screen delegated spenders | `rule.setCheckSpender(true)` | rule `DEFAULT_ADMIN_ROLE` |
+| Also screen senders (stricter than ERC-3643) | `rule.setCheckSender(true)`: traps de-listed holders | rule `DEFAULT_ADMIN_ROLE` |
+| Replace the compliance | `token.setRuleEngine(newRuleOrEngine)` | token `DEFAULT_ADMIN_ROLE` |
+| Remove the compliance | `token.setRuleEngine(address(0))`: the token becomes unrestricted | token `DEFAULT_ADMIN_ROLE` |
+
+**The registry is the list.** A registration or deletion takes effect for every token whose rule consults that registry, at the next transfer, with no call to the rule or the token. Whoever holds `IDENTITY_REGISTRAR_ROLE` (or runs the external registry) decides who may receive the token.
+
+**`clearIdentityRegistry` lifts the restriction silently** from the token's point of view: the token keeps calling the rule, and the rule approves everything. It emits `IdentityRegistryUpdated(address(0))`.
+
+To move tokens without the rule, use the token's `forcedTransfer(from, to, value)` (`DEFAULT_ADMIN_ROLE` on v3.0.0), which does not call the compliance contract.
+
+See also: [`RuleIdentityRegistry.md`](../contracts/RuleIdentityRegistry.md) for the full rule reference, [`IdentityRegistryWhitelist.md`](../contracts/IdentityRegistryWhitelist.md) for the registry, and [`RULE_SEMANTICS.md`](./RULE_SEMANTICS.md) §7 for the per-rule CMTAT v3.0.0 status.

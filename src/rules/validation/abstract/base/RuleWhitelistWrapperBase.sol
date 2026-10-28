@@ -19,12 +19,10 @@ import {IIdentityRegistryVerified} from "../../../interfaces/IIdentityRegistry.s
  * @dev Child rules must implement {IAddressList} and must be ALLOW-lists.
  *
  * WARNING: {IAddressList} carries membership, not polarity. This wrapper ORs its children's
- * `areAddressesListed` answers and reads `true` as ELIGIBLE. A deny-list such as `RuleBlacklist`
- * satisfies the same interface and passes every check {addRule} performs, yet its set means the
- * opposite: add one as a child and its blacklisted addresses become whitelisted, and {isVerified}
- * reports them as verified investors. An ERC-165 guard would not catch this -- a blacklist advertises
- * the same interface id, because it implements the same interface. Polarity is configuration
- * discipline enforced by the rules manager, not by this contract. Nethermind AuditAgent NM-20.
+ * `areAddressesListed` answers and reads `true` as ELIGIBLE, so a deny-list such as `RuleBlacklist`
+ * added as a child would turn its blacklisted addresses into whitelisted ones. {addRule} therefore
+ * also requires the child to advertise {IAddressListPolarity} and answer `isAllowList() == true`;
+ * a child that does not declare its polarity is refused. Nethermind AuditAgent NM-20.
  */
 abstract contract RuleWhitelistWrapperBase is
     RulesManagementModule,
@@ -235,9 +233,8 @@ abstract contract RuleWhitelistWrapperBase is
      * false for a codeless address, a missing selector or malformed return data -- so a hostile
      * candidate cannot brick the setter screening it.
      *
-     * WARNING: this cannot check POLARITY. A deny-list answers `areAddressesListed` just as
-     * faithfully as an allow-list and advertises the same id, so it passes here and then inverts the
-     * wrapper's meaning. Children must be allow-lists by configuration; see the contract-level note.
+     * The interface check alone cannot tell an allow-list from a deny-list, which advertises the same
+     * id, so the child must also declare its polarity and answer `isAllowList() == true`.
      * @param rule_ The candidate child rule.
      */
     function _checkRule(address rule_) internal view virtual override {

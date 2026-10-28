@@ -89,7 +89,8 @@ abstract contract RuleChainlinkPoRInvariantStorage is RuleSharedInvariantStorage
     /**
      * @notice Emitted when the Proof of Reserve data feed is set or replaced.
      * @param newReservesFeed Address of the newly configured data feed.
-     * @param feedDecimals Decimals reported by that feed, cached at configuration time.
+     * @param feedDecimals Decimals reported by that feed at configuration time, for information only:
+     * the rule reads them again from the feed on every check.
      */
     event ReservesFeedUpdated(address indexed newReservesFeed, uint8 feedDecimals);
     /**

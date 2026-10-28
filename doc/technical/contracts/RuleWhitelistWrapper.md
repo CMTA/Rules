@@ -8,7 +8,7 @@ This rule aggregates multiple child whitelist rules using OR logic. An address i
 
 Each child rule must implement `IAddressList` **and must be an allow-list**. The wrapper iterates through all registered rules and returns `true` for an address as soon as one rule lists it. Iteration stops early once all required addresses are resolved.
 
-> ⚠️ **`IAddressList` carries membership, not polarity.** The wrapper reads a child's `areAddressesListed` answer and treats `true` as *eligible*. It has no way to ask whether the child meant "allowed" or "denied", and nothing in `addRule` constrains that — see [Child rules must be allow-lists](#child-rules-must-be-allow-lists).
+> ⚠️ **`IAddressList` carries membership, not polarity.** The wrapper reads a child's `areAddressesListed` answer and treats `true` as *eligible*. Membership alone cannot say whether the child meant "allowed" or "denied", so `addRule` also requires the child to declare its polarity and be an allow-list — see [Child rules must be allow-lists](#child-rules-must-be-allow-lists).
 
 ![ruleWhitelistWrapper.drawio](../../schema/rule/ruleWhitelistWrapper.drawio.png)
 
@@ -45,6 +45,7 @@ _Diagram source: doc/img/rule-whitelist-wrapper-flow.puml._
 | `admin` | Address granted `DEFAULT_ADMIN_ROLE` (implicitly holds all roles) |
 | `forwarderIrrevocable` | ERC-2771 trusted forwarder address for meta-transactions (use `address(0)` to disable) |
 | `checkSpender_` | If `true`, spender address in `transferFrom` is also validated against child rules |
+| `allowMintBurn` | If `true`, sets both `allowMint` and `allowBurn` on the wrapper. The children's own flags are not read. Adjust afterwards with `setAllowMint` / `setAllowBurn` |
 
 ### `checkSpender` flag
 
@@ -59,6 +60,8 @@ The wrapper reuses restriction codes from the whitelist rule:
 | `CODE_ADDRESS_FROM_NOT_WHITELISTED` | 21 | Sender is not in any child whitelist |
 | `CODE_ADDRESS_TO_NOT_WHITELISTED` | 22 | Recipient is not in any child whitelist |
 | `CODE_ADDRESS_SPENDER_NOT_WHITELISTED` | 23 | Spender is not in any child whitelist (only when `checkSpender` is enabled) |
+| `CODE_MINT_NOT_ALLOWED` | 24 | Minting is disabled on the wrapper (`allowMint == false`) |
+| `CODE_BURN_NOT_ALLOWED` | 25 | Burning is disabled on the wrapper (`allowBurn == false`) |
 
 ## Access Control
 
@@ -187,7 +190,7 @@ Returns the number of registered child rules.
 ```solidity
 uint256 unresolved = targetsLength;
 for (uint256 i = 0; i < rulesLength; ++i) {
-    bool[] memory isListed = IAddressList(rule(i)).areAddressesListed(targetAddress);  // <- external call
+    bool[] memory isListed = IAddressListBatchQuery(rule(i)).areAddressesListed(targetAddress);  // <- external call
     for (uint256 j = 0; j < targetsLength; ++j) {
         if (isListed[j] && !result[j]) { result[j] = true; --unresolved; }
     }
@@ -237,6 +240,10 @@ With `checkSpender = true` (3 target addresses instead of 2), the same 10-child 
 ### Usage scenario
 
 Three operators (A, B, C) each manage their own `RuleWhitelist`. The `RuleWhitelistWrapper` is configured with all three as child rules. A transfer between any two addresses whitelisted by any one of the operators will pass. The wrapper admin grants `RULES_MANAGEMENT_ROLE` to a coordinator who adds and removes child rules as operators join or leave.
+
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_WHITELIST_WRAPPER_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_WHITELIST_WRAPPER_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_WHITELIST_WRAPPER_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_WHITELIST_WRAPPER_CMTAT_V3.3.0.md) for v3.3.0.
 
 ## CMTAT v3.0.0
 
