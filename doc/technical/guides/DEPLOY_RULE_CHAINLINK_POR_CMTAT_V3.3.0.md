@@ -6,6 +6,7 @@
 - [2. Choose the setup](#2-choose-the-setup)
 - [3. Contracts and roles](#3-contracts-and-roles)
 - [4. Deployment steps](#4-deployment-steps)
+  - [Rule constructor parameters](#rule-constructor-parameters)
   - [4.1 Behind a RuleEngine, set at deployment (recommended)](#41-behind-a-ruleengine-set-at-deployment-recommended)
   - [4.2 Rule set directly, after deployment](#42-rule-set-directly-after-deployment)
   - [4.3 Behind a RuleEngine, after deployment](#43-behind-a-ruleengine-after-deployment)
@@ -90,6 +91,17 @@ On both CMTAT and the AccessControl rule, the default admin implicitly holds eve
 ## 4. Deployment steps
 
 Each setup lists its steps, then draws them as a sequence diagram. The calls are shown from a single admin; in production the rule and minting roles can be held by different addresses (§3). The feed address is taken from Chainlink's list of Proof of Reserve feeds for the target chain.
+
+
+### Rule constructor parameters
+
+| Parameter | Type | What it sets | Checks and notes |
+| --- | --- | --- | --- |
+| `admin` | `address` | Receives `DEFAULT_ADMIN_ROLE`, which implicitly holds every role of the rule. Set it to the account (ideally a multisig) that will operate the rule. | Reverts if `address(0)`. On the `Ownable2Step` variant this parameter is `owner`, who then holds every privileged function |
+| `tokenContract_` | `address` | The token whose `totalSupply()` is compared with the reserves. | Must be non-zero, have code and answer `totalSupply()`, so the rule is deployed after the token |
+| `tokenDecimals_` | `uint8` | The token's decimals, used to scale the reserves reported by the feed into token base units. | 0 to 18, and must equal `token.decimals()` when the token exposes it |
+| `reservesFeed_` | `AggregatorV3Interface` | The Chainlink Proof of Reserve feed. Mints are refused once `totalSupply()` would exceed the reported reserves (code 75). | Must be a contract answering `decimals()` with at most 36 decimals (`MAX_FEED_DECIMALS`). The feed decimals are re-read on every check |
+| `maxStalenessSeconds_` | `uint256` | The oldest feed answer accepted, in seconds. An older answer blocks mints (code 76). | `0` disables the staleness check. Set it to the feed's heartbeat; change later with `setMaxStalenessSeconds` |
 
 ### 4.1 Behind a RuleEngine, set at deployment (recommended)
 

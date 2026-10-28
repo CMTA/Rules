@@ -6,6 +6,7 @@
 - [2. Choose the setup](#2-choose-the-setup)
 - [3. Contracts and roles](#3-contracts-and-roles)
 - [4. Deployment steps](#4-deployment-steps)
+  - [Rule constructor parameters](#rule-constructor-parameters)
   - [4.1 Behind a RuleEngine, set at deployment (recommended)](#41-behind-a-ruleengine-set-at-deployment-recommended)
   - [4.2 Rule set directly, after deployment](#42-rule-set-directly-after-deployment)
   - [4.3 Behind a RuleEngine, after deployment](#43-behind-a-ruleengine-after-deployment)
@@ -88,6 +89,16 @@ On both CMTAT and the AccessControl rule, the default admin implicitly holds eve
 ## 4. Deployment steps
 
 Each setup lists its steps, then draws them as a sequence diagram. The calls are shown from a single admin; in production the cap, binding and minting roles can be held by different addresses (§3).
+
+
+### Rule constructor parameters
+
+| Parameter | Type | What it sets | Checks and notes |
+| --- | --- | --- | --- |
+| `admin` | `address` | Receives `DEFAULT_ADMIN_ROLE`, which implicitly holds every role of the rule. Set it to the account (ideally a multisig) that will operate the rule. | Reverts if `address(0)`. On the `Ownable2Step` variant this parameter is `owner`, who then holds every privileged function |
+| `tokenContract_` | `address` | The token whose mints are counted. Fixed for the life of the rule: `setTokenContract` always reverts. | Must be non-zero, have code and answer `totalSupply()`, so the rule is deployed after the token |
+| `issuanceCap_` | `uint256` | The maximum cumulative issuance, in base units. A mint that would push `totalIssued` above it is refused (code 71); burns never free room. | Raise later with `increaseMaxTotalSupply` |
+| `initialIssued_` | `uint256` | The issuance already made before the rule was installed: the starting value of `totalIssued`. | Must be at least the token's current `totalSupply()`, else the constructor reverts. `0` for a new token |
 
 ### 4.1 Behind a RuleEngine, set at deployment (recommended)
 

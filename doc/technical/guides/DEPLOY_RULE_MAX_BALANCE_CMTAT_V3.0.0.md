@@ -6,6 +6,7 @@
 - [2. Choose the setup](#2-choose-the-setup)
 - [3. Contracts and roles](#3-contracts-and-roles)
 - [4. Deployment steps](#4-deployment-steps)
+  - [Rule constructor parameters](#rule-constructor-parameters)
   - [4.1 Behind a RuleEngine, set at deployment (recommended)](#41-behind-a-ruleengine-set-at-deployment-recommended)
   - [4.2 Rule set directly, after deployment](#42-rule-set-directly-after-deployment)
   - [4.3 Behind a RuleEngine, after deployment](#43-behind-a-ruleengine-after-deployment)
@@ -89,6 +90,15 @@ On both CMTAT and the AccessControl rule, the default admin implicitly holds eve
 ## 4. Deployment steps
 
 Each setup lists its steps, then draws them as a sequence diagram. The calls are shown from a single admin; in production the cap, rule and minting roles can be held by different addresses (§3). The pairing rule (here a whitelist) is shown in 4.1 and 4.3; deploy and fill it as in its own guide.
+
+
+### Rule constructor parameters
+
+| Parameter | Type | What it sets | Checks and notes |
+| --- | --- | --- | --- |
+| `admin` | `address` | Receives `DEFAULT_ADMIN_ROLE`, which implicitly holds every role of the rule. Set it to the account (ideally a multisig) that will operate the rule. | Reverts if `address(0)`. On the `Ownable2Step` variant this parameter is `owner`, who then holds every privileged function |
+| `balanceToken_` | `address` | The token whose `balanceOf` the rule reads to check the receiver's balance. | Must be non-zero, have code and answer `balanceOf`, so the rule is deployed after the token |
+| `maxBalance_` | `uint256` | The largest balance a non-exempt address may hold, in base units. A transfer or mint that would push the receiver above it is refused (code 82). | `0` forbids holding entirely, it does not disable the rule. Change later with `setMaxBalance` |
 
 ### 4.1 Behind a RuleEngine, set at deployment (recommended)
 

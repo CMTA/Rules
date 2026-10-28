@@ -6,6 +6,7 @@
 - [2. Choose the setup](#2-choose-the-setup)
 - [3. Contracts and roles](#3-contracts-and-roles)
 - [4. Deployment steps](#4-deployment-steps)
+  - [Rule constructor parameters](#rule-constructor-parameters)
   - [4.1 Rule set directly, at deployment (recommended for the quota alone)](#41-rule-set-directly-at-deployment-recommended-for-the-quota-alone)
   - [4.2 Rule set directly, after deployment](#42-rule-set-directly-after-deployment)
   - [4.3 Behind a RuleEngine, at deployment (recommended with other rules)](#43-behind-a-ruleengine-at-deployment-recommended-with-other-rules)
@@ -88,6 +89,13 @@ On both CMTAT and the AccessControl rule, the default admin implicitly holds eve
 ## 4. Deployment steps
 
 Each setup lists its steps, then draws them as a sequence diagram. The calls are shown from a single admin; in production the quota, binding and minting roles can be held by different addresses (§3).
+
+
+### Rule constructor parameters
+
+| Parameter | Type | What it sets | Checks and notes |
+| --- | --- | --- | --- |
+| `admin` | `address` | Receives `DEFAULT_ADMIN_ROLE`, which implicitly holds every role: `ALLOWANCE_OPERATOR_ROLE` (set quotas) and `COMPLIANCE_MANAGER_ROLE` (bind the caller). | Reverts if `address(0)`. On the `Ownable2Step` variant this parameter is `owner`. No quota is set at deployment, and the admin has none either: set quotas with `setMintAllowance` |
 
 ### 4.1 Rule set directly, at deployment (recommended for the quota alone)
 

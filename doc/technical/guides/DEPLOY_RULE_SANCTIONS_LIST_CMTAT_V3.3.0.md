@@ -6,6 +6,7 @@
 - [2. Choose the setup](#2-choose-the-setup)
 - [3. Contracts and roles](#3-contracts-and-roles)
 - [4. Deployment steps](#4-deployment-steps)
+  - [Rule constructor parameters](#rule-constructor-parameters)
   - [4.1 Rule set directly, at deployment (recommended for sanctions screening alone)](#41-rule-set-directly-at-deployment-recommended-for-sanctions-screening-alone)
   - [4.2 Rule set directly, after deployment](#42-rule-set-directly-after-deployment)
   - [4.3 Behind a RuleEngine, at deployment (recommended with other rules)](#43-behind-a-ruleengine-at-deployment-recommended-with-other-rules)
@@ -108,6 +109,15 @@ The oracle in the rule:
 ## 4. Deployment steps
 
 Each setup lists its steps, then draws them as a sequence diagram. The calls are shown from a single admin; in production the rule, oracle and minting roles can be held by different addresses (§3).
+
+
+### Rule constructor parameters
+
+| Parameter | Type | What it sets | Checks and notes |
+| --- | --- | --- | --- |
+| `admin` | `address` | Receives `DEFAULT_ADMIN_ROLE`, which implicitly holds every role of the rule. Set it to the account (ideally a multisig) that will operate the rule. | Reverts if `address(0)`. On the `Ownable2Step` variant this parameter is `owner`, who then holds every privileged function |
+| `forwarderIrrevocable` | `address` | ERC-2771 trusted forwarder for gasless (meta-transaction) calls to the rule's admin functions. | `address(0)` disables meta-transactions. Cannot be changed after deployment |
+| `sanctionContractOracle_` | `ISanctionsList` | The Chainalysis-style oracle the rule asks `isSanctioned(address)` on every operation. | `address(0)` is accepted and leaves the oracle unset: the rule then **lets everything through** until `setSanctionListOracle` is called. The address is not checked for code: an oracle without code, or a reverting one, makes every operation revert |
 
 ### 4.1 Rule set directly, at deployment (recommended for sanctions screening alone)
 

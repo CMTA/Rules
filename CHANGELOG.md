@@ -210,6 +210,7 @@ Commit:
   - Covered: `RuleReceiverWhitelist`, `RuleSpenderWhitelist`, `RuleWhitelistWrapper`, `RuleBlacklist`, `RuleSanctionsList`, `RuleERC2980`, `RuleIdentityRegistry`, `RuleMaxBalance`, `RuleChainlinkPoR`, `RuleConditionalTransferLight`, `RuleConditionalTransferLightMultiToken`, `RuleMintAllowance`, `RuleIssuanceCap`.
   - Each states which setups the rule allows (rules needing the token address cannot go in the token constructor; operation rules must be bound; `RuleConditionalTransferLightMultiToken` is direct-only) and draws each setup and each operation the rule acts on, with a happy path.
   - The `RuleMintAllowance` v3.0.0 guide states that the rule is inert there (no minter is forwarded) and points to v3.3.0.
+  - Each guide's deployment section opens with a table of the rule's constructor parameters: type, what each sets, and what the constructor checks (for example a token address that must already be deployed, or an oracle that is accepted unset and then lets everything through).
 - Documentation corrected against the code while writing the guides.
   - `RuleChainlinkPoR.md`: a reverting feed `decimals()` returns code 79, not 77, and `maxBackedSupply()` can return 79. `RULE_SEMANTICS.md` and `CLAUDE.md` no longer claim a read-time `code.length` check on the feed.
   - `RuleMintAllowance.md`: the allowance is debited before the tokens are created, not after; in direct mode the token, not a RuleEngine, is bound.

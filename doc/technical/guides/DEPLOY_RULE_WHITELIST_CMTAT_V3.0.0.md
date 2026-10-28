@@ -6,6 +6,7 @@
 - [2. Choose the setup](#2-choose-the-setup)
 - [3. Contracts and roles](#3-contracts-and-roles)
 - [4. Deployment steps](#4-deployment-steps)
+  - [Rule constructor parameters](#rule-constructor-parameters)
   - [4.1 Rule set directly, at deployment (recommended for a whitelist alone)](#41-rule-set-directly-at-deployment-recommended-for-a-whitelist-alone)
   - [4.2 Rule set directly, after deployment](#42-rule-set-directly-after-deployment)
   - [4.3 Behind a RuleEngine, at deployment](#43-behind-a-ruleengine-at-deployment)
@@ -84,6 +85,16 @@ Constructor flags of the rule:
 ## 4. Deployment steps
 
 Each setup lists its steps, then draws them as a sequence diagram. The calls are shown from a single admin; in production the whitelist, rule and minting roles can be held by different addresses (§3).
+
+
+### Rule constructor parameters
+
+| Parameter | Type | What it sets | Checks and notes |
+| --- | --- | --- | --- |
+| `admin` | `address` | Receives `DEFAULT_ADMIN_ROLE`, which implicitly holds every role of the rule. Set it to the account (ideally a multisig) that will operate the rule. | Reverts if `address(0)`. On the `Ownable2Step` variant this parameter is `owner`, who then holds every privileged function |
+| `forwarderIrrevocable` | `address` | ERC-2771 trusted forwarder for gasless (meta-transaction) calls to the rule's admin functions. | `address(0)` disables meta-transactions. Cannot be changed after deployment |
+| `checkSpender_` | `bool` | When `true`, a `transferFrom` also requires the spender to be whitelisted (code 23). Mint and burn are always exempt from the spender check. | Toggle later with `setCheckSpender` |
+| `allowMintBurn` | `bool` | Sets both `allowMint` and `allowBurn`. With `false`, every mint (code 24) and burn (code 25) is refused, even for whitelisted holders. | Pass `true` to be able to issue. Adjust each flag later with `setAllowMint` / `setAllowBurn` |
 
 ### 4.1 Rule set directly, at deployment (recommended for a whitelist alone)
 

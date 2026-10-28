@@ -7,6 +7,7 @@
 - [3. Choose the setup](#3-choose-the-setup)
 - [4. Contracts and roles](#4-contracts-and-roles)
 - [5. Deployment steps](#5-deployment-steps)
+  - [Rule constructor parameters](#rule-constructor-parameters)
   - [5.1 Rule set directly, at deployment (recommended for identity alone)](#51-rule-set-directly-at-deployment-recommended-for-identity-alone)
   - [5.2 Rule set directly, after deployment](#52-rule-set-directly-after-deployment)
   - [5.3 Behind a RuleEngine, at deployment](#53-behind-a-ruleengine-at-deployment)
@@ -117,6 +118,18 @@ The repository script `script/DeployCMTATWithIdentityRegistry.s.sol` deploys thi
 ## 5. Deployment steps
 
 Each setup lists its steps, then draws them as a sequence diagram. The calls are shown from a single admin; in production the registrar, rule and minting roles can be held by different addresses (§4). Every setup starts with the registry; with an existing ERC-3643 registry, skip steps 1 and 2.
+
+
+### Rule constructor parameters
+
+| Parameter | Type | What it sets | Checks and notes |
+| --- | --- | --- | --- |
+| `admin` | `address` | Receives `DEFAULT_ADMIN_ROLE`, which implicitly holds every role of the rule. Set it to the account (ideally a multisig) that will operate the rule. | Reverts if `address(0)`. On the `Ownable2Step` variant this parameter is `owner`, who then holds every privileged function |
+| `identityRegistry_` | `address` | The ERC-3643 identity registry the rule queries with `isVerified(address)`, for example an `IdentityRegistryWhitelist`. | Not checked: `address(0)` leaves the rule unconfigured and it blocks nothing. A registry without code, or one that reverts, makes every mint and transfer revert. Change later with `setIdentityRegistry` |
+| `checkSender_` | `bool` | When `true`, the sender must also be verified (code 55). | Default `false`, as ERC-3643 requires: `true` traps de-listed holders, who can no longer sell |
+| `checkSpender_` | `bool` | When `true`, a `transferFrom` spender must also be verified (code 57). The minter is exempt. | Default `false` |
+
+`IdentityRegistryWhitelist`, the registry deployed alongside in these setups, takes a single parameter, `admin`, which receives `DEFAULT_ADMIN_ROLE` and so `IDENTITY_REGISTRAR_ROLE` (`registerIdentity` / `deleteIdentity`).
 
 ### 5.1 Rule set directly, at deployment (recommended for identity alone)
 

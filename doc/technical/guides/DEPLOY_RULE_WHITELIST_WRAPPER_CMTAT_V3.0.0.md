@@ -7,6 +7,7 @@
 - [2. Choose the setup](#2-choose-the-setup)
 - [3. Contracts and roles](#3-contracts-and-roles)
 - [4. Deployment steps](#4-deployment-steps)
+  - [Rule constructor parameters](#rule-constructor-parameters)
   - [4.1 Wrapper set directly, at deployment (recommended for the wrapper alone)](#41-wrapper-set-directly-at-deployment-recommended-for-the-wrapper-alone)
   - [4.2 Wrapper set directly, after deployment](#42-wrapper-set-directly-after-deployment)
   - [4.3 Behind a RuleEngine, at deployment (recommended with other rules)](#43-behind-a-ruleengine-at-deployment-recommended-with-other-rules)
@@ -114,6 +115,18 @@ Constructor flags of the wrapper:
 ## 4. Deployment steps
 
 Each setup lists its steps, then draws them as a sequence diagram. The diagrams show two children, `ChildA` (a `RuleWhitelist` run by operator A) and `ChildB` (run by operator B), and calls from a single admin; in production each child, the wrapper and the token can have different admins (§3).
+
+
+### Rule constructor parameters
+
+| Parameter | Type | What it sets | Checks and notes |
+| --- | --- | --- | --- |
+| `admin` | `address` | Receives `DEFAULT_ADMIN_ROLE`, which implicitly holds every role of the rule. Set it to the account (ideally a multisig) that will operate the rule. | Reverts if `address(0)`. On the `Ownable2Step` variant this parameter is `owner`, who then holds every privileged function |
+| `forwarderIrrevocable` | `address` | ERC-2771 trusted forwarder for gasless (meta-transaction) calls to the rule's admin functions. | `address(0)` disables meta-transactions. Cannot be changed after deployment |
+| `checkSpender_` | `bool` | When `true`, a `transferFrom` spender must be listed in at least one child rule (code 23). Mint and burn are exempt. | Toggle later with `setCheckSpender` |
+| `allowMintBurn` | `bool` | Sets the **wrapper's own** `allowMint` and `allowBurn`. The children's flags are never read. With `false`, every mint (24) and burn (25) is refused. | Adjust later with `setAllowMint` / `setAllowBurn` |
+
+Each child is an ordinary `RuleWhitelist` (or `RuleReceiverWhitelist`), deployed with its own constructor. The wrapper reads only the children's membership, so their `checkSpender_` and `allowMintBurn` values have no effect through the wrapper.
 
 ### 4.1 Wrapper set directly, at deployment (recommended for the wrapper alone)
 
