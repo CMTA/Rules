@@ -117,6 +117,8 @@ sequenceDiagram
     Admin->>Rule: remainingMintable() returns (0, cap)
 ```
 
+The repository script `script/DeployCMTATWithMaxTotalSupply.s.sol` follows this order, but deploys CMTAT v3.3.0, not v3.0.0. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+
 ### 4.3 Behind a RuleEngine, after deployment
 
 1. **Deploy the token** with no engine. Do not mint yet.

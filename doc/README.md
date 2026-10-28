@@ -501,6 +501,7 @@ Full technical documentation for these scripts, including limitations, is in [`d
 Deployment scripts:
 - `script/DeployCMTATWithWhitelist.s.sol` — CMTAT + whitelist rule, bound directly to the token
 - `script/DeployCMTATWithBlacklist.s.sol` — CMTAT + blacklist rule, bound directly to the token
+- `script/DeployCMTATWithMaxTotalSupply.s.sol` — CMTAT + max-total-supply rule, bound directly to the token
 - `script/DeployCMTATWithBlacklistAndSanctionsList.s.sol` — CMTAT + RuleEngine with blacklist and sanctions rules
 - `script/DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply.s.sol` — the same plus a supply cap
 
@@ -527,7 +528,7 @@ Values are read from the environment, with the defaults below applied when a var
 | `CMTAT_INFORMATION` | `CMTAT_info` | all |
 | `CMTAT_FORWARDER` | `address(0)` (meta-transactions off) | all |
 | `SANCTIONS_ORACLE` | `address(0)` | the two sanctions scripts |
-| `CMTAT_MAX_SUPPLY` | `1000000` | the max-total-supply script |
+| `CMTAT_MAX_SUPPLY` | `1000000` | the two max-total-supply scripts |
 
 > ⚠️ **An unset `SANCTIONS_ORACLE` fails open.** `RuleSanctionsList` is registered and reports no error, and every transfer passes it until `setSanctionListOracle` is called. The oracle address is chain-specific, so there is no safe default. Set it before the token goes live.
 

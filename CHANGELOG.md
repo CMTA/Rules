@@ -86,6 +86,7 @@ Commit:
   - `setTokenContract` stays with `DEFAULT_ADMIN_ROLE`: repointing the observed token changes the protected supply as thoroughly as changing the cap. `TotalSupplyCapManager` gains a second hook, `_authorizeTokenContractManager`, for this split; both hooks are `internal view virtual`.
   - Backward compatible: the admin holds every role implicitly, so existing deployments behave as before. The admin is not enumerated as a member of the new role.
   - The constant is declared in the AccessControl deployable, not in the invariant storage, so the Ownable2Step variants (owner-only, unchanged) do not publish a role they never check.
+- Deployment script `script/DeployCMTATWithMaxTotalSupply.s.sol`: a CMTAT token (current version) with `RuleMaxTotalSupply` set directly on it, the cap read from `CMTAT_MAX_SUPPLY` (default `1000000`). Same shape as the whitelist and blacklist scripts: token first, then the rule, then `setRuleEngine`, then the admin hand-over. Covered by 8 tests in `test/DeploymentScripts/` and by the CI dry run.
 
 ### Changed
 
@@ -216,7 +217,7 @@ Commit:
   - Negative controls: three mutations (off-by-one cap, over-strict cap, wrong headroom view) each fail the suite. A first version missed the off-by-one on the safety invariant, because random amounts never hit `headroom + 1`; the `mintAtBoundary` action fixes that. Recorded in `INVARIANT_TESTS.md` §4.
   - Documented in `INVARIANT_TESTS.md` §3.3 and in the "Invariant testing" section of `doc/README.md`.
 - `remainingMintable()`: unit tests (headroom, exact fit, cap below supply, unreadable supply), a fuzz property that the headroom is exactly the largest mint the pre-flight check accepts, the ERC-3643 variant, and a real CMTAT v3.0.0 token across mints and burns.
-- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,318 tests pass in the default profile and 53 in the `erc3643` profile.
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,326 tests pass in the default profile and 53 in the `erc3643` profile.
 - **Security-review tests** (`CLAUDE_AUDIT.md` v0.7.0):
   - 16 proof-of-concept tests in `test/ThreatModel/ThreatModelV070Tests.t.sol` (4 fuzz). Tests suffixed `_CurrentBehaviour` must fail once a finding is fixed.
   - `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow` (`RuleIssuanceCapCMTATIntegration`): the gap-free deployment order of F-4 on a real CMTAT `v3.3` token and RuleEngine `rc7`; every mint, the admin's included, reverts until the cap rule is installed.

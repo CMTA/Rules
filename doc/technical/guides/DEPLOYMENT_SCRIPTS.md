@@ -12,10 +12,11 @@ Every script produces a working CMTAT token with compliance rules attached and a
 | --- | --- | --- | --- |
 | `DeployCMTATWithWhitelist.s.sol` | CMTAT + `RuleWhitelist` | B (direct) | 7 |
 | `DeployCMTATWithBlacklist.s.sol` | CMTAT + `RuleBlacklist` | B (direct) | 6 |
+| `DeployCMTATWithMaxTotalSupply.s.sol` | CMTAT + `RuleMaxTotalSupply` | B (direct) | 8 |
 | `DeployCMTATWithBlacklistAndSanctionsList.s.sol` | CMTAT + `RuleEngine` + 2 rules | A (engine) | 18 |
 | `DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply.s.sol` | CMTAT + `RuleEngine` + 3 rules | A (engine) | 19 |
 
-All four share [`script/base/CMTATDeploymentBase.sol`](../../../script/base/CMTATDeploymentBase.sol), which holds the token metadata, the environment configuration, and the address-logging helper.
+All five share [`script/base/CMTATDeploymentBase.sol`](../../../script/base/CMTATDeploymentBase.sol), which holds the token metadata, the environment configuration, and the address-logging helper.
 
 ## The shape every script shares
 
@@ -66,8 +67,8 @@ Both CMTAT and `RuleEngine` grant exactly one role at construction, `DEFAULT_ADM
 
 The scripts deliberately use both integration models described in `CLAUDE.md`, and the choice changes what `msg.sender` is inside a rule:
 
-- **Topology B, direct binding** (`DeployCMTATWithWhitelist`, `DeployCMTATWithBlacklist`). The rule is passed straight to `token.setRuleEngine(rule)`, with no engine in between, so inside the rule `msg.sender` is the token. Fine for a single validation rule, and cheaper: one contract fewer and no engine hop per transfer.
-- **Topology A, RuleEngine** (the other two). Required as soon as there is more than one rule.
+- **Topology B, direct binding** (`DeployCMTATWithWhitelist`, `DeployCMTATWithBlacklist`, `DeployCMTATWithMaxTotalSupply`). The rule is passed straight to `token.setRuleEngine(rule)`, with no engine in between, so inside the rule `msg.sender` is the token. Fine for a single validation rule, and cheaper: one contract fewer and no engine hop per transfer.
+- **Topology A, RuleEngine** (the two others). Required as soon as there is more than one rule.
 
 This matters if you copy a script as a starting point. An operation rule such as `RuleConditionalTransferLightMultiToken` is direct-binding only, while `RuleMintAllowance` is not, so the two are not interchangeable. Each script states its topology in its NatSpec header.
 
@@ -87,7 +88,7 @@ Values come from the environment, with the previous hard-coded constants as defa
 | `CMTAT_INFORMATION` | `CMTAT_info` | all |
 | `CMTAT_FORWARDER` | `address(0)` | all |
 | `SANCTIONS_ORACLE` | `address(0)` | the two sanctions scripts |
-| `CMTAT_MAX_SUPPLY` | `1000000` | the max-total-supply script |
+| `CMTAT_MAX_SUPPLY` | `1000000` | the two scripts deploying `RuleMaxTotalSupply` |
 
 A script needing different metadata overrides `_erc20Attributes()` or `_extraInformationAttributes()` rather than copying the block again.
 
@@ -133,6 +134,16 @@ Blocks transfers involving a blacklisted sender, recipient or spender (codes `36
 
 This is the inverse default of the whitelist script, and worth being deliberate about. A whitelist token is closed until you open it; a blacklist token is open until you close it.
 
+### DeployCMTATWithMaxTotalSupply
+
+Signature: `deploy(admin, deployer, forwarder, maxTotalSupply)`. `run()` reads the cap from `CMTAT_MAX_SUPPLY`, default `1000000`.
+
+Caps mints so that `totalSupply()` never exceeds `maxTotalSupply` (code `50`, or `51` when the supply cannot be read). Transfers and burns always pass, and a burn frees room for a later mint. The cap is in base units: with the default `CMTAT_DECIMALS = 0` that is whole tokens.
+
+**Step order matters.** `RuleMaxTotalSupply` validates its token at construction (non-zero, has code, `totalSupply()` callable), so the script deploys the token first, then the rule, then calls `setRuleEngine`. The rule is constructed with `admin`, so `MAX_TOTAL_SUPPLY_ROLE` and `setTokenContract` belong to the final admin from the start.
+
+To combine the cap with other rules, use the three-rule script below, which puts it behind a RuleEngine. For the order that leaves no unscreened window (a RuleEngine passed in the token constructor, token bound last), see [`DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md`](./DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md).
+
 ### DeployCMTATWithBlacklistAndSanctionsList
 
 Signature: `deploy(admin, deployer, forwarder, sanctionsOracle)`.
@@ -159,6 +170,7 @@ Nothing below can be done by the script, because only the operator knows the val
 | --- | --- |
 | Whitelist | Add every participant with `addAddress` / `addAddresses`. Until then transfers fail, including to the admin, who is not whitelisted by deployment. |
 | Blacklist | Nothing to make it work. Add addresses as needed. Review that an open-by-default token is what you want. |
+| Max total supply | Confirm `CMTAT_MAX_SUPPLY` is the real cap, in base units, and not the `1000000` default. Check `remainingMintable()`. |
 | Blacklist + sanctions | **Set the oracle** with `setSanctionListOracle`, unless `SANCTIONS_ORACLE` was set. |
 | The three-rule script | The same oracle step, plus confirm `CMTAT_MAX_SUPPLY` is the real cap and not the `1000000` default. |
 | All | Grant operational roles (minter, pauser, list managers) to whoever needs them. The admin implicitly holds all roles, so nothing is blocked, but relying on that means a single key does everything. |
@@ -186,7 +198,7 @@ Nothing below can be done by the script, because only the operator knows the val
 
 Two layers, and they cover different things.
 
-**Unit tests**, in [`test/DeploymentScripts/`](../../../test/DeploymentScripts/), call `deploy()` directly and assert the wiring, the role hand-over, and the resulting compliance behaviour end to end: 50 tests across the four scripts, including that the admin owns everything and the deployer owns nothing.
+**Unit tests**, in [`test/DeploymentScripts/`](../../../test/DeploymentScripts/), call `deploy()` directly and assert the wiring, the role hand-over, and the resulting compliance behaviour end to end: 58 tests across the five scripts, including that the admin owns everything and the deployer owns nothing.
 
 **A `forge script` dry run in CI**, one per script, in `.github/workflows/test.yml`.
 
