@@ -110,6 +110,7 @@ Commit:
 - **Deployment scripts deploy `RuleEngine2771` only when a forwarder is given.** `DeployCMTATWithBlacklistAndSanctionsList` and `DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply` deploy `RuleEngine` when `forwarder == address(0)` and `RuleEngine2771` otherwise, so the engine trusts the same forwarder as the token and the rules, as it did with rc6. The returned engine is still typed `RuleEngine`.
 - EVM target raised from `prague` to `osaka` in `foundry.toml` (both profiles) and `hardhat.config.js`; solc stays at `0.8.38`, the latest release.
   - The compiled contracts contain no Osaka-only opcode (`CLZ`), so they still run on Prague and Cancun chains.
+- `RuleSpenderWhitelist_InvalidTransferFrom`: first parameter renamed `ruleEngine` → `rule`. It always carried the rule's own address, and every other rule error already names it `rule`. The selector is unchanged; only the parameter name in the ABI differs.
 
 ### Fixed
 
