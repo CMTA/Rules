@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-27 15:10:38</td>
+            <td class="headerValue">2026-10-28 09:57:31</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">13</td>
@@ -99,11 +99,11 @@
 <a name="28"><span class="lineNum">      28 </span>                :            :      * @param forwarderIrrevocable Trusted ERC-2771 forwarder address for meta-transactions.</a>
 <a name="29"><span class="lineNum">      29 </span>                :            :      * @param sanctionContractOracle_ Initial sanctions oracle; skipped when the zero address.</a>
 <a name="30"><span class="lineNum">      30 </span>                :            :      */</a>
-<a name="31"><span class="lineNum">      31 </span>                :<span class="lineCov">        109 :     constructor(address forwarderIrrevocable, ISanctionsList sanctionContractOracle_)</span></a>
+<a name="31"><span class="lineNum">      31 </span>                :<span class="lineCov">        131 :     constructor(address forwarderIrrevocable, ISanctionsList sanctionContractOracle_)</span></a>
 <a name="32"><span class="lineNum">      32 </span>                :            :         MetaTxModuleStandalone(forwarderIrrevocable)</a>
 <a name="33"><span class="lineNum">      33 </span>                :            :     {</a>
-<a name="34"><span class="lineNum">      34 </span>           [<span class="branchCov" title="Branch 0 was taken 77 times"> + </span>]:<span class="lineCov">        108 :         if (address(sanctionContractOracle_) != address(0)) {</span></a>
-<a name="35"><span class="lineNum">      35 </span>                :<span class="lineCov">         77 :             _setSanctionListOracle(sanctionContractOracle_);</span></a>
+<a name="34"><span class="lineNum">      34 </span>           [<span class="branchCov" title="Branch 0 was taken 96 times"> + </span>]:<span class="lineCov">        130 :         if (address(sanctionContractOracle_) != address(0)) {</span></a>
+<a name="35"><span class="lineNum">      35 </span>                :<span class="lineCov">         96 :             _setSanctionListOracle(sanctionContractOracle_);</span></a>
 <a name="36"><span class="lineNum">      36 </span>                :            :         }</a>
 <a name="37"><span class="lineNum">      37 </span>                :            :     }</a>
 <a name="38"><span class="lineNum">      38 </span>                :            : </a>
@@ -134,36 +134,36 @@
 <a name="63"><span class="lineNum">      63 </span>                :            :      * @dev Restricted to the sanction-list manager; reverts on the zero address.</a>
 <a name="64"><span class="lineNum">      64 </span>                :            :      * @param sanctionContractOracle_ The new sanctions oracle address.</a>
 <a name="65"><span class="lineNum">      65 </span>                :            :      */</a>
-<a name="66"><span class="lineNum">      66 </span>                :<span class="lineCov">         18 :     function setSanctionListOracle(ISanctionsList sanctionContractOracle_) public virtual onlySanctionListManager {</span></a>
-<a name="67"><span class="lineNum">      67 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 15 times"> + </span>]:<span class="lineCov">         16 :         require(address(sanctionContractOracle_) != address(0), RuleSanctionsList_OracleAddressZeroNotAllowed());</span></a>
-<a name="68"><span class="lineNum">      68 </span>                :<span class="lineCov">         15 :         _setSanctionListOracle(sanctionContractOracle_);</span></a>
+<a name="66"><span class="lineNum">      66 </span>                :<span class="lineCov">         21 :     function setSanctionListOracle(ISanctionsList sanctionContractOracle_) public virtual onlySanctionListManager {</span></a>
+<a name="67"><span class="lineNum">      67 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 18 times"> + </span>]:<span class="lineCov">         19 :         require(address(sanctionContractOracle_) != address(0), RuleSanctionsList_OracleAddressZeroNotAllowed());</span></a>
+<a name="68"><span class="lineNum">      68 </span>                :<span class="lineCov">         18 :         _setSanctionListOracle(sanctionContractOracle_);</span></a>
 <a name="69"><span class="lineNum">      69 </span>                :            :     }</a>
 <a name="70"><span class="lineNum">      70 </span>                :            : </a>
 <a name="71"><span class="lineNum">      71 </span>                :            :     /**</a>
 <a name="72"><span class="lineNum">      72 </span>                :            :      * @notice Clears the sanctions oracle, disabling sanctions screening.</a>
 <a name="73"><span class="lineNum">      73 </span>                :            :      * @dev Restricted to the sanction-list manager.</a>
 <a name="74"><span class="lineNum">      74 </span>                :            :      */</a>
-<a name="75"><span class="lineNum">      75 </span>                :<span class="lineCov">          3 :     function clearSanctionListOracle() public virtual onlySanctionListManager {</span></a>
-<a name="76"><span class="lineNum">      76 </span>                :<span class="lineCov">          3 :         _setSanctionListOracle(ISanctionsList(address(0)));</span></a>
+<a name="75"><span class="lineNum">      75 </span>                :<span class="lineCov">          4 :     function clearSanctionListOracle() public virtual onlySanctionListManager {</span></a>
+<a name="76"><span class="lineNum">      76 </span>                :<span class="lineCov">          4 :         _setSanctionListOracle(ISanctionsList(address(0)));</span></a>
 <a name="77"><span class="lineNum">      77 </span>                :            :     }</a>
 <a name="78"><span class="lineNum">      78 </span>                :            : </a>
 <a name="79"><span class="lineNum">      79 </span>                :            :     /**</a>
 <a name="80"><span class="lineNum">      80 </span>                :            :      * @inheritdoc IERC3643IComplianceContract</a>
 <a name="81"><span class="lineNum">      81 </span>                :            :      */</a>
-<a name="82"><span class="lineNum">      82 </span>                :<span class="lineCov">         54 :     function transferred(address from, address to, uint256 value)</span></a>
+<a name="82"><span class="lineNum">      82 </span>                :<span class="lineCov">         66 :     function transferred(address from, address to, uint256 value)</span></a>
 <a name="83"><span class="lineNum">      83 </span>                :            :         public</a>
 <a name="84"><span class="lineNum">      84 </span>                :            :         view</a>
 <a name="85"><span class="lineNum">      85 </span>                :            :         virtual</a>
 <a name="86"><span class="lineNum">      86 </span>                :            :         override(IERC3643IComplianceContract)</a>
 <a name="87"><span class="lineNum">      87 </span>                :            :     {</a>
-<a name="88"><span class="lineNum">      88 </span>                :<span class="lineCov">         54 :         _transferred(from, to, value);</span></a>
+<a name="88"><span class="lineNum">      88 </span>                :<span class="lineCov">         66 :         _transferred(from, to, value);</span></a>
 <a name="89"><span class="lineNum">      89 </span>                :            :     }</a>
 <a name="90"><span class="lineNum">      90 </span>                :            : </a>
 <a name="91"><span class="lineNum">      91 </span>                :            :     /**</a>
 <a name="92"><span class="lineNum">      92 </span>                :            :      * @inheritdoc IRule</a>
 <a name="93"><span class="lineNum">      93 </span>                :            :      */</a>
-<a name="94"><span class="lineNum">      94 </span>                :<span class="lineCov">         98 :     function transferred(address spender, address from, address to, uint256 value) public view virtual override {</span></a>
-<a name="95"><span class="lineNum">      95 </span>                :<span class="lineCov">         98 :         _transferredFrom(spender, from, to, value);</span></a>
+<a name="94"><span class="lineNum">      94 </span>                :<span class="lineCov">        114 :     function transferred(address spender, address from, address to, uint256 value) public view virtual override {</span></a>
+<a name="95"><span class="lineNum">      95 </span>                :<span class="lineCov">        114 :         _transferredFrom(spender, from, to, value);</span></a>
 <a name="96"><span class="lineNum">      96 </span>                :            :     }</a>
 <a name="97"><span class="lineNum">      97 </span>                :            : </a>
 <a name="98"><span class="lineNum">      98 </span>                :            :     /**</a>
@@ -190,8 +190,8 @@
 <a name="119"><span class="lineNum">     119 </span>                :            :                             ACCESS CONTROL</a>
 <a name="120"><span class="lineNum">     120 </span>                :            :     //////////////////////////////////////////////////////////////*/</a>
 <a name="121"><span class="lineNum">     121 </span>                :            : </a>
-<a name="122"><span class="lineNum">     122 </span>                :<span class="lineCov">          3 :     modifier onlySanctionListManager() {</span></a>
-<a name="123"><span class="lineNum">     123 </span>                :<span class="lineCov">          3 :         _authorizeSanctionListManager();</span></a>
+<a name="122"><span class="lineNum">     122 </span>                :<span class="lineCov">          4 :     modifier onlySanctionListManager() {</span></a>
+<a name="123"><span class="lineNum">     123 </span>                :<span class="lineCov">          4 :         _authorizeSanctionListManager();</span></a>
 <a name="124"><span class="lineNum">     124 </span>                :            :         _;</a>
 <a name="125"><span class="lineNum">     125 </span>                :            :     }</a>
 <a name="126"><span class="lineNum">     126 </span>                :            : </a>
@@ -203,9 +203,9 @@
 <a name="132"><span class="lineNum">     132 </span>                :            :      * @notice Updates the stored sanctions oracle and emits {SetSanctionListOracle}.</a>
 <a name="133"><span class="lineNum">     133 </span>                :            :      * @param sanctionContractOracle_ The new sanctions oracle address (may be zero to disable).</a>
 <a name="134"><span class="lineNum">     134 </span>                :            :      */</a>
-<a name="135"><span class="lineNum">     135 </span>                :<span class="lineCov">         95 :     function _setSanctionListOracle(ISanctionsList sanctionContractOracle_) internal virtual {</span></a>
-<a name="136"><span class="lineNum">     136 </span>                :<span class="lineCov">         95 :         sanctionsList = sanctionContractOracle_;</span></a>
-<a name="137"><span class="lineNum">     137 </span>                :<span class="lineCov">         95 :         emit SetSanctionListOracle(sanctionContractOracle_);</span></a>
+<a name="135"><span class="lineNum">     135 </span>                :<span class="lineCov">        118 :     function _setSanctionListOracle(ISanctionsList sanctionContractOracle_) internal virtual {</span></a>
+<a name="136"><span class="lineNum">     136 </span>                :<span class="lineCov">        118 :         sanctionsList = sanctionContractOracle_;</span></a>
+<a name="137"><span class="lineNum">     137 </span>                :<span class="lineCov">        118 :         emit SetSanctionListOracle(sanctionContractOracle_);</span></a>
 <a name="138"><span class="lineNum">     138 </span>                :            :     }</a>
 <a name="139"><span class="lineNum">     139 </span>                :            : </a>
 <a name="140"><span class="lineNum">     140 </span>                :            :     /**</a>
@@ -226,7 +226,7 @@
 <a name="155"><span class="lineNum">     155 </span>                :            :      * @param to The recipient address; the zero address denotes a burn and is not screened.</a>
 <a name="156"><span class="lineNum">     156 </span>                :            :      * @return The restriction code, or TRANSFER_OK when no party is sanctioned.</a>
 <a name="157"><span class="lineNum">     157 </span>                :            :      */</a>
-<a name="158"><span class="lineNum">     158 </span>                :<span class="lineCov">        268 :     function _detectTransferRestriction(</span></a>
+<a name="158"><span class="lineNum">     158 </span>                :<span class="lineCov">        301 :     function _detectTransferRestriction(</span></a>
 <a name="159"><span class="lineNum">     159 </span>                :            :         address from,</a>
 <a name="160"><span class="lineNum">     160 </span>                :            :         address to,</a>
 <a name="161"><span class="lineNum">     161 </span>                :            :         uint256 /* value */</a>
@@ -239,15 +239,15 @@
 <a name="168"><span class="lineNum">     168 </span>                :            :     {</a>
 <a name="169"><span class="lineNum">     169 </span>                :            :         // Read the oracle address once. Safe to cache across the calls below: this function is</a>
 <a name="170"><span class="lineNum">     170 </span>                :            :         // `view`, so those are STATICCALLs and cannot write `sanctionsList`.</a>
-<a name="171"><span class="lineNum">     171 </span>                :<span class="lineCov">        268 :         ISanctionsList oracle = sanctionsList;</span></a>
-<a name="172"><span class="lineNum">     172 </span>           [<span class="branchCov" title="Branch 0 was taken 254 times"> + </span>]:<span class="lineCov">        268 :         if (address(oracle) != address(0)) {</span></a>
-<a name="173"><span class="lineNum">     173 </span>        [<span class="branchCov" title="Branch 0 was taken 40 times"> + </span><span class="branchCov" title="Branch 1 was taken 183 times"> + </span>]:<span class="lineCov">        254 :             if (from != address(0) &amp;&amp; oracle.isSanctioned(from)) {</span></a>
-<a name="174"><span class="lineNum">     174 </span>                :<span class="lineCov">         40 :                 return CODE_ADDRESS_FROM_IS_SANCTIONED;</span></a>
-<a name="175"><span class="lineNum">     175 </span>           [<span class="branchCov" title="Branch 0 was taken 31 times"> + </span>]:<span class="lineCov">        214 :             } else if (to != address(0) &amp;&amp; oracle.isSanctioned(to)) {</span></a>
-<a name="176"><span class="lineNum">     176 </span>                :<span class="lineCov">         31 :                 return CODE_ADDRESS_TO_IS_SANCTIONED;</span></a>
+<a name="171"><span class="lineNum">     171 </span>                :<span class="lineCov">        301 :         ISanctionsList oracle = sanctionsList;</span></a>
+<a name="172"><span class="lineNum">     172 </span>           [<span class="branchCov" title="Branch 0 was taken 282 times"> + </span>]:<span class="lineCov">        301 :         if (address(oracle) != address(0)) {</span></a>
+<a name="173"><span class="lineNum">     173 </span>        [<span class="branchCov" title="Branch 0 was taken 44 times"> + </span><span class="branchCov" title="Branch 1 was taken 195 times"> + </span>]:<span class="lineCov">        282 :             if (from != address(0) &amp;&amp; oracle.isSanctioned(from)) {</span></a>
+<a name="174"><span class="lineNum">     174 </span>                :<span class="lineCov">         44 :                 return CODE_ADDRESS_FROM_IS_SANCTIONED;</span></a>
+<a name="175"><span class="lineNum">     175 </span>           [<span class="branchCov" title="Branch 0 was taken 42 times"> + </span>]:<span class="lineCov">        237 :             } else if (to != address(0) &amp;&amp; oracle.isSanctioned(to)) {</span></a>
+<a name="176"><span class="lineNum">     176 </span>                :<span class="lineCov">         42 :                 return CODE_ADDRESS_TO_IS_SANCTIONED;</span></a>
 <a name="177"><span class="lineNum">     177 </span>                :            :             }</a>
 <a name="178"><span class="lineNum">     178 </span>                :            :         }</a>
-<a name="179"><span class="lineNum">     179 </span>                :<span class="lineCov">        197 :         return uint8(REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
+<a name="179"><span class="lineNum">     179 </span>                :<span class="lineCov">        214 :         return uint8(REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
 <a name="180"><span class="lineNum">     180 </span>                :            :     }</a>
 <a name="181"><span class="lineNum">     181 </span>                :            : </a>
 <a name="182"><span class="lineNum">     182 </span>                :            :     /**</a>
@@ -258,22 +258,22 @@
 <a name="187"><span class="lineNum">     187 </span>                :            :      * @param value The amount transferred.</a>
 <a name="188"><span class="lineNum">     188 </span>                :            :      * @return The restriction code, or TRANSFER_OK when no party is sanctioned.</a>
 <a name="189"><span class="lineNum">     189 </span>                :            :      */</a>
-<a name="190"><span class="lineNum">     190 </span>                :<span class="lineCov">        142 :     function _detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)</span></a>
+<a name="190"><span class="lineNum">     190 </span>                :<span class="lineCov">        161 :     function _detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)</span></a>
 <a name="191"><span class="lineNum">     191 </span>                :            :         internal</a>
 <a name="192"><span class="lineNum">     192 </span>                :            :         view</a>
 <a name="193"><span class="lineNum">     193 </span>                :            :         virtual</a>
 <a name="194"><span class="lineNum">     194 </span>                :            :         override</a>
 <a name="195"><span class="lineNum">     195 </span>                :            :         returns (uint8)</a>
 <a name="196"><span class="lineNum">     196 </span>                :            :     {</a>
-<a name="197"><span class="lineNum">     197 </span>                :<span class="lineCov">        142 :         ISanctionsList oracle = sanctionsList;</span></a>
+<a name="197"><span class="lineNum">     197 </span>                :<span class="lineCov">        161 :         ISanctionsList oracle = sanctionsList;</span></a>
 <a name="198"><span class="lineNum">     198 </span>                :            :         // The oracle guard scopes ONLY the spender check; the delegation below is unconditional, as</a>
 <a name="199"><span class="lineNum">     199 </span>                :            :         // in every sibling rule. Nesting the delegation inside the guard -- as this function used to</a>
 <a name="200"><span class="lineNum">     200 </span>                :            :         // -- silently drops any check in {_detectTransferRestriction} that does not depend on the</a>
 <a name="201"><span class="lineNum">     201 </span>                :            :         // oracle, including one added by a subclass overriding that hook.</a>
-<a name="202"><span class="lineNum">     202 </span>           [<span class="branchCov" title="Branch 0 was taken 18 times"> + </span>]:<span class="lineCov">        142 :         if (address(oracle) != address(0) &amp;&amp; oracle.isSanctioned(spender)) {</span></a>
-<a name="203"><span class="lineNum">     203 </span>                :<span class="lineCov">         18 :             return CODE_ADDRESS_SPENDER_IS_SANCTIONED;</span></a>
+<a name="202"><span class="lineNum">     202 </span>           [<span class="branchCov" title="Branch 0 was taken 23 times"> + </span>]:<span class="lineCov">        161 :         if (address(oracle) != address(0) &amp;&amp; oracle.isSanctioned(spender)) {</span></a>
+<a name="203"><span class="lineNum">     203 </span>                :<span class="lineCov">         23 :             return CODE_ADDRESS_SPENDER_IS_SANCTIONED;</span></a>
 <a name="204"><span class="lineNum">     204 </span>                :            :         }</a>
-<a name="205"><span class="lineNum">     205 </span>                :<span class="lineCov">        124 :         return _detectTransferRestriction(from, to, value);</span></a>
+<a name="205"><span class="lineNum">     205 </span>                :<span class="lineCov">        137 :         return _detectTransferRestriction(from, to, value);</span></a>
 <a name="206"><span class="lineNum">     206 </span>                :            :     }</a>
 <a name="207"><span class="lineNum">     207 </span>                :            : </a>
 <a name="208"><span class="lineNum">     208 </span>                :            :     /**</a>
@@ -282,9 +282,9 @@
 <a name="211"><span class="lineNum">     211 </span>                :            :      * @param to The recipient address.</a>
 <a name="212"><span class="lineNum">     212 </span>                :            :      * @param value The amount transferred.</a>
 <a name="213"><span class="lineNum">     213 </span>                :            :      */</a>
-<a name="214"><span class="lineNum">     214 </span>                :<span class="lineCov">         70 :     function _transferred(address from, address to, uint256 value) internal view virtual override {</span></a>
-<a name="215"><span class="lineNum">     215 </span>                :<span class="lineCov">         70 :         uint8 code = _detectTransferRestriction(from, to, value);</span></a>
-<a name="216"><span class="lineNum">     216 </span>        [<span class="branchCov" title="Branch 0 was taken 24 times"> + </span><span class="branchCov" title="Branch 1 was taken 46 times"> + </span>]:<span class="lineCov">         70 :         require(</span></a>
+<a name="214"><span class="lineNum">     214 </span>                :<span class="lineCov">         82 :     function _transferred(address from, address to, uint256 value) internal view virtual override {</span></a>
+<a name="215"><span class="lineNum">     215 </span>                :<span class="lineCov">         82 :         uint8 code = _detectTransferRestriction(from, to, value);</span></a>
+<a name="216"><span class="lineNum">     216 </span>        [<span class="branchCov" title="Branch 0 was taken 32 times"> + </span><span class="branchCov" title="Branch 1 was taken 50 times"> + </span>]:<span class="lineCov">         82 :         require(</span></a>
 <a name="217"><span class="lineNum">     217 </span>                :            :             code == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK),</a>
 <a name="218"><span class="lineNum">     218 </span>                :            :             RuleSanctionsList_InvalidTransfer(address(this), from, to, value, code)</a>
 <a name="219"><span class="lineNum">     219 </span>                :            :         );</a>
@@ -297,9 +297,9 @@
 <a name="226"><span class="lineNum">     226 </span>                :            :      * @param to The recipient address.</a>
 <a name="227"><span class="lineNum">     227 </span>                :            :      * @param value The amount transferred.</a>
 <a name="228"><span class="lineNum">     228 </span>                :            :      */</a>
-<a name="229"><span class="lineNum">     229 </span>                :<span class="lineCov">        105 :     function _transferredFrom(address spender, address from, address to, uint256 value) internal view virtual override {</span></a>
-<a name="230"><span class="lineNum">     230 </span>                :<span class="lineCov">        105 :         uint8 code = _detectTransferRestrictionFrom(spender, from, to, value);</span></a>
-<a name="231"><span class="lineNum">     231 </span>        [<span class="branchCov" title="Branch 0 was taken 10 times"> + </span><span class="branchCov" title="Branch 1 was taken 95 times"> + </span>]:<span class="lineCov">        105 :         require(</span></a>
+<a name="229"><span class="lineNum">     229 </span>                :<span class="lineCov">        121 :     function _transferredFrom(address spender, address from, address to, uint256 value) internal view virtual override {</span></a>
+<a name="230"><span class="lineNum">     230 </span>                :<span class="lineCov">        121 :         uint8 code = _detectTransferRestrictionFrom(spender, from, to, value);</span></a>
+<a name="231"><span class="lineNum">     231 </span>        [<span class="branchCov" title="Branch 0 was taken 16 times"> + </span><span class="branchCov" title="Branch 1 was taken 104 times"> + </span>]:<span class="lineCov">        120 :         require(</span></a>
 <a name="232"><span class="lineNum">     232 </span>                :            :             code == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK),</a>
 <a name="233"><span class="lineNum">     233 </span>                :            :             RuleSanctionsList_InvalidTransferFrom(address(this), spender, from, to, value, code)</a>
 <a name="234"><span class="lineNum">     234 </span>                :            :         );</a>

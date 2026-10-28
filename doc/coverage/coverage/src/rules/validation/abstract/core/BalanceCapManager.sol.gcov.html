@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-27 15:10:38</td>
+            <td class="headerValue">2026-10-28 09:57:31</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">16</td>
@@ -146,8 +146,8 @@
 <a name="75"><span class="lineNum">      75 </span>                :            :      * holder.</a>
 <a name="76"><span class="lineNum">      76 </span>                :            :      * @param targetAddress The address to exempt.</a>
 <a name="77"><span class="lineNum">      77 </span>                :            :      */</a>
-<a name="78"><span class="lineNum">      78 </span>                :<span class="lineCov">         12 :     function addExemptAddress(address targetAddress) public virtual onlyMaxBalanceManager {</span></a>
-<a name="79"><span class="lineNum">      79 </span>                :<span class="lineCov">         10 :         _addExemptAddress(targetAddress);</span></a>
+<a name="78"><span class="lineNum">      78 </span>                :<span class="lineCov">         14 :     function addExemptAddress(address targetAddress) public virtual onlyMaxBalanceManager {</span></a>
+<a name="79"><span class="lineNum">      79 </span>                :<span class="lineCov">         12 :         _addExemptAddress(targetAddress);</span></a>
 <a name="80"><span class="lineNum">      80 </span>                :            :     }</a>
 <a name="81"><span class="lineNum">      81 </span>                :            : </a>
 <a name="82"><span class="lineNum">      82 </span>                :            :     /**</a>
@@ -215,10 +215,10 @@
 <a name="144"><span class="lineNum">     144 </span>                :            :      *      address can never enter the exemption list.</a>
 <a name="145"><span class="lineNum">     145 </span>                :            :      * @param targetAddress The address to exempt.</a>
 <a name="146"><span class="lineNum">     146 </span>                :            :      */</a>
-<a name="147"><span class="lineNum">     147 </span>                :<span class="lineCov">         10 :     function _addExemptAddress(address targetAddress) internal virtual {</span></a>
-<a name="148"><span class="lineNum">     148 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 9 times"> + </span>]:<span class="lineCov">         10 :         require(targetAddress != address(0), RuleAddressSet_ZeroAddressNotAllowed());</span></a>
-<a name="149"><span class="lineNum">     149 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 8 times"> + </span>]:<span class="lineCov">          9 :         require(_addAddress(targetAddress), RuleAddressSet_AddressAlreadyListed());</span></a>
-<a name="150"><span class="lineNum">     150 </span>                :<span class="lineCov">          8 :         emit ExemptAddressAdded(targetAddress);</span></a>
+<a name="147"><span class="lineNum">     147 </span>                :<span class="lineCov">         12 :     function _addExemptAddress(address targetAddress) internal virtual {</span></a>
+<a name="148"><span class="lineNum">     148 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 11 times"> + </span>]:<span class="lineCov">         12 :         require(targetAddress != address(0), RuleAddressSet_ZeroAddressNotAllowed());</span></a>
+<a name="149"><span class="lineNum">     149 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 10 times"> + </span>]:<span class="lineCov">         11 :         require(_addAddress(targetAddress), RuleAddressSet_AddressAlreadyListed());</span></a>
+<a name="150"><span class="lineNum">     150 </span>                :<span class="lineCov">         10 :         emit ExemptAddressAdded(targetAddress);</span></a>
 <a name="151"><span class="lineNum">     151 </span>                :            :     }</a>
 <a name="152"><span class="lineNum">     152 </span>                :            : </a>
 <a name="153"><span class="lineNum">     153 </span>                :            :     /**</a>
@@ -234,9 +234,9 @@
 <a name="163"><span class="lineNum">     163 </span>                :            :      * @notice Stores the cap and emits {MaxBalanceUpdated}.</a>
 <a name="164"><span class="lineNum">     164 </span>                :            :      * @param newMaxBalance The new cap.</a>
 <a name="165"><span class="lineNum">     165 </span>                :            :      */</a>
-<a name="166"><span class="lineNum">     166 </span>                :<span class="lineCov">         89 :     function _setMaxBalance(uint256 newMaxBalance) internal virtual {</span></a>
-<a name="167"><span class="lineNum">     167 </span>                :<span class="lineCov">         89 :         maxBalance = newMaxBalance;</span></a>
-<a name="168"><span class="lineNum">     168 </span>                :<span class="lineCov">         89 :         emit MaxBalanceUpdated(newMaxBalance);</span></a>
+<a name="166"><span class="lineNum">     166 </span>                :<span class="lineCov">        101 :     function _setMaxBalance(uint256 newMaxBalance) internal virtual {</span></a>
+<a name="167"><span class="lineNum">     167 </span>                :<span class="lineCov">        101 :         maxBalance = newMaxBalance;</span></a>
+<a name="168"><span class="lineNum">     168 </span>                :<span class="lineCov">        101 :         emit MaxBalanceUpdated(newMaxBalance);</span></a>
 <a name="169"><span class="lineNum">     169 </span>                :            :     }</a>
 <a name="170"><span class="lineNum">     170 </span>                :            : </a>
 <a name="171"><span class="lineNum">     171 </span>                :            :     /**</a>
@@ -245,12 +245,12 @@
 <a name="174"><span class="lineNum">     174 </span>                :            :      * at setup instead of silently blocking every transfer.</a>
 <a name="175"><span class="lineNum">     175 </span>                :            :      * @param newBalanceToken The new token contract.</a>
 <a name="176"><span class="lineNum">     176 </span>                :            :      */</a>
-<a name="177"><span class="lineNum">     177 </span>                :<span class="lineCov">         88 :     function _setBalanceToken(address newBalanceToken) internal virtual {</span></a>
-<a name="178"><span class="lineNum">     178 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 87 times"> + </span>]:<span class="lineCov">         88 :         require(newBalanceToken != address(0), RuleMaxBalance_TokenAddressZeroNotAllowed());</span></a>
+<a name="177"><span class="lineNum">     177 </span>                :<span class="lineCov">        101 :     function _setBalanceToken(address newBalanceToken) internal virtual {</span></a>
+<a name="178"><span class="lineNum">     178 </span>        [<span class="branchCov" title="Branch 0 was taken 2 times"> + </span><span class="branchCov" title="Branch 1 was taken 99 times"> + </span>]:<span class="lineCov">        101 :         require(newBalanceToken != address(0), RuleMaxBalance_TokenAddressZeroNotAllowed());</span></a>
 <a name="179"><span class="lineNum">     179 </span>                :            :         // Explicit, rather than relying on the uncatchable extcodesize revert the probe below happens</a>
 <a name="180"><span class="lineNum">     180 </span>                :            :         // to produce for a codeless address: that is compiler behaviour, not a check.</a>
-<a name="181"><span class="lineNum">     181 </span>        [<span class="branchCov" title="Branch 0 was taken 2 times"> + </span><span class="branchCov" title="Branch 1 was taken 85 times"> + </span>]:<span class="lineCov">         87 :         require(newBalanceToken.code.length != 0, RuleMaxBalance_TokenIsNotAContract(newBalanceToken));</span></a>
-<a name="182"><span class="lineNum">     182 </span>           [<span class="branchCov" title="Branch 0 was taken 85 times"> + </span>]:<span class="lineCov">         85 :         try IBalanceOf(newBalanceToken).balanceOf(address(this)) returns (</span></a>
+<a name="181"><span class="lineNum">     181 </span>        [<span class="branchCov" title="Branch 0 was taken 2 times"> + </span><span class="branchCov" title="Branch 1 was taken 97 times"> + </span>]:<span class="lineCov">         99 :         require(newBalanceToken.code.length != 0, RuleMaxBalance_TokenIsNotAContract(newBalanceToken));</span></a>
+<a name="182"><span class="lineNum">     182 </span>           [<span class="branchCov" title="Branch 0 was taken 97 times"> + </span>]:<span class="lineCov">         97 :         try IBalanceOf(newBalanceToken).balanceOf(address(this)) returns (</span></a>
 <a name="183"><span class="lineNum">     183 </span>                :            :             uint256</a>
 <a name="184"><span class="lineNum">     184 </span>                :            :         ) {</a>
 <a name="185"><span class="lineNum">     185 </span>                :            :         // callable</a>
@@ -258,8 +258,8 @@
 <a name="187"><span class="lineNum">     187 </span>           [<span class="branchCov" title="Branch 1 was taken 2 times"> + </span>]:<span class="lineCov">          2 :         catch {</span></a>
 <a name="188"><span class="lineNum">     188 </span>                :<span class="lineCov">          2 :             revert RuleMaxBalance_TokenBalanceUnavailable(newBalanceToken);</span></a>
 <a name="189"><span class="lineNum">     189 </span>                :            :         }</a>
-<a name="190"><span class="lineNum">     190 </span>                :<span class="lineCov">         83 :         balanceToken = IBalanceOf(newBalanceToken);</span></a>
-<a name="191"><span class="lineNum">     191 </span>                :<span class="lineCov">         83 :         emit MaxBalanceTokenUpdated(newBalanceToken);</span></a>
+<a name="190"><span class="lineNum">     190 </span>                :<span class="lineCov">         95 :         balanceToken = IBalanceOf(newBalanceToken);</span></a>
+<a name="191"><span class="lineNum">     191 </span>                :<span class="lineCov">         95 :         emit MaxBalanceTokenUpdated(newBalanceToken);</span></a>
 <a name="192"><span class="lineNum">     192 </span>                :            :     }</a>
 <a name="193"><span class="lineNum">     193 </span>                :            : </a>
 <a name="194"><span class="lineNum">     194 </span>                :            :     /**</a>
@@ -279,15 +279,15 @@
 <a name="208"><span class="lineNum">     208 </span>                :            :      * @return headroom Remaining capacity in token units. `type(uint256).max` for an exempt address</a>
 <a name="209"><span class="lineNum">     209 </span>                :            :      * or the burn sentinel.</a>
 <a name="210"><span class="lineNum">     210 </span>                :            :      */</a>
-<a name="211"><span class="lineNum">     211 </span>                :<span class="lineCov">          5 :     function _remainingCapacity(address to) internal view virtual returns (bool balanceAvailable, uint256 headroom) {</span></a>
-<a name="212"><span class="lineNum">     212 </span>           [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span>]:<span class="lineCov">          5 :         if (to == address(0) || _isAddressListed(to)) {</span></a>
+<a name="211"><span class="lineNum">     211 </span>                :<span class="lineCov">          7 :     function _remainingCapacity(address to) internal view virtual returns (bool balanceAvailable, uint256 headroom) {</span></a>
+<a name="212"><span class="lineNum">     212 </span>           [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span>]:<span class="lineCov">          7 :         if (to == address(0) || _isAddressListed(to)) {</span></a>
 <a name="213"><span class="lineNum">     213 </span>                :<span class="lineCov">          1 :             return (true, type(uint256).max);</span></a>
 <a name="214"><span class="lineNum">     214 </span>                :            :         }</a>
-<a name="215"><span class="lineNum">     215 </span>                :<span class="lineCov">          4 :         (bool available, uint256 balance) = _balanceOf(to);</span></a>
-<a name="216"><span class="lineNum">     216 </span>           [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span>]:<span class="lineCov">          4 :         if (!available) {</span></a>
+<a name="215"><span class="lineNum">     215 </span>                :<span class="lineCov">          6 :         (bool available, uint256 balance) = _balanceOf(to);</span></a>
+<a name="216"><span class="lineNum">     216 </span>           [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span>]:<span class="lineCov">          6 :         if (!available) {</span></a>
 <a name="217"><span class="lineNum">     217 </span>                :<span class="lineCov">          1 :             return (false, 0);</span></a>
 <a name="218"><span class="lineNum">     218 </span>                :            :         }</a>
-<a name="219"><span class="lineNum">     219 </span>                :<span class="lineCov">          3 :         return (true, _capHeadroom(balance, maxBalance));</span></a>
+<a name="219"><span class="lineNum">     219 </span>                :<span class="lineCov">          5 :         return (true, _capHeadroom(balance, maxBalance));</span></a>
 <a name="220"><span class="lineNum">     220 </span>                :            :     }</a>
 <a name="221"><span class="lineNum">     221 </span>                :            : </a>
 <a name="222"><span class="lineNum">     222 </span>                :            :     /**</a>
@@ -299,9 +299,9 @@
 <a name="228"><span class="lineNum">     228 </span>                :            :      * @return available True when the balance could be read.</a>
 <a name="229"><span class="lineNum">     229 </span>                :            :      * @return balance The balance; meaningless when `available` is false.</a>
 <a name="230"><span class="lineNum">     230 </span>                :            :      */</a>
-<a name="231"><span class="lineNum">     231 </span>                :<span class="lineCov">        118 :     function _balanceOf(address account) internal view virtual returns (bool available, uint256 balance) {</span></a>
-<a name="232"><span class="lineNum">     232 </span>           [<span class="branchCov" title="Branch 0 was taken 118 times"> + </span>]:<span class="lineCov">        118 :         try balanceToken.balanceOf(account) returns (uint256 balance_) {</span></a>
-<a name="233"><span class="lineNum">     233 </span>                :<span class="lineCov">        115 :             return (true, balance_);</span></a>
+<a name="231"><span class="lineNum">     231 </span>                :<span class="lineCov">        142 :     function _balanceOf(address account) internal view virtual returns (bool available, uint256 balance) {</span></a>
+<a name="232"><span class="lineNum">     232 </span>           [<span class="branchCov" title="Branch 0 was taken 142 times"> + </span>]:<span class="lineCov">        142 :         try balanceToken.balanceOf(account) returns (uint256 balance_) {</span></a>
+<a name="233"><span class="lineNum">     233 </span>                :<span class="lineCov">        139 :             return (true, balance_);</span></a>
 <a name="234"><span class="lineNum">     234 </span>           [<span class="branchCov" title="Branch 1 was taken 3 times"> + </span>]:<span class="lineCov">          3 :         } catch {</span></a>
 <a name="235"><span class="lineNum">     235 </span>                :<span class="lineCov">          3 :             return (false, 0);</span></a>
 <a name="236"><span class="lineNum">     236 </span>                :            :         }</a>
@@ -319,7 +319,7 @@
 <a name="248"><span class="lineNum">     248 </span>                :            :      * meaningless and the caller should treat the check as failed.</a>
 <a name="249"><span class="lineNum">     249 </span>                :            :      * @return exceeded True when the transfer would push `to` past {maxBalance}.</a>
 <a name="250"><span class="lineNum">     250 </span>                :            :      */</a>
-<a name="251"><span class="lineNum">     251 </span>                :<span class="lineCov">        124 :     function _capExceeded(address to, uint256 value)</span></a>
+<a name="251"><span class="lineNum">     251 </span>                :<span class="lineCov">        149 :     function _capExceeded(address to, uint256 value)</span></a>
 <a name="252"><span class="lineNum">     252 </span>                :            :         internal</a>
 <a name="253"><span class="lineNum">     253 </span>                :            :         view</a>
 <a name="254"><span class="lineNum">     254 </span>                :            :         virtual</a>
@@ -327,15 +327,15 @@
 <a name="256"><span class="lineNum">     256 </span>                :            :     {</a>
 <a name="257"><span class="lineNum">     257 </span>                :            :         // Burns cannot breach a maximum, and address(0) is the sentinel rather than a holder.</a>
 <a name="258"><span class="lineNum">     258 </span>                :            :         // Exempt receivers may hold any amount. Neither reads a balance.</a>
-<a name="259"><span class="lineNum">     259 </span>           [<span class="branchCov" title="Branch 0 was taken 10 times"> + </span>]:<span class="lineCov">        124 :         if (to == address(0) || _isAddressListed(to)) {</span></a>
-<a name="260"><span class="lineNum">     260 </span>                :<span class="lineCov">         10 :             return (true, false);</span></a>
+<a name="259"><span class="lineNum">     259 </span>           [<span class="branchCov" title="Branch 0 was taken 13 times"> + </span>]:<span class="lineCov">        149 :         if (to == address(0) || _isAddressListed(to)) {</span></a>
+<a name="260"><span class="lineNum">     260 </span>                :<span class="lineCov">         13 :             return (true, false);</span></a>
 <a name="261"><span class="lineNum">     261 </span>                :            :         }</a>
-<a name="262"><span class="lineNum">     262 </span>                :<span class="lineCov">        114 :         uint256 balance;</span></a>
-<a name="263"><span class="lineNum">     263 </span>                :<span class="lineCov">        114 :         (balanceAvailable, balance) = _balanceOf(to);</span></a>
-<a name="264"><span class="lineNum">     264 </span>           [<span class="branchCov" title="Branch 0 was taken 2 times"> + </span>]:<span class="lineCov">        114 :         if (!balanceAvailable) {</span></a>
+<a name="262"><span class="lineNum">     262 </span>                :<span class="lineCov">        136 :         uint256 balance;</span></a>
+<a name="263"><span class="lineNum">     263 </span>                :<span class="lineCov">        136 :         (balanceAvailable, balance) = _balanceOf(to);</span></a>
+<a name="264"><span class="lineNum">     264 </span>           [<span class="branchCov" title="Branch 0 was taken 2 times"> + </span>]:<span class="lineCov">        136 :         if (!balanceAvailable) {</span></a>
 <a name="265"><span class="lineNum">     265 </span>                :<span class="lineCov">          2 :             return (false, false);</span></a>
 <a name="266"><span class="lineNum">     266 </span>                :            :         }</a>
-<a name="267"><span class="lineNum">     267 </span>                :<span class="lineCov">        112 :         return (true, _capExceededBy(balance, maxBalance, value));</span></a>
+<a name="267"><span class="lineNum">     267 </span>                :<span class="lineCov">        134 :         return (true, _capExceededBy(balance, maxBalance, value));</span></a>
 <a name="268"><span class="lineNum">     268 </span>                :            :     }</a>
 <a name="269"><span class="lineNum">     269 </span>                :            : }</a>
 </pre>

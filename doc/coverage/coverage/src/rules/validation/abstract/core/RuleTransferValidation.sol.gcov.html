@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-27 15:10:38</td>
+            <td class="headerValue">2026-10-28 09:57:31</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">5</td>
@@ -106,27 +106,27 @@
 <a name="35"><span class="lineNum">      35 </span>                :            :     /**</a>
 <a name="36"><span class="lineNum">      36 </span>                :            :      * @inheritdoc IERC1404</a>
 <a name="37"><span class="lineNum">      37 </span>                :            :      */</a>
-<a name="38"><span class="lineNum">      38 </span>                :<span class="lineCov">       2385 :     function detectTransferRestriction(address from, address to, uint256 value)</span></a>
+<a name="38"><span class="lineNum">      38 </span>                :<span class="lineCov">       2426 :     function detectTransferRestriction(address from, address to, uint256 value)</span></a>
 <a name="39"><span class="lineNum">      39 </span>                :            :         public</a>
 <a name="40"><span class="lineNum">      40 </span>                :            :         view</a>
 <a name="41"><span class="lineNum">      41 </span>                :            :         virtual</a>
 <a name="42"><span class="lineNum">      42 </span>                :            :         override(IERC1404)</a>
 <a name="43"><span class="lineNum">      43 </span>                :            :         returns (uint8)</a>
 <a name="44"><span class="lineNum">      44 </span>                :            :     {</a>
-<a name="45"><span class="lineNum">      45 </span>                :<span class="lineCov">       2385 :         return _detectTransferRestriction(from, to, value);</span></a>
+<a name="45"><span class="lineNum">      45 </span>                :<span class="lineCov">       2426 :         return _detectTransferRestriction(from, to, value);</span></a>
 <a name="46"><span class="lineNum">      46 </span>                :            :     }</a>
 <a name="47"><span class="lineNum">      47 </span>                :            : </a>
 <a name="48"><span class="lineNum">      48 </span>                :            :     /**</a>
 <a name="49"><span class="lineNum">      49 </span>                :            :      * @inheritdoc IERC1404Extend</a>
 <a name="50"><span class="lineNum">      50 </span>                :            :      */</a>
-<a name="51"><span class="lineNum">      51 </span>                :<span class="lineCov">        387 :     function detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)</span></a>
+<a name="51"><span class="lineNum">      51 </span>                :<span class="lineCov">        408 :     function detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)</span></a>
 <a name="52"><span class="lineNum">      52 </span>                :            :         public</a>
 <a name="53"><span class="lineNum">      53 </span>                :            :         view</a>
 <a name="54"><span class="lineNum">      54 </span>                :            :         virtual</a>
 <a name="55"><span class="lineNum">      55 </span>                :            :         override(IERC1404Extend)</a>
 <a name="56"><span class="lineNum">      56 </span>                :            :         returns (uint8)</a>
 <a name="57"><span class="lineNum">      57 </span>                :            :     {</a>
-<a name="58"><span class="lineNum">      58 </span>                :<span class="lineCov">        387 :         return _detectTransferRestrictionFrom(spender, from, to, value);</span></a>
+<a name="58"><span class="lineNum">      58 </span>                :<span class="lineCov">        408 :         return _detectTransferRestrictionFrom(spender, from, to, value);</span></a>
 <a name="59"><span class="lineNum">      59 </span>                :            :     }</a>
 <a name="60"><span class="lineNum">      60 </span>                :            : </a>
 <a name="61"><span class="lineNum">      61 </span>                :            :     /**</a>
@@ -137,27 +137,27 @@
 <a name="66"><span class="lineNum">      66 </span>                :            :      * @return isValid =&gt; true if the transfer is valid, false otherwise</a>
 <a name="67"><span class="lineNum">      67 </span>                :            :      *</a>
 <a name="68"><span class="lineNum">      68 </span>                :            :      */</a>
-<a name="69"><span class="lineNum">      69 </span>                :<span class="lineCov">        125 :     function canTransfer(address from, address to, uint256 amount)</span></a>
+<a name="69"><span class="lineNum">      69 </span>                :<span class="lineCov">        128 :     function canTransfer(address from, address to, uint256 amount)</span></a>
 <a name="70"><span class="lineNum">      70 </span>                :            :         public</a>
 <a name="71"><span class="lineNum">      71 </span>                :            :         view</a>
 <a name="72"><span class="lineNum">      72 </span>                :            :         virtual</a>
 <a name="73"><span class="lineNum">      73 </span>                :            :         override(IERC3643ComplianceRead)</a>
 <a name="74"><span class="lineNum">      74 </span>                :            :         returns (bool isValid)</a>
 <a name="75"><span class="lineNum">      75 </span>                :            :     {</a>
-<a name="76"><span class="lineNum">      76 </span>                :<span class="lineCov">        125 :         return _detectTransferRestriction(from, to, amount) == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
+<a name="76"><span class="lineNum">      76 </span>                :<span class="lineCov">        128 :         return _detectTransferRestriction(from, to, amount) == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
 <a name="77"><span class="lineNum">      77 </span>                :            :     }</a>
 <a name="78"><span class="lineNum">      78 </span>                :            : </a>
 <a name="79"><span class="lineNum">      79 </span>                :            :     /**</a>
 <a name="80"><span class="lineNum">      80 </span>                :            :      * @inheritdoc IERC7551Compliance</a>
 <a name="81"><span class="lineNum">      81 </span>                :            :      */</a>
-<a name="82"><span class="lineNum">      82 </span>                :<span class="lineCov">         54 :     function canTransferFrom(address spender, address from, address to, uint256 value)</span></a>
+<a name="82"><span class="lineNum">      82 </span>                :<span class="lineCov">         56 :     function canTransferFrom(address spender, address from, address to, uint256 value)</span></a>
 <a name="83"><span class="lineNum">      83 </span>                :            :         public</a>
 <a name="84"><span class="lineNum">      84 </span>                :            :         view</a>
 <a name="85"><span class="lineNum">      85 </span>                :            :         virtual</a>
 <a name="86"><span class="lineNum">      86 </span>                :            :         override(IERC7551Compliance)</a>
 <a name="87"><span class="lineNum">      87 </span>                :            :         returns (bool)</a>
 <a name="88"><span class="lineNum">      88 </span>                :            :     {</a>
-<a name="89"><span class="lineNum">      89 </span>                :<span class="lineCov">         54 :         return _detectTransferRestrictionFrom(spender, from, to, value)</span></a>
+<a name="89"><span class="lineNum">      89 </span>                :<span class="lineCov">         56 :         return _detectTransferRestrictionFrom(spender, from, to, value)</span></a>
 <a name="90"><span class="lineNum">      90 </span>                :            :             == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</a>
 <a name="91"><span class="lineNum">      91 </span>                :            :     }</a>
 <a name="92"><span class="lineNum">      92 </span>                :            : </a>
@@ -181,13 +181,13 @@
 <a name="110"><span class="lineNum">     110 </span>                :            :      * @param interfaceId The ERC-165 interface identifier to query.</a>
 <a name="111"><span class="lineNum">     111 </span>                :            :      * @return True if the interface is supported.</a>
 <a name="112"><span class="lineNum">     112 </span>                :            :      */</a>
-<a name="113"><span class="lineNum">     113 </span>                :<span class="lineCov">       1116 :     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {</span></a>
-<a name="114"><span class="lineNum">     114 </span>                :<span class="lineCov">       1116 :         return interfaceId == RuleEngineInterfaceId.RULE_ENGINE_INTERFACE_ID</span></a>
-<a name="115"><span class="lineNum">     115 </span>                :<span class="lineCov">       1100 :             || interfaceId == ERC1404ExtendInterfaceId.ERC1404EXTEND_INTERFACE_ID</span></a>
-<a name="116"><span class="lineNum">     116 </span>                :<span class="lineCov">       1097 :             || interfaceId == RuleInterfaceId.IRULE_INTERFACE_ID</span></a>
-<a name="117"><span class="lineNum">     117 </span>                :<span class="lineCov">        721 :             || interfaceId == RuleInterfaceId.IRULE_LEGACY_INTERFACE_ID</span></a>
-<a name="118"><span class="lineNum">     118 </span>                :<span class="lineCov">        708 :             || interfaceId == type(IERC7551Compliance).interfaceId</span></a>
-<a name="119"><span class="lineNum">     119 </span>                :<span class="lineCov">        708 :             || interfaceId == type(IERC3643IComplianceContract).interfaceId;</span></a>
+<a name="113"><span class="lineNum">     113 </span>                :<span class="lineCov">       1225 :     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {</span></a>
+<a name="114"><span class="lineNum">     114 </span>                :<span class="lineCov">       1225 :         return interfaceId == RuleEngineInterfaceId.RULE_ENGINE_INTERFACE_ID</span></a>
+<a name="115"><span class="lineNum">     115 </span>                :<span class="lineCov">       1209 :             || interfaceId == ERC1404ExtendInterfaceId.ERC1404EXTEND_INTERFACE_ID</span></a>
+<a name="116"><span class="lineNum">     116 </span>                :<span class="lineCov">       1206 :             || interfaceId == RuleInterfaceId.IRULE_INTERFACE_ID</span></a>
+<a name="117"><span class="lineNum">     117 </span>                :<span class="lineCov">        807 :             || interfaceId == RuleInterfaceId.IRULE_LEGACY_INTERFACE_ID</span></a>
+<a name="118"><span class="lineNum">     118 </span>                :<span class="lineCov">        794 :             || interfaceId == type(IERC7551Compliance).interfaceId</span></a>
+<a name="119"><span class="lineNum">     119 </span>                :<span class="lineCov">        794 :             || interfaceId == type(IERC3643IComplianceContract).interfaceId;</span></a>
 <a name="120"><span class="lineNum">     120 </span>                :            :     }</a>
 <a name="121"><span class="lineNum">     121 </span>                :            : </a>
 <a name="122"><span class="lineNum">     122 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>

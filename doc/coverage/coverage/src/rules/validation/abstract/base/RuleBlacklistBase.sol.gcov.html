@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-27 15:10:38</td>
+            <td class="headerValue">2026-10-28 09:57:31</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">10</td>
@@ -110,21 +110,21 @@
 <a name="39"><span class="lineNum">      39 </span>                :            :      * @inheritdoc IERC3643IComplianceContract</a>
 <a name="40"><span class="lineNum">      40 </span>                :            :      * @dev Validation only; does not modify state.</a>
 <a name="41"><span class="lineNum">      41 </span>                :            :      */</a>
-<a name="42"><span class="lineNum">      42 </span>                :<span class="lineCov">         81 :     function transferred(address from, address to, uint256 value)</span></a>
+<a name="42"><span class="lineNum">      42 </span>                :<span class="lineCov">         89 :     function transferred(address from, address to, uint256 value)</span></a>
 <a name="43"><span class="lineNum">      43 </span>                :            :         public</a>
 <a name="44"><span class="lineNum">      44 </span>                :            :         view</a>
 <a name="45"><span class="lineNum">      45 </span>                :            :         virtual</a>
 <a name="46"><span class="lineNum">      46 </span>                :            :         override(IERC3643IComplianceContract)</a>
 <a name="47"><span class="lineNum">      47 </span>                :            :     {</a>
-<a name="48"><span class="lineNum">      48 </span>                :<span class="lineCov">         81 :         _transferred(from, to, value);</span></a>
+<a name="48"><span class="lineNum">      48 </span>                :<span class="lineCov">         89 :         _transferred(from, to, value);</span></a>
 <a name="49"><span class="lineNum">      49 </span>                :            :     }</a>
 <a name="50"><span class="lineNum">      50 </span>                :            : </a>
 <a name="51"><span class="lineNum">      51 </span>                :            :     /**</a>
 <a name="52"><span class="lineNum">      52 </span>                :            :      * @inheritdoc IRule</a>
 <a name="53"><span class="lineNum">      53 </span>                :            :      * @dev Validation only; does not modify state.</a>
 <a name="54"><span class="lineNum">      54 </span>                :            :      */</a>
-<a name="55"><span class="lineNum">      55 </span>                :<span class="lineCov">        106 :     function transferred(address spender, address from, address to, uint256 value) public view virtual override {</span></a>
-<a name="56"><span class="lineNum">      56 </span>                :<span class="lineCov">        106 :         _transferredFrom(spender, from, to, value);</span></a>
+<a name="55"><span class="lineNum">      55 </span>                :<span class="lineCov">        115 :     function transferred(address spender, address from, address to, uint256 value) public view virtual override {</span></a>
+<a name="56"><span class="lineNum">      56 </span>                :<span class="lineCov">        115 :         _transferredFrom(spender, from, to, value);</span></a>
 <a name="57"><span class="lineNum">      57 </span>                :            :     }</a>
 <a name="58"><span class="lineNum">      58 </span>                :            : </a>
 <a name="59"><span class="lineNum">      59 </span>                :            :     /**</a>
@@ -165,21 +165,21 @@
 <a name="94"><span class="lineNum">      94 </span>                :            :     /**</a>
 <a name="95"><span class="lineNum">      95 </span>                :            :      * @inheritdoc RuleTransferValidation</a>
 <a name="96"><span class="lineNum">      96 </span>                :            :      */</a>
-<a name="97"><span class="lineNum">      97 </span>                :<span class="lineCov">        152 :     function supportsInterface(bytes4 interfaceId) public view virtual override(RuleTransferValidation) returns (bool) {</span></a>
+<a name="97"><span class="lineNum">      97 </span>                :<span class="lineCov">        160 :     function supportsInterface(bytes4 interfaceId) public view virtual override(RuleTransferValidation) returns (bool) {</span></a>
 <a name="98"><span class="lineNum">      98 </span>                :            :         // Advertise IAddressList: this rule manages an address set and is callable through</a>
 <a name="99"><span class="lineNum">      99 </span>                :            :         // the IAddressList interface.</a>
-<a name="100"><span class="lineNum">     100 </span>                :<span class="lineCov">        152 :         return interfaceId == AddressListInterfaceId.IADDRESS_LIST_INTERFACE_ID</span></a>
-<a name="101"><span class="lineNum">     101 </span>                :<span class="lineCov">        150 :             || interfaceId == AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID</span></a>
-<a name="102"><span class="lineNum">     102 </span>                :<span class="lineCov">        148 :             || interfaceId == AddressListInterfaceId.IADDRESS_LIST_POLARITY_INTERFACE_ID</span></a>
-<a name="103"><span class="lineNum">     103 </span>                :<span class="lineCov">        146 :             || RuleTransferValidation.supportsInterface(interfaceId);</span></a>
+<a name="100"><span class="lineNum">     100 </span>                :<span class="lineCov">        160 :         return interfaceId == AddressListInterfaceId.IADDRESS_LIST_INTERFACE_ID</span></a>
+<a name="101"><span class="lineNum">     101 </span>                :<span class="lineCov">        158 :             || interfaceId == AddressListInterfaceId.IADDRESS_LIST_BATCH_QUERY_INTERFACE_ID</span></a>
+<a name="102"><span class="lineNum">     102 </span>                :<span class="lineCov">        155 :             || interfaceId == AddressListInterfaceId.IADDRESS_LIST_POLARITY_INTERFACE_ID</span></a>
+<a name="103"><span class="lineNum">     103 </span>                :<span class="lineCov">        152 :             || RuleTransferValidation.supportsInterface(interfaceId);</span></a>
 <a name="104"><span class="lineNum">     104 </span>                :            :     }</a>
 <a name="105"><span class="lineNum">     105 </span>                :            : </a>
 <a name="106"><span class="lineNum">     106 </span>                :            :     /**</a>
 <a name="107"><span class="lineNum">     107 </span>                :            :      * @inheritdoc IAddressListPolarity</a>
 <a name="108"><span class="lineNum">     108 </span>                :            :      * @dev Listed addresses are the BLOCKED ones. A consumer that reads membership as eligibility must refuse this rule.</a>
 <a name="109"><span class="lineNum">     109 </span>                :            :      */</a>
-<a name="110"><span class="lineNum">     110 </span>                :<span class="lineCov">          3 :     function isAllowList() public pure virtual override returns (bool) {</span></a>
-<a name="111"><span class="lineNum">     111 </span>                :<span class="lineCov">          3 :         return false;</span></a>
+<a name="110"><span class="lineNum">     110 </span>                :<span class="lineCov">          4 :     function isAllowList() public pure virtual override returns (bool) {</span></a>
+<a name="111"><span class="lineNum">     111 </span>                :<span class="lineCov">          4 :         return false;</span></a>
 <a name="112"><span class="lineNum">     112 </span>                :            :     }</a>
 <a name="113"><span class="lineNum">     113 </span>                :            : </a>
 <a name="114"><span class="lineNum">     114 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
@@ -192,7 +192,7 @@
 <a name="121"><span class="lineNum">     121 </span>                :            :      * @param to The recipient address.</a>
 <a name="122"><span class="lineNum">     122 </span>                :            :      * @return The restriction code, or TRANSFER_OK if neither party is blacklisted.</a>
 <a name="123"><span class="lineNum">     123 </span>                :            :      */</a>
-<a name="124"><span class="lineNum">     124 </span>                :<span class="lineCov">        308 :     function _detectTransferRestriction(</span></a>
+<a name="124"><span class="lineNum">     124 </span>                :<span class="lineCov">        325 :     function _detectTransferRestriction(</span></a>
 <a name="125"><span class="lineNum">     125 </span>                :            :         address from,</a>
 <a name="126"><span class="lineNum">     126 </span>                :            :         address to,</a>
 <a name="127"><span class="lineNum">     127 </span>                :            :         uint256 /* value */</a>
@@ -203,12 +203,12 @@
 <a name="132"><span class="lineNum">     132 </span>                :            :         override</a>
 <a name="133"><span class="lineNum">     133 </span>                :            :         returns (uint8)</a>
 <a name="134"><span class="lineNum">     134 </span>                :            :     {</a>
-<a name="135"><span class="lineNum">     135 </span>        [<span class="branchCov" title="Branch 0 was taken 68 times"> + </span><span class="branchCov" title="Branch 1 was taken 203 times"> + </span>]:<span class="lineCov">        308 :         if (isAddressListed(from)) {</span></a>
-<a name="136"><span class="lineNum">     136 </span>                :<span class="lineCov">         68 :             return CODE_ADDRESS_FROM_IS_BLACKLISTED;</span></a>
-<a name="137"><span class="lineNum">     137 </span>           [<span class="branchCov" title="Branch 0 was taken 37 times"> + </span>]:<span class="lineCov">        240 :         } else if (isAddressListed(to)) {</span></a>
-<a name="138"><span class="lineNum">     138 </span>                :<span class="lineCov">         37 :             return CODE_ADDRESS_TO_IS_BLACKLISTED;</span></a>
+<a name="135"><span class="lineNum">     135 </span>        [<span class="branchCov" title="Branch 0 was taken 71 times"> + </span><span class="branchCov" title="Branch 1 was taken 212 times"> + </span>]:<span class="lineCov">        325 :         if (isAddressListed(from)) {</span></a>
+<a name="136"><span class="lineNum">     136 </span>                :<span class="lineCov">         71 :             return CODE_ADDRESS_FROM_IS_BLACKLISTED;</span></a>
+<a name="137"><span class="lineNum">     137 </span>           [<span class="branchCov" title="Branch 0 was taken 42 times"> + </span>]:<span class="lineCov">        254 :         } else if (isAddressListed(to)) {</span></a>
+<a name="138"><span class="lineNum">     138 </span>                :<span class="lineCov">         42 :             return CODE_ADDRESS_TO_IS_BLACKLISTED;</span></a>
 <a name="139"><span class="lineNum">     139 </span>                :            :         }</a>
-<a name="140"><span class="lineNum">     140 </span>                :<span class="lineCov">        203 :         return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
+<a name="140"><span class="lineNum">     140 </span>                :<span class="lineCov">        212 :         return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);</span></a>
 <a name="141"><span class="lineNum">     141 </span>                :            :     }</a>
 <a name="142"><span class="lineNum">     142 </span>                :            : </a>
 <a name="143"><span class="lineNum">     143 </span>                :            :     /**</a>
@@ -219,17 +219,17 @@
 <a name="148"><span class="lineNum">     148 </span>                :            :      * @param value The amount transferred.</a>
 <a name="149"><span class="lineNum">     149 </span>                :            :      * @return The restriction code, or TRANSFER_OK if no party is blacklisted.</a>
 <a name="150"><span class="lineNum">     150 </span>                :            :      */</a>
-<a name="151"><span class="lineNum">     151 </span>                :<span class="lineCov">        152 :     function _detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)</span></a>
+<a name="151"><span class="lineNum">     151 </span>                :<span class="lineCov">        164 :     function _detectTransferRestrictionFrom(address spender, address from, address to, uint256 value)</span></a>
 <a name="152"><span class="lineNum">     152 </span>                :            :         internal</a>
 <a name="153"><span class="lineNum">     153 </span>                :            :         view</a>
 <a name="154"><span class="lineNum">     154 </span>                :            :         virtual</a>
 <a name="155"><span class="lineNum">     155 </span>                :            :         override</a>
 <a name="156"><span class="lineNum">     156 </span>                :            :         returns (uint8)</a>
 <a name="157"><span class="lineNum">     157 </span>                :            :     {</a>
-<a name="158"><span class="lineNum">     158 </span>           [<span class="branchCov" title="Branch 0 was taken 18 times"> + </span>]:<span class="lineCov">        152 :         if (isAddressListed(spender)) {</span></a>
-<a name="159"><span class="lineNum">     159 </span>                :<span class="lineCov">         18 :             return CODE_ADDRESS_SPENDER_IS_BLACKLISTED;</span></a>
+<a name="158"><span class="lineNum">     158 </span>           [<span class="branchCov" title="Branch 0 was taken 23 times"> + </span>]:<span class="lineCov">        164 :         if (isAddressListed(spender)) {</span></a>
+<a name="159"><span class="lineNum">     159 </span>                :<span class="lineCov">         23 :             return CODE_ADDRESS_SPENDER_IS_BLACKLISTED;</span></a>
 <a name="160"><span class="lineNum">     160 </span>                :            :         }</a>
-<a name="161"><span class="lineNum">     161 </span>                :<span class="lineCov">        134 :         return _detectTransferRestriction(from, to, value);</span></a>
+<a name="161"><span class="lineNum">     161 </span>                :<span class="lineCov">        141 :         return _detectTransferRestriction(from, to, value);</span></a>
 <a name="162"><span class="lineNum">     162 </span>                :            :     }</a>
 <a name="163"><span class="lineNum">     163 </span>                :            : </a>
 <a name="164"><span class="lineNum">     164 </span>                :            :     /**</a>
@@ -238,9 +238,9 @@
 <a name="167"><span class="lineNum">     167 </span>                :            :      * @param to The recipient address.</a>
 <a name="168"><span class="lineNum">     168 </span>                :            :      * @param value The amount transferred.</a>
 <a name="169"><span class="lineNum">     169 </span>                :            :      */</a>
-<a name="170"><span class="lineNum">     170 </span>                :<span class="lineCov">         98 :     function _transferred(address from, address to, uint256 value) internal view virtual override {</span></a>
-<a name="171"><span class="lineNum">     171 </span>                :<span class="lineCov">         98 :         uint8 code = _detectTransferRestriction(from, to, value);</span></a>
-<a name="172"><span class="lineNum">     172 </span>        [<span class="branchCov" title="Branch 0 was taken 41 times"> + </span><span class="branchCov" title="Branch 1 was taken 57 times"> + </span>]:<span class="lineCov">         98 :         require(</span></a>
+<a name="170"><span class="lineNum">     170 </span>                :<span class="lineCov">        106 :     function _transferred(address from, address to, uint256 value) internal view virtual override {</span></a>
+<a name="171"><span class="lineNum">     171 </span>                :<span class="lineCov">        106 :         uint8 code = _detectTransferRestriction(from, to, value);</span></a>
+<a name="172"><span class="lineNum">     172 </span>        [<span class="branchCov" title="Branch 0 was taken 46 times"> + </span><span class="branchCov" title="Branch 1 was taken 60 times"> + </span>]:<span class="lineCov">        106 :         require(</span></a>
 <a name="173"><span class="lineNum">     173 </span>                :            :             code == uint8(REJECTED_CODE_BASE.TRANSFER_OK),</a>
 <a name="174"><span class="lineNum">     174 </span>                :            :             RuleBlacklist_InvalidTransfer(address(this), from, to, value, code)</a>
 <a name="175"><span class="lineNum">     175 </span>                :            :         );</a>
@@ -253,9 +253,9 @@
 <a name="182"><span class="lineNum">     182 </span>                :            :      * @param to The recipient address.</a>
 <a name="183"><span class="lineNum">     183 </span>                :            :      * @param value The amount transferred.</a>
 <a name="184"><span class="lineNum">     184 </span>                :            :      */</a>
-<a name="185"><span class="lineNum">     185 </span>                :<span class="lineCov">        114 :     function _transferredFrom(address spender, address from, address to, uint256 value) internal view virtual override {</span></a>
-<a name="186"><span class="lineNum">     186 </span>                :<span class="lineCov">        114 :         uint8 code = _detectTransferRestrictionFrom(spender, from, to, value);</span></a>
-<a name="187"><span class="lineNum">     187 </span>        [<span class="branchCov" title="Branch 0 was taken 14 times"> + </span><span class="branchCov" title="Branch 1 was taken 100 times"> + </span>]:<span class="lineCov">        114 :         require(</span></a>
+<a name="185"><span class="lineNum">     185 </span>                :<span class="lineCov">        123 :     function _transferredFrom(address spender, address from, address to, uint256 value) internal view virtual override {</span></a>
+<a name="186"><span class="lineNum">     186 </span>                :<span class="lineCov">        123 :         uint8 code = _detectTransferRestrictionFrom(spender, from, to, value);</span></a>
+<a name="187"><span class="lineNum">     187 </span>        [<span class="branchCov" title="Branch 0 was taken 19 times"> + </span><span class="branchCov" title="Branch 1 was taken 104 times"> + </span>]:<span class="lineCov">        123 :         require(</span></a>
 <a name="188"><span class="lineNum">     188 </span>                :            :             code == uint8(REJECTED_CODE_BASE.TRANSFER_OK),</a>
 <a name="189"><span class="lineNum">     189 </span>                :            :             RuleBlacklist_InvalidTransferFrom(address(this), spender, from, to, value, code)</a>
 <a name="190"><span class="lineNum">     190 </span>                :            :         );</a>

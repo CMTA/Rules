@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-27 15:10:38</td>
+            <td class="headerValue">2026-10-28 09:57:31</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">7</td>
@@ -161,8 +161,8 @@
 <a name="90"><span class="lineNum">      90 </span>                :            :      * @param targetAddress The address to add.</a>
 <a name="91"><span class="lineNum">      91 </span>                :            :      * @return True when the address was not already listed.</a>
 <a name="92"><span class="lineNum">      92 </span>                :            :      */</a>
-<a name="93"><span class="lineNum">      93 </span>                :<span class="lineCov">        714 :     function _addAddress(address targetAddress) internal virtual returns (bool) {</span></a>
-<a name="94"><span class="lineNum">      94 </span>                :<span class="lineCov">        714 :         return _listedAddresses.add(targetAddress);</span></a>
+<a name="93"><span class="lineNum">      93 </span>                :<span class="lineCov">        773 :     function _addAddress(address targetAddress) internal virtual returns (bool) {</span></a>
+<a name="94"><span class="lineNum">      94 </span>                :<span class="lineCov">        773 :         return _listedAddresses.add(targetAddress);</span></a>
 <a name="95"><span class="lineNum">      95 </span>                :            :     }</a>
 <a name="96"><span class="lineNum">      96 </span>                :            : </a>
 <a name="97"><span class="lineNum">      97 </span>                :            :     /**</a>
@@ -171,8 +171,8 @@
 <a name="100"><span class="lineNum">     100 </span>                :            :      * @param targetAddress The address to remove.</a>
 <a name="101"><span class="lineNum">     101 </span>                :            :      * @return True when the address was listed and has been removed.</a>
 <a name="102"><span class="lineNum">     102 </span>                :            :      */</a>
-<a name="103"><span class="lineNum">     103 </span>                :<span class="lineCov">         32 :     function _removeAddress(address targetAddress) internal virtual returns (bool) {</span></a>
-<a name="104"><span class="lineNum">     104 </span>                :<span class="lineCov">         32 :         return _listedAddresses.remove(targetAddress);</span></a>
+<a name="103"><span class="lineNum">     103 </span>                :<span class="lineCov">         41 :     function _removeAddress(address targetAddress) internal virtual returns (bool) {</span></a>
+<a name="104"><span class="lineNum">     104 </span>                :<span class="lineCov">         41 :         return _listedAddresses.remove(targetAddress);</span></a>
 <a name="105"><span class="lineNum">     105 </span>                :            :     }</a>
 <a name="106"><span class="lineNum">     106 </span>                :            : </a>
 <a name="107"><span class="lineNum">     107 </span>                :            :     /**</a>
@@ -188,8 +188,8 @@
 <a name="117"><span class="lineNum">     117 </span>                :            :      * @param targetAddress The address to check.</a>
 <a name="118"><span class="lineNum">     118 </span>                :            :      * @return isListed True if the address is listed, false otherwise.</a>
 <a name="119"><span class="lineNum">     119 </span>                :            :      */</a>
-<a name="120"><span class="lineNum">     120 </span>                :<span class="lineCov">       2059 :     function _isAddressListed(address targetAddress) internal view virtual returns (bool isListed) {</span></a>
-<a name="121"><span class="lineNum">     121 </span>                :<span class="lineCov">       2059 :         isListed = _listedAddresses.contains(targetAddress);</span></a>
+<a name="120"><span class="lineNum">     120 </span>                :<span class="lineCov">       2311 :     function _isAddressListed(address targetAddress) internal view virtual returns (bool isListed) {</span></a>
+<a name="121"><span class="lineNum">     121 </span>                :<span class="lineCov">       2311 :         isListed = _listedAddresses.contains(targetAddress);</span></a>
 <a name="122"><span class="lineNum">     122 </span>                :            :     }</a>
 <a name="123"><span class="lineNum">     123 </span>                :            : }</a>
 </pre>
