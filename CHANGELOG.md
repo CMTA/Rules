@@ -16,7 +16,6 @@ See [https://semver.org](https://semver.org)
 
 ## Type of changes
 
-- `Summary`: main new features/change with a description (keep it short) (not a changelog tag)
 - `Added` for new features.
 - `Changed` for changes in existing functionality.
 - `Deprecated` for soon-to-be removed features.
@@ -26,7 +25,13 @@ See [https://semver.org](https://semver.org)
 
 Reference: [keepachangelog.com/en/1.1.0/](https://keepachangelog.com/en/1.1.0/)
 
-Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
+Custom changelog tag
+
+- `Summary`: main new features/changes with a short description, at the top of each release
+- `breaking change`: breaking change regarding storage [ERC-7201](https://eips.ethereum.org/EIPS/eip-7201) namespace , as well as external engine
+- `Dependencies` (npm package, openzeppelin,...)
+- `Documentation`
+- `Testing`
 
 ## Checklist
 
@@ -41,14 +46,223 @@ Custom changelog tag: `Dependencies`, `Documentation`, `Testing`
 - Documentation
   - Perform a code coverage and update the files in the corresponding directory [./doc/coverage](./doc/coverage)
   - Perform an audit with several audit tools (Mythril and Slither), update the report in the corresponding directory [./doc/security/audits/tools](./doc/security/audits/tools)
+  - Run the static analysers on `script/` as well (`slither-report-script.md`, `aderyn-report-script.md`): their default commands leave the deployment scripts out
   - Update surya doc by running the 3 scripts in [./doc/script](./doc/script)
+  - Check that the compilation artifacts of the release are in [./doc/compilation](./doc/compilation), in a `vX.Y.Z` directory (`foundry/` from `forge build`, `hardhat/` from `npx hardhat compile --force`, one entry per deployable contract). Artifacts of a previous version may stay alongside, but the latest one must be present.
+  - Check that the Solidity version and the EVM version in `foundry.toml` and `hardhat.config.js` are the latest ones; if not, state the reason clearly in the documentation ([./doc/FOUNDRY.md](./doc/FOUNDRY.md)).
   - Update changelog
 
 
 
-## v0.6.0 - 2026-08-24
+## v0.7.0 - 2026-10-28
 
 Commit: 
+
+### Summary
+
+- Contracts now report `version()` → `"0.7.0"`.
+- Dependency update: CMTAT `v3.3.0-rc4` and RuleEngine `v3.0.0-rc7`. The update itself changes no rule's screening logic, restriction codes or storage layout.
+- RuleEngine `v3.0.0-rc7` changes how an engine is deployed (constructor, ERC-2771 variant, `IRule` id); rules stay compatible with older engines (see Breaking change).
+- Every rule is now tested against a real CMTAT `v3.0.0` token, the last audited CMTAT release, and the documentation states per rule what v3.0.0 supports.
+- **New rule `RuleIssuanceCap`** ([CMTA/Rules#16](https://github.com/CMTA/Rules/issues/16)): a per-token cap on cumulative issuance that burns do not restore, working on CMTAT v3.0.0. Built as an extension of `RuleMaxTotalSupply`, so no cap logic is duplicated.
+- One ABI change for off-chain consumers: `RuleMaxTotalSupply`'s `MaxTotalSupplyUpdated` event now carries the previous cap (see Changed).
+
+### Added
+
+- **`RuleIssuanceCap` / `RuleIssuanceCapOwnable2Step`**: non-replenishing issuance cap. The total ever minted cannot exceed `maxTotalSupply`; burns, forced burns and `crosschainBurn` never restore room. Code `71`.
+  - Design: extends `RuleMaxTotalSupplyBase` through the new `_afterMintChecked` hook, adding only a `totalIssued` counter and caller binding (~45 code lines). The cap setters, `MAX_TOTAL_SUPPLY_ROLE`, `MaxTotalSupplyUpdated(previous, new)`, `remainingMintable()`, the safe `totalSupply()` read and the ERC-1404 surface are inherited.
+  - The inherited live-supply check (code `50`) stays active against the same cap. It never rejects a mint the counter accepts while every mint is counted, and it stops minting if the counter was bypassed (rule detached).
+  - Stateful: `transferred` is restricted to the single bound caller (`bindToken`: the token directly, or the RuleEngine); `COMPLIANCE_MANAGER_ROLE` binds. The observed token is locked (`setTokenContract` reverts with `RuleIssuanceCap_TokenContractLocked`), and `initialIssued` must be at least the token's current supply.
+  - The counter is enforced with the real amount in `_afterMintChecked`, so a write path re-phased to `value = 0` (as on ERC-3643) cannot skip it. ERC-3643 is nevertheless **not supported in v1**: the inherited live-supply check double-counts there, and no `…ERC3643` variant ships.
+  - No replenishing mode flag: for a cap that burns restore, deploy `RuleMaxTotalSupply`. The choice is fixed at deployment by the contract chosen.
+- **`RuleMaxTotalSupply.remainingMintable() → (uint8 restrictionCode, uint256 headroom)`**: how much may still be minted before the cap, without simulating a mint.
+  - Saturates at `0` when the cap is at or below the current supply; returns code `51` instead of reverting when `totalSupply()` is unreadable.
+  - Same split as `RuleMaxBalance.remainingCapacity(to)`: the revert-free internal half `_remainingMintable()` lives in `TotalSupplyCapManager` and reuses the previously unused `CapAccounting._capHeadroom`; the code-returning public half lives in `RuleMaxTotalSupplyBase`.
+  - Inherited unchanged by `RuleMaxTotalSupplyOwnable2Step` and both `…ERC3643` variants. Non-breaking: one new selector, no storage change.
+- **`increaseMaxTotalSupply(amount)` / `decreaseMaxTotalSupply(amount)`** on `RuleMaxTotalSupply` and its three variants: relative cap changes.
+  - Two independently approved increases compose, where two absolute `setMaxTotalSupply` calls computed from the same old cap would overwrite each other.
+  - Gated like `setMaxTotalSupply` (`MAX_TOTAL_SUPPLY_ROLE`; owner on Ownable2Step) and emit the same `MaxTotalSupplyUpdated(previous, new)`.
+  - New errors `RuleMaxTotalSupply_IncreaseOverflow(current, amount)` and `RuleMaxTotalSupply_DecreaseBelowZero(current, amount)`. Decreasing below the current supply is allowed (it freezes minting). Non-breaking: two new selectors, no storage change.
+- **`MAX_TOTAL_SUPPLY_ROLE` on `RuleMaxTotalSupply`** (and `RuleMaxTotalSupplyERC3643`, which extends it): `setMaxTotalSupply` now requires this dedicated role instead of `DEFAULT_ADMIN_ROLE`, so an issuer can delegate cap changes without granting full admin.
+  - `setTokenContract` stays with `DEFAULT_ADMIN_ROLE`: repointing the observed token changes the protected supply as thoroughly as changing the cap. `TotalSupplyCapManager` gains a second hook, `_authorizeTokenContractManager`, for this split; both hooks are `internal view virtual`.
+  - Backward compatible: the admin holds every role implicitly, so existing deployments behave as before. The admin is not enumerated as a member of the new role.
+  - The constant is declared in the AccessControl deployable, not in the invariant storage, so the Ownable2Step variants (owner-only, unchanged) do not publish a role they never check.
+- Deployment script `script/DeployCMTATWithMaxTotalSupply.s.sol`: a CMTAT token (current version) with `RuleMaxTotalSupply` set directly on it, the cap read from `CMTAT_MAX_SUPPLY` (default `1000000`). Same shape as the whitelist and blacklist scripts: token first, then the rule, then `setRuleEngine`, then the admin hand-over. Covered by 8 tests in `test/DeploymentScripts/` and by the CI dry run.
+- Deployment scripts for every other rule, each deploying a CMTAT token (current version) with the rule set directly on it: `DeployCMTATWith` + `ReceiverWhitelist`, `SpenderWhitelist`, `WhitelistWrapper`, `SanctionsList`, `ERC2980`, `IdentityRegistry`, `MaxBalance`, `ChainlinkPoR`, `ConditionalTransferLight`, `ConditionalTransferLightMultiToken`, `MintAllowance`, `IssuanceCap` (12 scripts, 91 tests in `test/DeploymentScripts/`, all dry-run in CI).
+  - Same shape as the existing scripts: `deploy(admin, deployer, forwarder, ...)`, the token's admin handed over at the end. A rule the script must configure (`bindToken` on the four operation rules, `addRule` on the wrapper) is constructed with the deployer as temporary admin and handed over too.
+  - `DeployCMTATWithWhitelistWrapper` deploys two child whitelists, one per operator; `DeployCMTATWithIdentityRegistry` deploys an `IdentityRegistryWhitelist` as the registry.
+  - New environment variables: `CMTAT_MAX_BALANCE`, `CMTAT_ISSUANCE_CAP`, `CHAINLINK_POR_FEED`, `CHAINLINK_POR_MAX_STALENESS`. Without a feed, `DeployCMTATWithChainlinkPoR` deploys a mock feed on the local chain (31337) so the CI dry run succeeds, and reverts on any other chain.
+
+### Changed
+
+- Contracts now report `version()` → `"0.7.0"`.
+- **Event signature change for off-chain consumers: `MaxTotalSupplyUpdated(uint256 newMaxTotalSupply)` → `MaxTotalSupplyUpdated(uint256 previousMaxTotalSupply, uint256 newMaxTotalSupply)`** on `RuleMaxTotalSupply`, its Ownable2Step variant and both `…ERC3643` variants.
+  - Each event is now self-describing: one log shows what the cap was and what it became, so an auditor reading a single transaction no longer has to replay the history. `previousMaxTotalSupply` is `0` for the constructor's initial assignment.
+  - Impact: the event signature and its topic-0 hash change (`MaxTotalSupplyUpdated(uint256)` → `MaxTotalSupplyUpdated(uint256,uint256)`). Indexers, subgraphs and monitoring that filter on the old topic or decode a single `uint256` must be updated. Deployed v0.6.0 contracts keep emitting the old event; a consumer that follows both generations must accept both.
+  - No change to storage, functions, access control or behaviour.
+- **Code-quality review follow-ups in the code** (`CLAUDE_ANALYSIS.md` v0.7.0; the review itself is under Documentation).
+  - `RuleIssuanceCapBase._afterMintChecked` reads `totalIssued` and `maxTotalSupply` once into locals instead of re-reading both for `require`'s eagerly evaluated error arguments: **−345 gas per mint**, measured.
+  - `MAX_TOTAL_SUPPLY_ROLE` is declared once, in the new `RuleMaxTotalSupplyRolesStorage`, inherited by the two AccessControl deployables only (the `RuleAddressSetRolesStorage` pattern). Role getters unchanged.
+  - **63 `public` / `external` functions in 16 production files are now `virtual`** (compliance entrypoints, views, restriction-code functions). Runtime size of every deployable is identical; the convention is now written in `CLAUDE.md`.
+- `RuleIssuanceCapBase._authorizeTokenContractManager` locks `setTokenContract` with `require(false, RuleIssuanceCap_TokenContractLocked())` instead of a bare `revert`. Solc (0.8.36 and 0.8.38) reported the bare `revert` as making the inherited setter body unreachable; that was the only compiler warning in production code, previously hidden by forge's 256-warning cap. Same error, same behaviour.
+- **Nine unused imports removed** from the validation bases (`RuleBlacklistBase`, `RuleChainlinkPoRBase`, `RuleERC2980Base`, `RuleIdentityRegistryBase`, `RuleMaxBalanceBase`, `RuleMaxTotalSupplyBase`, `RuleReceiverWhitelistBase`, `RuleSanctionsListBase`, `RuleSpenderWhitelistBase`), reported by Aderyn.
+  - The RuleEngine `v3.0.0-rc7` migration had left `IRuleEngine` referenced only by an `@inheritdoc IRuleEngine` NatSpec tag, which `forge lint` counts as a use and Aderyn does not.
+  - The tags now name a contract each file already uses (`RuleTransferValidation` or `IRule`), or carry a one-line `@notice` where neither is imported. `RuleTransferValidation`'s NatSpec on the 4-argument `transferred` was rewritten to read well when inherited. No code or ABI change.
+- `RuleMaxTotalSupplyBase`: the public `transferred` overloads, `canReturnTransferRestrictionCode` and `messageForTransferRestriction` are now `virtual`, so a subclass can extend them. No bytecode, ABI or behaviour change.
+- **`RuleMaxTotalSupplyBase.transferred` is no longer `view`**, and the write path calls a new empty hook `_afterMintChecked(value)` after a mint passes, which is the seam `RuleIssuanceCap` uses. `canReturnTransferRestrictionCode` is now `public` instead of `external` so a subclass can call `super`.
+  - Selectors and behaviour are unchanged; the ABI `stateMutability` of `transferred` changes from `view` to `nonpayable`, which is what `IRule` / `IRuleEngine` already declare.
+  - The compiler no longer proves that `RuleMaxTotalSupply` never writes storage; `testTransferredNeverWritesStorage` now asserts it with `vm.accesses`. All existing `RuleMaxTotalSupply` suites (unit, CMTAT v3.0.0, invariants) pass unchanged.
+- **Deployment scripts deploy `RuleEngine2771` only when a forwarder is given.** `DeployCMTATWithBlacklistAndSanctionsList` and `DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply` deploy `RuleEngine` when `forwarder == address(0)` and `RuleEngine2771` otherwise, so the engine trusts the same forwarder as the token and the rules, as it did with rc6. The returned engine is still typed `RuleEngine`.
+- EVM target raised from `prague` to `osaka` in `foundry.toml` (both profiles) and `hardhat.config.js`; solc stays at `0.8.38`, the latest release.
+  - The compiled contracts contain no Osaka-only opcode (`CLZ`), so they still run on Prague and Cancun chains.
+- `RuleSpenderWhitelist_InvalidTransferFrom`: first parameter renamed `ruleEngine` → `rule`. It always carried the rule's own address, and every other rule error already names it `rule`. The selector is unchanged; only the parameter name in the ABI differs.
+- Deployment scripts: the default caps (`CMTAT_MAX_SUPPLY`, `CMTAT_MAX_BALANCE`, `CMTAT_ISSUANCE_CAP`) are now read by `_maxTotalSupply()`, `_maxBalance()` and `_issuanceCap()` in `CMTATDeploymentBase`, with defaults in whole tokens scaled by `CMTAT_DECIMALS`.
+  - Before, the defaults were base units, so with `CMTAT_DECIMALS = 18` the default supply cap allowed 0.000000000001 tokens and every mint failed. Unchanged at the default 0 decimals; a value set in the environment is still base units.
+  - `CMTAT_MAX_SUPPLY` was read in two scripts, each with its own copy of the default. Found by the first static analysis of `script/` (Aderyn, large numeric literals); pinned by `test/DeploymentScripts/CMTATDeploymentBase.t.sol`.
+- Deployment scripts: the token is created with its final `admin` whenever possible, with the rule or RuleEngine passed in its constructor, instead of with the deployer as a temporary admin followed by `setRuleEngine` and a hand-over.
+  - Seven single-rule scripts (whitelist, receiver whitelist, spender whitelist, blacklist, sanctions list, ERC-2980, identity registry) no longer take a `deployer` argument: `deploy(admin, forwarder, ...)`. The deployer never holds a role, and the token never exists without its rule.
+  - The wrapper, conditional-transfer and mint-allowance scripts keep a temporary admin on the wrapper or the rule only, for `addRule` / `bindToken`. The two RuleEngine scripts keep one on the engine only: it is deployed without a token, passed to the token's constructor, and binds the token last.
+  - The max-total-supply, max-balance, Chainlink PoR and issuance-cap scripts keep the token's temporary admin, because their rule needs the token's address and can only be installed with `setRuleEngine` afterwards. Every script that keeps a temporary admin explains why in a comment above its hand-over.
+
+### Fixed
+
+- **Unbound stateful rules now report restriction code 85 (`CODE_RULE_NOT_BOUND`)** instead of "allowed": `RuleConditionalTransferLight`, `RuleMintAllowance` and `RuleIssuanceCap`.
+  - Their `transferred` accepts only a bound caller, so until `bindToken` (or `bindRuleEngine` for `RuleConditionalTransferLight`) is called every operation reverts, while the views said it would succeed. Every view now reports 85 for every operation, the `can*` views return `false`, and `RuleIssuanceCap.remainingMintable()` returns `(85, 0)`.
+  - One code and one message for the three rules, declared once in the new `RuleBindingInvariantStorage`. It is the one code shared across unrelated rules.
+  - Behaviour change for integrators: a pre-flight on an unbound rule now fails instead of passing. Once bound, every view answers exactly as before. `RuleConditionalTransferLight` counts as bound when either a token or a RuleEngine is bound.
+- CI: `forge build --sizes` failed because the test helper `test/utils/CMTATDeploymentV300.sol` held the creation code of both CMTAT v3.0.0 variants (54 KB, over the EIP-170 limit). The helper is removed and `CMTATv300TestBase` deploys the token itself; test contracts are exempt from the size check.
+- CI warnings removed.
+  - `foundry.lock` recorded the previous dependency commits, so every Foundry command printed a revision mismatch for five submodules. It now records the pinned commits and tags of all nine (OpenZeppelin `v5.7.0`, CMTAT `v3.3.0-rc4` and `v3.0.0`, RuleEngine `v3.0.0-rc7`, forge-std `v1.17.0`, ERC-3643 `4.2.0-beta1`, and the two Chainlink reference repositories).
+  - The workflow installs Foundry `v1.5.0` instead of `nightly`.
+  - `foundry.toml` sets `ignored_warnings_from = ['lib']`, so compiler warnings from vendored dependencies (deprecated `pragma experimental ABIEncoderV2`, `at` and `error` becoming keywords) no longer flood the log.
+
+### Breaking change
+
+- **RuleEngine `v3.0.0-rc7` changes the external engine's deployment API** (details under Dependencies). Rules stay usable with rc7 and with rc6-or-older engines, but code that deploys an engine must change.
+  - `RuleEngine` is now `constructor(admin, tokenContract)`; a forwarder needs `RuleEngine2771(admin, forwarder, tokenContract)`. The deployables moved to `RuleEngine/deployment/accessControl/` and `RuleEngine/deployment/ownable/`.
+  - The `IRule` ERC-165 id changed to `0xb1a69752`. Every rule advertises both the new and the legacy id (`0x2497d6cb`), so no engine version rejects it.
+  - No rule storage changed: no ERC-7201 namespace or slot moved.
+
+### Dependencies
+
+- **Solidity compiler `0.8.36` → `0.8.38`** in `foundry.toml` (default profile) and `hardhat.config.js`. The `erc3643` profile stays at `0.8.30`, which the vendored ERC-3643 token pins exactly.
+  - The production sources compile with no warning of their own, checked with solc directly, since forge stops listing after 256 warnings. The new deprecation warnings (`memory-safe-assembly` NatSpec, `ABIEncoderV2`) all come from `lib/forge-std`.
+  - All Foundry tests (both profiles) and the Hardhat compile and smoke test pass on `0.8.38`. The `v0.7.0` static-analysis reports were produced at `0.8.36`.
+- **CMTAT `v3.3.0-rc3` → `v3.3.0-rc4`.** No functional change for the rules: rc4 only changes NatSpec in `IRuleEngine` (which `transferred` overload the token calls per operation) and moves CMTAT to OpenZeppelin `v5.7.0`, which this repository already uses.
+- **RuleEngine `v3.0.0-rc6` → `v3.0.0-rc7`.** Four changes affect this repository.
+  - `IRule` no longer inherits CMTAT's `IRuleEngine`: it declares only what the engine calls (ERC-1404 views, both `transferred` overloads, `canReturnTransferRestrictionCode`). `RuleTransferValidation` and the three operation bases (`RuleConditionalTransferLightBase`, `RuleConditionalTransferLightMultiTokenBase`, `RuleMintAllowanceBase`) now also inherit `IRuleEngineERC1404`, so every rule keeps the standalone role (`CMTAT.setRuleEngine(rule)`) and its `IRuleEngine` ERC-165 advertisement. The 4-argument `transferred` overrides `IRule` and `IRuleEngine` together.
+  - The `IRule` ERC-165 id changed from `0x2497d6cb` to `0xb1a69752`. Every rule now advertises **both** `RuleInterfaceId.IRULE_INTERFACE_ID` and `RuleInterfaceId.IRULE_LEGACY_INTERFACE_ID`, so it is accepted by an rc7 engine and by an rc6 or older one. Advertising only the new id would have made a rule compiled against rc7 unusable with an older engine (`RuleEngine_RuleInvalidInterface`).
+  - ERC-2771 is opt-in on the engine: `RuleEngine` is now `constructor(admin, tokenContract)` and the forwarder-aware variant is `RuleEngine2771(admin, forwarder, tokenContract)`. The deployables moved to `RuleEngine/deployment/accessControl/` and `RuleEngine/deployment/ownable/`; all imports updated.
+  - Token callbacks are identified by `msg.sender`, not `_msgSender()`, so a trusted forwarder can no longer act as a bound token. The rules never relied on relayed callbacks: no change needed.
+- Test-only submodule `lib/CMTATv3.0.0`, pinned to CMTAT tag `v3.0.0`, with the remapping `CMTATv3.0.0/=lib/CMTATv3.0.0/contracts/` (same approach as RuleEngine). It compiles with this repository's solc 0.8.38 and OpenZeppelin `v5.7.0`; nothing in `src/` imports it.
+- `pragma solidity` raised from `^0.8.20` to `^0.8.27` in every `src/` and `script/` file. `require(condition, CustomError())`, used throughout, needs solc 0.8.27 in the legacy pipeline, and RuleEngine rc7 now declares `^0.8.27` on the files every rule imports, so `^0.8.20` was no longer the real floor. Tests keep their pragma.
+- **forge-std `v1.12.0` → `v1.17.0`** (test-only). All tests, both profiles, and the deployment-script dry runs pass unchanged.
+
+### Documentation
+
+- **Security review of `v0.7.0`** ([`CLAUDE_AUDIT.md`](./doc/security/audits/tools/v0.7.0/CLAUDE_AUDIT.md)), covering the code changed since `v0.6.0`: 0 Critical, 0 High, 0 Medium, 0 Low, 5 Info. No code change.
+  - The Info findings concern deployment configurations `RuleIssuanceCap` cannot detect: a RuleEngine serving several tokens shares one counter (F-1), a binding unrelated to `tokenContract` is accepted while the views report OK (F-2), mints before attachment are not counted (F-4). Also: the `_afterMintChecked` hook does not warn that `RuleMaxTotalSupplyBase.transferred` is ungated (F-3), and code 85 does not name the unbound rule (F-5).
+  - F-1 is documented, behaviour unchanged: the `RuleIssuanceCap.bindToken` NatSpec and `RuleIssuanceCap.md` § Binding now warn that a bound RuleEngine must serve only `tokenContract`, since every token it serves would consume this token's issuance budget.
+  - F-3 is documented, behaviour unchanged: the `_afterMintChecked` NatSpec in `RuleMaxTotalSupplyBase` now warns that both `transferred` overloads are ungated, so a subclass that writes in the hook must restrict them to its bound caller.
+  - The detach WARNING in `RuleIssuanceCap.md` now explains what revoking `MINTER_ROLE` achieves, and that it does not stop the token's default admin (CMTAT grants it every role) or depend on pausing (which does not stop mints).
+  - F-4 is documented, behaviour unchanged: `RuleIssuanceCap.md` gains a "Deployment order" section. Mints made before the rule is installed are not counted, so install it before anyone can mint. With a RuleEngine there is a gap-free order: set the engine in the CMTAT constructor and bind the token to the engine last, so every mint reverts until the cap rule is in place (pinned by two new integration tests).
+  - F-2 (a binding unrelated to `tokenContract` is accepted) is declined: a binding-time check misses the likely mistakes (a stale engine, a topology mix-up), and its strict form rejects both documented setup orders. The behaviour fails closed and is caused by the trusted compliance manager.
+- **Code-quality review of `v0.7.0`** (`doc/security/audits/tools/v0.7.0/CLAUDE_ANALYSIS.md`, 24 findings): 10 fixed, 9 checked correct, 5 deliberately left. H-1 was decided and implemented as the code-85 change above. Nothing found is a vulnerability.
+- **Production comments no longer cite AI-assisted review reports** (`CLAUDE_AUDIT.md`, `CLAUDE_ANALYSIS.md`) or their bare finding IDs; each of the seven affected comments now states its conclusion itself. Comments only, no code change.
+  - Files: `RuleConditionalTransferLightApprovalBase`, `RuleConditionalTransferLightMultiTokenBase`, `RuleWhitelistShared`, `AddressSetBatchLib`, `RuleAddressSetInternal`, `BalanceCapManager`, `RuleWhitelistInvariantStorage`.
+  - Why: these reports are rewritten each release and their IDs restart: `CLAUDE_ANALYSIS.md` D-1 names three different findings across v0.5.0–v0.7.0, so a citation in deployed source could not say which one it meant. `CLAUDE.md` now allows citing only official audits by an audit company from production source.
+- Comment and agent-guide corrections from the code-quality review:
+  - Production comments no longer name test functions, a test file or a mock file (`RuleConditionalTransferLightApprovalBase`, `RuleMaxBalanceBase`, `AddressListInterfaceId`); each keeps what the test proved. `CLAUDE.md` gains the rule.
+  - `CLAUDE.md` / `AGENTS.md`: corrected the measured NatSpec percentile and two stale statements: the reason `IdentityRegistryWhitelist` reuses only the internal address-set layer, and `RuleIdentityRegistry` being listed as screening the minter.
+- New `doc/security/audits/CLAUDE_ANALYSIS_SUMMARY.md`: the map between production code and the AI-assisted review findings that production comments no longer cite. One entry per code location: file and line, the code, the comment before and after, the finding with its release, and the change applied. Seeded with the seven relocated citations and the code changes of the v0.7.0 review; `CLAUDE.md` requires an entry whenever such a finding changes code.
+- **Static analysis for `v0.7.0`** (`doc/security/audits/tools/v0.7.0/`): Slither 0.11.6 (latest) and Aderyn 0.6.5 reports, each with a summary table and a per-finding triage file, plus a Slither 0.11.5 run kept for a like-for-like comparison with `v0.6.0`. `AUDIT_OVERVIEW.md` and both READMEs updated.
+  - Slither: 46 results, nothing to fix. On 0.11.5 the code delta is nil (identical to `v0.6.0` result for result). The upgrade to 0.11.6 trades six `unused-return` hits for six `dead-code` false positives, one of them on `RuleIssuanceCapBase._afterMintChecked`, which is called through virtual dispatch.
+  - Recorded a pre-existing Slither blind spot: no IR is generated for `_addAddresses` / `_removeAddresses` in `RuleMaxBalance` and `IdentityRegistryWhitelist`, so no detector analyses those two copies (the same inherited code is analysed in the other address-set rules).
+  - Aderyn: 10 Low categories, 377 instances (+31), fully attributed to `RuleIssuanceCap` and the `RuleMaxTotalSupply` hooks. Its one new category, `State Change Without Event` on the now non-`view` `RuleMaxTotalSupplyBase.transferred`, is a false positive pinned by `testTransferredNeverWritesStorage`. Nothing to fix after the unused-import cleanup.
+- Version references updated to `0.7.0`: `VersionModule.VERSION`, `test/Version.t.sol`, both READMEs and `CLAUDE.md` / `AGENTS.md`.
+- Root `README.md`: a generated table of contents, and a statement of what the ERC-3643 cap-rule variants enforce and how to choose between them and the stock rules.
+- PDF generation: `doc/script/convert_links_for_pdf.sh` resolves relative links from the input file's location rather than from the form of the URL, and the new `doc/script/convert_links_for_pdf_root.sh` converts the links of the root `README.md`.
+- `doc/README.md`: `IRule` section rewritten for rc7 (new interface, both ERC-165 ids and which engines accept them), compatibility table with a `v0.7.0` row. Root `README.md`, `doc/FOUNDRY.md`, `CLAUDE.md` / `AGENTS.md`: submodule versions.
+- `doc/technical/guides/DEPLOYMENT_SCRIPTS.md`: which engine the scripts deploy, depending on `forwarder`.
+- CMTAT v3.0.0 support documented:
+  - `RULE_SEMANTICS.md` gets §7, a v3.0.0 vs v3.3 call-routing table and a per-rule status table, and §1 notes that its mint/burn spender columns never fire on v3.0.0.
+  - Every rule page in `doc/technical/contracts/` gets a "CMTAT v3.0.0" section with its status and test file.
+  - `doc/README.md` (new "CMTAT v3.0.0" compatibility subsection), root `README.md` (compatibility table), `doc/FOUNDRY.md`, `CLAUDE.md` / `AGENTS.md`.
+  - `RuleBlacklist.md`: stray characters after the usage scenario removed.
+- `RuleMaxTotalSupply`: the cap is in token **base units**, now stated in the NatSpec of the state variable, the setter and every constructor, and in a "Unit of the cap" section with a per-decimals table. Passing whole tokens on an 18-decimal token sets a cap 10^18 times too small and freezes minting (fail-closed).
+- `RuleIssuanceCap`: new contract page `doc/technical/contracts/RuleIssuanceCap.md` (which cap rule to use, how it decides, binding per topology, behaviour per token operation, ERC-3643 status, migration). Rows added to `RULE_SEMANTICS.md` §1, §2, §3, §6 and §7 and a new note [13], to both READMEs (rule table, code ranges, use cases, roles, API, invariants), `INVARIANT_TESTS.md` (§3.4, the handler table, two mutations) and `CLAUDE.md` / `AGENTS.md`. `RuleMaxTotalSupply.md` points to it and documents that `transferred` is no longer `view`.
+- `RuleMaxTotalSupply.md` documents what the cap measures and how each token operation affects it.
+  - "What the cap measures": the cap bounds outstanding supply, not cumulative issuance, so burns free room.
+  - "Behaviour by token operation": one row per operation, each with the test that pins it. Covers mint, burn, transfers, `burnAndMint` (net increase only), cross-chain mint/burn, forced burn, a cap at or below supply (including the zero-value-mint case), supply that existed before installation, and detach / re-attach.
+  - A warning that detaching the rule is the only way to exceed the cap, and a "One instance per token" subsection, previously documented only in `CLAUDE.md` and `RULE_SEMANTICS.md`.
+- Coverage report (`doc/coverage/`, lcov and HTML) and Surya diagrams and reports (`doc/surya/`) regenerated for `v0.7.0`; they now include `RuleIssuanceCap` and the other contracts added in this release.
+- Compilation artifacts of `v0.7.0` added in `doc/compilation/v0.7.0/`: `foundry/` (`forge build`) and `hardhat/` (`npx hardhat compile --force`), one JSON per deployable contract (35), solc `0.8.38`, optimizer 200 runs, EVM `osaka`. The empty `doc/compilation/hardhat/` directory was removed.
+- New guide `doc/technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md`: step-by-step deployment of `RuleWhitelist` with a CMTAT `v3.0.0` token.
+  - Four setups: rule set directly or behind a RuleEngine, installed in the token constructor or later with `setRuleEngine`, with the roles and checks for each.
+  - Mermaid sequence diagrams of a mint and of a transfer with the rule active.
+- New guide `doc/technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md`: the same deployment with a CMTAT `v3.3.0` token (validated against `v3.3.0-rc4`), with its own mint and transfer diagrams.
+  - On `v3.3.0` the minter arrives at the rule as `spender`; `RuleWhitelist` does not screen it, even with `checkSpender`.
+  - A table lists the differences from `v3.0.0`: constructor `Engine` struct, mint path and error, token-side errors, reentrancy guard.
+  - Both guides draw each workflow twice: rule plugged directly into the token, and rule behind a RuleEngine.
+  - Both guides also draw each of the four deployment setups as a sequence diagram (rule on the token or in a RuleEngine, installed in the constructor or after).
+- New guides `doc/technical/guides/DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.0.0.md` and `DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md`: step-by-step deployment of `RuleMaxTotalSupply` with a CMTAT `v3.0.0` or `v3.3.0` token.
+  - The rule's constructor needs the token's address, so it cannot be passed in the token constructor; the recommended setup passes a RuleEngine there instead and binds the token last, which leaves no unscreened window.
+  - Mermaid diagrams of the three deployment setups, of a mint (rule on the token, behind a RuleEngine, and a happy path with numbers), of a transfer and of a burn.
+- Contract pages (`doc/technical/contracts/`): the Schema section now opens with a short explanation of the Surya call graph and inheritance diagrams, and of the CMTAT flow diagram where there is one.
+- `RuleWhitelist` / `RuleWhitelistOwnable2Step` NatSpec: the `allowMintBurn` constructor parameter said it pre-lists `address(0)`; it sets the `allowMint` and `allowBurn` flags, and the zero address is never listed.
+- Deployment guides for every other rule, one for CMTAT `v3.0.0` and one for `v3.3.0` each (26 new files in `doc/technical/guides/`, listed in `doc/README.md` under "Deployment guide per rule" and linked from each contract page).
+  - Covered: `RuleReceiverWhitelist`, `RuleSpenderWhitelist`, `RuleWhitelistWrapper`, `RuleBlacklist`, `RuleSanctionsList`, `RuleERC2980`, `RuleIdentityRegistry`, `RuleMaxBalance`, `RuleChainlinkPoR`, `RuleConditionalTransferLight`, `RuleConditionalTransferLightMultiToken`, `RuleMintAllowance`, `RuleIssuanceCap`.
+  - Each states which setups the rule allows (rules needing the token address cannot go in the token constructor; operation rules must be bound; `RuleConditionalTransferLightMultiToken` is direct-only) and draws each setup and each operation the rule acts on, with a happy path.
+  - The `RuleMintAllowance` v3.0.0 guide states that the rule is inert there (no minter is forwarded) and points to v3.3.0.
+  - Each guide's deployment section opens with a table of the rule's constructor parameters: type, what each sets, and what the constructor checks (for example a token address that must already be deployed, or an oracle that is accepted unset and then lets everything through).
+- Documentation corrected against the code while writing the guides.
+  - `RuleChainlinkPoR.md`: a reverting feed `decimals()` returns code 79, not 77, and `maxBackedSupply()` can return 79. `RULE_SEMANTICS.md` and `CLAUDE.md` no longer claim a read-time `code.length` check on the feed.
+  - `RuleMintAllowance.md`: the allowance is debited before the tokens are created, not after; in direct mode the token, not a RuleEngine, is bound.
+  - `RuleConditionalTransferLight.md`: `COMPLIANCE_MANAGER_ROLE` also binds the RuleEngine, the bound RuleEngine may call `transferred`, and CMTAT calls `transferred` (not `detectTransferRestriction`) on the write path. `CLAUDE.md`: `approveAndTransferIfAllowed` also works behind a RuleEngine for `RuleConditionalTransferLight`.
+  - `RULE_SEMANTICS.md`: batch adds revert on `address(0)`, and the `RuleERC2980` mint and burn note now describes the `allowMint` / `allowBurn` flags.
+  - `RuleWhitelistWrapper.md`: polarity is enforced by `addRule`; the constructor table gains `allowMintBurn` and the code table gains 24 and 25.
+  - `RuleSanctionsList.md`: warns that an oracle without code, or a reverting one, makes every operation and view revert. `IdentityRegistryWhitelist.md`: `RuleIdentityRegistry` can also be set directly on the token.
+  - NatSpec: `RuleWhitelistWrapperBase` no longer says polarity is unchecked; the `ReservesFeedUpdated` event no longer says the feed decimals are cached.
+- Tables of contents: the `[TOC]` placeholder, which GitHub shows as plain text, is replaced in 51 documents (`doc/technical/`, `doc/TOOLCHAIN.md`) by a generated list of links to the level-2 and level-3 headings, between `<!-- toc -->` markers so it can be regenerated.
+- Static analysis re-run before tagging (2026-10-28, solc `0.8.38`, EVM `osaka`): Slither 47 results (one more `dead-code` false positive), Aderyn 381 instances (+4 one-per-file for the two new storage contracts). Nothing to fix.
+- First static analysis of the deployment scripts: `slither-report-script.md`, `aderyn-report-script.md` and `script-report-feedback.md` in `doc/security/audits/tools/v0.7.0/`. Slither's default build skips `script/` and Aderyn does not accept it as a source folder; both reports record the command that brings the scripts into scope.
+
+### Testing
+
+- Deployment tests backing the per-rule guides, on real CMTAT `v3.0.0` and `v3.3.0-rc4` tokens: 24 new files (`*V300Deployment.t.sol` in `test/CMTATv3.0.0/`, `*CMTATDeployment.t.sol` in each rule folder), 61 tests. They cover each guide's recommended setup, typically the rule or a RuleEngine passed in the token constructor, plus rule-specific cases (a frozen or blacklisted minter refused on v3.3 only, a sanctions oracle without code, polarity refusal of wrapper children). `RuleReceiverWhitelist`, `RuleSpenderWhitelist` and `RuleERC2980` had no test on a v3.3 token before.
+- `RuleMintAllowanceCMTATOperations.t.sol` (CMTAT `v3.3.0-rc4`, 7 tests): which caller each token operation charges. `crosschainMint` is charged to the bridge, the mint leg of `burnAndMint` to its caller, `batchMint` in total and rolled back as a whole; burns, `crosschainBurn`, forced transfers and transfers charge nothing; quotas survive `unbindToken`; the Debt variant enforces the quota. `RuleMintAllowanceV300.t.sol` gains a test showing that on `v3.0.0` the token's `detectTransferRestrictionFrom` reports code 70 for a mint that then passes.
+- `RuleMaxTotalSupplyCMTATIntegration.t.sol` (CMTAT `v3.3.0-rc4`): `RuleMaxTotalSupply` set directly on the token after deployment, and a RuleEngine passed in the token constructor that binds the token last. `RuleMaxTotalSupplyV300Deployment.t.sol` covers the RuleEngine order on CMTAT `v3.0.0`, and that the rule cannot be deployed before its token.
+- `RuleWhitelistCMTATConstructor.t.sol` (CMTAT `v3.3.0-rc4`): `RuleWhitelist`, or a RuleEngine holding it, passed in the token constructor; a non-whitelisted minter can still issue to a whitelisted receiver with `checkSpender` on, a non-whitelisted `transferFrom` spender cannot, and with a RuleEngine nothing moves until the engine binds the token.
+- `RuleWhitelistV300Deployment.t.sol` (CMTAT `v3.0.0`): `RuleWhitelist`, or a RuleEngine holding it, passed in the token constructor; the first mint is screened, and with a RuleEngine nothing moves until the engine binds the token.
+- `test/InterfaceId/RuleInterfaceIdCompatibility.t.sol` (3 tests): pins the two `IRule` id literals and checks that each distinct `supportsInterface` implementation advertises the new id, the legacy id and `IRuleEngine`.
+- Deployment-script tests: one test per engine script for each branch of the forwarder choice (4 tests).
+- **CMTAT v3.0.0 integration suites** (`test/CMTATv3.0.0/`, 320 tests): one suite per rule, each run on the Standard and Debt variants, set directly on the token and behind a `RuleEngine` (`RuleConditionalTransferLightMultiToken`: direct only).
+  - Shared harness: `CMTATv300TestBase`, which provides a variant-neutral token interface, installs the rule directly or behind a RuleEngine, and holds view assertions that check `canTransfer` and, on Standard, `detectTransferRestriction*`; and the four variant/topology mixins in `CMTATv300Variants.sol`. The base deploys the v3.0.0 token itself: a separate deployer holding the creation code of both variants (54 KB) exceeded the EIP-170 limit and failed the CI size check (`forge build --sizes`).
+  - Pinned v3.0.0 differences: a blacklisted, sanctioned or frozen **minter** is not screened by `RuleBlacklist`, `RuleSanctionsList` and `RuleERC2980` (v3.0.0 sends mint and burn without a spender); `RuleMintAllowance` is inert (every mint passes, no quota debited).
+  - Pinned `RuleMaxTotalSupply` behaviours: `burnAndMint` needs room only for the net increase, a forced burn frees room, `crosschainMint` / `crosschainBurn` are capped / free room, and supply minted while the rule is detached is counted on re-attach.
+- `RuleIssuanceCap`:
+  - Unit tests (`test/RuleIssuanceCap/`): counter, burns not restoring, the live-supply backstop, zero-value mints, `remainingMintable()` as the smaller room, binding, the locked token, roles and the Ownable2Step variant. A test-only harness re-phases the write path to `value = 0` to prove the counter is still enforced. 100% line and function coverage of `RuleIssuanceCapBase`; its one uncovered branch is the passing side of `require(false, RuleIssuanceCap_TokenContractLocked())`, which cannot execute.
+  - CMTAT v3.0.0 suite (`test/CMTATv3.0.0/RuleIssuanceCapV300.t.sol`, four variant/topology combinations): the requester's exact setup, including forced burns, `burnAndMint`, a bridge round trip and detach / re-attach. Integration with the current CMTAT, directly and behind a RuleEngine.
+  - Invariants: the five supply-cap invariants were moved into an abstract `SupplyCapInvariantsBase` and now run for both rules. `IssuanceCapInvariants` adds exact counter accounting and issuance ≥ supply. `MaxTotalSupplyHandler` gained a virtual `_fits`, which `IssuanceCapHandler` overrides rather than copying the handler. Two new mutations (counter never recorded, off-by-one issuance cap) are caught.
+- `increase/decreaseMaxTotalSupply`: events, decrease to exactly zero and below zero, increase up to and past `uint256` max, two increases composing, decrease below supply freezing mints only, role and owner gating. The invariant handler gains `increaseCap` / `decreaseCap` actions.
+- `test/Binding/UnboundRuleViews.t.sol`: each of the three binding rules unbound, bound, then unbound again; forcing each rule back to the old behaviour fails it.
+- Code-quality review follow-ups: tests for `unbindToken` on `RuleIssuanceCapOwnable2Step` (the last uncovered function in `src/`), `initialIssued` exactly equal to the supply, `bindToken(address(0))` and zero-step `increase` / `decrease`. `src/` coverage is now 100 % of lines, statements and functions, and 353 of 354 branches (the unreachable passing side of the locked-token `require(false, …)`). Five mutation spot-checks on this release's code were all killed. Five braceless `if` bodies in new tests were braced.
+- `MaxTotalSupplyUpdated(previous, new)`: the constructor test (`test/Events/ConstructorEvents.t.sol`) checks the new signature and `previous == 0`; a unit test checks the previous/new pair over two successive updates.
+- `MAX_TOTAL_SUPPLY_ROLE`: role hash, a cap operator who can change the cap but not the token (exact `AccessControlUnauthorizedAccount` errors), revocation, implicit admin holding, role enumeration, and inheritance by the ERC-3643 AccessControl variant.
+- **Invariant suite for `RuleMaxTotalSupply`** (`MaxTotalSupplyInvariants`, handler `test/invariant/MaxTotalSupplyHandler.sol`, 5 invariants × 8,192 calls) on a real CMTAT token, driving mints, boundary mints, `burnAndMint`, burns, forced burns, transfers and cap changes.
+  - Invariants: no accepted mint exceeds the cap (safety); no fitting mint is rejected (liveness); rejections use only the rule's error; `remainingMintable()` equals the cap minus the live supply; the pre-flight view accepts exactly the headroom.
+  - Negative controls: three mutations (off-by-one cap, over-strict cap, wrong headroom view) each fail the suite. A first version missed the off-by-one on the safety invariant, because random amounts never hit `headroom + 1`; the `mintAtBoundary` action fixes that. Recorded in `INVARIANT_TESTS.md` §4.
+  - Documented in `INVARIANT_TESTS.md` §3.3 and in the "Invariant testing" section of `doc/README.md`.
+- `remainingMintable()`: unit tests (headroom, exact fit, cap below supply, unreadable supply), a fuzz property that the headroom is exactly the largest mint the pre-flight check accepts, the ERC-3643 variant, and a real CMTAT v3.0.0 token across mints and burns.
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,491 tests pass in the default profile and 53 in the `erc3643` profile.
+- **Security-review tests** (`CLAUDE_AUDIT.md` v0.7.0):
+  - 16 proof-of-concept tests in `test/ThreatModel/ThreatModelV070Tests.t.sol` (4 fuzz). Tests suffixed `_CurrentBehaviour` must fail once a finding is fixed.
+  - `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow` (`RuleIssuanceCapCMTATIntegration`): the gap-free deployment order of F-4 on a real CMTAT `v3.3` token and RuleEngine `rc7`; every mint, the admin's included, reverts until the cap rule is installed.
+  - `testDeploymentWithEngineInConstructorBlocksGrantedMinter` (`RuleIssuanceCapCMTATIntegration`): the same order with a dedicated minter granted `MINTER_ROLE` before the engine binds the token; the role alone does not let it mint, and once the token is bound its mints are counted.
+
+## v0.6.0 - 2026-08-24
+
+Commit: `283efe723225c89729fd618852a9c2705a47180b`
 
 ### Summary
 

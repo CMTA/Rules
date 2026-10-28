@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/deployment/RuleIdentityRegistryOwnable2Step.sol | 5fae0ca575c1578cd3fa3937730d9657585d7e39 |
+| ./rules/validation/deployment/RuleIdentityRegistryOwnable2Step.sol | d036b2c4f5e3955f689f58d2fc8a69ebdd70f103 |
 
 
 ### Contracts Description Table

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {RuleSharedInvariantStorage} from "./RuleSharedInvariantStorage.sol";
 
@@ -32,10 +32,11 @@ abstract contract RuleMaxTotalSupplyInvariantStorage is RuleSharedInvariantStora
     uint8 public constant CODE_SUPPLY_ORACLE_UNAVAILABLE = 51;
 
     /**
-     * @notice Emitted when the maximum total supply is updated.
+     * @notice Emitted when the maximum total supply is updated, including the initial assignment.
+     * @param previousMaxTotalSupply Cap before the update; `0` for the constructor's assignment.
      * @param newMaxTotalSupply New maximum total supply cap.
      */
-    event MaxTotalSupplyUpdated(uint256 newMaxTotalSupply);
+    event MaxTotalSupplyUpdated(uint256 previousMaxTotalSupply, uint256 newMaxTotalSupply);
     /**
      * @notice Emitted when the tracked token contract is updated.
      * @param newTokenContract Address of the newly configured token contract.
@@ -49,4 +50,6 @@ abstract contract RuleMaxTotalSupplyInvariantStorage is RuleSharedInvariantStora
     error RuleMaxTotalSupply_TokenAddressZeroNotAllowed();
     error RuleMaxTotalSupply_TokenIsNotAContract(address token);
     error RuleMaxTotalSupply_TokenTotalSupplyUnavailable(address token);
+    error RuleMaxTotalSupply_DecreaseBelowZero(uint256 currentMaxTotalSupply, uint256 decreaseAmount);
+    error RuleMaxTotalSupply_IncreaseOverflow(uint256 currentMaxTotalSupply, uint256 increaseAmount);
 }

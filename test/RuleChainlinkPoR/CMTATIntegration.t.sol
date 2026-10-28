@@ -7,7 +7,7 @@ import {CMTATDeployment} from "test/utils/CMTATDeployment.sol";
 import {AggregatorV3Mock} from "src/mocks/AggregatorV3Mock.sol";
 import {AggregatorV3Interface} from "src/rules/interfaces/AggregatorV3Interface.sol";
 import {RuleChainlinkPoR} from "src/rules/validation/deployment/RuleChainlinkPoR.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 
 /**
  * @title End-to-end integration test: CMTAT + RuleEngine + RuleChainlinkPoR
@@ -33,7 +33,7 @@ contract RuleChainlinkPoRCMTATIntegration is Test, HelperContract {
         feed = new AggregatorV3Mock(FEED_DECIMALS, 1000 * 1e8);
 
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, address(cmtatContract));
+        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, address(cmtatContract));
 
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         rule = new RuleChainlinkPoR(

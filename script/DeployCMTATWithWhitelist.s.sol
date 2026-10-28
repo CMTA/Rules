@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {CMTATStandardStandalone} from "CMTAT/deployment/CMTATStandardStandalone.sol";
 import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
@@ -11,10 +11,11 @@ import {CMTATDeploymentBase} from "./base/CMTATDeploymentBase.sol";
  * @notice Deploys a CMTAT token guarded by a single `RuleWhitelist`.
  *
  *         Deployment order:
- *         1. `CMTATStandardStandalone` — the token, with `deployer` as temporary admin
- *         2. `RuleWhitelist`           — transfers allowed only between whitelisted addresses
- *         3. `token.setRuleEngine(rule)`
- *         4. Hand `DEFAULT_ADMIN_ROLE` to `admin`, renounce the deployer's
+ *         1. `RuleWhitelist` — transfers allowed only between whitelisted addresses
+ *         2. `CMTATStandardStandalone` — the token, created with `admin` and the rule in its constructor
+ *
+ * @dev The token is created with `admin` as its admin and the rule already installed, so it never
+ *      exists without compliance and the deployer never holds a role on it.
  *
  * @dev **Topology B (direct binding).** The rule is bound straight to the token, so inside the rule
  *      `msg.sender` is the token. Fine for a validation rule; not interchangeable with the
@@ -23,10 +24,7 @@ import {CMTATDeploymentBase} from "./base/CMTATDeploymentBase.sol";
 contract DeployCMTATWithWhitelist is CMTATDeploymentBase {
     /**
      * @notice Deploys and wires the token and its rule.
-     * @dev `deployer` is explicit rather than read as `address(this)`; see
-     *      `DeployCMTATWithBlacklist` and CLAUDE_ANALYSIS_SCRIPT.md S-1 for why.
      * @param admin Address that ends up holding `DEFAULT_ADMIN_ROLE` on the token.
-     * @param deployer Address that executes the calls and holds the temporary admin role.
      * @param forwarder ERC-2771 trusted forwarder; `address(0)` disables meta-transactions.
      * @param checkSpender When true, `transferFrom` also requires the spender to be whitelisted.
      * @param allowMintBurn Whether the rule permits mint and burn.
@@ -40,22 +38,17 @@ contract DeployCMTATWithWhitelist is CMTATDeploymentBase {
      * @return token The deployed CMTAT.
      * @return rule The whitelist rule bound to it.
      */
-    function deploy(address admin, address deployer, address forwarder, bool checkSpender, bool allowMintBurn)
+    function deploy(address admin, address forwarder, bool checkSpender, bool allowMintBurn)
         public
         virtual
         returns (CMTATStandardStandalone token, RuleWhitelist rule)
     {
-        token = new CMTATStandardStandalone(
-            forwarder, deployer, _erc20Attributes(), _extraInformationAttributes(), _emptyEngine()
-        );
         rule = new RuleWhitelist(admin, forwarder, checkSpender, allowMintBurn);
 
-        token.setRuleEngine(IRuleEngine(address(rule)));
-
-        if (admin != deployer) {
-            token.grantRole(token.DEFAULT_ADMIN_ROLE(), admin);
-            token.renounceRole(token.DEFAULT_ADMIN_ROLE(), deployer);
-        }
+        // The token takes `admin` and the rule in its constructor: no temporary admin to hand over.
+        token = new CMTATStandardStandalone(
+            forwarder, admin, _erc20Attributes(), _extraInformationAttributes(), _engine(IRuleEngine(address(rule)))
+        );
 
         _logDeployment("CMTAT token  ", address(token));
         _logDeployment("RuleWhitelist", address(rule));
@@ -68,7 +61,7 @@ contract DeployCMTATWithWhitelist is CMTATDeploymentBase {
      */
     function run() external virtual returns (CMTATStandardStandalone token, RuleWhitelist rule) {
         vm.startBroadcast();
-        (token, rule) = deploy(msg.sender, msg.sender, _forwarder(), false, true);
+        (token, rule) = deploy(msg.sender, _forwarder(), false, true);
         vm.stopBroadcast();
     }
 }

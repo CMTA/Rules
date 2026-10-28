@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {AggregatorV3Interface} from "../../rules/interfaces/AggregatorV3Interface.sol";
 import {ITotalSupply} from "../../rules/interfaces/ITotalSupply.sol";

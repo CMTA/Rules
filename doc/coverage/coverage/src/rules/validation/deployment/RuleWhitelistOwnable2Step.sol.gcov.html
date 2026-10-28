@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - lcov2.info - src/rules/validation/deployment/RuleWhitelistOwnable2Step.sol</title>
+  <title>LCOV - lcov.info - src/rules/validation/deployment/RuleWhitelistOwnable2Step.sol</title>
   <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
 </head>
 
@@ -28,7 +28,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">lcov2.info</td>
+            <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntry">13</td>
@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-08-19 15:38:25</td>
+            <td class="headerValue">2026-10-28 09:57:31</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">8</td>
@@ -70,7 +70,7 @@
 <pre class="sourceHeading">           Branch data     Line data    Source code</pre>
 <pre class="source">
 <a name="1"><span class="lineNum">       1 </span>                :            : // SPDX-License-Identifier: MPL-2.0</a>
-<a name="2"><span class="lineNum">       2 </span>                :            : pragma solidity ^0.8.20;</a>
+<a name="2"><span class="lineNum">       2 </span>                :            : pragma solidity ^0.8.27;</a>
 <a name="3"><span class="lineNum">       3 </span>                :            : </a>
 <a name="4"><span class="lineNum">       4 </span>                :            : import {Ownable} from &quot;@openzeppelin/contracts/access/Ownable.sol&quot;;</a>
 <a name="5"><span class="lineNum">       5 </span>                :            : import {Ownable2Step} from &quot;@openzeppelin/contracts/access/Ownable2Step.sol&quot;;</a>
@@ -92,7 +92,7 @@
 <a name="21"><span class="lineNum">      21 </span>                :            :      * @param owner Contract owner.</a>
 <a name="22"><span class="lineNum">      22 </span>                :            :      * @param forwarderIrrevocable Address of the ERC-2771 forwarder.</a>
 <a name="23"><span class="lineNum">      23 </span>                :            :      * @param checkSpender_ Enables spender checks for transferFrom when true.</a>
-<a name="24"><span class="lineNum">      24 </span>                :            :      * @param allowMintBurn Pre-lists `address(0)` at deployment when true.</a>
+<a name="24"><span class="lineNum">      24 </span>                :            :      * @param allowMintBurn When true, permits both minting and burning (sets `allowMint` and `allowBurn`).</a>
 <a name="25"><span class="lineNum">      25 </span>                :            :      */</a>
 <a name="26"><span class="lineNum">      26 </span>                :            :     constructor(address owner, address forwarderIrrevocable, bool checkSpender_, bool allowMintBurn)</a>
 <a name="27"><span class="lineNum">      27 </span>                :            :         RuleWhitelistBase(forwarderIrrevocable, checkSpender_, allowMintBurn)</a>

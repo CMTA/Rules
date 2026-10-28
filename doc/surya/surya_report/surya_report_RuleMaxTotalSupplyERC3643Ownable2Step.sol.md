@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/deployment/RuleMaxTotalSupplyERC3643Ownable2Step.sol | d7ed63426b3a13b1dd0a25b23af6b72bdd56d84a |
+| ./rules/validation/deployment/RuleMaxTotalSupplyERC3643Ownable2Step.sol | 78ddbd03d4f3c82dd8735968a5a3b6d852104240 |
 
 
 ### Contracts Description Table

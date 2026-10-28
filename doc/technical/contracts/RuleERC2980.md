@@ -1,6 +1,41 @@
 # Rule ERC-2980
 
-[TOC]
+<!-- toc -->
+
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Restriction codes](#restriction-codes)
+- [Access Control](#access-control)
+- [Constructor burn configuration](#constructor-burn-configuration)
+- [Whitelist methods](#whitelist-methods)
+  - [addWhitelistAddress(address targetAddress)](#addwhitelistaddressaddress-targetaddress)
+  - [addWhitelistAddresses(address[] calldata targetAddresses)](#addwhitelistaddressesaddress-calldata-targetaddresses)
+  - [removeWhitelistAddress(address targetAddress)](#removewhitelistaddressaddress-targetaddress)
+  - [removeWhitelistAddresses(address[] calldata targetAddresses)](#removewhitelistaddressesaddress-calldata-targetaddresses)
+  - [isWhitelisted(address targetAddress) → bool](#iswhitelistedaddress-targetaddress--bool)
+  - [areWhitelisted(address[] memory targetAddresses) → bool[]](#arewhitelistedaddress-memory-targetaddresses--bool)
+  - [whitelistAddressCount() → uint256](#whitelistaddresscount--uint256)
+  - [whitelist(address _operator) → bool](#whitelistaddress-_operator--bool)
+- [Frozenlist methods](#frozenlist-methods)
+  - [addFrozenlistAddress(address targetAddress)](#addfrozenlistaddressaddress-targetaddress)
+  - [addFrozenlistAddresses(address[] calldata targetAddresses)](#addfrozenlistaddressesaddress-calldata-targetaddresses)
+  - [removeFrozenlistAddress(address targetAddress)](#removefrozenlistaddressaddress-targetaddress)
+  - [removeFrozenlistAddresses(address[] calldata targetAddresses)](#removefrozenlistaddressesaddress-calldata-targetaddresses)
+  - [isFrozen(address targetAddress) → bool](#isfrozenaddress-targetaddress--bool)
+  - [areFrozen(address[] memory targetAddresses) → bool[]](#arefrozenaddress-memory-targetaddresses--bool)
+  - [frozenlistAddressCount() → uint256](#frozenlistaddresscount--uint256)
+  - [frozenlist(address _operator) → bool](#frozenlistaddress-_operator--bool)
+- [Notes](#notes)
+  - [Sender whitelist exemption](#sender-whitelist-exemption)
+  - [Deviation from ERC-2980 example interface](#deviation-from-erc-2980-example-interface)
+  - [isVerified semantics](#isverified-semantics)
+- [Usage scenario](#usage-scenario)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 This rule implements the [ERC-2980](https://eips.ethereum.org/EIPS/eip-2980) Swiss Compliant Asset Token transfer restriction. It combines two independent address lists managed within a single contract:
 
@@ -9,6 +44,12 @@ This rule implements the [ERC-2980](https://eips.ethereum.org/EIPS/eip-2980) Swi
 - **Priority**: the frozenlist is checked first. If `from`, `to`, or `spender` is frozen, the transfer is rejected regardless of whitelist membership.
 
 ## Schema
+
+The **Graph** and **Inheritance** diagrams are generated from the source code with [Surya](https://github.com/Consensys/surya), by the scripts in `doc/script/`, and must be regenerated after a code change:
+
+- **Graph** (`surya graph`): the call graph of the contract's source file. Each node is a function, grouped by contract, and each arrow is a call from one function to another, including calls to other contracts. Only that file is parsed, so logic inherited from a base contract appears in that base contract's own graph.
+- **Inheritance** (`surya inheritance`): the contracts and interfaces this contract inherits from, which tells you where each inherited function and modifier is defined.
+- **Flow with a CMTAT token**: a sequence diagram, written by hand in PlantUML (source in `doc/img/`), of how the rule takes part in a token transfer.
 
 ### Graph
 
@@ -52,18 +93,12 @@ _Diagram source: doc/img/rule-erc2980-flow.puml._
 - `RuleERC2980(address admin, address forwarderIrrevocable, bool allowMintBurn)`
 - `RuleERC2980Ownable2Step(address owner, address forwarderIrrevocable, bool allowMintBurn)`
 
-`allowMintBurn` sets **both** `allowMint` and `allowBurn`; they are independently settable afterwards via
-`setAllowMint(bool)` / `setAllowBurn(bool)`.
+`allowMintBurn` sets **both** `allowMint` and `allowBurn`; they are independently settable afterwards via `setAllowMint(bool)` / `setAllowBurn(bool)`.
 
-Mint/burn permission is an **explicit flag** — the constructor does **not** whitelist `address(0)`, and the zero
-address can never enter either list (`addWhitelistAddress(address(0))` / `addFrozenlistAddress(address(0))` revert).
-That keeps the **mandatory ERC-2980 getters** truthful: `whitelist(address(0))` and `frozenlist(address(0))` always
-return `false`.
+Mint/burn permission is an **explicit flag** — the constructor does **not** whitelist `address(0)`, and the zero address can never enter either list (`addWhitelistAddress(address(0))` / `addFrozenlistAddress(address(0))` revert). That keeps the **mandatory ERC-2980 getters** truthful: `whitelist(address(0))` and `frozenlist(address(0))` always return `false`.
 
-- `allowMintBurn = false` (default-safe): mint is refused with `CODE_MINT_NOT_ALLOWED` (`64`), burn with
-  `CODE_BURN_NOT_ALLOWED` (`65`) — dedicated codes, not the misleading "recipient not whitelisted" (`63`).
-- `allowMintBurn = true`: both permitted. A permitted mint still requires the recipient to be whitelisted and not
-  frozen; a permitted burn still requires the sender not to be frozen.
+- `allowMintBurn = false` (default-safe): mint is refused with `CODE_MINT_NOT_ALLOWED` (`64`), burn with `CODE_BURN_NOT_ALLOWED` (`65`) — dedicated codes, not the misleading "recipient not whitelisted" (`63`).
+- `allowMintBurn = true`: both permitted. A permitted mint still requires the recipient to be whitelisted and not frozen; a permitted burn still requires the sender not to be frozen.
 
 
 ## Whitelist methods
@@ -74,7 +109,7 @@ Adds a single address to the whitelist. Reverts with `RuleERC2980_AddressAlready
 
 ### `addWhitelistAddresses(address[] calldata targetAddresses)`
 
-Batch-adds addresses to the whitelist. Silently skips duplicates, but **reverts** on `address(0)` (the mint/burn sentinel is never a list member — skipping it would make the emitted event report it as one).
+Batch-adds addresses to the whitelist. Silently skips duplicates, but **reverts** on `address(0)`: the mint/burn sentinel is never a list member, and skipping it would make the emitted event report it as one.
 
 ### `removeWhitelistAddress(address targetAddress)`
 
@@ -151,3 +186,16 @@ The ERC-2980 example `Whitelistable` and `Freezable` interfaces return `false` o
 ## Usage scenario
 
 The compliance manager deploys `RuleERC2980` and grants separate roles for whitelist and frozenlist management. Investor Alice is added to the whitelist. Bob, a sanctioned actor, is added to the frozenlist. When Bob tries to send tokens, the frozenlist check fires first and rejects with code 60. When an unlisted address tries to receive tokens, the whitelist check rejects with code 63.
+
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_ERC2980_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_ERC2980_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_ERC2980_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_ERC2980_CMTAT_V3.3.0.md) for v3.3.0.
+
+## CMTAT v3.0.0
+
+✅ Supported, with one difference.
+
+- Recipient whitelist, frozen `from` / `to` and frozen `transferFrom` spender all apply.
+- WARNING: a **frozen minter or burner is not screened** on v3.0.0, which forwards no spender on mint and burn.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleERC2980V300.t.sol`.

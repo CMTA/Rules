@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {RuleAddressSet} from "../RuleAddressSet/RuleAddressSet.sol";
 import {RuleNFTAdapter} from "../core/RuleNFTAdapter.sol";
@@ -8,7 +8,6 @@ import {RuleSpenderWhitelistInvariantStorage} from "../invariant/RuleSpenderWhit
 import {AddressListInterfaceId} from "../../../interfaces/library/AddressListInterfaceId.sol";
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
-import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 
 /**
  * @title RuleSpenderWhitelistBase
@@ -42,7 +41,7 @@ abstract contract RuleSpenderWhitelistBase is RuleAddressSet, RuleNFTAdapter, Ru
      * @param restrictionCode The restriction code to check.
      * @return True if the code is produced by this rule.
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override returns (bool) {
+    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure virtual override returns (bool) {
         return restrictionCode == CODE_ADDRESS_SPENDER_NOT_WHITELISTED;
     }
 
@@ -53,12 +52,13 @@ abstract contract RuleSpenderWhitelistBase is RuleAddressSet, RuleNFTAdapter, Ru
     /**
      * @dev Regular transfers are always accepted by this rule.
      */
-    function transferred(address, address, uint256) public view override(IERC3643IComplianceContract) {}
+    function transferred(address, address, uint256) public view virtual override(IERC3643IComplianceContract) {}
 
     /**
-     * @inheritdoc IRuleEngine
+     * @notice Applies the rule to an operation that carries a spender (`transferFrom`, and mint / burn since
+     * CMTAT v3.3); reverts if it is not allowed.
      */
-    function transferred(address spender, address from, address to, uint256 value) public view override(IRuleEngine) {
+    function transferred(address spender, address from, address to, uint256 value) public view virtual override {
         _transferredFrom(spender, from, to, value);
     }
 
@@ -68,6 +68,7 @@ abstract contract RuleSpenderWhitelistBase is RuleAddressSet, RuleNFTAdapter, Ru
     function messageForTransferRestriction(uint8 restrictionCode)
         public
         pure
+        virtual
         override(IERC1404)
         returns (string memory)
     {

@@ -24,7 +24,9 @@ jobs:
         #v1.5.0
         uses: foundry-rs/foundry-toolchain@50d5a8956f2e319df19e6b57539d7e2acb9f8c1e
         with:
-          version: nightly
+          # Pinned to the stable release used locally: a nightly can change compiler handling or
+          # cheatcodes between two runs of the same commit, and prints a warning on every step.
+          version: v1.5.0
 
       - name: Show Forge version
         run: |
@@ -41,7 +43,7 @@ jobs:
         id: test
 
       # The vendored ERC-3643 `Token.sol` pins `pragma solidity 0.8.30` exactly, so it cannot share
-      # a compilation unit with our 0.8.36. `test/ERC3643Real/**` is in the default profile's `skip`
+      # a compilation unit with our 0.8.38. `test/ERC3643Real/**` is in the default profile's `skip`
       # list and is built by `[profile.erc3643]` instead, which means the step above does NOT run it.
       # Both commands are required — see the Toolchain section of AGENTS.md / CLAUDE.md.
       - name: Run Forge tests (ERC-3643 profile)

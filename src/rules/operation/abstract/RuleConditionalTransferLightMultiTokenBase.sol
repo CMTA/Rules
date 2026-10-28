@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
-import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
+import {IRuleEngine, IRuleEngineERC1404} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643ComplianceRead, IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
 import {IERC7551Compliance} from "CMTAT/interfaces/tokenization/draft-IERC7551.sol";
@@ -16,12 +16,13 @@ import {
 import {ITransferContext} from "../../interfaces/ITransferContext.sol";
 
 /**
- * @title RuleConditionalTransferLightMultiTokenBase — conditional-transfer rule wiring per-token approval state into the compliance interfaces
+ * @title RuleConditionalTransferLightMultiTokenBase — conditional-transfer rule keeping approvals per token and consuming them through the compliance interfaces
  */
 abstract contract RuleConditionalTransferLightMultiTokenBase is
     VersionModule,
     ERC3643ComplianceModule,
     RuleConditionalTransferLightMultiTokenInvariantStorage,
+    IRuleEngineERC1404,
     IRule
 {
     using SafeERC20 for IERC20;
@@ -46,7 +47,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
      * @param to The recipient of the created tokens.
      * @param value The amount of tokens created.
      */
-    function created(address to, uint256 value) external onlyBoundToken {
+    function created(address to, uint256 value) external virtual onlyBoundToken {
         _transferred(_msgSender(), address(0), to, value);
     }
 
@@ -55,7 +56,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
      * @param from The holder whose tokens are destroyed.
      * @param value The amount of tokens destroyed.
      */
-    function destroyed(address from, uint256 value) external onlyBoundToken {
+    function destroyed(address from, uint256 value) external virtual onlyBoundToken {
         _transferred(_msgSender(), from, address(0), value);
     }
 
@@ -63,14 +64,20 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
      * @notice Consumes one approval for the transfer described by `ctx`, using the caller as the token.
      * @param ctx The fungible transfer context (from, to, value).
      */
-    function transferred(ITransferContext.FungibleTransferContext calldata ctx) external onlyTransferExecutor {
+    function transferred(ITransferContext.FungibleTransferContext calldata ctx) external virtual onlyTransferExecutor {
         _transferred(_msgSender(), ctx.from, ctx.to, ctx.value);
     }
 
     /**
      * @inheritdoc IRule
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override(IRule) returns (bool) {
+    function canReturnTransferRestrictionCode(uint8 restrictionCode)
+        external
+        pure
+        virtual
+        override(IRule)
+        returns (bool)
+    {
         return restrictionCode == CODE_TRANSFER_REQUEST_NOT_APPROVED;
     }
 
@@ -80,6 +87,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
     function messageForTransferRestriction(uint8 restrictionCode)
         external
         pure
+        virtual
         override(IERC1404)
         returns (string memory)
     {
@@ -180,7 +188,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
     )
         public
         virtual
-        override(IRuleEngine)
+        override(IRule, IRuleEngine)
         onlyTransferExecutor
     {
         _transferred(_msgSender(), from, to, value);
@@ -194,7 +202,8 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
      * - Deliberately does NOT require the token to be bound, unlike {approveTransfer}: the primary
      *   use is cleaning up approvals that survived an {unbindToken}, at which point the token is by
      *   definition no longer bound. It is also the only way to clear approvals stranded under a key
-     *   that can never be consumed (see `CLAUDE_AUDIT.md` finding F-4).
+     *   that can never be consumed: behind a RuleEngine, approvals recorded for a token are looked
+     *   up under the engine's address, never under the token's.
      * @param token The token whose approvals are cleared.
      * @param from The sender of the transfer whose approvals are cleared.
      * @param to The recipient of the transfer whose approvals are cleared.
@@ -222,7 +231,12 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
      * @param value The amount of the transfer.
      * @return The current approval count for the transfer.
      */
-    function approvedCount(address token, address from, address to, uint256 value) public view returns (uint256) {
+    function approvedCount(address token, address from, address to, uint256 value)
+        public
+        view
+        virtual
+        returns (uint256)
+    {
         bytes32 transferHash = _transferHash(token, from, to, value);
         return approvalCounts[transferHash];
     }
@@ -239,6 +253,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
     function detectTransferRestriction(address from, address to, uint256 value)
         public
         view
+        virtual
         override(IERC1404)
         returns (uint8)
     {
@@ -297,6 +312,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
     )
         public
         view
+        virtual
         override(IERC1404Extend)
         returns (uint8)
     {
@@ -311,6 +327,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
     function canTransfer(address from, address to, uint256 value)
         public
         view
+        virtual
         override(IERC3643ComplianceRead)
         returns (bool)
     {
@@ -323,6 +340,7 @@ abstract contract RuleConditionalTransferLightMultiTokenBase is
     function canTransferFrom(address spender, address from, address to, uint256 value)
         public
         view
+        virtual
         override(IERC7551Compliance)
         returns (bool)
     {

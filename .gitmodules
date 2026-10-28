@@ -22,3 +22,6 @@
 [submodule "lib/chainlink-ace"]
 	path = lib/chainlink-ace
 	url = https://github.com/smartcontractkit/chainlink-ace.git
+[submodule "lib/CMTATv3.0.0"]
+	path = lib/CMTATv3.0.0
+	url = https://github.com/CMTA/CMTAT

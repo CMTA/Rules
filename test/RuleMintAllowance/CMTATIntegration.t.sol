@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {HelperContract} from "../HelperContract.sol";
 import {CMTATDeployment} from "test/utils/CMTATDeployment.sol";
 import {RuleMintAllowance} from "src/rules/operation/RuleMintAllowance.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 
 /**
  * @title End-to-end integration test: CMTAT + RuleEngine + RuleMintAllowance
@@ -23,7 +23,7 @@ contract CMTATIntegration is Test, HelperContract {
         cmtatContract = cmtatDeployment.cmtat();
 
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, address(cmtatContract));
+        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, address(cmtatContract));
 
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         mintAllowanceRule = new RuleMintAllowance(DEFAULT_ADMIN_ADDRESS);

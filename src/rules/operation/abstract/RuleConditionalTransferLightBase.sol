@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
-import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
+import {IRuleEngine, IRuleEngineERC1404} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643ComplianceRead, IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
 import {IERC7551Compliance} from "CMTAT/interfaces/tokenization/draft-IERC7551.sol";
@@ -23,6 +23,7 @@ abstract contract RuleConditionalTransferLightBase is
     VersionModule,
     ERC3643ComplianceModule,
     RuleConditionalTransferLightApprovalBase,
+    IRuleEngineERC1404,
     IRule
 {
     using SafeERC20 for IERC20;
@@ -58,7 +59,7 @@ abstract contract RuleConditionalTransferLightBase is
      * @param to The recipient of the created tokens.
      * @param value The amount of tokens created.
      */
-    function created(address to, uint256 value) external onlyBoundToken {
+    function created(address to, uint256 value) external virtual onlyBoundToken {
         _transferred(address(0), to, value);
     }
 
@@ -67,15 +68,21 @@ abstract contract RuleConditionalTransferLightBase is
      * @param from The holder whose tokens are destroyed.
      * @param value The amount of tokens destroyed.
      */
-    function destroyed(address from, uint256 value) external onlyBoundToken {
+    function destroyed(address from, uint256 value) external virtual onlyBoundToken {
         _transferred(from, address(0), value);
     }
 
     /**
      * @inheritdoc IRule
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override(IRule) returns (bool) {
-        return restrictionCode == CODE_TRANSFER_REQUEST_NOT_APPROVED;
+    function canReturnTransferRestrictionCode(uint8 restrictionCode)
+        external
+        pure
+        virtual
+        override(IRule)
+        returns (bool)
+    {
+        return restrictionCode == CODE_TRANSFER_REQUEST_NOT_APPROVED || restrictionCode == CODE_RULE_NOT_BOUND;
     }
 
     /**
@@ -84,11 +91,14 @@ abstract contract RuleConditionalTransferLightBase is
     function messageForTransferRestriction(uint8 restrictionCode)
         external
         pure
+        virtual
         override(IERC1404)
         returns (string memory)
     {
         if (restrictionCode == CODE_TRANSFER_REQUEST_NOT_APPROVED) {
             return TEXT_TRANSFER_REQUEST_NOT_APPROVED;
+        } else if (restrictionCode == CODE_RULE_NOT_BOUND) {
+            return TEXT_RULE_NOT_BOUND;
         }
         return TEXT_CODE_NOT_FOUND;
     }
@@ -164,7 +174,7 @@ abstract contract RuleConditionalTransferLightBase is
     )
         public
         virtual
-        override(IRuleEngine)
+        override(IRule, IRuleEngine)
         onlyTransferExecutor
     {
         _transferred(from, to, value);
@@ -248,9 +258,13 @@ abstract contract RuleConditionalTransferLightBase is
     function detectTransferRestriction(address from, address to, uint256 value)
         public
         view
+        virtual
         override(IERC1404)
         returns (uint8)
     {
+        if (_ruleNotBound()) {
+            return CODE_RULE_NOT_BOUND;
+        }
         if (from == address(0) || to == address(0)) {
             return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
         }
@@ -273,6 +287,7 @@ abstract contract RuleConditionalTransferLightBase is
     )
         public
         view
+        virtual
         override(IERC1404Extend)
         returns (uint8)
     {
@@ -285,6 +300,7 @@ abstract contract RuleConditionalTransferLightBase is
     function canTransfer(address from, address to, uint256 value)
         public
         view
+        virtual
         override(IERC3643ComplianceRead)
         returns (bool)
     {
@@ -297,11 +313,19 @@ abstract contract RuleConditionalTransferLightBase is
     function canTransferFrom(address spender, address from, address to, uint256 value)
         public
         view
+        virtual
         override(IERC7551Compliance)
         returns (bool)
     {
         return detectTransferRestrictionFrom(spender, from, to, value)
             == uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
+    }
+
+    /**
+     * @notice True while neither a token nor a RuleEngine is bound, so no caller can execute a transfer.
+     */
+    function _ruleNotBound() internal view virtual returns (bool) {
+        return getTokenBound() == address(0) && ruleEngine == address(0);
     }
 
     /*//////////////////////////////////////////////////////////////

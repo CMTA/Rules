@@ -1,6 +1,25 @@
 # Rule SpenderWhitelist
 
-[TOC]
+<!-- toc -->
+
+- [Configuration](#configuration)
+  - [Constructor parameters](#constructor-parameters)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Restriction codes](#restriction-codes)
+- [Access control](#access-control)
+  - [AccessControlEnumerable variant (RuleSpenderWhitelist)](#accesscontrolenumerable-variant-rulespenderwhitelist)
+  - [Ownable2Step variant (RuleSpenderWhitelistOwnable2Step)](#ownable2step-variant-rulespenderwhitelistownable2step)
+- [Behavior](#behavior)
+  - [Direct transfer path](#direct-transfer-path)
+  - [Spender path (transferFrom)](#spender-path-transferfrom)
+- [Notes](#notes)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 This rule restricts only spender-initiated transfers (`transferFrom`): the spender must be listed in an internal whitelist. Regular transfers (`transfer`) are always accepted by this rule.
 
@@ -14,6 +33,12 @@ This rule restricts only spender-initiated transfers (`transferFrom`): the spend
 | `forwarderIrrevocable` | ERC-2771 trusted forwarder address for meta-transactions (use `address(0)` to disable) |
 
 ## Schema
+
+The **Graph** and **Inheritance** diagrams are generated from the source code with [Surya](https://github.com/Consensys/surya), by the scripts in `doc/script/`, and must be regenerated after a code change:
+
+- **Graph** (`surya graph`): the call graph of the contract's source file. Each node is a function, grouped by contract, and each arrow is a call from one function to another, including calls to other contracts. Only that file is parsed, so logic inherited from a base contract appears in that base contract's own graph.
+- **Inheritance** (`surya inheritance`): the contracts and interfaces this contract inherits from, which tells you where each inherited function and modifier is defined.
+- **Flow with a CMTAT token**: a sequence diagram, written by hand in PlantUML (source in `doc/img/`), of how the rule takes part in a token transfer.
 
 ### Graph
 
@@ -55,8 +80,7 @@ Owner can manage the spender list and transfer ownership with two-step acceptanc
 
 ### Direct transfer path
 
-`detectTransferRestriction(from, to, value)` always returns `TRANSFER_OK`.
-`transferred(from, to, value)` is a no-op and never reverts.
+`detectTransferRestriction(from, to, value)` always returns `TRANSFER_OK`. `transferred(from, to, value)` is a no-op and never reverts.
 
 ### Spender path (`transferFrom`)
 
@@ -71,3 +95,15 @@ Owner can manage the spender list and transfer ownership with two-step acceptanc
 - The rule does not validate `from` or `to` addresses.
 - The rule also supports ERC-7943 tokenId/context overloads through `RuleNFTAdapter`.
 - Batch add/remove follows the project convention: skips duplicates/missing entries without reverting.
+
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_SPENDER_WHITELIST_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_SPENDER_WHITELIST_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_SPENDER_WHITELIST_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_SPENDER_WHITELIST_CMTAT_V3.3.0.md) for v3.3.0.
+
+## CMTAT v3.0.0
+
+✅ Supported, identical to v3.3.
+
+- v3.0.0 forwards the `transferFrom` caller as spender on the 4-argument path. Direct transfers, mints and burns are not screened on either version.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleSpenderWhitelistV300.t.sol`.

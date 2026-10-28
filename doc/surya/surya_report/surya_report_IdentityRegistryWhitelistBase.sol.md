@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./registry/abstract/IdentityRegistryWhitelistBase.sol | a829964c7d939f9ee5aab8bebf1ae471320606ad |
+| ./registry/abstract/IdentityRegistryWhitelistBase.sol | 3bba6ad17cbcf93b254fb597feaaaffef4812195 |
 
 
 ### Contracts Description Table

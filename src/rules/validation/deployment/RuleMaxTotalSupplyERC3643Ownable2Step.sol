@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {RuleMaxTotalSupplyOwnable2Step} from "./RuleMaxTotalSupplyOwnable2Step.sol";
 
@@ -27,7 +27,7 @@ contract RuleMaxTotalSupplyERC3643Ownable2Step is RuleMaxTotalSupplyOwnable2Step
     /**
      * @param owner Contract owner.
      * @param tokenContract_ Token contract that exposes totalSupply (must be non-zero).
-     * @param maxTotalSupply_ Initial maximum supply.
+     * @param maxTotalSupply_ Initial maximum supply, in token base units (scaled by `10 ** decimals()`).
      */
     constructor(address owner, address tokenContract_, uint256 maxTotalSupply_)
         RuleMaxTotalSupplyOwnable2Step(owner, tokenContract_, maxTotalSupply_)

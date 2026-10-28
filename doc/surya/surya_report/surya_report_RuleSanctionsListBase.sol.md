@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/base/RuleSanctionsListBase.sol | f3cf16d7239ca40019b9790c503224470f440a63 |
+| ./rules/validation/abstract/base/RuleSanctionsListBase.sol | 7be04d4946d46170d0bc0e31d815d8398cead12a |
 
 
 ### Contracts Description Table

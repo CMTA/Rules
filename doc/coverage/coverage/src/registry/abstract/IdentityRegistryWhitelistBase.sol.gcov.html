@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - lcov2.info - src/registry/abstract/IdentityRegistryWhitelistBase.sol</title>
+  <title>LCOV - lcov.info - src/registry/abstract/IdentityRegistryWhitelistBase.sol</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
 </head>
 
@@ -28,21 +28,21 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">lcov2.info</td>
+            <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntry">15</td>
-            <td class="headerCovTableEntry">16</td>
-            <td class="headerCovTableEntryHi">93.8 %</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-08-19 15:38:25</td>
+            <td class="headerValue">2026-10-28 09:57:31</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">6</td>
-            <td class="headerCovTableEntry">7</td>
-            <td class="headerCovTableEntryMed">85.7 %</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr>
             <td></td>
@@ -70,7 +70,7 @@
 <pre class="sourceHeading">           Branch data     Line data    Source code</pre>
 <pre class="source">
 <a name="1"><span class="lineNum">       1 </span>                :            : // SPDX-License-Identifier: MPL-2.0</a>
-<a name="2"><span class="lineNum">       2 </span>                :            : pragma solidity ^0.8.20;</a>
+<a name="2"><span class="lineNum">       2 </span>                :            : pragma solidity ^0.8.27;</a>
 <a name="3"><span class="lineNum">       3 </span>                :            : </a>
 <a name="4"><span class="lineNum">       4 </span>                :            : import {RuleAddressSetInternal} from &quot;../../rules/validation/abstract/RuleAddressSet/RuleAddressSetInternal.sol&quot;;</a>
 <a name="5"><span class="lineNum">       5 </span>                :            : import {IdentityRegistryWhitelistInvariantStorage} from &quot;./IdentityRegistryWhitelistInvariantStorage.sol&quot;;</a>
@@ -114,7 +114,7 @@
 <a name="43"><span class="lineNum">      43 </span>                :            :      * Reverts on the zero address and on an already-registered wallet, matching ERC-3643's</a>
 <a name="44"><span class="lineNum">      44 </span>                :            :      * reference registry (which reverts with &quot;address stored already&quot;).</a>
 <a name="45"><span class="lineNum">      45 </span>                :            :      */</a>
-<a name="46"><span class="lineNum">      46 </span>                :<span class="lineCov">         96 :     function registerIdentity(</span></a>
+<a name="46"><span class="lineNum">      46 </span>                :<span class="lineCov">        105 :     function registerIdentity(</span></a>
 <a name="47"><span class="lineNum">      47 </span>                :            :         address _userAddress,</a>
 <a name="48"><span class="lineNum">      48 </span>                :            :         address _identity,</a>
 <a name="49"><span class="lineNum">      49 </span>                :            :         uint16 /* _country */</a>
@@ -126,18 +126,18 @@
 <a name="55"><span class="lineNum">      55 </span>                :            :     {</a>
 <a name="56"><span class="lineNum">      56 </span>                :            :         // Same guards, same errors as the whitelist rules: the zero address is the mint/burn</a>
 <a name="57"><span class="lineNum">      57 </span>                :            :         // sentinel and must never be listed, or `isVerified(address(0))` would return true.</a>
-<a name="58"><span class="lineNum">      58 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 92 times"> + </span>]:<span class="lineCov">         93 :         require(_userAddress != address(0), RuleAddressSet_ZeroAddressNotAllowed());</span></a>
-<a name="59"><span class="lineNum">      59 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 91 times"> + </span>]:<span class="lineCov">         92 :         require(_addAddress(_userAddress), RuleAddressSet_AddressAlreadyListed());</span></a>
-<a name="60"><span class="lineNum">      60 </span>                :<span class="lineCov">         91 :         emit IdentityRegistered(_userAddress, _identity);</span></a>
+<a name="58"><span class="lineNum">      58 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 101 times"> + </span>]:<span class="lineCov">        102 :         require(_userAddress != address(0), RuleAddressSet_ZeroAddressNotAllowed());</span></a>
+<a name="59"><span class="lineNum">      59 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 100 times"> + </span>]:<span class="lineCov">        101 :         require(_addAddress(_userAddress), RuleAddressSet_AddressAlreadyListed());</span></a>
+<a name="60"><span class="lineNum">      60 </span>                :<span class="lineCov">        100 :         emit IdentityRegistered(_userAddress, _identity);</span></a>
 <a name="61"><span class="lineNum">      61 </span>                :            :     }</a>
 <a name="62"><span class="lineNum">      62 </span>                :            : </a>
 <a name="63"><span class="lineNum">      63 </span>                :            :     /**</a>
 <a name="64"><span class="lineNum">      64 </span>                :            :      * @inheritdoc IIdentityRegistryERC3643</a>
 <a name="65"><span class="lineNum">      65 </span>                :            :      * @dev Reverts if the wallet is not registered.</a>
 <a name="66"><span class="lineNum">      66 </span>                :            :      */</a>
-<a name="67"><span class="lineNum">      67 </span>                :<span class="lineCov">         11 :     function deleteIdentity(address _userAddress) external virtual override onlyIdentityRegistrar {</span></a>
-<a name="68"><span class="lineNum">      68 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 9 times"> + </span>]:<span class="lineCov">         10 :         require(_removeAddress(_userAddress), RuleAddressSet_AddressNotFound());</span></a>
-<a name="69"><span class="lineNum">      69 </span>                :<span class="lineCov">          9 :         emit IdentityRemoved(_userAddress);</span></a>
+<a name="67"><span class="lineNum">      67 </span>                :<span class="lineCov">         14 :     function deleteIdentity(address _userAddress) external virtual override onlyIdentityRegistrar {</span></a>
+<a name="68"><span class="lineNum">      68 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 12 times"> + </span>]:<span class="lineCov">         13 :         require(_removeAddress(_userAddress), RuleAddressSet_AddressNotFound());</span></a>
+<a name="69"><span class="lineNum">      69 </span>                :<span class="lineCov">         12 :         emit IdentityRemoved(_userAddress);</span></a>
 <a name="70"><span class="lineNum">      70 </span>                :            :     }</a>
 <a name="71"><span class="lineNum">      71 </span>                :            : </a>
 <a name="72"><span class="lineNum">      72 </span>                :            :     /**</a>
@@ -160,8 +160,8 @@
 <a name="89"><span class="lineNum">      89 </span>                :            :      * `isVerified` as &quot;is this wallet a valid investor&quot;, and the zero address is not a wallet.</a>
 <a name="90"><span class="lineNum">      90 </span>                :            :      * Mint and burn permission is the token's business, not the registry's.</a>
 <a name="91"><span class="lineNum">      91 </span>                :            :      */</a>
-<a name="92"><span class="lineNum">      92 </span>                :<span class="lineCov">         84 :     function isVerified(address _userAddress) public view virtual override returns (bool) {</span></a>
-<a name="93"><span class="lineNum">      93 </span>                :<span class="lineCov">         84 :         return _isAddressListed(_userAddress);</span></a>
+<a name="92"><span class="lineNum">      92 </span>                :<span class="lineCov">        108 :     function isVerified(address _userAddress) public view virtual override returns (bool) {</span></a>
+<a name="93"><span class="lineNum">      93 </span>                :<span class="lineCov">        108 :         return _isAddressListed(_userAddress);</span></a>
 <a name="94"><span class="lineNum">      94 </span>                :            :     }</a>
 <a name="95"><span class="lineNum">      95 </span>                :            : </a>
 <a name="96"><span class="lineNum">      96 </span>                :            :     /**</a>
@@ -186,8 +186,8 @@
 <a name="115"><span class="lineNum">     115 </span>                :            :                             ACCESS CONTROL</a>
 <a name="116"><span class="lineNum">     116 </span>                :            :     //////////////////////////////////////////////////////////////*/</a>
 <a name="117"><span class="lineNum">     117 </span>                :            : </a>
-<a name="118"><span class="lineNum">     118 </span>                :<span class="lineCov">         96 :     modifier onlyIdentityRegistrar() {</span></a>
-<a name="119"><span class="lineNum">     119 </span>                :<span class="lineCov">         96 :         _authorizeIdentityRegistrar();</span></a>
+<a name="118"><span class="lineNum">     118 </span>                :<span class="lineCov">        105 :     modifier onlyIdentityRegistrar() {</span></a>
+<a name="119"><span class="lineNum">     119 </span>                :<span class="lineCov">        105 :         _authorizeIdentityRegistrar();</span></a>
 <a name="120"><span class="lineNum">     120 </span>                :            :         _;</a>
 <a name="121"><span class="lineNum">     121 </span>                :            :     }</a>
 <a name="122"><span class="lineNum">     122 </span>                :            : </a>
@@ -195,7 +195,7 @@
 <a name="124"><span class="lineNum">     124 </span>                :            :      * @notice Authorizes the caller to register and delete identities; reverts otherwise.</a>
 <a name="125"><span class="lineNum">     125 </span>                :            :      * @dev Implemented by concrete subclasses with the desired access-control policy.</a>
 <a name="126"><span class="lineNum">     126 </span>                :            :      */</a>
-<a name="127"><span class="lineNum">     127 </span>                :<span class="lineNoCov">          0 :     function _authorizeIdentityRegistrar() internal view virtual;</span></a>
+<a name="127"><span class="lineNum">     127 </span>                :            :     function _authorizeIdentityRegistrar() internal view virtual;</a>
 <a name="128"><span class="lineNum">     128 </span>                :            : }</a>
 </pre>
       </td>

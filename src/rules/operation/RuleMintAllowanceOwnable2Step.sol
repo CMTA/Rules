@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
@@ -36,6 +36,7 @@ contract RuleMintAllowanceOwnable2Step is RuleMintAllowanceBase, Ownable2Step, O
     function supportsInterface(bytes4 interfaceId)
         public
         view
+        virtual
         override(Ownable2StepERC165Module, IERC165)
         returns (bool)
     {
@@ -44,7 +45,9 @@ contract RuleMintAllowanceOwnable2Step is RuleMintAllowanceBase, Ownable2Step, O
         return Ownable2StepERC165Module.supportsInterface(interfaceId)
             || interfaceId == RuleEngineInterfaceId.RULE_ENGINE_INTERFACE_ID
             || interfaceId == ERC1404ExtendInterfaceId.ERC1404EXTEND_INTERFACE_ID
-            || interfaceId == RuleInterfaceId.IRULE_INTERFACE_ID || interfaceId == type(IERC7551Compliance).interfaceId;
+            || interfaceId == RuleInterfaceId.IRULE_INTERFACE_ID
+            || interfaceId == RuleInterfaceId.IRULE_LEGACY_INTERFACE_ID
+            || interfaceId == type(IERC7551Compliance).interfaceId;
     }
 
     /*//////////////////////////////////////////////////////////////

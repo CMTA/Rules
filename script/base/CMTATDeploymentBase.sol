@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
@@ -30,6 +30,12 @@ import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
  *      | `CMTAT_TERMS_HASH` | the example document hash |
  *      | `CMTAT_INFORMATION` | `CMTAT_info` |
  *      | `CMTAT_FORWARDER` | `address(0)` (meta-transactions disabled) |
+ *      | `CMTAT_MAX_SUPPLY` | 1 000 000 whole tokens |
+ *      | `CMTAT_MAX_BALANCE` | 100 000 whole tokens |
+ *      | `CMTAT_ISSUANCE_CAP` | 1 000 000 whole tokens |
+ *
+ *      The three cap variables are read in base units; their defaults are whole tokens scaled by the
+ *      token's decimals, so a default stays meaningful when `CMTAT_DECIMALS` is not 0.
  *
  * @dev A script needing different metadata overrides {_erc20Attributes} or
  *      {_extraInformationAttributes} rather than copying the block again.
@@ -40,6 +46,13 @@ abstract contract CMTATDeploymentBase is Script {
      *      default so behaviour is unchanged when `CMTAT_TERMS_HASH` is not set.
      */
     bytes32 internal constant DEFAULT_TERMS_HASH = 0x9ff867f6592aa9d6d039e7aad6bd71f1659720cbc4dd9eae1554f6eab490098b;
+
+    /**
+     * @dev Default caps in whole tokens, scaled by {_wholeTokens} when read.
+     */
+    uint256 internal constant DEFAULT_MAX_TOTAL_SUPPLY_TOKENS = 1e6;
+    uint256 internal constant DEFAULT_MAX_BALANCE_TOKENS = 1e5;
+    uint256 internal constant DEFAULT_ISSUANCE_CAP_TOKENS = 1e6;
 
     /**
      * @notice Name, symbol and decimals for the token being deployed.
@@ -75,14 +88,24 @@ abstract contract CMTATDeploymentBase is Script {
     }
 
     /**
-     * @notice The engine slot passed at construction.
-     * @dev Always empty. Every script wires the engine (or the rule, in direct-binding mode) after
-     *      deployment with `setRuleEngine`, because the engine has to know the token address and the
-     *      token has to exist first.
+     * @notice The engine slot passed at construction, empty.
+     * @dev For the scripts whose rule needs the token's address, and so can only be installed with
+     *      `setRuleEngine` once the token exists.
      * @return engines A struct holding the zero rule engine.
      */
     function _emptyEngine() internal pure virtual returns (ICMTATConstructor.Engine memory engines) {
         engines = ICMTATConstructor.Engine(IRuleEngine(address(0)));
+    }
+
+    /**
+     * @notice The engine slot passed at construction, holding a rule or a RuleEngine.
+     * @dev Installing it in the constructor lets the token be created with its final admin: no later
+     *      `setRuleEngine`, so no temporary admin role for the deployer.
+     * @param ruleEngine The rule, or RuleEngine, the token calls on every transfer.
+     * @return engines A struct holding `ruleEngine`.
+     */
+    function _engine(IRuleEngine ruleEngine) internal pure virtual returns (ICMTATConstructor.Engine memory engines) {
+        engines = ICMTATConstructor.Engine(ruleEngine);
     }
 
     /**
@@ -92,6 +115,39 @@ abstract contract CMTATDeploymentBase is Script {
      */
     function _forwarder() internal view virtual returns (address forwarder) {
         forwarder = vm.envOr("CMTAT_FORWARDER", address(0));
+    }
+
+    /**
+     * @notice Supply cap for the scripts deploying `RuleMaxTotalSupply`, in base units.
+     * @return cap `CMTAT_MAX_SUPPLY`, or the default of 1 000 000 whole tokens.
+     */
+    function _maxTotalSupply() internal view virtual returns (uint256 cap) {
+        cap = vm.envOr("CMTAT_MAX_SUPPLY", _wholeTokens(DEFAULT_MAX_TOTAL_SUPPLY_TOKENS));
+    }
+
+    /**
+     * @notice Per-address cap for the script deploying `RuleMaxBalance`, in base units.
+     * @return cap `CMTAT_MAX_BALANCE`, or the default of 100 000 whole tokens.
+     */
+    function _maxBalance() internal view virtual returns (uint256 cap) {
+        cap = vm.envOr("CMTAT_MAX_BALANCE", _wholeTokens(DEFAULT_MAX_BALANCE_TOKENS));
+    }
+
+    /**
+     * @notice Cumulative issuance cap for the script deploying `RuleIssuanceCap`, in base units.
+     * @return cap `CMTAT_ISSUANCE_CAP`, or the default of 1 000 000 whole tokens.
+     */
+    function _issuanceCap() internal view virtual returns (uint256 cap) {
+        cap = vm.envOr("CMTAT_ISSUANCE_CAP", _wholeTokens(DEFAULT_ISSUANCE_CAP_TOKENS));
+    }
+
+    /**
+     * @notice Converts whole tokens to base units with the decimals the token will be deployed with.
+     * @param amount Whole tokens.
+     * @return baseUnits `amount * 10 ** decimals`.
+     */
+    function _wholeTokens(uint256 amount) internal view virtual returns (uint256 baseUnits) {
+        baseUnits = amount * 10 ** _erc20Attributes().decimalsIrrevocable;
     }
 
     /**

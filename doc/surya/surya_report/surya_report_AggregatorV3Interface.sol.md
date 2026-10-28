@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/interfaces/AggregatorV3Interface.sol | 34368a1aa3db1abd327fa122177121de654cb335 |
+| ./rules/interfaces/AggregatorV3Interface.sol | 5c077118a832ee1acba0a277154389ac24e5336a |
 
 
 ### Contracts Description Table

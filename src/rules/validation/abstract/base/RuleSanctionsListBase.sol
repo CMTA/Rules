@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {MetaTxModuleStandalone} from "../../../../modules/MetaTxModuleStandalone.sol";
 import {RuleSanctionsListInvariantStorage} from "../invariant/RuleSanctionsListInvariantStorage.sol";
@@ -7,7 +7,6 @@ import {RuleNFTAdapter} from "../core/RuleNFTAdapter.sol";
 import {ISanctionsList} from "../../../interfaces/ISanctionsList.sol";
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
-import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {IRule} from "RuleEngine/interfaces/IRule.sol";
 
 /**
@@ -44,7 +43,13 @@ abstract contract RuleSanctionsListBase is MetaTxModuleStandalone, RuleNFTAdapte
     /**
      * @inheritdoc IRule
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override(IRule) returns (bool) {
+    function canReturnTransferRestrictionCode(uint8 restrictionCode)
+        external
+        pure
+        virtual
+        override(IRule)
+        returns (bool)
+    {
         return restrictionCode == CODE_ADDRESS_FROM_IS_SANCTIONED || restrictionCode == CODE_ADDRESS_TO_IS_SANCTIONED
             || restrictionCode == CODE_ADDRESS_SPENDER_IS_SANCTIONED;
     }
@@ -74,14 +79,19 @@ abstract contract RuleSanctionsListBase is MetaTxModuleStandalone, RuleNFTAdapte
     /**
      * @inheritdoc IERC3643IComplianceContract
      */
-    function transferred(address from, address to, uint256 value) public view override(IERC3643IComplianceContract) {
+    function transferred(address from, address to, uint256 value)
+        public
+        view
+        virtual
+        override(IERC3643IComplianceContract)
+    {
         _transferred(from, to, value);
     }
 
     /**
-     * @inheritdoc IRuleEngine
+     * @inheritdoc IRule
      */
-    function transferred(address spender, address from, address to, uint256 value) public view override(IRuleEngine) {
+    function transferred(address spender, address from, address to, uint256 value) public view virtual override {
         _transferredFrom(spender, from, to, value);
     }
 
@@ -91,6 +101,7 @@ abstract contract RuleSanctionsListBase is MetaTxModuleStandalone, RuleNFTAdapte
     function messageForTransferRestriction(uint8 restrictionCode)
         public
         pure
+        virtual
         override(IERC1404)
         returns (string memory)
     {

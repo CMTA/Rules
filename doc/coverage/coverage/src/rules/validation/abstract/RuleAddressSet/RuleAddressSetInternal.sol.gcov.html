@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - lcov2.info - src/rules/validation/abstract/RuleAddressSet/RuleAddressSetInternal.sol</title>
+  <title>LCOV - lcov.info - src/rules/validation/abstract/RuleAddressSet/RuleAddressSetInternal.sol</title>
   <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
 </head>
 
@@ -28,7 +28,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">lcov2.info</td>
+            <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntry">14</td>
@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-08-19 15:38:25</td>
+            <td class="headerValue">2026-10-28 09:57:31</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">7</td>
@@ -70,7 +70,7 @@
 <pre class="sourceHeading">           Branch data     Line data    Source code</pre>
 <pre class="source">
 <a name="1"><span class="lineNum">       1 </span>                :            : // SPDX-License-Identifier: MPL-2.0</a>
-<a name="2"><span class="lineNum">       2 </span>                :            : pragma solidity ^0.8.20;</a>
+<a name="2"><span class="lineNum">       2 </span>                :            : pragma solidity ^0.8.27;</a>
 <a name="3"><span class="lineNum">       3 </span>                :            : </a>
 <a name="4"><span class="lineNum">       4 </span>                :            : /* ==== OpenZeppelin === */</a>
 <a name="5"><span class="lineNum">       5 </span>                :            : import {EnumerableSet} from &quot;@openzeppelin/contracts/utils/structs/EnumerableSet.sol&quot;;</a>
@@ -157,12 +157,12 @@
 <a name="86"><span class="lineNum">      86 </span>                :            :      * @notice Adds a single address to the set.</a>
 <a name="87"><span class="lineNum">      87 </span>                :            :      * @dev Forwards {EnumerableSet}'s &quot;did this change anything&quot; result so the caller can reject a</a>
 <a name="88"><span class="lineNum">      88 </span>                :            :      * duplicate without a second lookup: the membership test the caller would otherwise perform is</a>
-<a name="89"><span class="lineNum">      89 </span>                :            :      * the same one `add` already does internally (`CLAUDE_ANALYSIS.md` B-4).</a>
+<a name="89"><span class="lineNum">      89 </span>                :            :      * the same one `add` already does internally.</a>
 <a name="90"><span class="lineNum">      90 </span>                :            :      * @param targetAddress The address to add.</a>
 <a name="91"><span class="lineNum">      91 </span>                :            :      * @return True when the address was not already listed.</a>
 <a name="92"><span class="lineNum">      92 </span>                :            :      */</a>
-<a name="93"><span class="lineNum">      93 </span>                :<span class="lineCov">        511 :     function _addAddress(address targetAddress) internal virtual returns (bool) {</span></a>
-<a name="94"><span class="lineNum">      94 </span>                :<span class="lineCov">        511 :         return _listedAddresses.add(targetAddress);</span></a>
+<a name="93"><span class="lineNum">      93 </span>                :<span class="lineCov">        773 :     function _addAddress(address targetAddress) internal virtual returns (bool) {</span></a>
+<a name="94"><span class="lineNum">      94 </span>                :<span class="lineCov">        773 :         return _listedAddresses.add(targetAddress);</span></a>
 <a name="95"><span class="lineNum">      95 </span>                :            :     }</a>
 <a name="96"><span class="lineNum">      96 </span>                :            : </a>
 <a name="97"><span class="lineNum">      97 </span>                :            :     /**</a>
@@ -171,8 +171,8 @@
 <a name="100"><span class="lineNum">     100 </span>                :            :      * @param targetAddress The address to remove.</a>
 <a name="101"><span class="lineNum">     101 </span>                :            :      * @return True when the address was listed and has been removed.</a>
 <a name="102"><span class="lineNum">     102 </span>                :            :      */</a>
-<a name="103"><span class="lineNum">     103 </span>                :<span class="lineCov">         24 :     function _removeAddress(address targetAddress) internal virtual returns (bool) {</span></a>
-<a name="104"><span class="lineNum">     104 </span>                :<span class="lineCov">         24 :         return _listedAddresses.remove(targetAddress);</span></a>
+<a name="103"><span class="lineNum">     103 </span>                :<span class="lineCov">         41 :     function _removeAddress(address targetAddress) internal virtual returns (bool) {</span></a>
+<a name="104"><span class="lineNum">     104 </span>                :<span class="lineCov">         41 :         return _listedAddresses.remove(targetAddress);</span></a>
 <a name="105"><span class="lineNum">     105 </span>                :            :     }</a>
 <a name="106"><span class="lineNum">     106 </span>                :            : </a>
 <a name="107"><span class="lineNum">     107 </span>                :            :     /**</a>
@@ -188,8 +188,8 @@
 <a name="117"><span class="lineNum">     117 </span>                :            :      * @param targetAddress The address to check.</a>
 <a name="118"><span class="lineNum">     118 </span>                :            :      * @return isListed True if the address is listed, false otherwise.</a>
 <a name="119"><span class="lineNum">     119 </span>                :            :      */</a>
-<a name="120"><span class="lineNum">     120 </span>                :<span class="lineCov">       1467 :     function _isAddressListed(address targetAddress) internal view virtual returns (bool isListed) {</span></a>
-<a name="121"><span class="lineNum">     121 </span>                :<span class="lineCov">       1467 :         isListed = _listedAddresses.contains(targetAddress);</span></a>
+<a name="120"><span class="lineNum">     120 </span>                :<span class="lineCov">       2311 :     function _isAddressListed(address targetAddress) internal view virtual returns (bool isListed) {</span></a>
+<a name="121"><span class="lineNum">     121 </span>                :<span class="lineCov">       2311 :         isListed = _listedAddresses.contains(targetAddress);</span></a>
 <a name="122"><span class="lineNum">     122 </span>                :            :     }</a>
 <a name="123"><span class="lineNum">     123 </span>                :            : }</a>
 </pre>

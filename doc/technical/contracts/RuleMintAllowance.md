@@ -1,6 +1,32 @@
 # Rule Mint Allowance
 
-[TOC]
+<!-- toc -->
+
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Restriction codes](#restriction-codes)
+- [Access Control](#access-control)
+- [Methods](#methods)
+  - [setMintAllowance(address minter, uint256 amount)](#setmintallowanceaddress-minter-uint256-amount)
+  - [increaseMintAllowance(address minter, uint256 amount)](#increasemintallowanceaddress-minter-uint256-amount)
+  - [decreaseMintAllowance(address minter, uint256 amount)](#decreasemintallowanceaddress-minter-uint256-amount)
+  - [clearMintAllowances(address[] calldata minters)](#clearmintallowancesaddress-calldata-minters)
+  - [mintAllowance(address minter) → uint256](#mintallowanceaddress-minter--uint256)
+  - [bindToken(address token) / unbindToken(address token)](#bindtokenaddress-token--unbindtokenaddress-token)
+- [Workflow](#workflow)
+- [Allowance deduction](#allowance-deduction)
+- [Multiple minters](#multiple-minters)
+- [Notes](#notes)
+  - [3-arg transferred path](#3-arg-transferred-path)
+  - [Burns not restricted](#burns-not-restricted)
+  - [Eligibility views: which one is authoritative](#eligibility-views-which-one-is-authoritative)
+- [Usage scenario](#usage-scenario)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 This rule enforces a per-minter mint quota. An operator assigns each minter address a maximum number of tokens it is allowed to mint. Every successful mint reduces the minter's remaining allowance. The operator can adjust the allowance at any time by setting an absolute value or by incrementing/decrementing the current one.
 
@@ -10,13 +36,19 @@ Regular transfers and burns are **not restricted** by this rule — it only acts
 
 `detectTransferRestriction(from, to, value)` (the 3-arg form without a spender) always returns `TRANSFER_OK` because the minter's identity is not available in that call path. Use `detectTransferRestrictionFrom(minter, address(0), to, amount)` to query a minter's allowance.
 
-> ⚠️ **`canTransfer` and `detectTransferRestriction` are NOT authoritative for this rule.** They are hardcoded to "allowed" (`true` / `TRANSFER_OK`) because the 3-arg signature carries no minter identity, so a pre-flight that gates on them will disagree with enforcement: the mint still reverts with `RuleMintAllowance_AllowanceExceeded` if the quota is insufficient. **For a mint pre-flight, always use the spender-aware view** `canTransferFrom(minter, address(0), to, value)` (or `detectTransferRestrictionFrom(minter, address(0), to, value)`), which returns the real answer.
+> ⚠️ **`canTransfer` and `detectTransferRestriction` are NOT authoritative for this rule.** Once the rule is bound they always answer "allowed" (`true` / `TRANSFER_OK`; before binding they report code 85), because the 3-arg signature carries no minter identity, so a pre-flight that gates on them will disagree with enforcement: the mint still reverts with `RuleMintAllowance_AllowanceExceeded` if the quota is insufficient. **For a mint pre-flight, always use the spender-aware view** `canTransferFrom(minter, address(0), to, value)` (or `detectTransferRestrictionFrom(minter, address(0), to, value)`), which returns the real answer.
 
 > Compatibility warning: this rule does **not** enforce mint allowances for a token that only calls the standard ERC-3643 3-arg compliance functions. It requires the spender-aware RuleEngine/CMTAT v3.3+ path (`detectTransferRestrictionFrom` and `transferred(spender, from, to, value)`) so the minter address is available.
 
 For that reason, `RuleMintAllowance` does not advertise the full ERC-3643 `ICompliance` interface through ERC-165. It still implements the inherited 3-arg callbacks required by the rule interface, but they are not sufficient to enforce mint quotas.
 
 ## Schema
+
+The **Graph** and **Inheritance** diagrams are generated from the source code with [Surya](https://github.com/Consensys/surya), by the scripts in `doc/script/`, and must be regenerated after a code change:
+
+- **Graph** (`surya graph`): the call graph of the contract's source file. Each node is a function, grouped by contract, and each arrow is a call from one function to another, including calls to other contracts. Only that file is parsed, so logic inherited from a base contract appears in that base contract's own graph.
+- **Inheritance** (`surya inheritance`): the contracts and interfaces this contract inherits from, which tells you where each inherited function and modifier is defined.
+- **Flow with a CMTAT token**: a sequence diagram, written by hand in PlantUML (source in `doc/img/`), of how the rule takes part in a token transfer.
 
 ### Graph
 
@@ -28,7 +60,7 @@ For that reason, `RuleMintAllowance` does not advertise the full ERC-3643 `IComp
 
 ### Flow with a CMTAT token
 
-The sequence below shows how the rule participates when a CMTAT token (with this rule configured in its RuleEngine) processes a mint. As an operation rule, it decrements the minter's allowance in the `transferred` callback after balances are updated.
+The sequence below shows how the rule participates when a CMTAT token (with this rule configured in its RuleEngine) processes a mint. As an operation rule, it decrements the minter's allowance in the `transferred` callback, which CMTAT calls before the tokens are created; a mint above the remaining allowance reverts before any balance changes.
 
 ![RuleMintAllowance flow with a CMTAT token](../../img/rule-mint-allowance-flow.png)
 
@@ -39,6 +71,9 @@ _Diagram source: doc/img/rule-mint-allowance-flow.puml._
 | Constant | Code | Meaning |
 | --- | --- | --- |
 | `CODE_MINTER_ALLOWANCE_EXCEEDED` | 70 | Minter's remaining allowance is less than the requested mint amount |
+| `CODE_RULE_NOT_BOUND` | 85 | No caller is bound yet (`bindToken`), so every operation would revert. Shared, with the same message, by `RuleConditionalTransferLight`, `RuleMintAllowance` and `RuleIssuanceCap` |
+
+While the rule is unbound, every view reports code 85, including `canTransfer` / `detectTransferRestriction`. They return "allowed" only once a caller is bound.
 
 ## Access Control
 
@@ -76,7 +111,7 @@ Returns the remaining mint allowance for `minter`. Default is `0`.
 
 ### `bindToken(address token)` / `unbindToken(address token)`
 
-Binds or unbinds the caller address. Only the bound address is authorised to call `transferred`. In practice, bind the RuleEngine address. Restricted to `COMPLIANCE_MANAGER_ROLE`. A second `bindToken` call reverts until the current binding is removed.
+Binds or unbinds the caller address. Only the bound address is authorised to call `transferred`. Bind the token when the rule is set directly on it, or the RuleEngine when the rule sits behind one. Restricted to `COMPLIANCE_MANAGER_ROLE`. A second `bindToken` call reverts until the current binding is removed.
 
 > ⚠️ **`unbindToken` does not clear `mintAllowance`.** Quotas granted while the previous RuleEngine/token was bound remain in storage and are spendable by the same minters as soon as a new caller is bound. The operator who controls rebinding also controls allowances, so the trust model is preserved — but when migrating, call `clearMintAllowances` **before** rebinding if the old quotas must not carry over.
 
@@ -113,8 +148,8 @@ Burns (`to == address(0)`) are not tracked by this rule. Minters do not recover 
 
 | View | Signature | Authoritative for mint quota? |
 | --- | --- | --- |
-| `canTransfer` | `(from, to, value)` | ❌ No — hardcoded `true` (no minter identity) |
-| `detectTransferRestriction` | `(from, to, value)` | ❌ No — hardcoded `TRANSFER_OK` |
+| `canTransfer` | `(from, to, value)` | ❌ No — `true` once bound (no minter identity); `false` while unbound |
+| `detectTransferRestriction` | `(from, to, value)` | ❌ No — `TRANSFER_OK` once bound; code 85 while unbound |
 | `canTransferFrom` | `(minter, address(0), to, value)` | ✅ **Yes** — returns `false` when the quota is insufficient |
 | `detectTransferRestrictionFrom` | `(minter, address(0), to, value)` | ✅ **Yes** — returns `70` when the quota is insufficient |
 
@@ -122,9 +157,9 @@ An integrator that pre-flights a mint with `canTransfer` will see "allowed" even
 
 #### The blind spot propagates to the RuleEngine and to the token
 
-The table above describes calls made **directly on the rule**. In a normal deployment nobody does that: the rule sits inside a `RuleEngine`, which sits in the token's compliance slot, and an integrator holds only the **token** address. Every level in that chain forwards the 3-argument call unchanged, so every level inherits the hardcoded `true`:
+The table above describes calls made **directly on the rule**. In a normal deployment nobody does that: the rule sits inside a `RuleEngine`, which sits in the token's compliance slot, and an integrator holds only the **token** address. Every level in that chain forwards the 3-argument call unchanged, so every level inherits the rule's unconditional `true` (once bound):
 
-| You call | Which reaches | Quota checked? |
+| You call | Forwarded to | Quota checked? |
 | --- | --- | --- |
 | `cmtat.detectTransferRestriction(address(0), to, value)` | `ruleEngine.detectTransferRestriction(...)` → each rule's 3-arg view | ❌ **No** |
 | `cmtat.canTransfer(address(0), to, value)` | same 3-arg chain | ❌ **No** |
@@ -134,17 +169,22 @@ The table above describes calls made **directly on the rule**. In a normal deplo
 
 `RuleEngineBase._detectTransferRestriction` walks its rules calling each one's **3-argument** `detectTransferRestriction` and returns the first non-zero code. This rule always returns `0`, so it contributes nothing to the aggregate — the engine-level answer is "allowed" no matter what the minter's quota is, for **every token that engine serves**. CMTAT's `ValidationModuleERC1404` then forwards its own ERC-1404 views to the engine, carrying the blind spot to the token's public API.
 
-> ⚠️ **If you hold only the token address**, the authoritative mint pre-flight is
-> `cmtat.detectTransferRestrictionFrom(minter, address(0), to, value)` — or `canTransferFrom` with the
-> same arguments. `cmtat.canTransfer` and `cmtat.detectTransferRestriction` will report a mint as
-> allowed that then reverts with `RuleMintAllowance_AllowanceExceeded`.
+> ⚠️ **If you hold only the token address**, the authoritative mint pre-flight is `cmtat.detectTransferRestrictionFrom(minter, address(0), to, value)` — or `canTransferFrom` with the same arguments. `cmtat.canTransfer` and `cmtat.detectTransferRestriction` will report a mint as allowed that then reverts with `RuleMintAllowance_AllowanceExceeded`.
 
-This is pinned by `test_MA1_EngineAndTokenInheritTheHardcodedAllowedView_CurrentBehaviour` in
-[`test/ThreatModel/ThreatModelTests.t.sol`](../../../test/ThreatModel/ThreatModelTests.t.sol). Per the
-project convention, that test asserts behaviour the audit considers wrong: if the rule, the engine or
-the token is ever changed to close the gap, it fails, and the finding and documentation must be
-updated with it.
+This is pinned by `test_MA1_EngineAndTokenInheritTheHardcodedAllowedView_CurrentBehaviour` in [`test/ThreatModel/ThreatModelTests.t.sol`](../../../test/ThreatModel/ThreatModelTests.t.sol). Per the project convention, that test asserts behaviour the audit considers wrong: if the rule, the engine or the token is ever changed to close the gap, it fails, and the finding and documentation must be updated with it.
 
 ## Usage scenario
 
 An issuer deploys `RuleMintAllowance` and grants `ALLOWANCE_OPERATOR_ROLE` to a compliance officer. The officer assigns `setMintAllowance(alice, 100_000e18)` — Alice may mint up to 100 000 tokens. Each `cmtat.mint(recipient, amount)` call by Alice reduces her quota. Once exhausted, further mints by Alice revert. The officer can call `increaseMintAllowance(alice, 50_000e18)` to extend Alice's quota or `setMintAllowance(alice, 0)` to revoke it entirely.
+
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_MINT_ALLOWANCE_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_MINT_ALLOWANCE_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_MINT_ALLOWANCE_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_MINT_ALLOWANCE_CMTAT_V3.3.0.md) for v3.3.0.
+
+## CMTAT v3.0.0
+
+❌ **Not supported (inert).**
+
+- The quota is debited only on the 4-argument `transferred(minter, address(0), to, value)`. v3.0.0 sends every mint on the 3-argument path with no minter, so the rule blocks nothing and debits nothing, while its own `canTransferFrom` still reports the quota as exceeded. Requires CMTAT >= v3.3. The test pins this so that the limitation stays visible.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleMintAllowanceV300.t.sol`.

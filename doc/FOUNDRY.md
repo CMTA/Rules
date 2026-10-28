@@ -8,29 +8,34 @@ Here are the settings for [Hardhat](https://hardhat.org) and [Foundry](https://g
 
 - `hardhat.config.js`
 
-  - Solidity [v0.8.36](https://docs.soliditylang.org/en/v0.8.36/)
-  - EVM version: Prague (Pectra upgrade)
+  - Solidity [v0.8.38](https://docs.soliditylang.org/en/v0.8.38/)
+  - EVM version: Osaka (Fusaka upgrade)
   - Optimizer: true, 200 runs
 
 - `foundry.toml`
 
-  - Solidity [v0.8.36](https://docs.soliditylang.org/en/v0.8.36/)
-  - EVM version: Prague (Pectra upgrade)
+  - Solidity [v0.8.38](https://docs.soliditylang.org/en/v0.8.38/)
+  - EVM version: Osaka (Fusaka upgrade)
   - Optimizer: true, 200 runs
+  - Exception, the `erc3643` profile (tests in `test/ERC3643Real/` only): Solidity v0.8.30, not the latest, because the vendored ERC-3643 `Token.sol` pins `pragma solidity 0.8.30` exactly. It builds no deployable artifact.
+
+The compiled contracts contain no Osaka-only opcode (`CLZ`), so they also run on a Prague or Cancun chain. They need Cancun at least: the revert-free supply and feed reads rely on EIP-6780.
 
 - Library
 
   - Foundry [v1.5.0](https://github.com/foundry-rs/foundry)
 
-  - Forge std [v1.12.0](https://github.com/foundry-rs/forge-std/releases/tag/v1.12.0)
+  - Forge std [v1.17.0](https://github.com/foundry-rs/forge-std/releases/tag/v1.17.0)
 
   - OpenZeppelin Contracts (submodule) [v5.7.0](https://github.com/OpenZeppelin/openzeppelin-contracts/releases/tag/v5.7.0)
 
   - OpenZeppelin Contracts Upgradeable (submodule) [v5.7.0](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/releases/tag/v5.7.0)
 
-  - CMTAT [v3.3.0-rc3](https://github.com/CMTA/CMTAT/releases/tag/v3.3.0-rc3)
+  - CMTAT [v3.3.0-rc4](https://github.com/CMTA/CMTAT/releases/tag/v3.3.0-rc4)
 
-  - RuleEngine [v3.0.0-rc6](https://github.com/CMTA/RuleEngine/releases/tag/v3.0.0-rc6)
+  - CMTAT [v3.0.0](https://github.com/CMTA/CMTAT/releases/tag/v3.0.0) (tests only, `lib/CMTATv3.0.0`, remapping `CMTATv3.0.0/`): the last audited CMTAT release, used by `test/CMTATv3.0.0/`
+
+  - RuleEngine [v3.0.0-rc7](https://github.com/CMTA/RuleEngine/releases/tag/v3.0.0-rc7)
 
 ## Toolchain installation
 
@@ -190,8 +195,7 @@ $ anvil
 
 ### Deploy
 
-> **Warning — private key security**
-> Passing `--private-key` directly on the command line is **not recommended** in production: the key is visible in your shell history and to any process that can read `/proc`. Prefer hardware wallets (`--ledger`, `--trezor`), encrypted keystores (`--account <keystore>`), or environment-variable signers. See [Foundry best practices](https://www.getfoundry.sh/best-practices) for details.
+> **Warning — private key security** Passing `--private-key` directly on the command line is **not recommended** in production: the key is visible in your shell history and to any process that can read `/proc`. Prefer hardware wallets (`--ledger`, `--trezor`), encrypted keystores (`--account <keystore>`), or environment-variable signers. See [Foundry best practices](https://www.getfoundry.sh/best-practices) for details.
 
 ```shell
 $ forge script script/DeployCMTATWithWhitelist.s.sol --rpc-url <your_rpc_url> --private-key <your_private_key>

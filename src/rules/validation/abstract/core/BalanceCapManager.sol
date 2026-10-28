@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {RuleMaxBalanceInvariantStorage} from "../invariant/RuleMaxBalanceInvariantStorage.sol";
 import {IBalanceOf} from "../../../interfaces/IBalanceOf.sol";
@@ -140,7 +140,8 @@ abstract contract BalanceCapManager is CapAccounting, RuleAddressSetInternal, Ru
      *
      *      `_addAddress` does not guard the sentinel; the caller must, exactly as the whitelist
      *      rules and `IdentityRegistryWhitelist` do. The batch path is guarded separately, by the
-     *      function pointer `_addAddresses` passes to `AddressSetBatchLib`. Invariant I-12.
+     *      function pointer `_addAddresses` passes to `AddressSetBatchLib`. Either way the zero
+     *      address can never enter the exemption list.
      * @param targetAddress The address to exempt.
      */
     function _addExemptAddress(address targetAddress) internal virtual {
@@ -169,8 +170,8 @@ abstract contract BalanceCapManager is CapAccounting, RuleAddressSetInternal, Ru
 
     /**
      * @notice Stores the observed token and emits {MaxBalanceTokenUpdated}.
-     * @dev Probes `balanceOf` at configuration time so a token that cannot serve the check fails
-     * loudly at setup instead of silently blocking every transfer.
+     * @dev Probes `balanceOf` at configuration time so a token that cannot serve the check reverts
+     * at setup instead of silently blocking every transfer.
      * @param newBalanceToken The new token contract.
      */
     function _setBalanceToken(address newBalanceToken) internal virtual {
@@ -178,7 +179,9 @@ abstract contract BalanceCapManager is CapAccounting, RuleAddressSetInternal, Ru
         // Explicit, rather than relying on the uncatchable extcodesize revert the probe below happens
         // to produce for a codeless address: that is compiler behaviour, not a check.
         require(newBalanceToken.code.length != 0, RuleMaxBalance_TokenIsNotAContract(newBalanceToken));
-        try IBalanceOf(newBalanceToken).balanceOf(address(this)) returns (uint256) {
+        try IBalanceOf(newBalanceToken).balanceOf(address(this)) returns (
+            uint256
+        ) {
         // callable
         }
         catch {

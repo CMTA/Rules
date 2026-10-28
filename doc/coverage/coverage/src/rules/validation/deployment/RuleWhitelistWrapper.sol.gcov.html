@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - lcov2.info - src/rules/validation/deployment/RuleWhitelistWrapper.sol</title>
+  <title>LCOV - lcov.info - src/rules/validation/deployment/RuleWhitelistWrapper.sol</title>
   <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
 </head>
 
@@ -28,7 +28,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">lcov2.info</td>
+            <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntry">19</td>
@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-08-19 15:38:25</td>
+            <td class="headerValue">2026-10-28 09:57:31</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">11</td>
@@ -71,7 +71,7 @@
 <pre class="source">
 <a name="1"><span class="lineNum">       1 </span>                :            : // SPDX-License-Identifier: MPL-2.0</a>
 <a name="2"><span class="lineNum">       2 </span>                :            : </a>
-<a name="3"><span class="lineNum">       3 </span>                :            : pragma solidity ^0.8.20;</a>
+<a name="3"><span class="lineNum">       3 </span>                :            : pragma solidity ^0.8.27;</a>
 <a name="4"><span class="lineNum">       4 </span>                :            : </a>
 <a name="5"><span class="lineNum">       5 </span>                :            : /* ==== OpenZeppelin === */</a>
 <a name="6"><span class="lineNum">       6 </span>                :            : import {AccessControlEnumerable} from &quot;@openzeppelin/contracts/access/extensions/AccessControlEnumerable.sol&quot;;</a>
@@ -115,8 +115,8 @@
 <a name="44"><span class="lineNum">      44 </span>                :            :      * @param account Address being checked for the role.</a>
 <a name="45"><span class="lineNum">      45 </span>                :            :      * @return True if `account` holds `role`.</a>
 <a name="46"><span class="lineNum">      46 </span>                :            :      */</a>
-<a name="47"><span class="lineNum">      47 </span>                :<span class="lineCov">         56 :     function hasRole(bytes32 role, address account) public view virtual override returns (bool) {</span></a>
-<a name="48"><span class="lineNum">      48 </span>                :<span class="lineCov">        173 :         return AccessControlModuleStandalone.hasRole(role, account);</span></a>
+<a name="47"><span class="lineNum">      47 </span>                :<span class="lineCov">         95 :     function hasRole(bytes32 role, address account) public view virtual override returns (bool) {</span></a>
+<a name="48"><span class="lineNum">      48 </span>                :<span class="lineCov">        306 :         return AccessControlModuleStandalone.hasRole(role, account);</span></a>
 <a name="49"><span class="lineNum">      49 </span>                :            :     }</a>
 <a name="50"><span class="lineNum">      50 </span>                :            : </a>
 <a name="51"><span class="lineNum">      51 </span>                :            :     /**</a>
@@ -124,15 +124,15 @@
 <a name="53"><span class="lineNum">      53 </span>                :            :      * @param interfaceId The interface identifier, as specified in ERC-165.</a>
 <a name="54"><span class="lineNum">      54 </span>                :            :      * @return True if the interface is supported.</a>
 <a name="55"><span class="lineNum">      55 </span>                :            :      */</a>
-<a name="56"><span class="lineNum">      56 </span>                :<span class="lineCov">         50 :     function supportsInterface(bytes4 interfaceId)</span></a>
+<a name="56"><span class="lineNum">      56 </span>                :<span class="lineCov">         89 :     function supportsInterface(bytes4 interfaceId)</span></a>
 <a name="57"><span class="lineNum">      57 </span>                :            :         public</a>
 <a name="58"><span class="lineNum">      58 </span>                :            :         view</a>
 <a name="59"><span class="lineNum">      59 </span>                :            :         virtual</a>
 <a name="60"><span class="lineNum">      60 </span>                :            :         override(AccessControlEnumerable, RuleWhitelistWrapperBase)</a>
 <a name="61"><span class="lineNum">      61 </span>                :            :         returns (bool)</a>
 <a name="62"><span class="lineNum">      62 </span>                :            :     {</a>
-<a name="63"><span class="lineNum">      63 </span>                :<span class="lineCov">         50 :         return RuleWhitelistWrapperBase.supportsInterface(interfaceId)</span></a>
-<a name="64"><span class="lineNum">      64 </span>                :<span class="lineCov">         35 :             || AccessControlEnumerable.supportsInterface(interfaceId);</span></a>
+<a name="63"><span class="lineNum">      63 </span>                :<span class="lineCov">         89 :         return RuleWhitelistWrapperBase.supportsInterface(interfaceId)</span></a>
+<a name="64"><span class="lineNum">      64 </span>                :<span class="lineCov">         59 :             || AccessControlEnumerable.supportsInterface(interfaceId);</span></a>
 <a name="65"><span class="lineNum">      65 </span>                :            :     }</a>
 <a name="66"><span class="lineNum">      66 </span>                :            : </a>
 <a name="67"><span class="lineNum">      67 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
@@ -145,8 +145,8 @@
 <a name="74"><span class="lineNum">      74 </span>                :            :      * @param account Address receiving the role.</a>
 <a name="75"><span class="lineNum">      75 </span>                :            :      * @return True if the role was newly granted.</a>
 <a name="76"><span class="lineNum">      76 </span>                :            :      */</a>
-<a name="77"><span class="lineNum">      77 </span>                :<span class="lineCov">         56 :     function _grantRole(bytes32 role, address account) internal virtual override returns (bool) {</span></a>
-<a name="78"><span class="lineNum">      78 </span>                :<span class="lineCov">         56 :         return AccessControlEnumerable._grantRole(role, account);</span></a>
+<a name="77"><span class="lineNum">      77 </span>                :<span class="lineCov">         99 :     function _grantRole(bytes32 role, address account) internal virtual override returns (bool) {</span></a>
+<a name="78"><span class="lineNum">      78 </span>                :<span class="lineCov">         99 :         return AccessControlEnumerable._grantRole(role, account);</span></a>
 <a name="79"><span class="lineNum">      79 </span>                :            :     }</a>
 <a name="80"><span class="lineNum">      80 </span>                :            : </a>
 <a name="81"><span class="lineNum">      81 </span>                :            :     /**</a>
@@ -155,8 +155,8 @@
 <a name="84"><span class="lineNum">      84 </span>                :            :      * @param account Address losing the role.</a>
 <a name="85"><span class="lineNum">      85 </span>                :            :      * @return True if the role was previously held and is now revoked.</a>
 <a name="86"><span class="lineNum">      86 </span>                :            :      */</a>
-<a name="87"><span class="lineNum">      87 </span>                :<span class="lineCov">          1 :     function _revokeRole(bytes32 role, address account) internal virtual override returns (bool) {</span></a>
-<a name="88"><span class="lineNum">      88 </span>                :<span class="lineCov">          1 :         return AccessControlEnumerable._revokeRole(role, account);</span></a>
+<a name="87"><span class="lineNum">      87 </span>                :<span class="lineCov">          9 :     function _revokeRole(bytes32 role, address account) internal virtual override returns (bool) {</span></a>
+<a name="88"><span class="lineNum">      88 </span>                :<span class="lineCov">          9 :         return AccessControlEnumerable._revokeRole(role, account);</span></a>
 <a name="89"><span class="lineNum">      89 </span>                :            :     }</a>
 <a name="90"><span class="lineNum">      90 </span>                :            : </a>
 <a name="91"><span class="lineNum">      91 </span>                :            :     /*//////////////////////////////////////////////////////////////</a>
@@ -177,7 +177,7 @@
 <a name="106"><span class="lineNum">     106 </span>                :            :      * @notice Restricts rules management to holders of RULES_MANAGEMENT_ROLE.</a>
 <a name="107"><span class="lineNum">     107 </span>                :            :      * @dev Restrict rules management to the dedicated role.</a>
 <a name="108"><span class="lineNum">     108 </span>                :            :      */</a>
-<a name="109"><span class="lineNum">     109 </span>                :<span class="lineCov">        105 :     function _onlyRulesManager() internal view virtual override onlyRole(RULES_MANAGEMENT_ROLE) {}</span></a>
+<a name="109"><span class="lineNum">     109 </span>                :<span class="lineCov">        175 :     function _onlyRulesManager() internal view virtual override onlyRole(RULES_MANAGEMENT_ROLE) {}</span></a>
 <a name="110"><span class="lineNum">     110 </span>                :            : </a>
 <a name="111"><span class="lineNum">     111 </span>                :            :     /**</a>
 <a name="112"><span class="lineNum">     112 </span>                :            :      * @notice Restricts rules-limit management to holders of RULES_MANAGEMENT_ROLE.</a>
@@ -188,8 +188,8 @@
 <a name="117"><span class="lineNum">     117 </span>                :            :      * @notice Returns the message sender, accounting for meta-transaction (ERC-2771) context.</a>
 <a name="118"><span class="lineNum">     118 </span>                :            :      * @return sender The address of the message sender.</a>
 <a name="119"><span class="lineNum">     119 </span>                :            :      */</a>
-<a name="120"><span class="lineNum">     120 </span>                :<span class="lineCov">        172 :     function _msgSender() internal view virtual override(RuleWhitelistWrapperBase, Context) returns (address sender) {</span></a>
-<a name="121"><span class="lineNum">     121 </span>                :<span class="lineCov">        172 :         return RuleWhitelistWrapperBase._msgSender();</span></a>
+<a name="120"><span class="lineNum">     120 </span>                :<span class="lineCov">        309 :     function _msgSender() internal view virtual override(RuleWhitelistWrapperBase, Context) returns (address sender) {</span></a>
+<a name="121"><span class="lineNum">     121 </span>                :<span class="lineCov">        309 :         return RuleWhitelistWrapperBase._msgSender();</span></a>
 <a name="122"><span class="lineNum">     122 </span>                :            :     }</a>
 <a name="123"><span class="lineNum">     123 </span>                :            : </a>
 <a name="124"><span class="lineNum">     124 </span>                :            :     /**</a>
@@ -204,14 +204,14 @@
 <a name="133"><span class="lineNum">     133 </span>                :            :      * @notice Returns the length of the context suffix appended by the forwarder.</a>
 <a name="134"><span class="lineNum">     134 </span>                :            :      * @return The context suffix length in bytes.</a>
 <a name="135"><span class="lineNum">     135 </span>                :            :      */</a>
-<a name="136"><span class="lineNum">     136 </span>                :<span class="lineCov">        173 :     function _contextSuffixLength()</span></a>
+<a name="136"><span class="lineNum">     136 </span>                :<span class="lineCov">        310 :     function _contextSuffixLength()</span></a>
 <a name="137"><span class="lineNum">     137 </span>                :            :         internal</a>
 <a name="138"><span class="lineNum">     138 </span>                :            :         view</a>
 <a name="139"><span class="lineNum">     139 </span>                :            :         virtual</a>
 <a name="140"><span class="lineNum">     140 </span>                :            :         override(RuleWhitelistWrapperBase, Context)</a>
 <a name="141"><span class="lineNum">     141 </span>                :            :         returns (uint256)</a>
 <a name="142"><span class="lineNum">     142 </span>                :            :     {</a>
-<a name="143"><span class="lineNum">     143 </span>                :<span class="lineCov">        173 :         return RuleWhitelistWrapperBase._contextSuffixLength();</span></a>
+<a name="143"><span class="lineNum">     143 </span>                :<span class="lineCov">        310 :         return RuleWhitelistWrapperBase._contextSuffixLength();</span></a>
 <a name="144"><span class="lineNum">     144 </span>                :            :     }</a>
 <a name="145"><span class="lineNum">     145 </span>                :            : }</a>
 </pre>

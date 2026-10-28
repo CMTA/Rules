@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {IERC734KeyHasPurpose} from "../registry/interfaces/IIdentityRegistryERC3643.sol";
 
@@ -12,7 +12,7 @@ import {IERC734KeyHasPurpose} from "../registry/interfaces/IIdentityRegistryERC3
  * @dev It records keys rather than returning a blanket `true` so the tests exercise the same shape
  * as a real identity: recovery succeeds only for a wallet the identity actually vouches for.
  *
- * WARNING: test scaffolding only. Holds no real keys and performs no authorisation.
+ * WARNING: test stub only. Holds no real keys and performs no authorisation.
  */
 contract OnchainIdMock is IERC734KeyHasPurpose {
     /**

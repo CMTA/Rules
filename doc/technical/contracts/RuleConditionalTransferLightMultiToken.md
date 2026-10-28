@@ -1,6 +1,29 @@
 # Rule Conditional Transfer Light MultiToken
 
-[TOC]
+<!-- toc -->
+
+- [Deployment topology — why a RuleEngine does not work](#deployment-topology--why-a-ruleengine-does-not-work)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Restriction codes](#restriction-codes)
+- [Access control](#access-control)
+- [Methods](#methods)
+  - [approveTransfer(address token, address from, address to, uint256 value)](#approvetransferaddress-token-address-from-address-to-uint256-value)
+  - [cancelTransferApproval(address token, address from, address to, uint256 value)](#canceltransferapprovaladdress-token-address-from-address-to-uint256-value)
+  - [resetApproval(address token, address from, address to, uint256 value) -> uint256](#resetapprovaladdress-token-address-from-address-to-uint256-value---uint256)
+  - [approvedCount(address token, address from, address to, uint256 value) -> uint256](#approvedcountaddress-token-address-from-address-to-uint256-value---uint256)
+  - [approveAndTransferIfAllowed(address token, address from, address to, uint256 value) -> bool](#approveandtransferifallowedaddress-token-address-from-address-to-uint256-value---bool)
+  - [transferred(...)](#transferred)
+  - [detectTransferRestrictionForToken(address token, address from, address to, uint256 value) -> uint8](#detecttransferrestrictionfortokenaddress-token-address-from-address-to-uint256-value---uint8)
+  - [canTransferForToken(address token, address from, address to, uint256 value) -> bool](#cantransferfortokenaddress-token-address-from-address-to-uint256-value---bool)
+  - [detectTransferRestriction(from, to, value) / canTransfer(from, to, value)](#detecttransferrestrictionfrom-to-value--cantransferfrom-to-value)
+- [Notes](#notes)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 `RuleConditionalTransferLightMultiToken` is an operation rule that requires explicit operator approval before each transfer, with approvals scoped per token.
 
@@ -14,7 +37,7 @@ This prevents approval reuse across tokens, **provided the rule receives token-s
 >
 > **Do not add this rule to a `RuleEngine`.** Wire it with `CMTAT.setRuleEngine(rule)` on every token, and bind each token with `bindToken(tokenA)`, `bindToken(tokenB)`, …
 >
-> The reason is structural: approvals are **recorded** under the `token` argument you pass to `approveTransfer`, but **consumed** under `msg.sender`. Those two keys agree only when the caller *is* the token. Behind a `RuleEngine` the caller is the engine, and the rule cannot do its job — see [Deployment topology](#deployment-topology--why-a-ruleengine-does-not-work) for the exhaustive case analysis.
+> Approvals are **recorded** under the `token` argument you pass to `approveTransfer`, but **consumed** under `msg.sender`. Those two keys agree only when the caller *is* the token. Behind a `RuleEngine` the caller is the engine, and the rule cannot do its job — see [Deployment topology](#deployment-topology--why-a-ruleengine-does-not-work) for the exhaustive case analysis.
 >
 > "MultiToken" means *several tokens each pointing directly at one shared rule*, not *one RuleEngine serving several tokens*.
 
@@ -42,7 +65,7 @@ Case D "works" but is not a valid deployment:
 3. **`approveAndTransferIfAllowed` cannot work.** It calls `IERC20(token).allowance(...)` on what is actually the engine → revert.
 4. **It is strictly worse than the single-token rule.** Case D is only safe when the engine serves exactly one token, and in that situation [`RuleConditionalTransferLight`](./RuleConditionalTransferLight.md) does the same job with an honest API and a working `approveAndTransferIfAllowed`.
 
-**Correct deployment (direct binding).** Each token calls the rule itself, so `msg.sender == tokenX`, the approve key and the consume key are both `H(tokenX, …)`, and approvals are genuinely isolated per token:
+**Correct deployment (direct binding).** Each token calls the rule itself, so `msg.sender == tokenX`, the approve key and the consume key are both `H(tokenX, …)`, and approvals are isolated per token:
 
 ```
 CMTAT_A.setRuleEngine(rule);   rule.bindToken(address(CMTAT_A));
@@ -54,6 +77,12 @@ rule.approveTransfer(address(CMTAT_A), alice, bob, 100);  // usable on CMTAT_A o
 Supporting true per-token scoping behind a `RuleEngine` would require the token address to be threaded into `IRuleEngine.transferred(...)`, which is an upstream RuleEngine interface change and is not possible from this repository. See `CLAUDE_AUDIT.md` finding **F-4**.
 
 ## Schema
+
+The **Graph** and **Inheritance** diagrams are generated from the source code with [Surya](https://github.com/Consensys/surya), by the scripts in `doc/script/`, and must be regenerated after a code change:
+
+- **Graph** (`surya graph`): the call graph of the contract's source file. Each node is a function, grouped by contract, and each arrow is a call from one function to another, including calls to other contracts. Only that file is parsed, so logic inherited from a base contract appears in that base contract's own graph.
+- **Inheritance** (`surya inheritance`): the contracts and interfaces this contract inherits from, which tells you where each inherited function and modifier is defined.
+- **Flow with a CMTAT token**: a sequence diagram, written by hand in PlantUML (source in `doc/img/`), of how the rule takes part in a token transfer.
 
 ### Graph
 
@@ -109,9 +138,7 @@ Returns the remaining count for a specific token key.
 
 Approves and executes `safeTransferFrom` on the specified token, requiring allowance for this rule as spender.
 
-Like its single-token twin, the helper **inverts checks-effects-interactions on purpose** — the approval is
-recorded *before* `safeTransferFrom` so the token's compliance callback can consume it — and it now ends with a
-post-condition asserting the approval was in fact consumed:
+Like its single-token twin, the helper **inverts checks-effects-interactions on purpose** — the approval is recorded *before* `safeTransferFrom` so the token's compliance callback can consume it — and it now ends with a post-condition asserting the approval was in fact consumed:
 
 ```solidity
 require(
@@ -120,12 +147,7 @@ require(
 );
 ```
 
-A count that did not come back down means no callback reached the rule — the token is not bound directly, or is
-a plain ERC-20 that notifies nobody. Before this check the transfer completed and left a spendable approval for
-`(token, from, to, value)` behind, enough to authorise a later never-approved transfer of that exact tuple
-(Nethermind AuditAgent `NM-17`). The comparison is against the count **before** the helper ran, so an operator's
-own outstanding approvals are untouched. Pinned by
-`testApproveAndTransferRevertsWhenTheTokenDoesNotCallBack`.
+A count that did not come back down means the rule received no callback — the token is not bound directly, or is a plain ERC-20 that notifies nobody. Before this check the transfer completed and left a spendable approval for `(token, from, to, value)` behind, enough to authorise a later never-approved transfer of that exact tuple (Nethermind AuditAgent `NM-17`). The comparison is against the count **before** the helper ran, so an operator's own outstanding approvals are untouched. Pinned by `testApproveAndTransferRevertsWhenTheTokenDoesNotCallBack`.
 
 ### `transferred(...)`
 
@@ -151,3 +173,15 @@ The standardized signatures are kept as-is (the token cannot be added to them wi
 - This rule is ERC-20 operation-focused, like `RuleConditionalTransferLight`.
 - **Do not deploy this rule behind a `RuleEngine`.** Approvals are consumed under `msg.sender`, so token scoping is lost (or the rule breaks outright) in that topology — the full case analysis is in [Deployment topology](#deployment-topology--why-a-ruleengine-does-not-work). If you need a conditional-transfer rule for a single token behind a RuleEngine, use [`RuleConditionalTransferLight`](./RuleConditionalTransferLight.md) instead.
 - `unbindToken` does **not** clear `approvalCounts`. Approvals recorded for a previously bound token remain in storage and become consumable again if that token is rebound. Use `resetApproval(token, from, to, value)` to discard them before rebinding — it works on an unbound token precisely for this reason.
+
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_MULTI_TOKEN_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_MULTI_TOKEN_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_MULTI_TOKEN_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_MULTI_TOKEN_CMTAT_V3.3.0.md) for v3.3.0.
+
+## CMTAT v3.0.0
+
+✅ Supported, direct binding only.
+
+- One instance serves several v3.0.0 tokens set directly with `setRuleEngine(rule)`; an approval for one token does not authorise a transfer of another. Never put it behind a `RuleEngine`, on any CMTAT version.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, set directly on the token (the only supported topology): `test/CMTATv3.0.0/RuleConditionalTransferLightMultiTokenV300.t.sol`.

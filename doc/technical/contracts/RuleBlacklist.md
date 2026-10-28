@@ -1,12 +1,39 @@
 # Rule Blacklist
 
-[TOC]
+<!-- toc -->
+
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Restriction codes](#restriction-codes)
+- [Access Control](#access-control)
+- [Methods](#methods)
+  - [addAddress(address targetAddress)](#addaddressaddress-targetaddress)
+  - [addAddresses(address[] calldata targetAddresses)](#addaddressesaddress-calldata-targetaddresses)
+  - [removeAddress(address targetAddress)](#removeaddressaddress-targetaddress)
+  - [removeAddresses(address[] calldata targetAddresses)](#removeaddressesaddress-calldata-targetaddresses)
+  - [isAddressListed(address targetAddress) → bool](#isaddresslistedaddress-targetaddress--bool)
+  - [areAddressesListed(address[] memory targetAddresses) → bool[]](#areaddresseslistedaddress-memory-targetaddresses--bool)
+- [Notes](#notes)
+  - [Batch vs single operations](#batch-vs-single-operations)
+  - [Usage scenario](#usage-scenario)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 This rule blocks transfers involving any blacklisted address. Both the sender (`from`) and recipient (`to`) are checked. The spender in a `transferFrom` call is always checked as well.
 
 A significant portion of the address-list management code is shared with the whitelist rule via `RuleAddressSet`.
 
 ## Schema
+
+The **Graph** and **Inheritance** diagrams are generated from the source code with [Surya](https://github.com/Consensys/surya), by the scripts in `doc/script/`, and must be regenerated after a code change:
+
+- **Graph** (`surya graph`): the call graph of the contract's source file. Each node is a function, grouped by contract, and each arrow is a call from one function to another, including calls to other contracts. Only that file is parsed, so logic inherited from a base contract appears in that base contract's own graph.
+- **Inheritance** (`surya inheritance`): the contracts and interfaces this contract inherits from, which tells you where each inherited function and modifier is defined.
+- **Flow with a CMTAT token**: a sequence diagram, written by hand in PlantUML (source in `doc/img/`), of how the rule takes part in a token transfer.
 
 ### Graph
 
@@ -77,4 +104,17 @@ Single-item operations (`addAddress`, `removeAddress`) revert on duplicate/missi
 
 ### Usage scenario
 
-The operator deploys `RuleBlacklist`, grants `ADDRESS_LIST_ADD_ROLE` to a compliance manager, and registers the rule in the `RuleEngine`. The compliance manager calls `addAddresses([badActor])`. Any transfer from, to, or by the blacklisted address is rejected with codes 36, 37, or 38.rea
+The operator deploys `RuleBlacklist`, grants `ADDRESS_LIST_ADD_ROLE` to a compliance manager, and registers the rule in the `RuleEngine`. The compliance manager calls `addAddresses([badActor])`. Any transfer from, to, or by the blacklisted address is rejected with codes 36, 37, or 38.
+
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_BLACKLIST_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_BLACKLIST_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_BLACKLIST_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_BLACKLIST_CMTAT_V3.3.0.md) for v3.3.0.
+
+## CMTAT v3.0.0
+
+✅ Supported, with one difference.
+
+- `from`, `to` and the `transferFrom` spender are screened.
+- WARNING: on v3.0.0 a blacklisted **minter or burner is not screened**. v3.0.0 sends mint and burn on the 3-argument `transferred`, with no spender, so there is nothing to check. On CMTAT >= v3.3 the operator arrives as `spender` and is blocked. Control who holds `MINTER_ROLE` / `BURNER_ROLE` on the token instead.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleBlacklistV300.t.sol`.

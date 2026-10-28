@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {ITransferContext} from "../../interfaces/ITransferContext.sol";
 import {RuleConditionalTransferLightInvariantStorage} from "./RuleConditionalTransferLightInvariantStorage.sol";
@@ -37,7 +37,7 @@ abstract contract RuleConditionalTransferLightApprovalBase is RuleConditionalTra
      * @notice Consumes one approval for the transfer described by `ctx`.
      * @param ctx The fungible transfer context (from, to, value).
      */
-    function transferred(ITransferContext.FungibleTransferContext calldata ctx) external onlyTransferExecutor {
+    function transferred(ITransferContext.FungibleTransferContext calldata ctx) external virtual onlyTransferExecutor {
         _transferredFromContext(ctx);
     }
 
@@ -104,7 +104,7 @@ abstract contract RuleConditionalTransferLightApprovalBase is RuleConditionalTra
      * @param value The amount of the transfer.
      * @return The current approval count for the transfer.
      */
-    function approvedCount(address from, address to, uint256 value) public view returns (uint256) {
+    function approvedCount(address from, address to, uint256 value) public view virtual returns (uint256) {
         bytes32 transferHash = _transferHash(from, to, value);
         return approvalCounts[transferHash];
     }
@@ -153,8 +153,7 @@ abstract contract RuleConditionalTransferLightApprovalBase is RuleConditionalTra
      * keccak256(abi.encodePacked(from, bytes12(0), to, bytes12(0), value))
      * keccak256(abi.encode(bytes32(bytes20(from)), bytes32(bytes20(to)), value))
      * ```
-     * Pinned by `testDocumentedPreimageMatchesTheStorageKey`. Use {approvedCount} unless you need
-     * the storage slot directly.
+     * Use {approvedCount} unless you need the storage slot directly.
      * @param from The sender of the transfer.
      * @param to The recipient of the transfer.
      * @param value The amount of the transfer.
@@ -162,8 +161,9 @@ abstract contract RuleConditionalTransferLightApprovalBase is RuleConditionalTra
      */
     function _transferHash(address from, address to, uint256 value) internal pure virtual returns (bytes32 hash) {
         // Hand-rolled rather than `abi.encodePacked` on the linter's `asm-keccak256` advice: this is
-        // on the transfer write path, and the assembly is ~109 gas cheaper per call. Injectivity is
-        // verified in `CLAUDE_AUDIT.md` F-12; the exact layout is documented above.
+        // on the transfer write path, and the assembly is ~109 gas cheaper per call. Injective because
+        // all three words are fixed-width, so distinct (from, to, value) tuples cannot share a
+        // preimage; the exact layout is documented above.
         assembly ("memory-safe") {
             let ptr := mload(0x40)
             mstore(ptr, shl(96, from))

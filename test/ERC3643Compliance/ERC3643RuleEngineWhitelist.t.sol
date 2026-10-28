@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 import {HelperContract} from "../HelperContract.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 import {ERC3643TokenMock, IERC3643ComplianceForToken} from "src/mocks/ERC3643TokenMock.sol";
 import {IdentityRegistryWhitelist} from "src/registry/IdentityRegistryWhitelist.sol";
 import {
@@ -47,7 +47,7 @@ contract ERC3643RuleEngineWhitelist is Test, HelperContract, IdentityRegistryWhi
 
         // The engine is deployed before the token exists, so it is bound afterwards.
         vm.prank(DEFAULT_ADMIN_ADDRESS);
-        engine = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+        engine = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS);
 
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         engine.addRule(whitelistRule);

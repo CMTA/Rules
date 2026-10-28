@@ -1,6 +1,36 @@
 # Rule Conditional Transfer Light
 
-[TOC]
+<!-- toc -->
+
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+- [Restriction codes](#restriction-codes)
+- [Access Control](#access-control)
+- [Methods](#methods)
+  - [approveTransfer(address from, address to, uint256 value)](#approvetransferaddress-from-address-to-uint256-value)
+  - [cancelTransferApproval(address from, address to, uint256 value)](#canceltransferapprovaladdress-from-address-to-uint256-value)
+  - [resetApproval(address from, address to, uint256 value) → uint256](#resetapprovaladdress-from-address-to-uint256-value--uint256)
+  - [approveAndTransferIfAllowed(address from, address to, uint256 value) → bool](#approveandtransferifallowedaddress-from-address-to-uint256-value--bool)
+  - [approvedCount(address from, address to, uint256 value) → uint256](#approvedcountaddress-from-address-to-uint256-value--uint256)
+  - [Binding: token vs RuleEngine](#binding-token-vs-ruleengine)
+  - [bindToken(address token) / unbindToken(address token)](#bindtokenaddress-token--unbindtokenaddress-token)
+  - [bindRuleEngine(address ruleEngine) / unbindRuleEngine()](#bindruleengineaddress-ruleengine--unbindruleengine)
+  - [isTransferExecutor(address caller) → bool](#istransferexecutoraddress-caller--bool)
+- [Workflow](#workflow)
+  - [Token holder initiates](#token-holder-initiates)
+  - [Operator initiates](#operator-initiates)
+- [Approval counting](#approval-counting)
+- [Notes](#notes)
+  - [transferFrom spender ignored](#transferfrom-spender-ignored)
+  - [Zero-value transfers are not treated as no-ops](#zero-value-transfers-are-not-treated-as-no-ops)
+  - [Duplicate approvals](#duplicate-approvals)
+- [Usage scenario](#usage-scenario)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 This rule requires that each transfer be explicitly approved by an operator before it can execute. It is an **operation rule**: it modifies state during the transfer call (consuming one approval count), unlike validation rules which are read-only.
 
@@ -9,6 +39,12 @@ Each approval is tracked by a hash of `(from, to, value)`. The same transfer tup
 Mints (`from == address(0)`) and burns (`to == address(0)`) are **exempt**: they always pass without requiring an approval. `created` and `destroyed` follow the same path as `transferred` and return immediately for those cases.
 
 ## Schema
+
+The **Graph** and **Inheritance** diagrams are generated from the source code with [Surya](https://github.com/Consensys/surya), by the scripts in `doc/script/`, and must be regenerated after a code change:
+
+- **Graph** (`surya graph`): the call graph of the contract's source file. Each node is a function, grouped by contract, and each arrow is a call from one function to another, including calls to other contracts. Only that file is parsed, so logic inherited from a base contract appears in that base contract's own graph.
+- **Inheritance** (`surya inheritance`): the contracts and interfaces this contract inherits from, which tells you where each inherited function and modifier is defined.
+- **Flow with a CMTAT token**: a sequence diagram, written by hand in PlantUML (source in `doc/img/`), of how the rule takes part in a token transfer.
 
 ### Graph
 
@@ -31,6 +67,9 @@ _Diagram source: doc/img/rule-conditional-transfer-light-flow.puml._
 | Constant | Code | Meaning |
 | --- | --- | --- |
 | `CODE_TRANSFER_REQUEST_NOT_APPROVED` | 46 | No approval exists for this `(from, to, value)` tuple |
+| `CODE_RULE_NOT_BOUND` | 85 | No caller is bound yet: neither a token (`bindToken`) nor a RuleEngine (`bindRuleEngine`), so every operation would revert. Shared, with the same message, by `RuleConditionalTransferLight`, `RuleMintAllowance` and `RuleIssuanceCap` |
+
+Code 85 detects only the fully unbound state. A rule bound to a token but used behind a RuleEngine that was never bound with `bindRuleEngine` still reverts every transfer from the engine, and no view can see it, because a view does not know who will call `transferred`.
 
 ## Access Control
 
@@ -38,9 +77,9 @@ _Diagram source: doc/img/rule-conditional-transfer-light-flow.puml._
 | --- | --- |
 | `DEFAULT_ADMIN_ROLE` | Manages all roles; implicitly holds all roles below |
 | `OPERATOR_ROLE` | May approve or cancel transfer approvals, and call `approveAndTransferIfAllowed` |
-| `COMPLIANCE_MANAGER_ROLE` | May bind and unbind token contracts (`bindToken`, `unbindToken`) |
+| `COMPLIANCE_MANAGER_ROLE` | May bind and unbind the token (`bindToken`, `unbindToken`) and the RuleEngine (`bindRuleEngine`, `unbindRuleEngine`) |
 
-Token execution (`transferred`) is restricted to bound token contracts only.
+Token execution (`transferred`) is restricted to the bound token and the bound RuleEngine (`isTransferExecutor`).
 
 
 ## Methods
@@ -57,7 +96,7 @@ Decrements the approval count for the `(from, to, value)` hash by 1. Reverts if 
 
 Discards **every** outstanding approval for the `(from, to, value)` hash in one call and returns the count that was cleared. Reverts if no approval exists. Restricted to `OPERATOR_ROLE`. Emits `TransferApprovalReset`.
 
-Unlike `approveTransfer`, this deliberately does **not** require a token to be bound — its main use is discarding approvals that survived an `unbindToken` (see below), at which point nothing is bound.
+Like `approveTransfer`, this does **not** require a token to be bound — its main use is discarding approvals that survived an `unbindToken` (see below), at which point nothing is bound.
 
 ### `approveAndTransferIfAllowed(address from, address to, uint256 value) → bool`
 
@@ -67,9 +106,7 @@ Works in **both** topologies, provided the bindings are set correctly — see [B
 
 #### It requires a token that calls back, and now checks that it did
 
-The helper **inverts checks-effects-interactions on purpose**: it records the approval *before*
-`safeTransferFrom`, so the approval exists while the token runs its compliance callback into this rule and the
-callback can consume it. That is only correct if the callback actually arrives.
+The helper **inverts checks-effects-interactions on purpose**: it records the approval *before* `safeTransferFrom`, so the approval exists while the token runs its compliance callback into this rule and the callback can consume it. That is only correct if the callback arrives.
 
 It ends with a post-condition:
 
@@ -84,24 +121,16 @@ require(
 );
 ```
 
-If the count did not come back down, no callback reached the rule — a plain ERC-20 bound with `bindToken`, or a
-RuleEngine never bound or since unbound with `unbindRuleEngine`. Before this check the transfer **succeeded** and
-left the approval standing, indistinguishable from an operator-created one and enough to authorise a later,
-never-approved transfer of exactly `(from, to, value)`. The only remedy was for the operator to notice the
-leftover count and call `resetApproval` (Nethermind AuditAgent `NM-17`).
+If the count did not come back down, the rule received no callback — a plain ERC-20 bound with `bindToken`, or a RuleEngine never bound or since unbound with `unbindRuleEngine`. Before this check the transfer **succeeded** and left the approval standing, indistinguishable from an operator-created one and enough to authorise a later, never-approved transfer of exactly `(from, to, value)`. The only remedy was for the operator to notice the leftover count and call `resetApproval` (Nethermind AuditAgent `NM-17`).
 
 Points worth knowing:
 
-- It compares against the count **before** the helper ran, not against zero, so an operator's own outstanding
-  approvals for the same tuple survive untouched.
-- Reading state *after* the external call is deliberate. A hostile token can only make the check **fail**, never
-  pass spuriously; a path that consumed more than one approval also fails, which is the direction you want.
-- It is a **behaviour change** for a deployment that ran the helper against a non-callback token: that call now
-  reverts instead of completing. That is the point — the transfer was leaving a compliance hole behind.
+- It compares against the count **before** the helper ran, not against zero, so an operator's own outstanding approvals for the same tuple survive untouched.
+- Reading state *after* the external call is deliberate. A hostile token can only make the check **fail**, never pass spuriously; a path that consumed more than one approval also fails, which is the direction you want.
+- It is a **behaviour change** for a deployment that ran the helper against a non-callback token: that call now reverts instead of completing. That is the point — the transfer was leaving a compliance hole behind.
 - Cost: two warm `SLOAD`s on an operator-only path.
 
-Pinned by `testRevertsWhenTheTokenDoesNotCallBack`, `testPreExistingApprovalsSurviveTheHelper` and
-`testDirectBindingFlowStillConsumesExactlyOne`.
+Pinned by `testRevertsWhenTheTokenDoesNotCallBack`, `testPreExistingApprovalsSurviveTheHelper` and `testDirectBindingFlowStillConsumesExactlyOne`.
 
 ### `approvedCount(address from, address to, uint256 value) → uint256`
 
@@ -157,9 +186,9 @@ Returns `true` if `caller` is the bound token or the bound RuleEngine — i.e. w
 ### Token holder initiates
 
 1. The token holder calls the CMTAT `transfer(to, value)`.
-2. The CMTAT calls `detectTransferRestriction` via the RuleEngine — returns code 46 if no approval exists.
+2. The CMTAT calls `transferred` via the RuleEngine, which reverts while no approval exists; a front end can check beforehand with `detectTransferRestriction`, which returns code 46.
 3. The operator (off-chain or via contract) calls `approveTransfer(from, to, value)`.
-4. The token holder retries the transfer. `detectTransferRestriction` returns 0 (OK).
+4. The token holder retries the transfer. `detectTransferRestriction` now returns 0 (OK).
 5. The CMTAT calls `transferred(from, to, value)` which consumes one approval count.
 
 ### Operator initiates
@@ -179,47 +208,31 @@ For `transferred(spender, from, to, value)`, the spender address is ignored. App
 
 ### Zero-value transfers are not treated as no-ops
 
-**Open conformance gap against CMTAT `v3.3.0-rc3`.** That release added a normative requirement to
-`IRuleEngine`'s NatSpec:
+**Open conformance gap against CMTAT `v3.3.0-rc3`.** That release added a normative requirement to `IRuleEngine`'s NatSpec:
 
-> Zero-value calls are permissionless. ERC-20 requires transfers of `0` to be treated as normal transfers, and
-> OpenZeppelin's `_spendAllowance` consumes no allowance when `value == 0`, so any address can call
-> `transferFrom(victim, anyone, 0)` and reach this callback for an arbitrary `from`, with itself as `spender`,
-> without ever having been approved. *"Implementations MUST therefore treat `value == 0` as carrying no
-> economic meaning: any stateful rule ... MUST be a no-op for a zero value."*
+> Zero-value calls are permissionless. ERC-20 requires transfers of `0` to be treated as normal transfers, and OpenZeppelin's `_spendAllowance` consumes no allowance when `value == 0`, so any address can call `transferFrom(victim, anyone, 0)` and reach this callback for an arbitrary `from`, with itself as `spender`, without ever having been approved. *"Implementations MUST therefore treat `value == 0` as carrying no economic meaning: any stateful rule ... MUST be a no-op for a zero value."*
 
-This rule keys approvals on `(from, to, value)` with no special case for `value == 0`, so it does not yet
-satisfy that. Measured against the rule as shipped:
+This rule keys approvals on `(from, to, value)` with no special case for `value == 0`, so it does not yet satisfy that. Measured against the rule as shipped:
 
 | Call | Behaviour today |
 | --- | --- |
 | `transferred(attacker, victim, anyone, 0)` with no matching approval | **Reverts** — so a zero-value transfer that ERC-20 says should succeed is rejected |
 | An approval recorded for `(from, to, 0)` | **Consumable by any caller**, since the spender is not part of the key |
 
-Neither moves value, and the second requires an operator to have approved a zero-value transfer in the first
-place, which is a degenerate thing to do. The practical exposure is therefore low.
+Neither moves value, and the second requires an operator to have approved a zero-value transfer in the first place, which is a degenerate thing to do. The practical exposure is therefore low.
 
-**Decision: documented, not fixed, for `v0.5.0`.** The fix is an early return when `value == 0`, before any
-approval lookup or state change, on this rule and
-[`RuleConditionalTransferLightMultiToken`](./RuleConditionalTransferLightMultiToken.md). It is a **behaviour
-change** to shipped compliance logic — a zero-value transfer would stop reverting — so it was recorded rather
-than applied late in the release.
+**Decision: documented, not fixed, for `v0.5.0`.** The fix is an early return when `value == 0`, before any approval lookup or state change, on this rule and [`RuleConditionalTransferLightMultiToken`](./RuleConditionalTransferLightMultiToken.md). It is a **behaviour change** to shipped compliance logic — a zero-value transfer would stop reverting — so it was recorded rather than applied late in the release.
 
-**Which rules the fix would and would not cover**, measured against the code rather than inferred from the
-wording of the requirement:
+**Which rules the fix would and would not cover**, measured against the code rather than inferred from the wording of the requirement:
 
 | Rule | `value == 0` today | In scope? |
 | --- | --- | --- |
 | This rule and `…MultiToken` | Consumes an approval, for a caller never approved | **Yes** |
 | [`RuleMaxBalance`](./RuleMaxBalance.md) | Rejects a receiver already **over** the cap | **Yes** — receiving nothing cannot breach a holding cap |
-| `RuleMintAllowance` | Quota unchanged: debiting `0` is already a no-op, and the mint path is not permissionlessly reachable | **No** — nothing to change |
+| `RuleMintAllowance` | Quota unchanged: debiting `0` is already a no-op, and the mint path is not open to arbitrary callers | **No** — nothing to change |
 | `RuleBlacklist`, `RuleWhitelist`, `RuleSanctionsList`, `RuleIdentityRegistry` | Blocked, as for any value | **No, deliberately** — these screen *who*, not *how much*. A zero-value transfer still emits a `Transfer` event linking the parties, so a blanket "zero is always allowed" would weaken every deny-list for no benefit |
 
-The strongest argument for the change is **ERC-20 conformance**, not the desynchronisation the requirement
-describes: ERC-20 says a zero-value transfer must be treated as a normal transfer, so a rule that reverts one
-makes the *token* non-conformant and breaks integrations that sweep balances or probe with a zero-value send.
-The attacker-desynchronises-state framing barely applies here — it needs an operator to have recorded a
-zero-value approval first.
+The strongest argument for the change is **ERC-20 conformance**, not the desynchronisation the requirement describes: ERC-20 says a zero-value transfer must be treated as a normal transfer, so a rule that reverts one makes the *token* non-conformant and breaks integrations that sweep balances or probe with a zero-value send. The attacker-desynchronises-state framing barely applies here — it needs an operator to have recorded a zero-value approval first.
 
 ### Duplicate approvals
 
@@ -228,3 +241,15 @@ Multiple approvals for the same `(from, to, value)` tuple are allowed and stack.
 ## Usage scenario
 
 The issuer deploys `RuleConditionalTransferLight`, grants `OPERATOR_ROLE` to a compliance officer, and calls `bindToken(cmtat)` with `COMPLIANCE_MANAGER_ROLE`. Investor Alice wants to transfer 1,000 tokens to Bob. The compliance officer reviews the request off-chain and calls `approveTransfer(alice, bob, 1000)`. Alice's transfer then succeeds, and the approval is consumed. A subsequent transfer of the same amount requires a new approval.
+
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_CMTAT_V3.3.0.md) for v3.3.0.
+
+## CMTAT v3.0.0
+
+✅ Supported, identical to v3.3.
+
+- Approvals are keyed `(from, to, value)` and consumed on transfers and `transferFrom`; mint and burn need none. `approveAndTransferIfAllowed` works in both topologies (behind an engine, also call `bindRuleEngine(engine)`).
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleConditionalTransferLightV300.t.sol`.

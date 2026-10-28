@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {RuleSharedInvariantStorage} from "../../validation/abstract/invariant/RuleSharedInvariantStorage.sol";
+import {RuleBindingInvariantStorage} from "./RuleBindingInvariantStorage.sol";
 
 /**
  * @title RuleMintAllowanceInvariantStorage — constants, events and errors for the mint-allowance rule
  */
-abstract contract RuleMintAllowanceInvariantStorage is RuleSharedInvariantStorage {
+abstract contract RuleMintAllowanceInvariantStorage is RuleSharedInvariantStorage, RuleBindingInvariantStorage {
     /* ============ Role ============ */
     /**
      * @notice Role allowed to set, increase and decrease minter allowances

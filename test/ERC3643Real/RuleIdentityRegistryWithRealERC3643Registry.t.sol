@@ -8,7 +8,7 @@ import {ClaimTopicsRegistry} from "ERC3643/registry/implementation/ClaimTopicsRe
 import {IdentityRegistry} from "ERC3643/registry/implementation/IdentityRegistry.sol";
 import {IdentityRegistryStorage} from "ERC3643/registry/implementation/IdentityRegistryStorage.sol";
 import {TrustedIssuersRegistry} from "ERC3643/registry/implementation/TrustedIssuersRegistry.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 import {RuleIdentityRegistry} from "src/rules/validation/deployment/RuleIdentityRegistry.sol";
 import {ClaimIssuerMock, OnchainIdClaimMock} from "./utils/OnchainIdClaimMocks.sol";
 
@@ -88,7 +88,7 @@ contract RuleIdentityRegistryWithRealERC3643Registry is Test {
 
         // The rule under test consults the real registry. ERC-3643 defaults: receiver-only.
         rule = new RuleIdentityRegistry(ADMIN, address(registry), false, false);
-        ruleEngine = new RuleEngine(ADMIN, address(0), address(0));
+        ruleEngine = new RuleEngine(ADMIN, address(0));
         ruleEngine.addRule(rule);
         vm.stopPrank();
     }

@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/operation/RuleMintAllowance.sol | 5dffbe6960ee9eb1154007dc3f33dba2ae4601e0 |
+| ./rules/operation/RuleMintAllowance.sol | 8a05b53e6191e9abd7d7c1714ea811132db54fb8 |
 
 
 ### Contracts Description Table

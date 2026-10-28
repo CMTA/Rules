@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {AggregatorV3Interface} from "../../../interfaces/AggregatorV3Interface.sol";
 import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
-import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {RuleTransferValidation} from "../core/RuleTransferValidation.sol";
 import {ChainlinkPoRFeedManager} from "../core/ChainlinkPoRFeedManager.sol";
 
@@ -59,7 +58,7 @@ abstract contract RuleChainlinkPoRBase is RuleTransferValidation, ChainlinkPoRFe
      * @param restrictionCode Restriction code to test.
      * @return True if `restrictionCode` is one of this rule's codes.
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override returns (bool) {
+    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure virtual override returns (bool) {
         return restrictionCode == CODE_RESERVES_EXCEEDED || restrictionCode == CODE_RESERVES_FEED_STALE
             || restrictionCode == CODE_RESERVES_ANSWER_INVALID || restrictionCode == CODE_RESERVES_FEED_UNAVAILABLE
             || restrictionCode == CODE_TOTAL_SUPPLY_UNAVAILABLE;
@@ -72,14 +71,19 @@ abstract contract RuleChainlinkPoRBase is RuleTransferValidation, ChainlinkPoRFe
     /**
      * @inheritdoc IERC3643IComplianceContract
      */
-    function transferred(address from, address to, uint256 value) public view override(IERC3643IComplianceContract) {
+    function transferred(address from, address to, uint256 value)
+        public
+        view
+        virtual
+        override(IERC3643IComplianceContract)
+    {
         _transferred(from, to, value);
     }
 
     /**
-     * @inheritdoc IRuleEngine
+     * @inheritdoc RuleTransferValidation
      */
-    function transferred(address spender, address from, address to, uint256 value) public view override(IRuleEngine) {
+    function transferred(address spender, address from, address to, uint256 value) public view virtual override {
         _transferredFrom(spender, from, to, value);
     }
 
@@ -89,6 +93,7 @@ abstract contract RuleChainlinkPoRBase is RuleTransferValidation, ChainlinkPoRFe
     function messageForTransferRestriction(uint8 restrictionCode)
         public
         pure
+        virtual
         override(IERC1404)
         returns (string memory)
     {

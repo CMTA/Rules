@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 import {HelperContract} from "../HelperContract.sol";
 import {CMTATDeployment} from "test/utils/CMTATDeployment.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 import {IdentityRegistryWhitelist} from "src/registry/IdentityRegistryWhitelist.sol";
 import {RuleIdentityRegistry} from "src/rules/validation/deployment/RuleIdentityRegistry.sol";
 
@@ -50,7 +50,7 @@ contract CMTATRuleIdentityRegistryComposition is Test, HelperContract {
         // ...and the rule CONSULTS it. ERC-3643 defaults: receiver-only screening.
         rule = new RuleIdentityRegistry(DEFAULT_ADMIN_ADDRESS, address(registry), false, false);
 
-        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, ZERO_ADDRESS, address(cmtatContract));
+        ruleEngineMock = new RuleEngine(DEFAULT_ADMIN_ADDRESS, address(cmtatContract));
         ruleEngineMock.addRule(rule);
         cmtatContract.setRuleEngine(ruleEngineMock);
 

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {CMTATStandardStandalone} from "CMTAT/deployment/CMTATStandardStandalone.sol";
 import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
+import {RuleEngine2771} from "RuleEngine/deployment/accessControl/RuleEngine2771.sol";
 import {RuleBlacklist} from "src/rules/validation/deployment/RuleBlacklist.sol";
 import {RuleMaxTotalSupply} from "src/rules/validation/deployment/RuleMaxTotalSupply.sol";
 import {RuleSanctionsList} from "src/rules/validation/deployment/RuleSanctionsList.sol";
@@ -16,15 +17,15 @@ import {CMTATDeploymentBase} from "./base/CMTATDeploymentBase.sol";
  *         sanctions screening, and a hard cap on total supply.
  *
  *         Deployment order:
- *         1. `CMTATStandardStandalone` — the token (deployer as temporary admin, so it can be wired)
- *         2. `RuleBlacklist`           — blocks blacklisted sender / recipient / spender
- *         3. `RuleSanctionsList`       — blocks sanctioned addresses via a Chainalysis-style oracle
- *         4. `RuleMaxTotalSupply`      — rejects mints that would push `totalSupply` past the cap
- *         5. `RuleEngine`              — aggregates all three; the token is bound at construction
- *         6. `token.setRuleEngine(...)`
- *         7. Hand every admin role to `admin`, renounce the deployer's
+ *         1. `RuleBlacklist` — blocks blacklisted sender / recipient / spender
+ *         2. `RuleSanctionsList` — blocks sanctioned addresses via a Chainalysis-style oracle
+ *         3. `RuleEngine` — no token yet, `deployer` as temporary admin
+ *         4. `CMTATStandardStandalone` — the token, created with `admin` and the engine in its constructor
+ *         5. `RuleMaxTotalSupply` — rejects mints that would push `totalSupply` past the cap
+ *         6. `addRule` the three rules, then `ruleEngine.bindToken(token)` last
+ *         7. Hand `DEFAULT_ADMIN_ROLE` on the engine to `admin`, renounce the deployer's
  *
- * @dev **Step 4 must follow step 1.** Unlike the other two rules, `RuleMaxTotalSupply` validates its
+ * @dev **Step 5 must follow step 4.** Unlike the other two rules, `RuleMaxTotalSupply` validates its
  *      token at construction — non-zero, has code, and `totalSupply()` callable — so it cannot be
  *      deployed before the token exists. Passing a placeholder address reverts with
  *      `RuleMaxTotalSupply_TokenIsNotAContract`.
@@ -78,35 +79,41 @@ contract DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply is CMTATDeployme
             RuleMaxTotalSupply ruleMaxTotalSupply
         )
     {
-        // 1. The token, with the deployer as temporary admin so the wiring below is permitted.
-        token = new CMTATStandardStandalone(
-            forwarder, deployer, _erc20Attributes(), _extraInformationAttributes(), _emptyEngine()
-        );
-
-        // 2-3. Address-screening rules; each is owned by the intended admin from the start.
+        // 1-2. Address-screening rules; each is owned by the intended admin from the start.
         ruleBlacklist = new RuleBlacklist(admin, forwarder);
         ruleSanctionsList = new RuleSanctionsList(admin, forwarder, sanctionsOracle);
 
-        // 4. The supply cap. MUST come after the token: the constructor probes `totalSupply()`.
+        // 3. The engine, with no token yet. The deployer is its temporary admin so that it can add the
+        //    rules and bind the token below. ERC-2771 is opt-in since RuleEngine v3.0.0-rc7: only the
+        //    `2771` variant takes a forwarder.
+        ruleEngine = forwarder == address(0)
+            ? new RuleEngine(deployer, address(0))
+            : new RuleEngine2771(deployer, forwarder, address(0));
+
+        // 4. The token, created with `admin` and the engine in its constructor: no temporary admin on it.
+        //    Until step 6 the engine rejects every call from it, so nothing moves unscreened.
+        token = new CMTATStandardStandalone(
+            forwarder,
+            admin,
+            _erc20Attributes(),
+            _extraInformationAttributes(),
+            _engine(IRuleEngine(address(ruleEngine)))
+        );
+
+        // 5. The supply cap. MUST come after the token: the constructor probes `totalSupply()`.
         ruleMaxTotalSupply = new RuleMaxTotalSupply(admin, address(token), maxTotalSupply);
-
-        // 5. The engine, deployer-owned for now so rules can be added. Binding the token at
-        //    construction is what authorises it to call `transferred()` on the engine.
-        ruleEngine = new RuleEngine(deployer, forwarder, address(token));
-
         ruleEngine.addRule(ruleBlacklist);
         ruleEngine.addRule(ruleSanctionsList);
         ruleEngine.addRule(ruleMaxTotalSupply);
 
-        // 6. Connect the engine to the token.
-        token.setRuleEngine(IRuleEngine(address(ruleEngine)));
+        // 6. Bind the token last: from now on it may call `transferred()` on the engine.
+        ruleEngine.bindToken(address(token));
 
-        // 7. Hand over, and drop the deployer's rights so the deployment key is not a standing risk.
+        // 7. Hand the engine over. Skipped when both are the same address: the renounce would then
+        //    remove the only admin.
         if (admin != deployer) {
             ruleEngine.grantRole(ruleEngine.DEFAULT_ADMIN_ROLE(), admin);
             ruleEngine.renounceRole(ruleEngine.DEFAULT_ADMIN_ROLE(), deployer);
-            token.grantRole(token.DEFAULT_ADMIN_ROLE(), admin);
-            token.renounceRole(token.DEFAULT_ADMIN_ROLE(), deployer);
         }
 
         _logDeployment("CMTAT token       ", address(token));
@@ -117,7 +124,8 @@ contract DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply is CMTATDeployme
     }
 
     /**
-     * @notice Broadcast entrypoint. Deploys with no sanctions oracle and a 1 000 000 unit cap.
+     * @notice Broadcast entrypoint. Deploys with no sanctions oracle and the cap from `CMTAT_MAX_SUPPLY`
+     *         (default 1 000 000 whole tokens).
      * @dev The oracle is left unset because its address is chain-specific (Chainalysis publishes one
      *      per network). **Until it is set, sanctions screening is disabled and passes everything** —
      *      call `setSanctionListOracle` before the token goes live.
@@ -141,7 +149,7 @@ contract DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply is CMTATDeployme
             msg.sender,
             _forwarder(),
             ISanctionsList(vm.envOr("SANCTIONS_ORACLE", address(0))),
-            vm.envOr("CMTAT_MAX_SUPPLY", uint256(1_000_000))
+            _maxTotalSupply()
         );
         vm.stopBroadcast();
     }

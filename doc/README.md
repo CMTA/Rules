@@ -4,10 +4,9 @@
 
 Each rule can be used **standalone**, directly plugged into a CMTAT token, **or** managed collectively via a RuleEngine.
 
-The **RuleEngine** is an external smart contract that applies transfer restrictions to security tokens such as **CMTAT** or [ERC-3643](https://eips.ethereum.org/EIPS/eip-3643)-compatible tokens through a RuleEngine.
-Rules are modular validator contracts that the `RuleEngine` or `CMTAT` compatible token can call on every transfer to ensure regulatory and business-logic compliance.
+The **RuleEngine** is an external smart contract that applies transfer restrictions to security tokens such as **CMTAT** or [ERC-3643](https://eips.ethereum.org/EIPS/eip-3643)-compatible tokens through a RuleEngine. Rules are modular validator contracts that the `RuleEngine` or `CMTAT` compatible token can call on every transfer to ensure regulatory and business-logic compliance.
 
-**Current package version:** `v0.6.0` (contracts report `version()` → `"0.6.0"`). Built against CMTAT `v3.3.0-rc3` and RuleEngine `v3.0.0-rc6`; see [Compatibility](#compatibility) for the supported range.
+**Current package version:** `v0.7.0` (contracts report `version()` → `"0.7.0"`). Built against CMTAT `v3.3.0-rc4` and RuleEngine `v3.0.0-rc7`; see [Compatibility](#compatibility) for the supported range.
 
 > This project has not undergone an audit and is provided as-is without any warranties.
 
@@ -31,8 +30,7 @@ Rules are modular validator contracts that the `RuleEngine` or `CMTAT` compatibl
 
 ## Schema
 
-A rule can be reached two ways, and the choice changes what `msg.sender` is inside it. Both are supported for
-CMTAT; only the first works for ERC-3643.
+A rule can be called in two ways, and the choice changes what `msg.sender` is inside it. Both are supported for CMTAT; only the first works for ERC-3643.
 
 ### Topology A — through a RuleEngine
 
@@ -40,16 +38,9 @@ CMTAT; only the first works for ERC-3643.
 
 _Diagram source: [`doc/schema/rule-via-ruleengine.puml`](./schema/rule-via-ruleengine.puml)._
 
-The holder calls `transfer` or `transferFrom` on the token **(1)**. The token reports the movement to its
-compliance contract **(2)** — the 3-argument `transferred(from, to, value)` for a plain transfer, the
-4-argument `transferred(spender, from, to, value)` when a spender is involved, which includes every mint. The
-`RuleEngine` relays that to each registered rule in turn **(3a–3c)** and returns the **first non-zero**
-restriction code, so rule order decides *which* code a rejection reports, not whether it is rejected.
+The holder calls `transfer` or `transferFrom` on the token **(1)**. The token reports the movement to its compliance contract **(2)** — the 3-argument `transferred(from, to, value)` for a plain transfer, the 4-argument `transferred(spender, from, to, value)` when a spender is involved, which includes every mint. The `RuleEngine` relays that to each registered rule in turn **(3a–3c)** and returns the **first non-zero** restriction code, so rule order decides *which* code a rejection reports, not whether it is rejected.
 
-Use this whenever more than one rule applies. **ERC-3643 tokens require it**: they drive mint and burn through
-`created` and `destroyed`, which the validation rules do not implement — only `RuleEngine` implements the full
-`ICompliance` surface. Inside each rule `msg.sender` is the engine, not the token, which matters for the
-operation rules that key state on the caller.
+Use this whenever more than one rule applies. **ERC-3643 tokens require it**: they drive mint and burn through `created` and `destroyed`, which the validation rules do not implement — only `RuleEngine` implements the full `ICompliance` surface. Inside each rule `msg.sender` is the engine, not the token, which matters for the operation rules that key state on the caller.
 
 ### Topology B — bound directly to the token
 
@@ -57,13 +48,9 @@ operation rules that key state on the caller.
 
 _Diagram source: [`doc/schema/rule-direct.puml`](./schema/rule-direct.puml)._
 
-`token.setRuleEngine(rule)` puts a rule in the compliance slot with no engine in between, so the token calls
-the rule directly and `msg.sender` inside the rule is the **token itself**. It is one contract fewer and saves
-an engine hop on every transfer, which makes it the cheaper choice when a single validation rule is all you
-need. `RuleConditionalTransferLightMultiToken` requires it.
+`token.setRuleEngine(rule)` puts a rule in the compliance slot with no engine in between, so the token calls the rule directly and `msg.sender` inside the rule is the **token itself**. It is one contract fewer and saves an engine hop on every transfer, which makes it the cheaper choice when a single validation rule is all you need. `RuleConditionalTransferLightMultiToken` requires it.
 
-**A bare rule cannot back an ERC-3643 token**, for the reason above: no `created` / `destroyed`. For ERC-3643,
-use Topology A.
+**A bare rule cannot back an ERC-3643 token**, for the reason above: no `created` / `destroyed`. For ERC-3643, use Topology A.
 
 ## Overview
 
@@ -87,7 +74,7 @@ A rule can be consumed in three ways. All three call the same rule contract; the
 | Mode | Caller | What the rule must implement | When to use |
 | --- | --- | --- | --- |
 | **Direct CMTAT rule** | A CMTAT token calls the rule directly (no RuleEngine) | `IRuleEngine` (`canTransfer` + `transferred`, including the spender-aware overload) | A single rule is enough; no multi-rule orchestration needed |
-| **RuleEngine-managed rule** | A `RuleEngine` aggregates one or more rules and calls each on every transfer | `IRule` (`IRuleEngine` + `canReturnTransferRestrictionCode`) | Several rules must be combined, ordered, or share restriction codes |
+| **RuleEngine-managed rule** | A `RuleEngine` aggregates one or more rules and calls each on every transfer | `IRule` (ERC-1404 views + both `transferred` overloads + `canReturnTransferRestrictionCode`) | Several rules must be combined, ordered, or share restriction codes |
 | **ERC-3643 through RuleEngine** | An ERC-3643 token drives `created` / `destroyed` / transfer hooks on a RuleEngine, which forwards them to the rules | Rules as above; the **RuleEngine** implements the full ERC-3643 `ICompliance` | The token is ERC-3643 and needs full `ICompliance` — a standalone rule cannot back an ERC-3643 token directly |
 
 Interface details for each mode are documented under [Architecture](#architecture); full signatures live in the [API](#api) reference.
@@ -96,9 +83,26 @@ Interface details for each mode are documented under [Architecture](#architectur
 
 | Component        | Compatible Versions                                        |
 | ---------------- | ---------------------------------------------------------- |
+| **Rules v0.7.0** | CMTAT ≥ v3.0.0 (tested against v3.3.0-rc4 and v3.0.0)<br />RuleEngine v3.0.0-rc7 (rules are also accepted by v3.0.0-rc6 and older, see [Using Rules via RuleEngine](#using-rules-via-ruleengine)) |
 | **Rules v0.6.0** | CMTAT ≥ v3.0.0 (tested against v3.3.0-rc3)<br />RuleEngine v3.0.0-rc6 |
 
-Spender-aware paths (e.g. `RuleMintAllowance`) rely on the 4-argument `canTransferFrom` / `transferred(spender, from, to, value)` callbacks, which require a CMTAT / RuleEngine that forwards the spender to the rule; this repository is validated against CMTAT `v3.3.0-rc3`. The other rules only use the 3-argument path and work across the full CMTAT ≥ v3.0.0 range.
+Spender-aware paths (e.g. `RuleMintAllowance`) rely on the 4-argument `canTransferFrom` / `transferred(spender, from, to, value)` callbacks, which require a CMTAT / RuleEngine that forwards the spender to the rule; this repository is validated against CMTAT `v3.3.0-rc4`.
+
+### CMTAT v3.0.0
+
+CMTAT v3.0.0 is the last audited CMTAT release. It calls the rules with the same ordering as v3.3 (before the value moves) and forwards the `transferFrom` spender, but sends **mint and burn on the 3-argument `transferred`, without a spender**. Every rule is tested against a real v3.0.0 token, pinned as the test-only submodule `lib/CMTATv3.0.0` (remapping `CMTATv3.0.0/`). Each suite in `test/CMTATv3.0.0/` runs on the Standard and Debt variants, set directly on the token and behind a `RuleEngine`.
+
+| Rule | On CMTAT v3.0.0 |
+| --- | --- |
+| `RuleWhitelist`, `RuleWhitelistWrapper`, `RuleReceiverWhitelist`, `RuleSpenderWhitelist`, `RuleIdentityRegistry` | ✅ same behaviour as on v3.3 |
+| `RuleMaxTotalSupply`, `RuleMaxBalance`, `RuleChainlinkPoR` | ✅ same behaviour as on v3.3 (pre-update notification, so no variant is needed) |
+| `RuleConditionalTransferLight` | ✅ same behaviour as on v3.3 |
+| `RuleIssuanceCap` | ✅ same behaviour as on v3.3: the cap is per token, so the missing mint spender changes nothing |
+| `RuleConditionalTransferLightMultiToken` | ✅ same behaviour, direct binding only (as on every version) |
+| `RuleBlacklist`, `RuleSanctionsList`, `RuleERC2980` | ✅ work, but a listed / sanctioned / frozen **minter or burner is not screened** |
+| `RuleMintAllowance` | ❌ **inert**: every mint passes and no quota is debited. Requires CMTAT ≥ v3.3 |
+
+The per-rule detail is in [`RULE_SEMANTICS.md` §7](./technical/guides/RULE_SEMANTICS.md#7-cmtat-version-compatibility--v300-vs-v33), and each rule's page has a "CMTAT v3.0.0" section.
 
 Each Rule implements the interface `IRuleEngine` defined in CMTAT.
 
@@ -115,7 +119,7 @@ function canTransfer(address _from, address _to, uint256 _amount) external view 
 function transferred(address _from, address _to, uint256 _amount) external;
 ```
 
-However, contrary to the RuleEngine, the whole interface is not implemented: the **validation rules** do not declare `created` and `destroyed`, so a validation rule cannot back an ERC-3643 token on its own. (The operation rules — `RuleConditionalTransferLight`, `…MultiToken` and `RuleMintAllowance` — do implement both, but each is bound to a single token and is not a general compliance contract.)
+However, contrary to the RuleEngine, the whole interface is not implemented: the **validation rules** do not declare `created` and `destroyed`, so a validation rule cannot back an ERC-3643 token on its own. The operation rules — `RuleConditionalTransferLight`, `…MultiToken`, `RuleMintAllowance` and `RuleIssuanceCap` — do implement both, but each is bound to a single token and is not a general compliance contract.
 
 The alternative to use a Rule with an ERC-3643 token is through the RuleEngine, which implements the whole `ICompliance` interface.
 
@@ -135,58 +139,38 @@ An ERC-3643 token has a **second** pluggable slot besides compliance, and this l
 
 _Diagram source: [`doc/schema/erc3643-slots.puml`](./schema/erc3643-slots.puml)._
 
-ERC-3643 decides who may hold a token by asking an identity registry one question, `isVerified(wallet)`. A
-standard registry answers it by reading the wallet's ONCHAINID for the required claims. This library supplies
-**both sides of that exchange**, and they face opposite directions:
+ERC-3643 decides who may hold a token by asking an identity registry one question, `isVerified(wallet)`. A standard registry answers it by reading the wallet's ONCHAINID for the required claims. This library supplies **both sides of that exchange**, and they face opposite directions:
 
 | Contract | What it is | Installed with |
 | --- | --- | --- |
 | [`RuleIdentityRegistry`](./technical/contracts/RuleIdentityRegistry.md) | The side that **asks**: a compliance rule that calls `isVerified` on whichever registry it is pointed at, and blocks the transfer when the answer is no | Added to a RuleEngine like any other rule |
 | [`IdentityRegistryWhitelist`](./technical/contracts/IdentityRegistryWhitelist.md) | The side that **answers**: a registry implementation (`IIdentityRegistryERC3643`) that replies from a whitelist instead of reading ONCHAINIDs | `token.setIdentityRegistry(...)` — **not** a rule, implements no `IRule`, never add it to a RuleEngine |
 
-**Which one you need is decided by the token, not by preference**, because only one of the two token standards
-has an identity slot at all:
+**Which one you need is decided by the token, not by preference**, because only one of the two token standards has an identity slot at all:
 
 ![Identity verification: which route applies](./schema/erc3643-identity-directions.png)
 
 _Diagram source: [`doc/schema/erc3643-identity-directions.puml`](./schema/erc3643-identity-directions.puml)._
 
-- **ERC-3643 token — it has the slot.** Install `IdentityRegistryWhitelist` with `setIdentityRegistry` and the
-  token screens every transfer itself. Do **not** also register `RuleIdentityRegistry` behind a RuleEngine
-  here: the token already consults the registry, so the rule would screen the same wallets a second time
-  without adding any restriction.
-- **CMTAT token — there is no slot.** `setIdentityRegistry` is an ERC-3643 concept and CMTAT has no
-  equivalent, so `RuleIdentityRegistry` behind a RuleEngine is not one option among several: it is the only
-  way to apply identity-registry screening at all. It consults whichever registry you point it at, either your
-  own ONCHAINID-backed one or `IdentityRegistryWhitelist`.
+- **ERC-3643 token — it has the slot.** Install `IdentityRegistryWhitelist` with `setIdentityRegistry` and the token screens every transfer itself. Do **not** also register `RuleIdentityRegistry` behind a RuleEngine here: the token already consults the registry, so the rule would screen the same wallets a second time without adding any restriction.
+- **CMTAT token — there is no slot.** `setIdentityRegistry` is an ERC-3643 concept and CMTAT has no equivalent, so `RuleIdentityRegistry` behind a RuleEngine is not one option among several: it is the only way to apply identity-registry screening at all. It consults whichever registry you point it at, either your own ONCHAINID-backed one or `IdentityRegistryWhitelist`.
 
-That second case is the reason the two contracts compose, and it is pinned end to end by
-[`test/IdentityRegistryWhitelist/CMTATRuleIdentityRegistryComposition.t.sol`](../test/IdentityRegistryWhitelist/CMTATRuleIdentityRegistryComposition.t.sol).
-They are wired by interface rather than inheritance: the rule holds an `IIdentityRegistryVerified` and only
-ever calls `isVerified`, which the registry implements as part of its ERC-3643 surface. Neither contract
-references the other.
+That second case is the reason the two contracts compose, and it is pinned end to end by [`test/IdentityRegistryWhitelist/CMTATRuleIdentityRegistryComposition.t.sol`](../test/IdentityRegistryWhitelist/CMTATRuleIdentityRegistryComposition.t.sol). They are wired by interface rather than inheritance: the rule holds an `IIdentityRegistryVerified` and only ever calls `isVerified`, which the registry implements as part of its ERC-3643 surface. Neither contract references the other.
 
-`IdentityRegistryWhitelist` keeps **no identity state**: `_identity` and `_country` are accepted for signature
-compatibility then discarded, and `investorCountry` is a constant `0`. The token itself must hold
-`IDENTITY_REGISTRAR_ROLE`, because `recoveryAddress` makes the token call `registerIdentity` and
-`deleteIdentity`.
+`IdentityRegistryWhitelist` keeps **no identity state**: `_identity` and `_country` are accepted for signature compatibility then discarded, and `investorCountry` is a constant `0`. The token itself must hold `IDENTITY_REGISTRAR_ROLE`, because `recoveryAddress` makes the token call `registerIdentity` and `deleteIdentity`.
 
 #### Matching the spec's screening semantics
 
-ERC-3643 requires that **only the receiver** be verified: `transferFrom` works the same way, `mint` and
-`forcedTransfer` check only the receiver, and `burn` bypasses eligibility entirely. That asymmetry is
-deliberate — screening the sender would trap a de-listed holder in their position.
+ERC-3643 requires that **only the receiver** be verified: `transferFrom` works the same way, `mint` and `forcedTransfer` check only the receiver, and `burn` bypasses eligibility entirely. That asymmetry is deliberate — screening the sender would trap a de-listed holder in their position.
 
 - [`RuleReceiverWhitelist`](./technical/contracts/RuleReceiverWhitelist.md) reproduces this exactly (code `81`).
-- [`RuleIdentityRegistry`](./technical/contracts/RuleIdentityRegistry.md) defaults to the same behaviour, with
-  `checkSender` / `checkSpender` available as explicit opt-ins, both `false` by default.
+- [`RuleIdentityRegistry`](./technical/contracts/RuleIdentityRegistry.md) defaults to the same behaviour, with `checkSender` / `checkSpender` available as explicit opt-ins, both `false` by default.
 
 Every rule and the registry implement `IERC3643Version`, so `version()` is queryable on-chain.
 
 #### Tested against a real ERC-3643 token
 
-[`test/ERC3643Real/`](../test/ERC3643Real/) exercises the integration against the actual ERC-3643 `Token.sol`
-and `IdentityRegistry.sol` rather than mocks:
+[`test/ERC3643Real/`](../test/ERC3643Real/) exercises the integration against the actual ERC-3643 `Token.sol` and `IdentityRegistry.sol` rather than mocks:
 
 | Suite | Covers |
 | --- | --- |
@@ -194,14 +178,13 @@ and `IdentityRegistry.sol` rather than mocks:
 | `RuleIdentityRegistryWithRealERC3643Registry.t.sol` | The identity rule against a real `IdentityRegistry` |
 | `ERC3643ReceiverWhitelistParity.t.sol` | Receiver-whitelist parity with the spec's eligibility |
 
-31 tests, run with `FOUNDRY_PROFILE=erc3643 forge test`. They are **not** part of a plain `forge test`: the
-vendored `Token.sol` pins solc `0.8.30` exactly and cannot share a compilation unit with our `0.8.36`.
+31 tests, run with `FOUNDRY_PROFILE=erc3643 forge test`. They are **not** part of a plain `forge test`: the vendored `Token.sol` pins solc `0.8.30` exactly and cannot share a compilation unit with our `0.8.38`.
 
 ### ERC-721/ERC-1155
 
-To improve compatibility with [ERC-721](https://eips.ethereum.org/EIPS/eip-721) and [ERC-1155](https://eips.ethereum.org/EIPS/eip-1155), most validation rules implement the interface `IERC7943NonFungibleComplianceExtend` which includes compliance functions with the `tokenId` argument. 
+To improve compatibility with [ERC-721](https://eips.ethereum.org/EIPS/eip-721) and [ERC-1155](https://eips.ethereum.org/EIPS/eip-1155), most validation rules implement the interface `IERC7943NonFungibleComplianceExtend` which includes compliance functions with the `tokenId` argument.
 
-- Operation rules (such as `RuleConditionalTransferLight`) are ERC-20 only and do not expose the ERC-721/1155 interfaces. 
+- Operation rules (such as `RuleConditionalTransferLight`) are ERC-20 only and do not expose the ERC-721/1155 interfaces.
 - The two supply-cap validation rules, `RuleMaxTotalSupply` and `RuleChainlinkPoR`, are ERC-20 only as well and do not expose the ERC-721/1155 interfaces. This is deliberate: they cap a fungible supply, so a `tokenId` dimension would be meaningless for them. Both also require the protected token to expose an aggregate `totalSupply()`, which plain ERC-721 does not (only `ERC721Enumerable` does) and which is not per-id for ERC-1155.
 
 The full per-rule overload matrix is in [`doc/technical/guides/RULE_SEMANTICS.md`](./technical/guides/RULE_SEMANTICS.md#3-overload-surface-erc-7943-tokenid--itransfercontext).
@@ -224,9 +207,9 @@ function transferred(address from, address to, uint256 tokenId, uint256 value) e
 function transferred(address spender, address from, address to, uint256 tokenId, uint256 value) external;
 ```
 
-The diagram below shows a non-fungible transfer flowing through the `tokenId`-aware compliance signatures. 
+The diagram below shows a non-fungible transfer flowing through the `tokenId`-aware compliance signatures.
 
-For validation rules a single `transferred(...)` call both validates and reverts — it internally runs `detectTransferRestrictionFrom` and requires `TRANSFER_OK` — so no separate pre-check is required in the transfer path; the read-only `detectTransferRestriction*` / `canTransfer*` overloads remain available for off-chain queries. 
+For validation rules a single `transferred(...)` call both validates and reverts — it internally runs `detectTransferRestrictionFrom` and requires `TRANSFER_OK` — so no separate pre-check is required in the transfer path; the read-only `detectTransferRestriction*` / `canTransfer*` overloads remain available for off-chain queries.
 
 The `RuleNFTAdapter` carries the `tokenId` argument but currently delegates to the address-based checks (`from` / `to` / `spender`), so no rule restricts on the token id yet.
 
@@ -316,7 +299,9 @@ Here is the list of codes used by the different rules
 | RuleSpenderWhitelist         | CODE_ADDRESS_SPENDER_NOT_WHITELISTED | 66    |
 |                              | Reserved slot                        | 67-69 |
 | RuleMintAllowance            | CODE_MINTER_ALLOWANCE_EXCEEDED       | 70    |
-|                              | Reserved slot                        | 71-74 |
+| RuleIssuanceCap              | CODE_ISSUANCE_CAP_EXCEEDED           | 71    |
+|                              | (also 50, 51, shared with RuleMaxTotalSupply) |       |
+|                              | Reserved slot                        | 72-74 |
 | RuleChainlinkPoR             | CODE_RESERVES_EXCEEDED               | 75    |
 |                              | CODE_RESERVES_FEED_STALE             | 76    |
 |                              | CODE_RESERVES_ANSWER_INVALID         | 77    |
@@ -326,9 +311,10 @@ Here is the list of codes used by the different rules
 | RuleReceiverWhitelist        | CODE_ADDRESS_RECEIVER_NOT_WHITELISTED | 81   |
 | RuleMaxBalance               | CODE_MAX_BALANCE_EXCEEDED             | 82   |
 |                              | CODE_BALANCE_UNAVAILABLE              | 83   |
-|                              | Reserved slot                        | 82-84 |
+|                              | Reserved slot                        | 84    |
+| RuleConditionalTransferLight, RuleMintAllowance, RuleIssuanceCap | CODE_RULE_NOT_BOUND (shared, same message) | 85 |
 
-Note: 
+Note:
 
 - The CMTAT already uses the code 0-6 and the code 7-12 should be left free to allow further additions in the CMTAT.
 - If you decide to create your own rules, we encourage you to use code > 100 to leave free the other restriction codes for future rules added in this project.
@@ -349,9 +335,9 @@ This makes rules directly pluggable into CMTAT without any intermediary RuleEngi
 
 ### Transfer Context Helper
 
-Rules also expose an optional unified entrypoint using `MultiTokenTransferContext` / `FungibleTransferContext` (see `ITransferContext`) to pass a single struct instead of multiple arguments. 
+Rules also expose an optional unified entrypoint using `MultiTokenTransferContext` / `FungibleTransferContext` (see `ITransferContext`) to pass a single struct instead of multiple arguments.
 
-This is a helper API inspired by [TokenF](https://github.com/dl-tokenf/contracts) and does not replace the standard ERC-3643 / RuleEngine interfaces. 
+This is a helper API inspired by [TokenF](https://github.com/dl-tokenf/contracts) and does not replace the standard ERC-3643 / RuleEngine interfaces.
 
 Validation rules generally expose both the non-fungible and fungible variants. `RuleConditionalTransferLight` and `RuleConditionalTransferLightMultiToken` expose only the fungible variant, and `RuleMaxTotalSupply`, `RuleChainlinkPoR` and `RuleMintAllowance` expose neither — see the per-rule matrix in [`doc/technical/guides/RULE_SEMANTICS.md`](./technical/guides/RULE_SEMANTICS.md#3-overload-surface-erc-7943-tokenid--itransfercontext).
 
@@ -384,16 +370,27 @@ Both structs are passed to `transferred(MultiTokenTransferContext calldata ctx)`
 
 ### Using Rules via RuleEngine
 
-When used through the RuleEngine, a rule must also implement:
+When used through the RuleEngine, a rule must also implement `IRule` (RuleEngine `v3.0.0-rc7`):
 
 ```solidity
-interface IRule is IRuleEngine {
+interface IRule is IERC1404Extend, IERC3643IComplianceContract, IERC165 {
+    function transferred(address spender, address from, address to, uint256 value) external;
+
     function canReturnTransferRestrictionCode(uint8 restrictionCode)
         external
         view
         returns (bool);
 }
 ```
+
+Since RuleEngine `v3.0.0-rc7`, `IRule` no longer inherits CMTAT's `IRuleEngine`: it declares only what the engine calls on a rule, so `canTransfer` / `canTransferFrom` are not part of it. Its ERC-165 id changed accordingly:
+
+| Id | Value | Accepted by |
+| --- | --- | --- |
+| `RuleInterfaceId.IRULE_INTERFACE_ID` | `0xb1a69752` | RuleEngine `v3.0.0-rc7` and later |
+| `RuleInterfaceId.IRULE_LEGACY_INTERFACE_ID` | `0x2497d6cb` | every RuleEngine v3.x, including `rc6` and older |
+
+Every rule in this repository still implements `IRuleEngine` (it keeps the standalone role) and therefore advertises **both** ids, so it can be added to an `rc7` engine and to an older one.
 
 The RuleEngine can then:
 
@@ -420,7 +417,8 @@ Separately, `src/registry/` holds [`IdentityRegistryWhitelist`](./technical/cont
 | Restrict `transferFrom` operators (spenders) | `RuleSpenderWhitelist` |
 | Block known bad addresses | `RuleBlacklist` |
 | Block sanctioned addresses (Chainalysis oracle) | `RuleSanctionsList` |
-| Cap total token supply | `RuleMaxTotalSupply` |
+| Cap total token supply (burns restore room) | `RuleMaxTotalSupply` |
+| Cap cumulative issuance, e.g. an authorised share amount or a fixed issue volume (burns do **not** restore room) | `RuleIssuanceCap` |
 | Cap total supply at the reserves reported by a Chainlink Proof of Reserve feed | `RuleChainlinkPoR` |
 | Require identity-registry verification (ERC-3643) | `RuleIdentityRegistry` |
 | ERC-2980 Swiss compliance (whitelist + frozenlist) | `RuleERC2980` |
@@ -440,11 +438,11 @@ Rules do **not** all treat the spender, mint/burn, or an unset oracle the same w
 
 ### Views that are not authoritative
 
-Two rules answer the standard ERC-1404 / ERC-3643 read views with something other than the real answer. In both cases the reason is structural — the 3-argument signature cannot carry the information the rule needs — and in both cases a correct alternative exists. **The important part is that the misleading answer is not confined to the rule: it propagates through the `RuleEngine` to the token's own public views**, which is the API an integrator actually calls.
+Two rules answer the standard ERC-1404 / ERC-3643 read views with something other than the real answer. In both cases the 3-argument signature cannot carry the information the rule needs, and in both cases a correct alternative exists. **The misleading answer is not confined to the rule: it propagates through the `RuleEngine` to the token's own public views**, which is the API an integrator calls.
 
 | Rule | Not authoritative | Why | Use instead |
 | --- | --- | --- | --- |
-| `RuleMintAllowance` | `canTransfer` / `detectTransferRestriction` — hardcoded to allowed | The 3-arg signature carries no minter identity, and the quota is keyed on the minter | `canTransferFrom(minter, address(0), to, value)` or `detectTransferRestrictionFrom(...)` |
+| `RuleMintAllowance` | `canTransfer` / `detectTransferRestriction` — always allowed once bound (code 85 before) | The 3-arg signature carries no minter identity, and the quota is keyed on the minter | `canTransferFrom(minter, address(0), to, value)` or `detectTransferRestrictionFrom(...)` |
 | `RuleConditionalTransferLightMultiToken` | `canTransfer` / `detectTransferRestriction` — caller-dependent | The token key is derived from `msg.sender`, so any off-chain `eth_call` reads "not approved" even for an approved transfer | `canTransferForToken(token, from, to, value)` or `detectTransferRestrictionForToken(...)` |
 
 **Propagation.** `RuleEngineBase._detectTransferRestriction` aggregates by calling each rule's **3-argument** view and returning the first non-zero code, and CMTAT's `ValidationModuleERC1404` forwards the token's ERC-1404 views to the engine. So a `RuleMintAllowance` that returns `0` makes `ruleEngine.canTransfer(...)` **and** `cmtat.canTransfer(...)` report every mint as allowed, regardless of quota. The 4-argument chain (`detectTransferRestrictionFrom`) is unaffected at every level and carries the real answer.
@@ -465,7 +463,7 @@ Available validation rules: `RuleWhitelist`, `RuleReceiverWhitelist`, `RuleWhite
 
 Operation rules modify blockchain state during transfer execution. Their `transferred()` function is state-mutating: it consumes or updates stored data as part of the transfer flow.
 
-Available operation rules: `RuleConditionalTransferLight`, `RuleConditionalTransferLightMultiToken`, `RuleMintAllowance`.
+Available operation rules: `RuleConditionalTransferLight`, `RuleConditionalTransferLightMultiToken`, `RuleMintAllowance`, `RuleIssuanceCap`.
 
 A full-featured variant, `RuleConditionalTransfer`, is maintained as a separate experimental repository at [CMTA/RuleConditionalTransfer](https://github.com/CMTA/RuleConditionalTransfer).
 
@@ -491,7 +489,7 @@ forge test
 
 ## Deployment Guide
 
-> ⚠️ **Before production deployment:** this project has [not undergone an audit](#ruleengine---rules). Review the unaudited status, configure roles with least privilege (grant only the roles each operator needs, and prefer the `Ownable2Step` variants for single-owner setups), and run an end-to-end transfer test on the target token setup.
+> ⚠️ **Before production deployment:** this project has [not undergone an audit](#ruleengine---rules). Review the unaudited status and configure roles with least privilege: grant only the roles each operator needs, and prefer the `Ownable2Step` variants for single-owner setups. Then run an end-to-end transfer test on the target token setup.
 
 1. Deploy the rule contract(s) with the desired admin and optional module addresses.
 2. Configure the rule state and roles, including whitelist/blacklist entries and oracle or registry addresses.
@@ -500,14 +498,48 @@ forge test
 
 Full technical documentation for these scripts, including limitations, is in [`doc/technical/guides/DEPLOYMENT_SCRIPTS.md`](./technical/guides/DEPLOYMENT_SCRIPTS.md).
 
+#### Deployment guide per rule
+
+Each rule has a step-by-step guide for a CMTAT v3.0.0 token and one for CMTAT v3.3.0 (validated against `v3.3.0-rc4`). Each covers the possible setups (rule on the token or behind a RuleEngine, installed in the token constructor or after), with a sequence diagram per setup and per operation the rule acts on, including a happy path.
+
+| Rule | CMTAT v3.0.0 | CMTAT v3.3.0 | Recommended setup |
+| --- | --- | --- | --- |
+| `RuleWhitelist` | [v3.0.0](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_WHITELIST_CMTAT_V3.3.0.md) | Rule on the token at deployment; a RuleEngine at deployment with other rules |
+| `RuleReceiverWhitelist` | [v3.0.0](./technical/guides/DEPLOY_RULE_RECEIVER_WHITELIST_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_RECEIVER_WHITELIST_CMTAT_V3.3.0.md) | Same as `RuleWhitelist`. Screens only the receiver; no mint flag |
+| `RuleSpenderWhitelist` | [v3.0.0](./technical/guides/DEPLOY_RULE_SPENDER_WHITELIST_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_SPENDER_WHITELIST_CMTAT_V3.3.0.md) | A RuleEngine at deployment, next to a rule that screens holders. Acts only on `transferFrom` |
+| `RuleWhitelistWrapper` | [v3.0.0](./technical/guides/DEPLOY_RULE_WHITELIST_WRAPPER_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_WHITELIST_WRAPPER_CMTAT_V3.3.0.md) | Children deployed and added to the wrapper first, then the wrapper on the token (or in a RuleEngine). Children never go in the engine |
+| `RuleBlacklist` | [v3.0.0](./technical/guides/DEPLOY_RULE_BLACKLIST_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_BLACKLIST_CMTAT_V3.3.0.md) | Rule on the token at deployment. Screens the minter and burner on v3.3.0 only |
+| `RuleSanctionsList` | [v3.0.0](./technical/guides/DEPLOY_RULE_SANCTIONS_LIST_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_SANCTIONS_LIST_CMTAT_V3.3.0.md) | Same as `RuleBlacklist`. Lets everything through while no oracle is set |
+| `RuleERC2980` | [v3.0.0](./technical/guides/DEPLOY_RULE_ERC2980_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_ERC2980_CMTAT_V3.3.0.md) | Rule on the token at deployment. Frozen minter screened on v3.3.0 only |
+| `RuleIdentityRegistry` | [v3.0.0](./technical/guides/DEPLOY_RULE_IDENTITY_REGISTRY_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_IDENTITY_REGISTRY_CMTAT_V3.3.0.md) | Registry first (e.g. `IdentityRegistryWhitelist`), then the rule on the token at deployment. Receiver only by default |
+| `RuleMaxTotalSupply` | [v3.0.0](./technical/guides/DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md) | The rule needs the token address: a RuleEngine at deployment, rule added, token bound last |
+| `RuleMaxBalance` | [v3.0.0](./technical/guides/DEPLOY_RULE_MAX_BALANCE_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_MAX_BALANCE_CMTAT_V3.3.0.md) | Same as `RuleMaxTotalSupply`. Pair with a one-address-per-investor rule |
+| `RuleChainlinkPoR` | [v3.0.0](./technical/guides/DEPLOY_RULE_CHAINLINK_POR_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_CHAINLINK_POR_CMTAT_V3.3.0.md) | Same as `RuleMaxTotalSupply`. Needs the feed, the token decimals and a staleness threshold |
+| `RuleConditionalTransferLight` | [v3.0.0](./technical/guides/DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_CMTAT_V3.3.0.md) | Rule on the token at deployment, then `bindToken`. One token per rule |
+| `RuleConditionalTransferLightMultiToken` | [v3.0.0](./technical/guides/DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_MULTI_TOKEN_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_CONDITIONAL_TRANSFER_LIGHT_MULTI_TOKEN_CMTAT_V3.3.0.md) | Rule on each token at deployment, then `bindToken` for each. Never behind a RuleEngine |
+| `RuleMintAllowance` | [v3.0.0](./technical/guides/DEPLOY_RULE_MINT_ALLOWANCE_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_MINT_ALLOWANCE_CMTAT_V3.3.0.md) | v3.3.0 only (inert on v3.0.0): rule on the token at deployment, then `bindToken` |
+| `RuleIssuanceCap` | [v3.0.0](./technical/guides/DEPLOY_RULE_ISSUANCE_CAP_CMTAT_V3.0.0.md) | [v3.3.0](./technical/guides/DEPLOY_RULE_ISSUANCE_CAP_CMTAT_V3.3.0.md) | A RuleEngine at deployment, rule bound to it and added, token bound last |
+
 Deployment scripts:
 - `script/DeployCMTATWithWhitelist.s.sol` — CMTAT + whitelist rule, bound directly to the token
 - `script/DeployCMTATWithBlacklist.s.sol` — CMTAT + blacklist rule, bound directly to the token
+- `script/DeployCMTATWithMaxTotalSupply.s.sol` — CMTAT + max-total-supply rule, bound directly to the token
+- `script/DeployCMTATWithReceiverWhitelist.s.sol` — CMTAT + `RuleReceiverWhitelist`, set directly on the token
+- `script/DeployCMTATWithSpenderWhitelist.s.sol` — CMTAT + `RuleSpenderWhitelist`, set directly on the token
+- `script/DeployCMTATWithWhitelistWrapper.s.sol` — CMTAT + `RuleWhitelistWrapper` + 2 child `RuleWhitelist`, set directly on the token
+- `script/DeployCMTATWithSanctionsList.s.sol` — CMTAT + `RuleSanctionsList`, set directly on the token
+- `script/DeployCMTATWithERC2980.s.sol` — CMTAT + `RuleERC2980`, set directly on the token
+- `script/DeployCMTATWithIdentityRegistry.s.sol` — CMTAT + `IdentityRegistryWhitelist` + `RuleIdentityRegistry`, set directly on the token
+- `script/DeployCMTATWithMaxBalance.s.sol` — CMTAT + `RuleMaxBalance`, set directly on the token
+- `script/DeployCMTATWithChainlinkPoR.s.sol` — CMTAT + `RuleChainlinkPoR`, set directly on the token
+- `script/DeployCMTATWithConditionalTransferLight.s.sol` — CMTAT + `RuleConditionalTransferLight`, set directly on the token
+- `script/DeployCMTATWithConditionalTransferLightMultiToken.s.sol` — CMTAT + `RuleConditionalTransferLightMultiToken`, set directly on the token
+- `script/DeployCMTATWithMintAllowance.s.sol` — CMTAT + `RuleMintAllowance`, set directly on the token
+- `script/DeployCMTATWithIssuanceCap.s.sol` — CMTAT + `RuleIssuanceCap`, set directly on the token
 - `script/DeployCMTATWithBlacklistAndSanctionsList.s.sol` — CMTAT + RuleEngine with blacklist and sanctions rules
 - `script/DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply.s.sol` — the same plus a supply cap
 
-Each script deploys with the caller as both deployer and final admin, hands over every admin role, and
-renounces the deployer's, so no temporary rights outlive the transaction. Run one with:
+Where it can, a script deploys the rule (or the RuleEngine) first and creates the token with its final admin and the rule in its constructor, so the deployer never holds a role on the token. Where a call must follow the token's deployment (`setRuleEngine` for a rule that needs the token's address, `bindToken`, `addRule`), the deployer is a temporary admin and hands the role over at the end, so no temporary rights outlive the run. Run one with:
 
 ```bash
 forge script script/DeployCMTATWithBlacklist.s.sol:DeployCMTATWithBlacklist \
@@ -518,8 +550,7 @@ Omitting `--broadcast` simulates locally, which is what CI does for every script
 
 #### Script configuration
 
-Values are read from the environment, with the defaults below applied when a variable is unset, so the
-scripts run unconfigured. Shared settings live in `script/base/CMTATDeploymentBase.sol`.
+Values are read from the environment, with the defaults below applied when a variable is unset, so the scripts run unconfigured. Shared settings live in `script/base/CMTATDeploymentBase.sol`.
 
 | Variable | Default | Applies to |
 | --- | --- | --- |
@@ -530,12 +561,14 @@ scripts run unconfigured. Shared settings live in `script/base/CMTATDeploymentBa
 | `CMTAT_TERMS_NAME` / `CMTAT_TERMS_URI` / `CMTAT_TERMS_HASH` | example document | all |
 | `CMTAT_INFORMATION` | `CMTAT_info` | all |
 | `CMTAT_FORWARDER` | `address(0)` (meta-transactions off) | all |
-| `SANCTIONS_ORACLE` | `address(0)` | the two sanctions scripts |
-| `CMTAT_MAX_SUPPLY` | `1000000` | the max-total-supply script |
+| `SANCTIONS_ORACLE` | `address(0)` | the three sanctions scripts |
+| `CMTAT_MAX_SUPPLY` | `1000000` | the two max-total-supply scripts |
+| `CMTAT_MAX_BALANCE` | `100000` | the max-balance script |
+| `CMTAT_ISSUANCE_CAP` | `1000000` | the issuance-cap script |
+| `CHAINLINK_POR_FEED` | `address(0)` (mock feed on chain 31337, revert elsewhere) | the Chainlink PoR script |
+| `CHAINLINK_POR_MAX_STALENESS` | `86400` | the Chainlink PoR script |
 
-> ⚠️ **An unset `SANCTIONS_ORACLE` fails open.** `RuleSanctionsList` is registered and reports no error,
-> and every transfer passes it until `setSanctionListOracle` is called. The oracle address is
-> chain-specific, so there is no safe default. Set it before the token goes live.
+> ⚠️ **An unset `SANCTIONS_ORACLE` fails open.** `RuleSanctionsList` is registered and reports no error, and every transfer passes it until `setSanctionListOracle` is called. The oracle address is chain-specific, so there is no safe default. Set it before the token goes live.
 
 ### Choosing a Rule Variant
 
@@ -581,6 +614,7 @@ Several rules are available in multiple access-control variants. Use the simples
 | RuleConditionalTransferLight                                | Read-Write                          | <strong><span style="color: #b00020;">&#x2718;</span></strong> | <strong><span style="color: #1e7e34;">&#x2714;</span></strong> | <strong><span style="color: #1e7e34;">&#x2714;</span></strong> | This rule requires that transfers have to be approved by an operator before being executed. Each approval is consumed once and the same transfer can be approved multiple times. |
 | RuleConditionalTransferLightMultiToken                      | Read-Write                          | <strong><span style="color: #b00020;">&#x2718;</span></strong> | <strong><span style="color: #b00020;">&#x2718;</span></strong> <sup>e</sup> | <strong><span style="color: #1e7e34;">&#x2714;</span></strong> | Multi-token variant of ConditionalTransferLight. Approvals are token-scoped with key `(token, from, to, value)` so one token cannot consume another token's approvals. |
 | RuleMintAllowance                                           | Read-Write                          | <strong><span style="color: #b00020;">&#x2718;</span></strong> | <strong><span style="color: #b00020;">&#x2718;</span></strong> <sup>f</sup> | <strong><span style="color: #1e7e34;">&#x2714;</span></strong> | Enforces a per-minter mint quota managed by an operator; each mint reduces the minter's allowance. Regular transfers and burns are not restricted. |
+| RuleIssuanceCap                                             | Read-Write                          | <strong><span style="color: #b00020;">&#x2718;</span></strong> | <strong><span style="color: #b00020;">&#x2718;</span></strong> <sup>g</sup> | <strong><span style="color: #1e7e34;">&#x2714;</span></strong> | Caps cumulative issuance: the total ever minted cannot exceed the cap, and burns do not restore room. Extends `RuleMaxTotalSupply`, whose live-supply check stays active against the same cap. |
 | [RuleConditionalTransfer](https://github.com/CMTA/RuleConditionalTransfer) (external) | Read-Write | <strong><span style="color: #b00020;">&#x2718;</span></strong> | <strong><span style="color: #1e7e34;">&#x2714;</span></strong> | <strong><span style="color: #b00020;">&#x2718;</span></strong><br /> (experimental rule) | Full-featured approval-based transfer rule implementing Swiss law *Vinkulierung*. Supports automatic approval after three months, automatic transfer execution, and a conditional whitelist for address pairs that bypass approval. Maintained in a separate repository. |
 | [RuleSelf](https://github.com/rya-sge/ruleself) (community) | — | <strong><span style="color: #b00020;">&#x2718;</span></strong> | — | <strong><span style="color: #b00020;">&#x2718;</span></strong><br /> (community project) | Use [Self](https://self.xyz), a zero-knowledge identity  solution to determine which is allowed to interact with the token.<br />Community-maintained rule project. Not developed or maintained by CMTA. |
 
@@ -588,22 +622,21 @@ All rules implement the CMTAT rule interfaces needed by their supported transfer
 
 <sup>*</sup> A checkmark in this column means the rule enforces compliance for ERC-3643 tokens **through a RuleEngine or the CMTAT transfer path** — it does **not** mean the rule is itself a full ERC-3643 `ICompliance` contract. A standalone rule implements only `canTransfer` + `transferred`, so it cannot back an ERC-3643 token directly; use it through a RuleEngine, which implements the full `ICompliance` interface (see [Integration modes](#integration-modes)).
 
-**A checkmark is not unconditional.** ERC-3643 / T-REX never forwards a spender (both `transfer` and
-`transferFrom` call the 3-argument `transferred`) and calls compliance **after** it moves the value. Per-rule
-detail, including the three distinct failure modes, is in
-[`RULE_SEMANTICS.md` §6](./technical/guides/RULE_SEMANTICS.md).
+**A checkmark is not unconditional.** ERC-3643 / T-REX never forwards a spender (both `transfer` and `transferFrom` call the 3-argument `transferred`) and calls compliance **after** it moves the value. Per-rule detail, including the three distinct failure modes, is in [`RULE_SEMANTICS.md` §6](./technical/guides/RULE_SEMANTICS.md).
 
-<sup>a</sup> Works, but **`checkSpender` never fires** — no spender reaches the rule on this path.
-<sup>b</sup> Works on `from` / `to`; the **spender leg is inert**, so a listed/sanctioned/frozen *spender* moving
-someone else's tokens is not caught.
-<sup>c</sup> ⚠️ **Use the ERC-3643 variant** — `RuleMaxTotalSupplyERC3643` / `RuleChainlinkPoRERC3643`. The stock
-rule counts the amount twice and reverts mints that are within the cap.
+<sup>a</sup> Works, but **`checkSpender` never fires** — the rule receives no spender on this path.
+
+<sup>b</sup> Works on `from` / `to`; the **spender leg is inert**, so a listed/sanctioned/frozen *spender* moving someone else's tokens is not caught.
+
+<sup>c</sup> ⚠️ **Use the ERC-3643 variant** — `RuleMaxTotalSupplyERC3643` / `RuleChainlinkPoRERC3643`. The stock rule counts the amount twice and reverts mints that are within the cap.
+
 <sup>d</sup> ❌ **Inert** — spender screening exists only on the 4-argument path, which this token never uses.
-<sup>e</sup> ❌ **Not supported** — direct-binding only, and ERC-3643 needs a RuleEngine for `created` /
-`destroyed`.
-<sup>f</sup> ❌ **Inert, and silently permissive** — `created` carries no minter identity, so no quota is
-debited and every mint passes. `RuleMaxBalance` is likewise **not supported**: same double-count as <sup>c</sup>,
-with no variant available.
+
+<sup>e</sup> ❌ **Not supported** — direct-binding only, and ERC-3643 needs a RuleEngine for `created` / `destroyed`.
+
+<sup>f</sup> ❌ **Inert, and silently permissive** — `created` carries no minter identity, so no quota is debited and every mint passes. `RuleMaxBalance` is likewise **not supported**: same double-count as <sup>c</sup>, with no variant available.
+
+<sup>g</sup> ❌ **Not supported in v1** — the counter itself is correct on ERC-3643, but the inherited live-supply check double-counts, as in <sup>c</sup>; no `…ERC3643` variant is shipped yet.
 
 <sup>&#x2020;</sup> `RuleMintAllowance` is **Partial**: it does not advertise the full ERC-3643 `ICompliance` interface via ERC-165 because its per-minter mint quota requires the spender-aware mint callback to identify the minter, which the 3-argument ERC-3643 mint callback cannot provide.
 
@@ -614,7 +647,7 @@ Technical documentation lives in [`doc/technical/`](./technical/), split in two:
 | Directory | Contents |
 | --- | --- |
 | [`technical/contracts/`](./technical/contracts/) | One page per deployable contract: what it enforces, its restriction codes, roles, methods and caveats |
-| [`technical/guides/`](./technical/guides/) | Cross-cutting material that spans several contracts: [`RULE_SEMANTICS.md`](./technical/guides/RULE_SEMANTICS.md) (how the rules differ from one another), [`INVARIANT_TESTS.md`](./technical/guides/INVARIANT_TESTS.md) (the stateful invariant suite), [`DEPLOYMENT_SCRIPTS.md`](./technical/guides/DEPLOYMENT_SCRIPTS.md) (the `script/` deployment scripts) |
+| [`technical/guides/`](./technical/guides/) | Cross-cutting material that spans several contracts: [`RULE_SEMANTICS.md`](./technical/guides/RULE_SEMANTICS.md) (how the rules differ from one another), [`INVARIANT_TESTS.md`](./technical/guides/INVARIANT_TESTS.md) (the stateful invariant suite), [`DEPLOYMENT_SCRIPTS.md`](./technical/guides/DEPLOYMENT_SCRIPTS.md) (the `script/` deployment scripts), and `DEPLOY_<RULE>_CMTAT_V3.0.0.md` / `_V3.3.0.md`, one pair per rule (step-by-step deployment with a CMTAT token; see [Deployment guide per rule](#deployment-guide-per-rule)) |
 
 Per-contract pages:
 
@@ -635,8 +668,10 @@ Per-contract pages:
 | RuleConditionalTransferLight | [RuleConditionalTransferLight.md](./technical/contracts/RuleConditionalTransferLight.md) |
 | RuleConditionalTransferLightMultiToken | [RuleConditionalTransferLightMultiToken.md](./technical/contracts/RuleConditionalTransferLightMultiToken.md) |
 | RuleMintAllowance | [RuleMintAllowance.md](./technical/contracts/RuleMintAllowance.md) |
+| RuleIssuanceCap | [RuleIssuanceCap.md](./technical/contracts/RuleIssuanceCap.md) |
 | RuleConditionalTransfer | [RuleConditionalTransfer.md](./technical/contracts/RuleConditionalTransfer.md) — **maintained in a separate repository**, kept here for reference |
 | Deployment scripts | [DEPLOYMENT_SCRIPTS.md](./technical/guides/DEPLOYMENT_SCRIPTS.md) |
+| Deployment guide per rule | [Deployment guide per rule](#deployment-guide-per-rule) |
 
 ### Operational Notes
 
@@ -719,13 +754,20 @@ Validation (read-only) rules have no binding requirement: they hold no per-trans
 - `RuleConditionalTransferLightMultiToken`: with a shared `RuleEngine`, the caller seen by the rule is the engine address (not the underlying token). In that topology, token-scoped approvals are not visible unless approvals are keyed to the engine address, which is not per-token scoping.
 - **Warning**: `RuleConditionalTransferLightMultiToken` supports several tokens when integrated directly with each token contract. It must not be used for per-token approval isolation through a shared `RuleEngine`.
 
+#### RuleIssuanceCap
+
+- `RuleIssuanceCap`: burns, forced burns and `crosschainBurn` never restore room; the mint leg of `burnAndMint` and every `crosschainMint` count as new issuance. Do not use it for a bridged token.
+- `RuleIssuanceCap`: `transferred()` is restricted to the single caller bound via `bindToken` (the token, or the RuleEngine in front of it); until bound, every mint reverts.
+- `RuleIssuanceCap`: the observed token is fixed at deployment (`setTokenContract` reverts), and `initialIssued` must be at least the token's current supply.
+- `RuleIssuanceCap`: the inherited live-supply check stays active, so mints made while the rule was detached still stop minting at the cap once it is re-attached.
+
 #### General notes
 
 - All validation rules: read-only rules still implement `transferred()` for ERC-3643 and RuleEngine compatibility, but do not change state.
 - All AccessControl variants: use `onlyRole(ROLE)` in `_authorize*()` and mark internal helpers `virtual`.
 - All AccessControl variants: use `AccessControlEnumerable`, so role members can be enumerated with `getRoleMember` / `getRoleMemberCount`; default admin is treated as having all roles via `hasRole`, but may not appear in role member lists unless explicitly granted.
 - All meta-tx-enabled rules: `forwarderIrrevocable` is accepted as-is (including `address(0)`) and is not validated against ERC-165 because some forwarders do not implement it.
-- All rules: implement `IERC3643Version` via `VersionModule` and expose `version()` returning `"0.6.0"`.
+- All rules: implement `IERC3643Version` via `VersionModule` and expose `version()` returning `"0.7.0"`.
 
 ### Read-only (validation) rule
 
@@ -733,8 +775,7 @@ Currently, there are eight validation rules: whitelist, whitelist wrapper, spend
 
 #### Whitelist
 
-Only whitelisted addresses may hold or receive tokens.
- Transfers are rejected if:
+Only whitelisted addresses may hold or receive tokens. Transfers are rejected if:
 
 - `from` is not whitelisted
 - `to` is not whitelisted
@@ -871,29 +912,19 @@ The operator deploys `RuleMaxTotalSupply` with `setMaxTotalSupply(1_000_000)` an
 
 #### Max balance per holder
 
-Caps how many tokens a single address may hold. One cap applies to every holder, and the operator may exempt
-specific addresses from it. The **receiver** is screened: a transfer is rejected when
-`balanceOf(to) + value > maxBalance`. Mints are covered by the same check; burns are exempt, and the sender is
-never screened because sending tokens away can only lower a balance.
+Caps how many tokens a single address may hold. One cap applies to every holder, and the operator may exempt specific addresses from it. The **receiver** is screened: a transfer is rejected when `balanceOf(to) + value > maxBalance`. Mints are covered by the same check; burns are exempt, and the sender is never screened because sending tokens away can only lower a balance.
 
 ![surya_inheritance_RuleMaxBalance.sol](./surya/surya_inheritance/surya_inheritance_RuleMaxBalance.sol.png)
 
-> ⚠️ **Do not deploy this rule alone.** The cap counts tokens per *address*, so an investor holding through two
-> addresses holds twice the cap and no rule objects. Pair it with a rule that admits one address per investor
-> (`RuleWhitelist`, `RuleReceiverWhitelist` or `RuleIdentityRegistry`) **and** an onboarding policy of one
-> admitted address per legal entity — a whitelist alone does not close it, since the operator can admit both
-> wallets. See [RuleMaxBalance.md](./technical/contracts/RuleMaxBalance.md).
+> ⚠️ **Do not deploy this rule alone.** The cap counts tokens per *address*, so an investor holding through two addresses holds twice the cap and no rule objects. Pair it with a rule that admits one address per investor (`RuleWhitelist`, `RuleReceiverWhitelist` or `RuleIdentityRegistry`) **and** an onboarding policy of one admitted address per legal entity — a whitelist alone does not close it, since the operator can admit both wallets. See [RuleMaxBalance.md](./technical/contracts/RuleMaxBalance.md).
 
 **Usage scenario**
 
-An issuer must keep any single investor below 5% of a 1,000,000-token issue. They deploy `RuleWhitelist` and
-`RuleMaxBalance(admin, cmtat, 50_000)` in the same RuleEngine, admit exactly one address per onboarded
-investor, and exempt the treasury address holding the unsold allocation. An investor at 50,000 tokens can still
-sell, and can buy again once below the cap; a mint that would push them over is rejected with code `82`.
+An issuer must keep any single investor below 5% of a 1,000,000-token issue. They deploy `RuleWhitelist` and `RuleMaxBalance(admin, cmtat, 50_000)` in the same RuleEngine, admit exactly one address per onboarded investor, and exempt the treasury address holding the unsold allocation. An investor at 50,000 tokens can still sell, and can buy again once below the cap; a mint that would push them over is rejected with code `82`.
 
 #### Chainlink Proof of Reserve
 
-Limits minting so that the total supply never exceeds the reserves actually backing the token. Before every mint the rule reads the latest reserve value from a [Chainlink Proof of Reserve](https://docs.chain.link/data-feeds/proof-of-reserve) data feed (any `AggregatorV3Interface`), scales it from the feed's decimals to the token's, and rejects the mint if `totalSupply + amount` would exceed it.
+Limits minting so that the total supply never exceeds the reserves backing the token. Before every mint the rule reads the latest reserve value from a [Chainlink Proof of Reserve](https://docs.chain.link/data-feeds/proof-of-reserve) data feed (any `AggregatorV3Interface`), scales it from the feed's decimals to the token's, and rejects the mint if `totalSupply + amount` would exceed it.
 
 The rule is modelled on Chainlink's [`SecureMintPolicy`](https://docs.chain.link/ace/reference/policy-library/secure-mint-policy) from the ACE policy library, re-expressed as an ERC-1404 / ERC-3643 compliance rule and deliberately simplified: the ACE policy's configurable reserve margin is not carried over.
 
@@ -930,7 +961,7 @@ The operator calls `setIdentityRegistry(registry)`. The issuer attempts a transf
 
 ### Read-Write (Operation) rule
 
-There are three operation rules available: `RuleConditionalTransferLight`, `RuleConditionalTransferLightMultiToken`, and `RuleMintAllowance`.
+There are four operation rules available: `RuleConditionalTransferLight`, `RuleConditionalTransferLightMultiToken`, `RuleMintAllowance` and `RuleIssuanceCap`.
 
 #### Conditional transfer (light)
 
@@ -950,11 +981,19 @@ Compatibility warning: `RuleMintAllowance` does not enforce quotas for a token t
 
 For the same reason, it does not advertise the full ERC-3643 `ICompliance` interface through ERC-165; the 3-arg callbacks alone cannot enforce the mint quota.
 
-> ⚠️ **`canTransfer` / `detectTransferRestriction` are not authoritative for this rule** — they are hardcoded to "allowed" because the 3-arg signature has no minter identity, so they disagree with enforcement. Pre-flight a mint with the spender-aware view `canTransferFrom(minter, address(0), to, value)` (or `detectTransferRestrictionFrom`). See [RuleMintAllowance.md](./technical/contracts/RuleMintAllowance.md#eligibility-views-which-one-is-authoritative).
+> ⚠️ **`canTransfer` / `detectTransferRestriction` are not authoritative for this rule** — once the rule is bound they always answer "allowed" (code 85 before binding), because the 3-arg signature has no minter identity, so they disagree with enforcement. Pre-flight a mint with the spender-aware view `canTransferFrom(minter, address(0), to, value)` (or `detectTransferRestrictionFrom`). See [RuleMintAllowance.md](./technical/contracts/RuleMintAllowance.md#eligibility-views-which-one-is-authoritative).
 
 **Usage scenario**
 
 The compliance manager binds the rule to the RuleEngine with `bindToken(ruleEngine)`. Attempting to bind a second RuleEngine/token reverts until the current binding is removed with `unbindToken`. The operator assigns `setMintAllowance(alice, 100_000e18)`. Alice's mints deduct from her quota through `transferred(alice, address(0), recipient, amount)`; once exhausted, further mints revert with code 70 until the operator increases the quota.
+
+#### Issuance cap
+
+This rule caps the **cumulative issuance** of one token: the total ever minted cannot exceed `maxTotalSupply`, and burns do not restore room. It extends `RuleMaxTotalSupply` with a `totalIssued` counter raised on every accepted mint (code `71` when it would pass the cap), while the inherited live-supply check (code `50`) stays active against the same cap. It works on CMTAT v3.0.0, whose mints carry no minter, because the cap is per token. For a cap that burns do restore, use `RuleMaxTotalSupply`. See [RuleIssuanceCap.md](./technical/contracts/RuleIssuanceCap.md).
+
+**Usage scenario**
+
+A company's shareholders authorise the issue of 1,000,000 shares. The operator deploys `RuleIssuanceCap(admin, token, 1_000_000, currentIssued)`, binds it to the RuleEngine with `bindToken(ruleEngine)`, and adds it to the engine. Shares that are later redeemed and burned do not free authorised volume: issuing beyond 1,000,000 in total requires a new authorisation, recorded on-chain with `increaseMaxTotalSupply`.
 
 #### Conditional transfer (light, multi-token)
 
@@ -986,13 +1025,14 @@ See also [docs.openzeppelin.com - AccessControl](https://docs.openzeppelin.com/c
 
 | Role | Hash | Functions (by rule) |
 | --- | --- | --- |
-| `DEFAULT_ADMIN_ROLE` | `0x0000000000000000000000000000000000000000000000000000000000000000` | `grantRole`, `revokeRole`, `renounceRole` (all AccessControl rules); `setCheckSpender` (RuleWhitelist, RuleWhitelistWrapper); `setMaxTotalSupply`, `setTokenContract` (RuleMaxTotalSupply); `setReservesFeed`, `setTokenMetadata`, `setMaxStalenessSeconds` (RuleChainlinkPoR); `setIdentityRegistry`, `clearIdentityRegistry` (RuleIdentityRegistry) |
+| `DEFAULT_ADMIN_ROLE` | `0x0000000000000000000000000000000000000000000000000000000000000000` | `grantRole`, `revokeRole`, `renounceRole` (all AccessControl rules); `setCheckSpender` (RuleWhitelist, RuleWhitelistWrapper); `setTokenContract` (RuleMaxTotalSupply); `setReservesFeed`, `setTokenMetadata`, `setMaxStalenessSeconds` (RuleChainlinkPoR); `setIdentityRegistry`, `clearIdentityRegistry` (RuleIdentityRegistry) |
+| `MAX_TOTAL_SUPPLY_ROLE` | `0xff56c44a0b63a2f9b3aaada52f4982ecb1bd4eefdb286a7832ff51e8bc4e49f1` | `setMaxTotalSupply`, `increaseMaxTotalSupply`, `decreaseMaxTotalSupply` (RuleMaxTotalSupply, RuleMaxTotalSupplyERC3643, RuleIssuanceCap) |
 | `ADDRESS_LIST_ADD_ROLE` | `0x1b03c849816e077359373cf0a8d6d8f741d643bc1e95273ffe11515f83bebf61` | `addAddress`, `addAddresses` (RuleWhitelist, RuleBlacklist) |
 | `ADDRESS_LIST_REMOVE_ROLE` | `0x1b94c92b564251ed6b49246d9a82eb7a486b6490f3b3a3bf3b28d2e99801f3ec` | `removeAddress`, `removeAddresses` (RuleWhitelist, RuleBlacklist) |
 | `SANCTIONLIST_ROLE` | `0x30842281ac34bdc7d568c7ab276f84ba6fc1a1de1ae858b0afd35e716fb0650d` | `setSanctionListOracle`, `clearSanctionListOracle` (RuleSanctionsList) |
 | `RULES_MANAGEMENT_ROLE` | `0xea5f4eb72290e50c32abd6c23e45de3d8300b3286e1cbc2e293114b92e034e5e` | `setRules`, `clearRules`, `addRule`, `removeRule` (RuleWhitelistWrapper) |
 | `OPERATOR_ROLE` | `0x97667070c54ef182b0f5858b034beac1b6f3089aa2d3188bb1e8929f4fa9b929` | `approveTransfer`, `cancelTransferApproval` (RuleConditionalTransferLight / RuleConditionalTransferLightMultiToken) |
-| `COMPLIANCE_MANAGER_ROLE` | `0xe5c50d0927e06141e032cb9a67e1d7092dc85c0b0825191f7e1cede600028568` | `bindToken`, `unbindToken` (RuleConditionalTransferLight / RuleConditionalTransferLightMultiToken / RuleMintAllowance) |
+| `COMPLIANCE_MANAGER_ROLE` | `0xe5c50d0927e06141e032cb9a67e1d7092dc85c0b0825191f7e1cede600028568` | `bindToken`, `unbindToken` (RuleConditionalTransferLight / RuleConditionalTransferLightMultiToken / RuleMintAllowance / RuleIssuanceCap) |
 | `ALLOWANCE_OPERATOR_ROLE` | `0x86a2482724302deea267bc1ca14032806c318aeaf8d1e0d445a6fb7e7c997beb` | `setMintAllowance`, `increaseMintAllowance`, `decreaseMintAllowance` (RuleMintAllowance) |
 | `WHITELIST_ADD_ROLE` | `0x77c0b4c0975a0b0417d8ce295502737b95fee8923755fed0cce952907a1861ed` | `addWhitelistAddress`, `addWhitelistAddresses` (RuleERC2980) |
 | `WHITELIST_REMOVE_ROLE` | `0xf4d11a530c5b90f459c6ab1e335d3d77156b8ff3093308e4fca6d100ee87ade9` | `removeWhitelistAddress`, `removeWhitelistAddresses` (RuleERC2980) |
@@ -1015,10 +1055,9 @@ For simpler ownership-based control, `Ownable2Step` variants (two-step ownership
 - `RuleConditionalTransferLightOwnable2Step`
 - `RuleConditionalTransferLightMultiTokenOwnable2Step`
 - `RuleMintAllowanceOwnable2Step`
+- `RuleIssuanceCapOwnable2Step`
 
-`RuleConditionalTransferLightOwnable2Step` now grants approval and execution permissions exclusively to the owner.
-All `Ownable2Step` variants enforce access using OpenZeppelin's `onlyOwner` modifier.
-All `Ownable2Step` variants also advertise ERC-165 support for `IERC165` (`0x01ffc9a7`), ERC-173 ownership (`0x7f5828d0`), and Ownable2Step handover (`0x9ab669ef`).
+`RuleConditionalTransferLightOwnable2Step` now grants approval and execution permissions exclusively to the owner. All `Ownable2Step` variants enforce access using OpenZeppelin's `onlyOwner` modifier. All `Ownable2Step` variants also advertise ERC-165 support for `IERC165` (`0x01ffc9a7`), ERC-173 ownership (`0x7f5828d0`), and Ownable2Step handover (`0x9ab669ef`).
 
 ### Address List
 
@@ -1028,7 +1067,7 @@ These roles are listed above in the Role Summary table.
 
 ## Toolchains and Usage
 
-This repository is developed and tested with [Foundry](https://book.getfoundry.sh); a Hardhat config is also present for compilation and a small smoke test. Build settings (`foundry.toml` / `hardhat.config.js`): solc `v0.8.36`, EVM `Prague`, optimizer on (200 runs).
+This repository is developed and tested with [Foundry](https://book.getfoundry.sh); a Hardhat config is also present for compilation and a small smoke test. Build settings (`foundry.toml` / `hardhat.config.js`): solc `v0.8.38`, EVM `Osaka`, optimizer on (200 runs). The compiled contracts use no Osaka-only opcode (no `CLZ`), so they also run on a Prague or Cancun chain.
 
 ### Main commands
 
@@ -1043,13 +1082,14 @@ This repository is developed and tested with [Foundry](https://book.getfoundry.s
 | Gas snapshot | `forge snapshot` (check only: `forge snapshot --check`) |
 | Coverage | `forge coverage` |
 | Coverage report ([`doc/coverage`](./coverage/)) | `forge coverage --exclude-tests --no-match-coverage '(test\|mocks?\|script)/' --report lcov --report-file doc/coverage/lcov.info && genhtml doc/coverage/lcov.info --branch-coverage --prefix "$PWD/" --output-dir doc/coverage/coverage` |
+| Compilation artifacts ([`doc/compilation`](./compilation/)) | `forge build` and `npx hardhat compile --force`, then copy one JSON per deployable contract into `doc/compilation/vX.Y.Z/foundry/` and `.../hardhat/` |
 | Invariant suite only | `forge test --match-path "test/invariant/*"` |
 | Format | `forge fmt` |
 | Deploy a script | `forge script script/<Deploy...>.s.sol --rpc-url <url> --account <keystore>` |
 
 ### Invariant testing
 
-The two **stateful (operation) rules** — `RuleConditionalTransferLight` and `RuleMintAllowance` — are covered by a handler-driven `StdInvariant` suite in [`test/invariant/`](../test/invariant/), which fuzzes long randomly-ordered call sequences and re-checks four invariants after every step (8 192 calls each, `fail_on_revert = true`):
+The **stateful (operation) rules** `RuleConditionalTransferLight`, `RuleMintAllowance` and `RuleIssuanceCap`, and `RuleMaxTotalSupply` (the last two on a real CMTAT token) are covered by a handler-driven `StdInvariant` suite in [`test/invariant/`](../test/invariant/). It fuzzes long randomly-ordered call sequences and re-checks eleven invariants after every step (the five supply-cap invariants run for both cap rules) (8 192 calls each, `fail_on_revert = true`):
 
 | Invariant | Asserts |
 | --- | --- |
@@ -1057,14 +1097,21 @@ The two **stateful (operation) rules** — `RuleConditionalTransferLight` and `R
 | `invariant_noApprovalExceedsTotalRecorded` | `Σ approvalCounts ≤ totalApproved` |
 | `invariant_allowanceMatchesGhost` | the on-chain mint quota exactly matches an independently-computed ghost mirror, after any interleaving |
 | `invariant_mintedNeverExceedsCredited` | `Σ minted ≤ Σ credited` |
+| `invariant_noMintBreachedTheCap` | every accepted mint left `totalSupply ≤ maxTotalSupply` (safety) |
+| `invariant_noFittingMintWasRejected` | every mint that fitted under the cap went through (liveness) |
+| `invariant_mintsFailOnlyWithTheRuleError` | a rejected mint reverts only with the rule's own error |
+| `invariant_remainingMintableMatchesLiveSupply` | `remainingMintable() == max(cap − totalSupply, 0)`, forced burns included |
+| `invariant_preflightAgreesWithHeadroom` | the pre-flight view accepts exactly the headroom and rejects one unit more |
+| `invariant_totalIssuedMatchesGhost` | `RuleIssuanceCap.totalIssued` equals the sum of accepted mints: burns never restore it |
+| `invariant_issuedCoversSupply` | cumulative issuance is never below the outstanding supply |
 
-Both suites are **mutation-verified**: injecting an approval double-spend or an off-by-one quota deduction makes them fail. Validation rules are read-only and hold no per-transfer state, so they are covered by unit and fuzz tests instead.
+All suites are **mutation-verified**: injecting an approval double-spend, an off-by-one quota deduction, an off-by-one or over-strict cap, a wrong headroom view, an unrecorded issuance counter or an off-by-one issuance cap makes them fail. The other validation rules are read-only and their state does not evolve, so unit and fuzz tests cover them. `RuleMaxTotalSupply` is the exception: the supply it guards changes, sometimes without calling the rule (forced burns).
 
 Full details — handler architecture, ghost variables, the negative controls, the coverage map against the threat-model invariants, and how to add a new one — are in **[doc/technical/guides/INVARIANT_TESTS.md](./technical/guides/INVARIANT_TESTS.md)**.
 
-Deployment scripts: `script/DeployCMTATWithWhitelist.s.sol`, `script/DeployCMTATWithBlacklist.s.sol`, `script/DeployCMTATWithBlacklistAndSanctionsList.s.sol`.
+Deployment scripts: one per rule (`script/DeployCMTATWith<Rule>.s.sol`) plus two RuleEngine combinations; see [Deployment Guide](#deployment-guide).
 
-> **Deployment key security:** avoid passing `--private-key` on the command line (visible in shell history and to any process that can read `/proc`). Prefer hardware wallets (`--ledger`, `--trezor`) or encrypted keystores (`--account <keystore>`). See [Foundry best practices](https://www.getfoundry.sh/best-practices).
+> **Deployment key security:** avoid passing `--private-key` on the command line: it is visible in shell history and to any process that can read `/proc`. Prefer hardware wallets (`--ledger`, `--trezor`) or encrypted keystores (`--account <keystore>`). See [Foundry best practices](https://www.getfoundry.sh/best-practices).
 
 For the full toolchain guide — dependency versions, Hardhat commands, HTML coverage generation, the gas-benchmark workflow, and the generic Forge / Cast / Anvil / Chisel reference — see **[doc/FOUNDRY.md](./FOUNDRY.md)** and the [Foundry book](https://book.getfoundry.sh/).
 
@@ -1421,8 +1468,7 @@ function contains(address targetAddress)
 
 ##### Description
 
-Checks whether a specific address is listed.
- Implements `IIdentityRegistryContains`.
+Checks whether a specific address is listed. Implements `IIdentityRegistryContains`.
 
 ##### Parameters
 
@@ -1494,29 +1540,21 @@ Checks the listing status of multiple addresses in a single call.
 
 ##### Null address
 
-It is possible to add the null address (0x0) to the address list. In a whitelist, this enables mint/burn flows (since `from`/`to` can be zero). In a blacklist, adding `0x0` blocks mint/burn.
-For `RuleWhitelist`, you can also pre-list `0x0` at deployment using the constructor parameter `allowMintBurn=true`.
+It is possible to add the null address (0x0) to the address list. In a whitelist, this enables mint/burn flows (since `from`/`to` can be zero). In a blacklist, adding `0x0` blocks mint/burn. For `RuleWhitelist`, you can also pre-list `0x0` at deployment using the constructor parameter `allowMintBurn=true`.
 
 ##### Duplicate address
 
-**addAddress**
-If the address already exists, the transaction is reverted to save gas.
-**addAddresses**
-If one of the addresses already exist, there is no change for this address. The transaction remains valid (no revert).
+**addAddress** If the address already exists, the transaction is reverted to save gas. **addAddresses** If one of the addresses already exist, there is no change for this address. The transaction remains valid (no revert).
 
 ##### NonExistent Address
 
-**removeAddress**
-If the address does not exist in the whitelist, the transaction is reverted to save gas.
-**removeAddresses**
-If the address does not exist in the whitelist, there is no change for this address. The transaction remains valid (no revert).
+**removeAddress** If the address does not exist in the whitelist, the transaction is reverted to save gas. **removeAddresses** If the address does not exist in the whitelist, there is no change for this address. The transaction remains valid (no revert).
 
 
 
 ### IERC7943NonFungibleCompliance
 
-Compliance interface for ERC-721 / ERC-1155–style non-fungible assets. It is implemented by the address-screening validation rules only: the operation rules (such as `RuleConditionalTransferLight`) and the supply-cap rules `RuleMaxTotalSupply` and `RuleChainlinkPoR` are ERC-20 only and do not implement this interface.
- For ERC-721, `amount` must always be `1`.
+Compliance interface for ERC-721 / ERC-1155–style non-fungible assets. It is implemented by the address-screening validation rules only: the operation rules (such as `RuleConditionalTransferLight`) and the supply-cap rules `RuleMaxTotalSupply` and `RuleChainlinkPoR` are ERC-20 only and do not implement this interface. For ERC-721, `amount` must always be `1`.
 
 ------
 
@@ -1568,8 +1606,7 @@ Verifies whether a token transfer is permitted according to the rule-based compl
 
 ### IERC7943NonFungibleComplianceExtend
 
-Extended compliance interface for ERC-721 / ERC-1155 non-fungible assets. It is implemented by the address-screening validation rules only: the operation rules (such as `RuleConditionalTransferLight`) and the supply-cap rules `RuleMaxTotalSupply` and `RuleChainlinkPoR` are ERC-20 only and do not implement this interface.
- Adds restriction-code reporting, spender-aware checks, and a post-transfer hook.
+Extended compliance interface for ERC-721 / ERC-1155 non-fungible assets. It is implemented by the address-screening validation rules only: the operation rules (such as `RuleConditionalTransferLight`) and the supply-cap rules `RuleMaxTotalSupply` and `RuleChainlinkPoR` are ERC-20 only and do not implement this interface. Adds restriction-code reporting, spender-aware checks, and a post-transfer hook.
 
 For ERC-721, `amount` / `value` must always be `1`.
 
@@ -1736,8 +1773,7 @@ Signals to the compliance engine that a transfer has successfully occurred.
 
 ### RuleSanctionsList
 
-Compliance rule enforcing sanctions-screening for token transfers.
- Integrates a sanctions-oracle (e.g., Chainalysis) to block transfers when the sender, recipient, or spender is sanctioned.
+Compliance rule enforcing sanctions-screening for token transfers. Integrates a sanctions-oracle (e.g., Chainalysis) to block transfers when the sender, recipient, or spender is sanctioned.
 
 ------
 
@@ -1768,9 +1804,7 @@ Set the sanctions-oracle contract used for transfer-restriction checks.
 
 ##### Description
 
-Updates the sanctions-oracle contract reference.
- This function may only be called by accounts granted the `SANCTIONLIST_ROLE`.
- Passing the zero address reverts; use `clearSanctionListOracle` to disable checks.
+Updates the sanctions-oracle contract reference. This function may only be called by accounts granted the `SANCTIONLIST_ROLE`. Passing the zero address reverts; use `clearSanctionListOracle` to disable checks.
 
 ##### Emits
 
@@ -1798,10 +1832,19 @@ Initializes access control, the token contract, and the max supply.
 function setMaxTotalSupply(uint256 newMaxTotalSupply)
     public
     virtual
-    onlyRole(DEFAULT_ADMIN_ROLE)
+    onlyRole(MAX_TOTAL_SUPPLY_ROLE)
 ```
 
-Updates the configured maximum supply.
+Updates the configured maximum supply. The admin holds `MAX_TOTAL_SUPPLY_ROLE` implicitly.
+
+#### increaseMaxTotalSupply / decreaseMaxTotalSupply
+
+```solidity
+function increaseMaxTotalSupply(uint256 amount) public virtual onlyRole(MAX_TOTAL_SUPPLY_ROLE)
+function decreaseMaxTotalSupply(uint256 amount) public virtual onlyRole(MAX_TOTAL_SUPPLY_ROLE)
+```
+
+Raise or lower the cap by `amount`. They revert with `RuleMaxTotalSupply_IncreaseOverflow` past `type(uint256).max`, and with `RuleMaxTotalSupply_DecreaseBelowZero` when `amount` exceeds the cap. Unlike two absolute `setMaxTotalSupply` calls computed from the same old cap, two increases compose.
 
 #### setTokenContract
 
@@ -1812,7 +1855,20 @@ function setTokenContract(address tokenContract_)
     onlyRole(DEFAULT_ADMIN_ROLE)
 ```
 
-Sets the token contract used to read `totalSupply()`.
+Sets the token contract used to read `totalSupply()`. Stays admin-only: `MAX_TOTAL_SUPPLY_ROLE` does not grant it.
+
+### RuleIssuanceCap
+
+Extends `RuleMaxTotalSupply` (all of its functions above apply) with a non-replenishing counter. Only the additions:
+
+```solidity
+constructor(address admin, address tokenContract_, uint256 issuanceCap_, uint256 initialIssued_)
+function totalIssued() public view returns (uint256)
+function bindToken(address token) public virtual onlyRole(COMPLIANCE_MANAGER_ROLE) // single binding
+function unbindToken(address token) public virtual onlyRole(COMPLIANCE_MANAGER_ROLE)
+```
+
+`setTokenContract` always reverts (`RuleIssuanceCap_TokenContractLocked`). `transferred` is restricted to the bound caller. Events: `TotalIssuedInitialized(initialIssued)`, `IssuanceRecorded(value, totalIssued)`.
 
 ### RuleChainlinkPoR
 
@@ -1953,6 +2009,10 @@ Returns the number of approvals for the transfer hash.
 
 ## Security
 
+### Security review (v0.7.0)
+
+The published report, [**`CLAUDE_AUDIT.md`**](./security/audits/tools/v0.7.0/CLAUDE_AUDIT.md), covers the code changed since v0.6.0. **Outcome: 0 Critical, 0 High, 0 Medium, 0 Low, 5 Informational.** The findings are deployment shapes `RuleIssuanceCap` cannot detect (an engine serving several tokens, a wrong binding, mints before attachment), a missing warning on the `_afterMintChecked` extension point, and the shared code 85. Proofs: [`test/ThreatModel/ThreatModelV070Tests.t.sol`](../test/ThreatModel/ThreatModelV070Tests.t.sol) (16 tests, 4 fuzz).
+
 ### Manual Threat Model & Review (v0.4.0)
 
 The published report is [**`CLAUDE_AUDIT.md`**](./security/audits/tools/v0.4.0/claude-audit/CLAUDE_AUDIT.md) — findings, invariant verification, access-control verification, what was remediated, and the open improvement backlog. It records the trust model and actors, the catalogued threats and invariants, and an explicit disposition for every threat ID.
@@ -1971,28 +2031,44 @@ Proofs live in [`test/ThreatModel/ThreatModelTests.t.sol`](../test/ThreatModel/T
 
 See the consolidated [Audit & Security-Analysis Overview](./security/audits/AUDIT_OVERVIEW.md) for the full index and triage. Latest tool outputs (including feedback documents) are in [`doc/security/audits/tools/v0.4.0/`](./security/audits/tools/v0.4.0/).
 
+#### Static analysis (v0.7.0)
+
+Run **2026-10-26** for the v0.7.0 release and **re-run 2026-10-28** before tagging (solc `0.8.38`, EVM `osaka`), with Slither **0.11.6** (latest) and Aderyn 0.6.5; a Slither 0.11.5 run is kept for a like-for-like comparison with v0.6.0. Full reports and per-finding triage in [`doc/security/audits/tools/v0.7.0/`](./security/audits/tools/v0.7.0/).
+
+| Tool | High | Medium | Low | Info | Anything to fix? |
+|---|---|---|---|---|---|
+| [Slither](https://github.com/crytic/slither) 0.11.6 | 2 | 5 | 18 | 22 | **No** — [feedback](./security/audits/tools/v0.7.0/slither-report-feedback.md) |
+| [Aderyn](https://github.com/Cyfrin/aderyn) 0.6.5 | 0 | 0 | 10 categories (381 instances) | 0 | **No** — [feedback](./security/audits/tools/v0.7.0/aderyn-report-feedback.md) |
+| Slither 0.11.6 and Aderyn 0.6.5 on `script/` | 0 | 0 | 2 categories (36 instances, Aderyn) | 0 | **No** after one fix — [feedback](./security/audits/tools/v0.7.0/script-report-feedback.md) |
+
+**Nothing to fix.**
+- Slither: on 0.11.5 the code delta is nil, identical to v0.6.0 result for result, although this release added `RuleIssuanceCap`. The upgrade to 0.11.6 keeps 46 results but trades six `unused-return` hits for six `dead-code` false positives.
+- Slither cannot analyse `_addAddresses` / `_removeAddresses` in `RuleMaxBalance` and `IdentityRegistryWhitelist` (no IR, both versions). The same inherited code is analysed elsewhere; see the feedback.
+- Aderyn's +31 is fully attributed to the new rule and the `RuleMaxTotalSupply` hooks. The pre-release re-run adds one Slither `dead-code` false positive and four Aderyn one-per-file instances for the two new storage contracts.
+- Deployment scripts, analysed separately for the first time: Slither reports nothing. Aderyn's large-numeric-literal finding on the default caps was fixed; the fix also made the defaults whole tokens scaled by `CMTAT_DECIMALS`, where they had been base units.
+- Its one new category, `State Change Without Event` on the now non-`view` `RuleMaxTotalSupplyBase.transferred`, is a false positive pinned by a no-write test.
+- The first Aderyn run also found nine unused `IRuleEngine` imports left by the RuleEngine rc7 migration; they were removed before the committed run.
+
+Commands used for `v0.7.0` (mocks excluded):
+
+```bash
+slither . --checklist --filter-paths "node_modules,lib,test,forge-std,mocks" \
+  > doc/security/audits/tools/v0.7.0/slither-report.md
+aderyn -x mocks --output doc/security/audits/tools/v0.7.0/aderyn-report.md
+```
+
 #### Static analysis (v0.6.0)
 
-Re-run **2026-08-21** for the v0.6.0 release, at solc `0.8.36`, with the same tool versions as v0.5.0 so the
-delta is directly comparable. Full reports and per-finding triage in
-[`doc/security/audits/tools/v0.6.0/`](./security/audits/tools/v0.6.0/).
+Re-run **2026-08-21** for the v0.6.0 release, at solc `0.8.36`, with the same tool versions as v0.5.0 so the delta is directly comparable. Full reports and per-finding triage in [`doc/security/audits/tools/v0.6.0/`](./security/audits/tools/v0.6.0/).
 
 | Tool | High | Medium | Low | Info | Anything to fix? |
 |---|---|---|---|---|---|
 | [Slither](https://github.com/crytic/slither) 0.11.5 | 2 | 11 | 18 | 15 | **No** — [feedback](./security/audits/tools/v0.6.0/slither-report-feedback.md) |
 | [Aderyn](https://github.com/Cyfrin/aderyn) 0.6.5 | 0 | 0 | 9 categories (346 instances) | 0 | **No** — [feedback](./security/audits/tools/v0.6.0/aderyn-report-feedback.md) |
 
-**Nothing to fix.** Slither moved 44 → 46 and Aderyn 336 → 346, both fully attributed to code added this
-release. Aderyn's +10 is *exactly* the five new production files appearing once each in the two per-file
-categories (`Unspecific Solidity Pragma`, `PUSH0 Opcode`); no new category appeared, and neither
-`Centralization Risk` nor `Empty Block` moved, because the new ERC-3643 variants add no privileged external
-function. Slither's one new `dead-code` hit is a false positive that would be damaging to act on — it names the
-notification seam `RuleChainlinkPoRERC3643` exists to override.
+**Nothing to fix.** Slither moved 44 → 46 and Aderyn 336 → 346, both fully attributed to code added this release. Aderyn's +10 is *exactly* the five new production files appearing once each in the two per-file categories (`Unspecific Solidity Pragma`, `PUSH0 Opcode`); no new category appeared, and neither `Centralization Risk` nor `Empty Block` moved, because the new ERC-3643 variants add no privileged external function. Slither's one new `dead-code` hit is a false positive that would be damaging to act on — it names the notification seam `RuleChainlinkPoRERC3643` exists to override.
 
-The 2026-08-21 re-run, after the RuleEngine `v3.0.0-rc6` bump, **moved no detector in either tool** — same 46
-Slither results, same 346 Aderyn instances, same categories. Slither's contract count rose 221 → 225 purely
-because rc6 added five upstream contracts to the inheritance graph, all under `lib/` and all filtered out of the
-results.
+The 2026-08-21 re-run, after the RuleEngine `v3.0.0-rc6` bump, **moved no detector in either tool** — same 46 Slither results, same 346 Aderyn instances, same categories. Slither's contract count rose 221 → 225 purely because rc6 added five upstream contracts to the inheritance graph, all under `lib/` and all filtered out of the results.
 
 Commands used for `v0.6.0` (mocks excluded):
 
@@ -2004,20 +2080,14 @@ aderyn -x mocks --output doc/security/audits/tools/v0.6.0/aderyn-report.md
 
 #### Static analysis (v0.5.0)
 
-Re-run **2026-08-13** for the v0.5.0 release, at solc `0.8.36`. Full reports and per-finding triage in
-[`doc/security/audits/tools/v0.5.0/`](./security/audits/tools/v0.5.0/); consolidated view in
-[`AUDIT_OVERVIEW.md`](./security/audits/AUDIT_OVERVIEW.md).
+Re-run **2026-08-13** for the v0.5.0 release, at solc `0.8.36`. Full reports and per-finding triage in [`doc/security/audits/tools/v0.5.0/`](./security/audits/tools/v0.5.0/); consolidated view in [`AUDIT_OVERVIEW.md`](./security/audits/AUDIT_OVERVIEW.md).
 
 | Tool | High | Medium | Low | Info | Anything to fix? |
 |---|---|---|---|---|---|
 | [Slither](https://github.com/crytic/slither) 0.11.5 | 2 | 11 | 17 | 14 | **No** — [feedback](./security/audits/tools/v0.5.0/slither-report-feedback.md) |
 | [Aderyn](https://github.com/Cyfrin/aderyn) 0.6.5 | 0 | 0 | 9 categories (336 instances) | 0 | **No** — [feedback](./security/audits/tools/v0.5.0/aderyn-report-feedback.md) |
 
-**Nothing to fix.** Every increase over v0.4.0 is proportional to the three contracts this release adds; the two
-new Slither categories (`uninitialized-local`, `timestamp`) were each verified against the source and are a
-`try`/`catch` assignment pattern and the Proof-of-Reserve staleness check respectively. The 2026-08-13 re-run
-lowered both totals (Slither 46 → 43, Aderyn 333 → 315 instances) even as the contract count rose, because the
-`AddressSetBatchLib` refactor consolidated the duplicated batch loops and consumes their return values.
+**Nothing to fix.** Every increase over v0.4.0 is proportional to the three contracts this release adds; the two new Slither categories (`uninitialized-local`, `timestamp`) were each verified against the source and are a `try`/`catch` assignment pattern and the Proof-of-Reserve staleness check respectively. The 2026-08-13 re-run lowered both totals (Slither 46 → 43, Aderyn 333 → 315 instances) even as the contract count rose, because the `AddressSetBatchLib` refactor consolidated the duplicated batch loops and consumes their return values.
 
 Commands used for `v0.5.0` (mocks excluded):
 
@@ -2027,62 +2097,27 @@ slither . --checklist --filter-paths "node_modules,lib,test,forge-std,mocks" \
 aderyn -x mocks --output doc/security/audits/tools/v0.5.0/aderyn-report.md
 ```
 
-> The Slither filter must list **`lib`**: this is a Foundry project, so omitting it pulls the whole vendored
-> dependency tree into scope and inflates the result count roughly four-fold with OpenZeppelin-internal findings.
+> The Slither filter must list **`lib`**: this is a Foundry project, so omitting it pulls the whole vendored dependency tree into scope and inflates the result count roughly four-fold with OpenZeppelin-internal findings.
 
 #### Nethermind AuditAgent (v0.5.0)
 
-AI automated scan with [**Nethermind AuditAgent**](https://auditagent.nethermind.io/), run **2026-08-17**
-(Scan ID `10`, commit `01632da0…951e204c`, 89 contracts / 9 764 LoC).
-[Report (PDF)](./security/audits/tools/v0.5.0/nethermind_audit_agent_report_v0.5.0.pdf) ·
-[feedback](./security/audits/tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md).
+AI automated scan with [**Nethermind AuditAgent**](https://auditagent.nethermind.io/), run **2026-08-17** (Scan ID `10`, commit `01632da0…951e204c`, 89 contracts / 9 764 LoC). [Report (PDF)](./security/audits/tools/v0.5.0/nethermind_audit_agent_report_v0.5.0.pdf) · [feedback](./security/audits/tools/v0.5.0/nethermind_audit_agent_report_v0.5.0-feedback.md).
 
-> ⚠️ **Note: this scan was performed by an AI-powered automated tool, not a formal human-led audit.** Nethermind's
-> own notice states the report "has been generated entirely by AI… does not constitute a full security audit… must
-> be independently verified", and that it does not authorise describing the project as "audited by Nethermind".
-> The feedback file is that independent verification — every finding was opened against the cited `file:line`.
+> ⚠️ **Note: this scan was performed by an AI-powered automated tool, not a formal human-led audit.** Nethermind's own notice states the report "has been generated entirely by AI… does not constitute a full security audit… must be independently verified", and that it does not authorise describing the project as "audited by Nethermind". The feedback file is that independent verification — every finding was opened against the cited `file:line`.
 
 | Tool | High | Medium | Low | Info | Anything to fix? |
 |---|---|---|---|---|---|
 | [Nethermind AuditAgent (AI)](https://auditagent.nethermind.io/) | 0 | 13 | 11 | 0 | **7 fixed** (NM-3, 6, 10, 11, 17, 18, 20 — `v0.6.0`), 16 accepted as design, 1 declined; nothing left open |
 
-**Nothing exploitable.** There are no false positives — all 24 findings describe real code — but 17 restate
-positions already documented in the source and in [`CLAUDE_AUDIT.md`](./security/audits/tools/v0.4.0/claude-audit/CLAUDE_AUDIT.md)
-(F-4, F-5, F-7, and the accepted-risk rows for a reverting oracle or identity registry), and the 24 items collapse
-to roughly **11 distinct claims**. Every failure described is fail-closed (over-restriction, a blocked transfer) or
-inert (a rule that cannot screen an identity it is never given); none of the 13 Medium ratings survives
-verification at Medium.
+**Nothing exploitable.** There are no false positives — all 24 findings describe real code — but 17 restate positions already documented in the source and in [`CLAUDE_AUDIT.md`](./security/audits/tools/v0.4.0/claude-audit/CLAUDE_AUDIT.md) (F-4, F-5, F-7, and the accepted-risk rows for a reverting oracle or identity registry), and the 24 items collapse to roughly **11 distinct claims**. Every failure described is fail-closed (over-restriction, a blocked transfer) or inert (a rule that cannot screen an identity it is never given); none of the 13 Medium ratings survives verification at Medium.
 
-**Fixed in `v0.6.0` — NM-3.** `RuleIdentityRegistryBase._detectTransferRestrictionFrom` returned `TRANSFER_OK`
-outright when the identity registry was unset or the transfer was a burn, instead of delegating to
-`_detectTransferRestriction`. A subclass extending only that hook applied to `transfer` but silently not to
-`transferFrom` or `burnFrom` — the same anti-pattern `RuleSanctionsListBase` was restructured to remove. The fix
-is behaviour-preserving (both early returns duplicated guards the delegate already performs) and is pinned by
-`test/RuleIdentityRegistry/RuleIdentityRegistryDelegation.t.sol`.
+**Fixed in `v0.6.0` — NM-3.** `RuleIdentityRegistryBase._detectTransferRestrictionFrom` returned `TRANSFER_OK` outright when the identity registry was unset or the transfer was a burn, instead of delegating to `_detectTransferRestriction`. A subclass extending only that hook applied to `transfer` but silently not to `transferFrom` or `burnFrom` — the same anti-pattern `RuleSanctionsListBase` was restructured to remove. The fix is behaviour-preserving (both early returns duplicated guards the delegate already performs) and is pinned by `test/RuleIdentityRegistry/RuleIdentityRegistryDelegation.t.sol`.
 
-**Fixed in `v0.6.0` — NM-10.** `ChainlinkPoRFeedManager` flagged a feed as stale only when
-`block.timestamp > updatedAt` — a guard against underflow whose side effect was that any future-dated round
-counted as fresh, so a feed frozen on an old reserve answer could keep authorising mints. A future `updatedAt` is
-now a malformed answer (code `77`), rejected regardless of `maxStalenessSeconds`.
+**Fixed in `v0.6.0` — NM-10.** `ChainlinkPoRFeedManager` flagged a feed as stale only when `block.timestamp > updatedAt` — a guard against underflow whose side effect was that any future-dated round counted as fresh, so a feed frozen on an old reserve answer could keep authorising mints. A future `updatedAt` is now a malformed answer (code `77`), rejected regardless of `maxStalenessSeconds`.
 
-**Fixed in `v0.6.0` — NM-6.** `RuleNFTAdapter`'s ERC-7943 spender-aware overloads screened an owner-initiated
-transfer as delegated, while the `ITransferContext` entrypoints did not. The interfaces signal a direct transfer
-differently — `spender == from` on ERC-7943 and `ctx`, `spender == address(0)` on the CMTAT path — so the adapter
-now normalises on a shared `_isDelegated` predicate and the CMTAT path is deliberately untouched. See
-[`RULE_SEMANTICS.md` §3](./technical/guides/RULE_SEMANTICS.md) for the convention table.
+**Fixed in `v0.6.0` — NM-6.** `RuleNFTAdapter`'s ERC-7943 spender-aware overloads screened an owner-initiated transfer as delegated, while the `ITransferContext` entrypoints did not. The interfaces signal a direct transfer differently — `spender == from` on ERC-7943 and `ctx`, `spender == address(0)` on the CMTAT path — so the adapter now normalises on a shared `_isDelegated` predicate and the CMTAT path is deliberately untouched. See [`RULE_SEMANTICS.md` §3](./technical/guides/RULE_SEMANTICS.md) for the convention table.
 
-**Fixed in `v0.6.0` — NM-11.** `RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR` assume the token
-calls the compliance hook **before** moving the value — CMTAT does, a real ERC-3643 / T-REX token calls it
-**after** — so on that path the stock rule counts the amount twice and reverts mints that are within the cap.
-The direction is over-restriction, never over-issuance. `v0.6.0` adds a stateless `CapAccounting` primitive and a
-`_detectTransferRestrictionOnNotify` hook on each cap rule (defaulting to today's CMTAT behaviour), then ships
-[`RuleChainlinkPoRERC3643`](./technical/contracts/RuleChainlinkPoRERC3643.md) and
-[`RuleMaxTotalSupplyERC3643`](./technical/contracts/RuleMaxTotalSupplyERC3643.md) as one-line overrides of it.
-Only the write path is re-phased: ERC-3643 calls `canTransfer` *before* `_mint` and `created` *after*, in the same
-transaction, so the read views must keep projecting the pending amount. Verified by suites driving the genuine
-vendored T-REX token, including four tests pinning the stock rules failing on it. **`RuleMaxBalance` is
-deliberately excluded** — a post-update variant would revert an agent's `forcedTransfer` and, on T-REX ≤ 4.1
-where `recoveryAddress` routes through it, brick wallet recovery.
+**Fixed in `v0.6.0` — NM-11.** `RuleMaxBalance`, `RuleMaxTotalSupply` and `RuleChainlinkPoR` assume the token calls the compliance hook **before** moving the value — CMTAT does, a real ERC-3643 / T-REX token calls it **after** — so on that path the stock rule counts the amount twice and reverts mints that are within the cap. The direction is over-restriction, never over-issuance. `v0.6.0` adds a stateless `CapAccounting` primitive and a `_detectTransferRestrictionOnNotify` hook on each cap rule (defaulting to today's CMTAT behaviour), then ships [`RuleChainlinkPoRERC3643`](./technical/contracts/RuleChainlinkPoRERC3643.md) and [`RuleMaxTotalSupplyERC3643`](./technical/contracts/RuleMaxTotalSupplyERC3643.md) as one-line overrides of it. Only the write path is re-phased: ERC-3643 calls `canTransfer` *before* `_mint` and `created` *after*, in the same transaction, so the read views must keep projecting the pending amount. Verified by suites driving the genuine vendored T-REX token, including four tests pinning the stock rules failing on it. **`RuleMaxBalance` is deliberately excluded** — a post-update variant would revert an agent's `forcedTransfer` and, on T-REX ≤ 4.1 where `recoveryAddress` routes through it, brick wallet recovery.
 
 Commands used for `v0.4.0` (mocks excluded):
 
@@ -2168,8 +2203,7 @@ AI-assisted static analysis was performed with [Wake Arena](https://getwake.io) 
 
 ## Development
 
-Parts of this project were written with the help of AI coding assistants, principally **Claude Code**
-(Anthropic) and **Codex** (OpenAI).
+Parts of this project were written with the help of AI coding assistants, principally **Claude Code** (Anthropic) and **Codex** (OpenAI).
 
 ## Intellectual property
 

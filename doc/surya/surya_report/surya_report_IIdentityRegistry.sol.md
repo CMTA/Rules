@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/interfaces/IIdentityRegistry.sol | b1b6798d6952e4edfa2f54da544d46125411374d |
+| ./rules/interfaces/IIdentityRegistry.sol | 135955d857e017a9d29a3722b5a3fd799e4ab4cf |
 
 
 ### Contracts Description Table

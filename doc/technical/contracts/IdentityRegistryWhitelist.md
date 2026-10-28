@@ -1,24 +1,47 @@
 # Identity Registry Whitelist (ERC-3643)
 
-[TOC]
+<!-- toc -->
+
+  - [Where the whitelist comes from](#where-the-whitelist-comes-from)
+- [Which ERC-3643 functions call the registry, and how](#which-erc-3643-functions-call-the-registry-and-how)
+  - [The recoveryAddress sequence](#the-recoveryaddress-sequence)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+- [Installation](#installation)
+- [Access Control](#access-control)
+- [Methods](#methods)
+  - [registerIdentity(address _userAddress, address _identity, uint16 _country)](#registeridentityaddress-_useraddress-address-_identity-uint16-_country)
+  - [deleteIdentity(address _userAddress)](#deleteidentityaddress-_useraddress)
+  - [isVerified(address _userAddress) → bool](#isverifiedaddress-_useraddress--bool)
+  - [investorCountry(address _userAddress) → uint16](#investorcountryaddress-_useraddress--uint16)
+  - [version() → string](#version--string)
+  - [registeredIdentityCount() → uint256](#registeredidentitycount--uint256)
+- [Limitations](#limitations)
+  - [1. No ERC-734 surface: recoveryAddress needs a real ONCHAINID](#1-no-erc-734-surface-recoveryaddress-needs-a-real-onchainid)
+  - [2. Recovery still trusts the token agent completely](#2-recovery-still-trusts-the-token-agent-completely)
+  - [3. No identity data is kept](#3-no-identity-data-is-kept)
+  - [4. No claim topics, no trusted issuers](#4-no-claim-topics-no-trusted-issuers)
+  - [5. Only the token-facing interface exists](#5-only-the-token-facing-interface-exists)
+- [Tests](#tests)
+
+<!-- /toc -->
 
 `IdentityRegistryWhitelist` is a whitelist that presents itself to an **ERC-3643 token as its identity registry**. Install it with `token.setIdentityRegistry(address(this))`. `registerIdentity` whitelists a wallet, `deleteIdentity` removes it, and `isVerified` answers the question the token asks on every inbound transfer.
 
 > **This is not a compliance rule.** It implements no `IRule` surface, has no restriction codes, and **must not be added to a `RuleEngine`**. It sits on the token's *identity registry* slot, not its *compliance* slot. Do not confuse it with [`RuleIdentityRegistry`](./RuleIdentityRegistry.md), which is the mirror image: a compliance rule that *consults* an external identity registry. This contract *is* the registry.
 
-> **Using it with a CMTAT token.** CMTAT has **no** `setIdentityRegistry` slot — that is ERC-3643 only — so
-> this contract cannot be installed on a CMTAT token directly. Reach it through
-> [`RuleIdentityRegistry`](./RuleIdentityRegistry.md) in a `RuleEngine`, which consults this registry over
-> `isVerified`. The two are wired by interface, not inheritance, and that pairing is pinned by
-> [`CMTATRuleIdentityRegistryComposition.t.sol`](../../../test/IdentityRegistryWhitelist/CMTATRuleIdentityRegistryComposition.t.sol).
+> **Using it with a CMTAT token.** CMTAT has **no** `setIdentityRegistry` slot — that is ERC-3643 only — so this contract cannot be installed on a CMTAT token directly. Use it through [`RuleIdentityRegistry`](./RuleIdentityRegistry.md), set directly on the token or added to a `RuleEngine`, which consults this registry over `isVerified`. The two are coupled by interface, not inheritance, and that pairing is pinned by [`CMTATRuleIdentityRegistryComposition.t.sol`](../../../test/IdentityRegistryWhitelist/CMTATRuleIdentityRegistryComposition.t.sol).
 
 ### Where the whitelist comes from
 
-The address set is **not re-implemented**. The contract inherits `RuleAddressSetInternal`, the same `EnumerableSet` machinery `RuleWhitelist` and `RuleBlacklist` are built on — so the storage layout, the zero-address guard and the revert errors (`RuleAddressSet_ZeroAddressNotAllowed`, `RuleAddressSet_AddressNotFound`) are shared code rather than a second implementation. **No separate whitelist contract is deployed**: the registry *is* the list.
+The address set is **not re-implemented**. The contract inherits `RuleAddressSetInternal`, the same `EnumerableSet` set code `RuleWhitelist` and `RuleBlacklist` are built on — so the storage layout, the zero-address guard and the revert errors (`RuleAddressSet_ZeroAddressNotAllowed`, `RuleAddressSet_AddressNotFound`) are shared code rather than a second implementation. **No separate whitelist contract is deployed**: the registry *is* the list.
 
-Only the `internal` layer is inherited, and that is deliberate: the registry exposes exactly one write API (the ERC-3643 one) rather than two overlapping ones. The two roles that gate `RuleAddressSet`'s public `addAddress` / `removeAddress` live in a separate `RuleAddressSetRolesStorage`, inherited by that public layer only, so **this registry does not advertise `ADDRESS_LIST_ADD_ROLE` / `ADDRESS_LIST_REMOVE_ROLE` at all** — it never enforces them, and exposing an inert role invites an operator to grant a privilege that authorises nothing. `testDoesNotExposeInertAddressListRoles` pins their absence from the ABI. Inheriting the public `RuleAddressSet` surface would add `addAddress` / `removeAddress` alongside `registerIdentity` / `deleteIdentity`, giving the same state change two sets of roles and two sets of events, and leaving an operator to guess which pair is authoritative.
+Only the `internal` layer is inherited, so that the registry exposes exactly one write API (the ERC-3643 one) rather than two overlapping ones. Inheriting the public `RuleAddressSet` surface would add `addAddress` / `removeAddress` alongside `registerIdentity` / `deleteIdentity`, giving the same state change two sets of roles and two sets of events, and leaving an operator to guess which pair is authoritative.
 
-The design goal is a **wrapper, not a registry**: it adapts the calls an ERC-3643 token makes onto a plain whitelist, and keeps **no identity state whatsoever**: no ONCHAINID, no country, no claims. `registerIdentity`'s `_identity` and `_country` arguments exist so the ERC-3643 signature matches; both are discarded. Verification means exactly one thing: is this wallet on the whitelist.
+The two roles that gate `RuleAddressSet`'s public `addAddress` / `removeAddress` live in a separate `RuleAddressSetRolesStorage`, inherited by that public layer only, so **this registry does not advertise `ADDRESS_LIST_ADD_ROLE` / `ADDRESS_LIST_REMOVE_ROLE` at all** — it never enforces them, and exposing an inert role invites an operator to grant a privilege that authorises nothing. `testDoesNotExposeInertAddressListRoles` pins their absence from the ABI.
+
+The design goal is a **wrapper, not a registry**: it adapts the calls an ERC-3643 token makes onto a plain whitelist, and keeps **no identity state**: no ONCHAINID, no country, no claims. `registerIdentity`'s `_identity` and `_country` arguments exist so the ERC-3643 signature matches; both are discarded. Verification means exactly one thing: is this wallet on the whitelist.
 
 ## Which ERC-3643 functions call the registry, and how
 
@@ -60,6 +83,11 @@ Steps 3 and 5 mean **the token itself is a caller of the registry's write functi
 
 ## Schema
 
+The **Graph** and **Inheritance** diagrams are generated from the source code with [Surya](https://github.com/Consensys/surya), by the scripts in `doc/script/`, and must be regenerated after a code change:
+
+- **Graph** (`surya graph`): the call graph of the contract's source file. Each node is a function, grouped by contract, and each arrow is a call from one function to another, including calls to other contracts. Only that file is parsed, so logic inherited from a base contract appears in that base contract's own graph.
+- **Inheritance** (`surya inheritance`): the contracts and interfaces this contract inherits from, which tells you where each inherited function and modifier is defined.
+
 ### Graph
 
 ![surya_graph_IdentityRegistryWhitelist](../../surya/surya_graph/surya_graph_IdentityRegistryWhitelist.sol.png)
@@ -79,7 +107,7 @@ registry.grantRole(role, operator);        // maintains the whitelist
 registry.grantRole(role, address(token));  // REQUIRED for recoveryAddress
 ```
 
-Then, to recover a wallet (the replacement wallet is registered **by the token**, so do not pre-register it):
+Then, to recover a wallet: the replacement wallet is registered **by the token**, so do not pre-register it.
 
 ```solidity
 token.recoveryAddress(lostWallet, newWallet, investorOnchainId);    // a real ERC-734 identity
@@ -118,9 +146,7 @@ Whitelist membership. **`isVerified(address(0))` is always `false`**: the zero a
 
 ### `version() → string`
 
-Returns the library release the contract was deployed from (currently `"0.5.0"`), via `VersionModule`. The
-registry is not a rule, but it is a deployable production contract wired into a token's identity slot, so being
-able to identify its release matters for the same reasons it does for the rules.
+Returns the library release the contract was deployed from (currently `"0.5.0"`), via `VersionModule`. The registry is not a rule, but it is a deployable production contract wired into a token's identity slot, so being able to identify its release matters for the same reasons it does for the rules.
 
 ### `registeredIdentityCount() → uint256`
 
@@ -157,19 +183,19 @@ Less than it sounds, because the token barely uses it. Auditing the reference im
 | Location | Role |
 | --- | --- |
 | `token/Token.sol:308` (`recoveryAddress`) | **The only use in the token.** A pure pass-through: reads the lost wallet's country and hands it straight to `registerIdentity` for the new wallet. The token never branches on the value, never stores it, and exposes no getter — `IToken.sol` does not mention country at all. |
-| `registry/implementation/IdentityRegistryStorage.sol:91,112,177` | Storage plumbing: writes and reads the field. |
+| `registry/implementation/IdentityRegistryStorage.sol:91,112,177` | Storage: writes and reads the field. |
 | `registry/implementation/IdentityRegistry.sol:132,226` | Forwards to storage. |
 | `compliance/legacy/BasicCompliance.sol:175` | `_getCountry()`, the only place country drives *logic*, and it has **no caller** in the vendored tree; it exists for country-restriction modules built on top. Note the path: `legacy`. |
 | `_testContracts/` | `MockContract`, `LegacyToken_3_5_2`. |
 
 Two things follow:
 
-- **The token is genuinely unaffected.** Its single use is a round trip that starts and ends in the registry, so a constant `0` in and a discarded `0` out changes nothing. Recovery works exactly as it does with a full registry.
+- **The token is unaffected.** Its single use is a round trip that starts and ends in the registry, so a constant `0` in and a discarded `0` out changes nothing. Recovery works exactly as it does with a full registry.
 - **The current modular compliance framework has no country module.** `compliance/modular/modules/` contains only `AbstractModule`, `AbstractModuleUpgradeable`, `IModule`, `ModuleProxy` and `TestModule` — none reference country.
 
 So the real exposure is narrow and specific: **a custom compliance module that calls `investorCountry` will see every investor as country 0**, and will therefore apply whatever rule it has for country 0 to everyone. Nothing shipped in ERC-3643 does this, but a jurisdiction-restriction module is a plausible thing to write. If that is on your roadmap, this registry is the wrong base — use the full ERC-3643 registry stack, which stores the country properly.
 
-If you need investor metadata on-chain generally, the same conclusion applies: this is a whitelist wearing the registry interface, nothing more.
+If you need investor metadata on-chain generally, the same conclusion applies: this is a whitelist exposed through the registry interface, and it stores no investor data.
 
 ### 4. No claim topics, no trusted issuers
 

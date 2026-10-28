@@ -3,7 +3,7 @@ pragma solidity 0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {ComplianceNotFollowed, Token} from "ERC3643/token/Token.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 import {AggregatorV3Mock} from "src/mocks/AggregatorV3Mock.sol";
 import {IdentityRegistryWhitelist} from "src/registry/IdentityRegistryWhitelist.sol";
 import {AggregatorV3Interface} from "src/rules/interfaces/AggregatorV3Interface.sol";
@@ -63,7 +63,7 @@ contract ERC3643RealTokenChainlinkPoR is Test, RuleChainlinkPoRInvariantStorage 
 
         vm.startPrank(ADMIN);
         registry = new IdentityRegistryWhitelist(ADMIN);
-        engine = new RuleEngine(ADMIN, address(0), address(0));
+        engine = new RuleEngine(ADMIN, address(0));
         vm.stopPrank();
 
         _wire();
@@ -306,7 +306,7 @@ contract ERC3643RealTokenChainlinkPoR is Test, RuleChainlinkPoRInvariantStorage 
      *      it; the reserve answer is simply scaled by `10 ** 18` too little, and every mint is
      *      refused. The same mistake with the decimals reversed would over-mint instead.
      *
-     *      There is no on-chain fix: the constructor probe genuinely succeeded. The remedy is
+     *      There is no on-chain fix: the constructor probe succeeded. The remedy is
      *      ordering (construct after `init`) or calling `setTokenMetadata` afterwards to re-sync.
      */
     function testRuleBuiltBeforeInitCachesTheWrongDecimals() public {
@@ -317,7 +317,7 @@ contract ERC3643RealTokenChainlinkPoR is Test, RuleChainlinkPoRInvariantStorage 
         RuleChainlinkPoRERC3643 early =
             new RuleChainlinkPoRERC3643(ADMIN, address(fresh), 0, AggregatorV3Interface(address(scaledFeed)), 0);
 
-        RuleEngine freshEngine = new RuleEngine(ADMIN, address(0), address(0));
+        RuleEngine freshEngine = new RuleEngine(ADMIN, address(0));
         vm.prank(ADMIN);
         freshEngine.setTokenSelfBindingApproval(address(fresh), true);
         fresh.init(address(registry), address(freshEngine), "Late init", "LATE", 18, address(0));

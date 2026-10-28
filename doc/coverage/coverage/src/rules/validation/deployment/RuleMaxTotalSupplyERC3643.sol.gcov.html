@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - lcov2.info - src/rules/validation/deployment/RuleMaxTotalSupplyERC3643.sol</title>
+  <title>LCOV - lcov.info - src/rules/validation/deployment/RuleMaxTotalSupplyERC3643.sol</title>
   <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
 </head>
 
@@ -28,7 +28,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">lcov2.info</td>
+            <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntry">2</td>
@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-08-19 15:38:25</td>
+            <td class="headerValue">2026-10-28 09:57:31</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">1</td>
@@ -70,7 +70,7 @@
 <pre class="sourceHeading">           Branch data     Line data    Source code</pre>
 <pre class="source">
 <a name="1"><span class="lineNum">       1 </span>                :            : // SPDX-License-Identifier: MPL-2.0</a>
-<a name="2"><span class="lineNum">       2 </span>                :            : pragma solidity ^0.8.20;</a>
+<a name="2"><span class="lineNum">       2 </span>                :            : pragma solidity ^0.8.27;</a>
 <a name="3"><span class="lineNum">       3 </span>                :            : </a>
 <a name="4"><span class="lineNum">       4 </span>                :            : import {RuleMaxTotalSupply} from &quot;./RuleMaxTotalSupply.sol&quot;;</a>
 <a name="5"><span class="lineNum">       5 </span>                :            : </a>
@@ -98,7 +98,7 @@
 <a name="27"><span class="lineNum">      27 </span>                :            :     /**</a>
 <a name="28"><span class="lineNum">      28 </span>                :            :      * @param admin Address that receives the default admin role.</a>
 <a name="29"><span class="lineNum">      29 </span>                :            :      * @param tokenContract_ Token contract that exposes totalSupply (must be non-zero).</a>
-<a name="30"><span class="lineNum">      30 </span>                :            :      * @param maxTotalSupply_ Initial maximum supply.</a>
+<a name="30"><span class="lineNum">      30 </span>                :            :      * @param maxTotalSupply_ Initial maximum supply, in token base units (scaled by `10 ** decimals()`).</a>
 <a name="31"><span class="lineNum">      31 </span>                :            :      */</a>
 <a name="32"><span class="lineNum">      32 </span>                :            :     constructor(address admin, address tokenContract_, uint256 maxTotalSupply_)</a>
 <a name="33"><span class="lineNum">      33 </span>                :            :         RuleMaxTotalSupply(admin, tokenContract_, maxTotalSupply_)</a>

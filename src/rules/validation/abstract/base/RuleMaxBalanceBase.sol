@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
-import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {RuleTransferValidation} from "../core/RuleTransferValidation.sol";
 import {BalanceCapManager} from "../core/BalanceCapManager.sol";
 
@@ -19,8 +18,7 @@ import {BalanceCapManager} from "../core/BalanceCapManager.sol";
  * `RuleIdentityRegistry`) *and* admit one address per investor.
  *
  * @dev **Assumes the token calls this BEFORE moving the value**, so `balanceOf(to)` still excludes
- * `value`. CMTAT does; a token notifying afterwards would halve the effective cap. Pinned by
- * `testMintExactlyToTheCapProvesPreUpdateAccounting`.
+ * `value`. CMTAT does; a token notifying afterwards would halve the effective cap.
  *
  * @dev `maxBalance = 0` forbids holding entirely; it does not disable the rule. The read path must
  * never revert: an unreadable balance yields {CODE_BALANCE_UNAVAILABLE}
@@ -53,7 +51,7 @@ abstract contract RuleMaxBalanceBase is RuleTransferValidation, BalanceCapManage
      * @param restrictionCode Restriction code to test.
      * @return True if `restrictionCode` is one of this rule's codes.
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override returns (bool) {
+    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure virtual override returns (bool) {
         return restrictionCode == CODE_MAX_BALANCE_EXCEEDED || restrictionCode == CODE_BALANCE_UNAVAILABLE;
     }
 
@@ -84,14 +82,19 @@ abstract contract RuleMaxBalanceBase is RuleTransferValidation, BalanceCapManage
     /**
      * @inheritdoc IERC3643IComplianceContract
      */
-    function transferred(address from, address to, uint256 value) public view override(IERC3643IComplianceContract) {
+    function transferred(address from, address to, uint256 value)
+        public
+        view
+        virtual
+        override(IERC3643IComplianceContract)
+    {
         _transferred(from, to, value);
     }
 
     /**
-     * @inheritdoc IRuleEngine
+     * @inheritdoc RuleTransferValidation
      */
-    function transferred(address spender, address from, address to, uint256 value) public view override(IRuleEngine) {
+    function transferred(address spender, address from, address to, uint256 value) public view virtual override {
         _transferredFrom(spender, from, to, value);
     }
 
@@ -101,6 +104,7 @@ abstract contract RuleMaxBalanceBase is RuleTransferValidation, BalanceCapManage
     function messageForTransferRestriction(uint8 restrictionCode)
         public
         pure
+        virtual
         override(IERC1404)
         returns (string memory)
     {

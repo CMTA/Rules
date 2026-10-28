@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/deployment/RuleMaxTotalSupply.sol | e6499a3861218ecfde7db68c440f0c2dd6690c3f |
+| ./rules/validation/deployment/RuleMaxTotalSupply.sol | 7ca5131c6986506adfb4f6494700b68f3bb1765c |
 
 
 ### Contracts Description Table
@@ -15,10 +15,11 @@
 |:----------:|:-------------------:|:----------------:|:----------------:|:---------------:|
 |     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 ||||||
-| **RuleMaxTotalSupply** | Implementation | AccessControlModuleStandalone, RuleMaxTotalSupplyBase |||
+| **RuleMaxTotalSupply** | Implementation | AccessControlModuleStandalone, RuleMaxTotalSupplyBase, RuleMaxTotalSupplyRolesStorage |||
 | └ | <Constructor> | Public ❗️ | 🛑  | AccessControlModuleStandalone RuleMaxTotalSupplyBase |
 | └ | supportsInterface | Public ❗️ |   |NO❗️ |
 | └ | _authorizeMaxTotalSupplyManager | Internal 🔒 |   | onlyRole |
+| └ | _authorizeTokenContractManager | Internal 🔒 |   | onlyRole |
 
 
 ### Legend

@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/core/ChainlinkPoRFeedManager.sol | 4d917002775897247442a336203c5436d3f444e3 |
+| ./rules/validation/abstract/core/ChainlinkPoRFeedManager.sol | 2fd987bcaf2413f984849ebd8298d6af1f7f7f5b |
 
 
 ### Contracts Description Table

@@ -2,3 +2,4 @@ CMTAT/=lib/CMTAT/contracts/
 RuleEngine/=lib/RuleEngine/src/
 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
 ERC3643/=lib/ERC-3643/contracts/
+CMTATv3.0.0/=lib/CMTATv3.0.0/contracts/

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
-import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
+import {IRuleEngine, IRuleEngineERC1404} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 import {IERC1404, IERC1404Extend} from "CMTAT/interfaces/tokenization/draft-IERC1404.sol";
 import {IERC3643ComplianceRead, IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
 import {IERC7551Compliance} from "CMTAT/interfaces/tokenization/draft-IERC7551.sol";
@@ -23,8 +23,8 @@ import {RuleMintAllowanceInvariantStorage} from "./RuleMintAllowanceInvariantSto
  *      introduced in CMTAT v3.3. The 3-arg `transferred(from=0, to, value)` path has no
  *      minter identity and performs no deduction.
  *
- *      `detectTransferRestriction(from, to, value)` always returns TRANSFER_OK because
- *      the minter identity is unavailable in the 3-arg call; use
+ *      `detectTransferRestriction(from, to, value)` returns TRANSFER_OK once the rule is bound
+ *      (CODE_RULE_NOT_BOUND before), because the minter identity is unavailable in the 3-arg call; use
  *      `detectTransferRestrictionFrom(minter, address(0), to, amount)` to query allowance.
  *
  *      Callers of the state-modifying `transferred()` functions must be bound via
@@ -35,6 +35,7 @@ abstract contract RuleMintAllowanceBase is
     VersionModule,
     ERC3643ComplianceModule,
     RuleMintAllowanceInvariantStorage,
+    IRuleEngineERC1404,
     IRule
 {
     /*//////////////////////////////////////////////////////////////
@@ -72,8 +73,14 @@ abstract contract RuleMintAllowanceBase is
     /**
      * @inheritdoc IRule
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override(IRule) returns (bool) {
-        return restrictionCode == CODE_MINTER_ALLOWANCE_EXCEEDED;
+    function canReturnTransferRestrictionCode(uint8 restrictionCode)
+        external
+        pure
+        virtual
+        override(IRule)
+        returns (bool)
+    {
+        return restrictionCode == CODE_MINTER_ALLOWANCE_EXCEEDED || restrictionCode == CODE_RULE_NOT_BOUND;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -178,7 +185,7 @@ abstract contract RuleMintAllowanceBase is
     function transferred(address spender, address from, address to, uint256 value)
         public
         virtual
-        override(IRuleEngine)
+        override(IRule, IRuleEngine)
         onlyBoundToken
     {
         _transferredFrom(spender, from, to, value);
@@ -190,19 +197,22 @@ abstract contract RuleMintAllowanceBase is
     function messageForTransferRestriction(uint8 restrictionCode)
         public
         pure
+        virtual
         override(IERC1404)
         returns (string memory)
     {
         if (restrictionCode == CODE_MINTER_ALLOWANCE_EXCEEDED) {
             return TEXT_MINTER_ALLOWANCE_EXCEEDED;
+        } else if (restrictionCode == CODE_RULE_NOT_BOUND) {
+            return TEXT_RULE_NOT_BOUND;
         }
         return TEXT_CODE_NOT_FOUND;
     }
 
     /**
-     * @dev Always returns TRANSFER_OK: the minter address is not available in the
+     * @dev TRANSFER_OK once the rule is bound: the minter address is not available in the
      *      3-arg call. Call `detectTransferRestrictionFrom` to check a minter's quota.
-     * @return The restriction code, always TRANSFER_OK.
+     * @return CODE_RULE_NOT_BOUND while no caller is bound, otherwise TRANSFER_OK.
      */
     function detectTransferRestriction(address, address, uint256)
         public
@@ -211,6 +221,9 @@ abstract contract RuleMintAllowanceBase is
         override(IERC1404)
         returns (uint8)
     {
+        if (_ruleNotBound()) {
+            return CODE_RULE_NOT_BOUND;
+        }
         return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
     }
 
@@ -228,8 +241,8 @@ abstract contract RuleMintAllowanceBase is
     }
 
     /**
-     * @dev Always returns true: use `canTransferFrom` to check mint allowance.
-     * @return Always true.
+     * @dev True once the rule is bound (false before): use `canTransferFrom` to check mint allowance.
+     * @return Whether a caller is bound.
      */
     function canTransfer(address, address, uint256)
         public
@@ -238,7 +251,7 @@ abstract contract RuleMintAllowanceBase is
         override(IERC3643ComplianceRead)
         returns (bool)
     {
-        return true;
+        return !_ruleNotBound();
     }
 
     /**
@@ -309,10 +322,20 @@ abstract contract RuleMintAllowanceBase is
         virtual
         returns (uint8)
     {
+        if (_ruleNotBound()) {
+            return CODE_RULE_NOT_BOUND;
+        }
         if (from == address(0) && mintAllowance[spender] < value) {
             return CODE_MINTER_ALLOWANCE_EXCEEDED;
         }
         return uint8(IERC1404Extend.REJECTED_CODE_BASE.TRANSFER_OK);
+    }
+
+    /**
+     * @notice True while no token or RuleEngine is bound, so every `transferred` call reverts.
+     */
+    function _ruleNotBound() internal view virtual returns (bool) {
+        return getTokenBound() == address(0);
     }
 
     /**

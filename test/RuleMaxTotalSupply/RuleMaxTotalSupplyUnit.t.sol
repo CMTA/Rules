@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {HelperContract} from "../HelperContract.sol";
 import {RuleMaxTotalSupply} from "src/rules/validation/deployment/RuleMaxTotalSupply.sol";
 import {TotalSupplyMock} from "src/mocks/TotalSupplyMock.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract RuleMaxTotalSupplyUnit is Test, HelperContract {
     TotalSupplyMock private token;
@@ -84,6 +85,80 @@ contract RuleMaxTotalSupplyUnit is Test, HelperContract {
         assertEq(rule.detectTransferRestriction(ADDRESS1, ZERO_ADDRESS, 1), TRANSFER_OK);
     }
 
+    /**
+     * @notice `transferred` is no longer `view` (so `RuleIssuanceCap` can record mints through
+     * `_afterMintChecked`), so the compiler no longer proves this rule never writes. This test does:
+     * no storage write on either overload, for a mint, a transfer or a burn.
+     */
+    function testTransferredNeverWritesStorage() public {
+        token.setTotalSupply(10);
+        vm.record();
+        rule.transferred(ZERO_ADDRESS, ADDRESS1, 5);
+        rule.transferred(ADDRESS1, ADDRESS2, 5);
+        rule.transferred(ADDRESS1, ZERO_ADDRESS, 5);
+        rule.transferred(ADDRESS3, ZERO_ADDRESS, ADDRESS1, 5);
+        rule.transferred(ADDRESS3, ADDRESS1, ADDRESS2, 5);
+        (, bytes32[] memory writes) = vm.accesses(address(rule));
+        assertEq(writes.length, 0, "RuleMaxTotalSupply wrote storage");
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                          remainingMintable
+    //////////////////////////////////////////////////////////////*/
+
+    function testRemainingMintableIsCapMinusSupply() public {
+        token.setTotalSupply(60);
+        (uint8 code, uint256 headroom) = rule.remainingMintable();
+        assertEq(code, TRANSFER_OK);
+        assertEq(headroom, 40);
+    }
+
+    function testRemainingMintableIsZeroAtTheCap() public {
+        token.setTotalSupply(100);
+        (, uint256 headroom) = rule.remainingMintable();
+        assertEq(headroom, 0);
+    }
+
+    /// @notice A cap lowered below the supply saturates at 0 instead of underflowing.
+    function testRemainingMintableSaturatesWhenTheCapIsBelowTheSupply() public {
+        token.setTotalSupply(60);
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.setMaxTotalSupply(10);
+        (uint8 code, uint256 headroom) = rule.remainingMintable();
+        assertEq(code, TRANSFER_OK);
+        assertEq(headroom, 0);
+    }
+
+    function testRemainingMintableReportsAnUnreadableSupply() public {
+        RevertingTotalSupplyMock breakable = new RevertingTotalSupplyMock();
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.setTokenContract(address(breakable));
+        breakable.setRevertOnTotalSupply(true);
+        (uint8 code, uint256 headroom) = rule.remainingMintable();
+        assertEq(code, CODE_SUPPLY_ORACLE_UNAVAILABLE);
+        assertEq(headroom, 0);
+    }
+
+    /// @notice The headroom is exactly the largest mint the pre-flight check accepts.
+    function testFuzz_RemainingMintableAgreesWithTheMintCheck(uint256 supply, uint256 cap) public {
+        token.setTotalSupply(supply);
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.setMaxTotalSupply(cap);
+        (, uint256 headroom) = rule.remainingMintable();
+        if (supply > cap) {
+            // Already over the line: no headroom, and even a zero mint is rejected.
+            assertEq(headroom, 0);
+            assertEq(rule.detectTransferRestriction(ZERO_ADDRESS, ADDRESS1, 0), CODE_MAX_TOTAL_SUPPLY_EXCEEDED);
+            return;
+        }
+        assertEq(rule.detectTransferRestriction(ZERO_ADDRESS, ADDRESS1, headroom), TRANSFER_OK);
+        if (headroom != type(uint256).max) {
+            assertEq(
+                rule.detectTransferRestriction(ZERO_ADDRESS, ADDRESS1, headroom + 1), CODE_MAX_TOTAL_SUPPLY_EXCEEDED
+            );
+        }
+    }
+
     function testTransferred_RevertsWithTheSupplyOracleCode() public {
         RevertingTotalSupplyMock breakable = new RevertingTotalSupplyMock();
         vm.prank(DEFAULT_ADMIN_ADDRESS);
@@ -113,6 +188,175 @@ contract RuleMaxTotalSupplyUnit is Test, HelperContract {
         vm.expectRevert();
         vm.prank(ADDRESS1);
         rule.setTokenContract(address(token));
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                         MAX_TOTAL_SUPPLY_ROLE
+    //////////////////////////////////////////////////////////////*/
+
+    function testMaxTotalSupplyRoleHash() public view {
+        assertEq(rule.MAX_TOTAL_SUPPLY_ROLE(), keccak256("MAX_TOTAL_SUPPLY_ROLE"));
+    }
+
+    function testCapOperatorCanSetTheCapButNotTheToken() public {
+        bytes32 role = rule.MAX_TOTAL_SUPPLY_ROLE();
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.grantRole(role, ADDRESS2);
+
+        vm.prank(ADDRESS2);
+        rule.setMaxTotalSupply(200);
+        assertEq(rule.maxTotalSupply(), 200);
+
+        TotalSupplyMock other = new TotalSupplyMock();
+        vm.expectRevert(
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, ADDRESS2, bytes32(0))
+        );
+        vm.prank(ADDRESS2);
+        rule.setTokenContract(address(other));
+    }
+
+    function testSetMaxTotalSupplyRequiresTheRole() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, ADDRESS1, rule.MAX_TOTAL_SUPPLY_ROLE()
+            )
+        );
+        vm.prank(ADDRESS1);
+        rule.setMaxTotalSupply(200);
+    }
+
+    function testRevokedCapOperatorLosesAccess() public {
+        bytes32 role = rule.MAX_TOTAL_SUPPLY_ROLE();
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        rule.grantRole(role, ADDRESS2);
+        rule.revokeRole(role, ADDRESS2);
+        vm.stopPrank();
+        vm.expectRevert(
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, ADDRESS2, role)
+        );
+        vm.prank(ADDRESS2);
+        rule.setMaxTotalSupply(200);
+    }
+
+    /// @notice Existing deployments are unaffected: the admin holds the new role implicitly.
+    function testAdminHoldsTheRoleImplicitly() public {
+        assertTrue(rule.hasRole(rule.MAX_TOTAL_SUPPLY_ROLE(), DEFAULT_ADMIN_ADDRESS));
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.setMaxTotalSupply(300);
+        assertEq(rule.maxTotalSupply(), 300);
+    }
+
+    /// @notice Each update reports the cap it replaces, so one event is self-describing.
+    function testSetMaxTotalSupplyEmitsPreviousAndNewCap() public {
+        vm.expectEmit(address(rule));
+        emit MaxTotalSupplyUpdated(100, 250);
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.setMaxTotalSupply(250);
+
+        vm.expectEmit(address(rule));
+        emit MaxTotalSupplyUpdated(250, 0);
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.setMaxTotalSupply(0);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                   increase / decreaseMaxTotalSupply
+    //////////////////////////////////////////////////////////////*/
+
+    function testIncreaseMaxTotalSupply() public {
+        vm.expectEmit(address(rule));
+        emit MaxTotalSupplyUpdated(100, 150);
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.increaseMaxTotalSupply(50);
+        assertEq(rule.maxTotalSupply(), 150);
+    }
+
+    function testDecreaseMaxTotalSupply() public {
+        vm.expectEmit(address(rule));
+        emit MaxTotalSupplyUpdated(100, 30);
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.decreaseMaxTotalSupply(70);
+        assertEq(rule.maxTotalSupply(), 30);
+    }
+
+    function testDecreaseToExactlyZero() public {
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.decreaseMaxTotalSupply(100);
+        assertEq(rule.maxTotalSupply(), 0);
+    }
+
+    function testCannotDecreaseBelowZero() public {
+        vm.expectRevert(abi.encodeWithSelector(RuleMaxTotalSupply_DecreaseBelowZero.selector, 100, 101));
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.decreaseMaxTotalSupply(101);
+    }
+
+    function testCannotIncreasePastUint256Max() public {
+        uint256 amount = type(uint256).max - 99;
+        vm.expectRevert(abi.encodeWithSelector(RuleMaxTotalSupply_IncreaseOverflow.selector, 100, amount));
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.increaseMaxTotalSupply(amount);
+    }
+
+    function testIncreaseUpToUint256Max() public {
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.increaseMaxTotalSupply(type(uint256).max - 100);
+        assertEq(rule.maxTotalSupply(), type(uint256).max);
+    }
+
+    /// @notice A zero step is a no-op that still records the (unchanged) cap in the event.
+    function testZeroIncreaseAndDecreaseAreNoOps() public {
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        vm.expectEmit(address(rule));
+        emit MaxTotalSupplyUpdated(100, 100);
+        rule.increaseMaxTotalSupply(0);
+        vm.expectEmit(address(rule));
+        emit MaxTotalSupplyUpdated(100, 100);
+        rule.decreaseMaxTotalSupply(0);
+        vm.stopPrank();
+        assertEq(rule.maxTotalSupply(), 100);
+    }
+
+    /// @notice Two increases approved against the same old cap compose; two absolute sets would not.
+    function testTwoIncreasesCompose() public {
+        vm.startPrank(DEFAULT_ADMIN_ADDRESS);
+        rule.increaseMaxTotalSupply(25);
+        rule.increaseMaxTotalSupply(25);
+        vm.stopPrank();
+        assertEq(rule.maxTotalSupply(), 150);
+    }
+
+    /// @notice Lowering the cap below the supply is allowed: it freezes minting, nothing else.
+    function testDecreaseBelowSupplyFreezesMinting() public {
+        token.setTotalSupply(80);
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.decreaseMaxTotalSupply(50);
+        (, uint256 headroom) = rule.remainingMintable();
+        assertEq(headroom, 0);
+        assertEq(rule.detectTransferRestriction(ADDRESS1, ADDRESS2, 10), TRANSFER_OK);
+    }
+
+    function testCapOperatorCanIncreaseAndDecrease() public {
+        bytes32 role = rule.MAX_TOTAL_SUPPLY_ROLE();
+        vm.prank(DEFAULT_ADMIN_ADDRESS);
+        rule.grantRole(role, ADDRESS2);
+        vm.startPrank(ADDRESS2);
+        rule.increaseMaxTotalSupply(10);
+        rule.decreaseMaxTotalSupply(20);
+        vm.stopPrank();
+        assertEq(rule.maxTotalSupply(), 90);
+    }
+
+    function testIncreaseAndDecreaseRequireTheRole() public {
+        bytes memory err = abi.encodeWithSelector(
+            IAccessControl.AccessControlUnauthorizedAccount.selector, ADDRESS1, rule.MAX_TOTAL_SUPPLY_ROLE()
+        );
+        vm.expectRevert(err);
+        vm.prank(ADDRESS1);
+        rule.increaseMaxTotalSupply(1);
+        vm.expectRevert(err);
+        vm.prank(ADDRESS1);
+        rule.decreaseMaxTotalSupply(1);
     }
 
     function testSetMaxTotalSupply_OnlyAdmin() public {

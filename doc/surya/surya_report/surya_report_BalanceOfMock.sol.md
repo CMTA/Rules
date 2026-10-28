@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./mocks/BalanceOfMock.sol | dfe90a976b017758577cde4b6a9ccd182d781503 |
+| ./mocks/BalanceOfMock.sol | 5851723f7fc2ff641ac3fa8234cfd045803695f6 |
 
 
 ### Contracts Description Table

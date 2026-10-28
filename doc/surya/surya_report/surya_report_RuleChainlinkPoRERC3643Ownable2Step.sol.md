@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/deployment/RuleChainlinkPoRERC3643Ownable2Step.sol | b885da14c378e3fdf5b67dec2d9e00b17a06f042 |
+| ./rules/validation/deployment/RuleChainlinkPoRERC3643Ownable2Step.sol | 8b99c1fe08684a50447e08d31dd6350b5a4aa36a |
 
 
 ### Contracts Description Table

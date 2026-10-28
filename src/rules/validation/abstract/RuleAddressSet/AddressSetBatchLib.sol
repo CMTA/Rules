@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
@@ -7,7 +7,7 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
  * @title AddressSetBatchLib
  * @notice The batch add/remove loops shared by every address-list rule in this library.
  * @dev Extracted because the same two loops were written three times and had already drifted: only
- * the {RuleAddressSetInternal} copy was covered by a zero-address test (`CLAUDE_ANALYSIS.md` D-1).
+ * the {RuleAddressSetInternal} copy was covered by a zero-address test.
  * Only the loops live here; single-address `add` / `remove` / `contains` / `length` stay as one-line
  * delegations to {EnumerableSet}, where a library would add indirection without removing duplication.
  *

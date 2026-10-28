@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/operation/abstract/RuleConditionalTransferLightMultiTokenBase.sol | 920bbe385eb3b6e11472d296798f9a5e259b0a81 |
+| ./rules/operation/abstract/RuleConditionalTransferLightMultiTokenBase.sol | 99b371a7d938759d34bbd3a84796c99923e42403 |
 
 
 ### Contracts Description Table
@@ -15,7 +15,7 @@
 |:----------:|:-------------------:|:----------------:|:----------------:|:---------------:|
 |     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 ||||||
-| **RuleConditionalTransferLightMultiTokenBase** | Implementation | VersionModule, ERC3643ComplianceModule, RuleConditionalTransferLightMultiTokenInvariantStorage, IRule |||
+| **RuleConditionalTransferLightMultiTokenBase** | Implementation | VersionModule, ERC3643ComplianceModule, RuleConditionalTransferLightMultiTokenInvariantStorage, IRuleEngineERC1404, IRule |||
 | └ | created | External ❗️ | 🛑  | onlyBoundToken |
 | └ | destroyed | External ❗️ | 🛑  | onlyBoundToken |
 | └ | transferred | External ❗️ | 🛑  | onlyTransferExecutor |

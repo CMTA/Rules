@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 /* ==== CMTAT === */
 import {IERC3643IComplianceContract} from "CMTAT/interfaces/tokenization/IERC3643Partial.sol";
-import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
 /* ==== Abstract contracts === */
 import {RuleWhitelistInvariantStorage} from "../RuleAddressSet/invariantStorage/RuleWhitelistInvariantStorage.sol";
 import {RuleNFTAdapter} from "./RuleNFTAdapter.sol";
@@ -64,7 +63,13 @@ abstract contract RuleWhitelistShared is RuleNFTAdapter, RuleWhitelistInvariantS
      * @param restrictionCode The restriction code to validate.
      * @return isKnown True if the restriction code is recognized by this rule, false otherwise.
      */
-    function canReturnTransferRestrictionCode(uint8 restrictionCode) external pure override returns (bool isKnown) {
+    function canReturnTransferRestrictionCode(uint8 restrictionCode)
+        external
+        pure
+        virtual
+        override
+        returns (bool isKnown)
+    {
         return restrictionCode == CODE_ADDRESS_FROM_NOT_WHITELISTED
             || restrictionCode == CODE_ADDRESS_TO_NOT_WHITELISTED
             || restrictionCode == CODE_ADDRESS_SPENDER_NOT_WHITELISTED || restrictionCode == CODE_MINT_NOT_ALLOWED
@@ -81,6 +86,7 @@ abstract contract RuleWhitelistShared is RuleNFTAdapter, RuleWhitelistInvariantS
     function messageForTransferRestriction(uint8 restrictionCode)
         external
         pure
+        virtual
         override
         returns (string memory message)
     {
@@ -141,7 +147,12 @@ abstract contract RuleWhitelistShared is RuleNFTAdapter, RuleWhitelistInvariantS
      * @param to The address receiving tokens.
      * @param value The token amount being transferred.
      */
-    function transferred(address from, address to, uint256 value) public view override(IERC3643IComplianceContract) {
+    function transferred(address from, address to, uint256 value)
+        public
+        view
+        virtual
+        override(IERC3643IComplianceContract)
+    {
         _transferred(from, to, value);
     }
 
@@ -156,7 +167,7 @@ abstract contract RuleWhitelistShared is RuleNFTAdapter, RuleWhitelistInvariantS
      * @param to The recipient address.
      * @param value The token amount being transferred.
      */
-    function transferred(address spender, address from, address to, uint256 value) public view override(IRuleEngine) {
+    function transferred(address spender, address from, address to, uint256 value) public view virtual override {
         _transferredFrom(spender, from, to, value);
     }
 
@@ -169,7 +180,7 @@ abstract contract RuleWhitelistShared is RuleNFTAdapter, RuleWhitelistInvariantS
      * @dev The event lives here rather than at the call site so the constructors of the inheriting
      *      rules announce the initial value too, matching {_setAllowMintBurn}. Without it an indexer
      *      could reconstruct `allowMint` and `allowBurn` from genesis but had to special-case
-     *      `checkSpender` (`CLAUDE_ANALYSIS.md` C-2).
+     *      `checkSpender`.
      * @param value New flag value.
      */
     function _setCheckSpender(bool value) internal virtual {

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {RuleMaxTotalSupplyInvariantStorage} from "../invariant/RuleMaxTotalSupplyInvariantStorage.sol";
 import {ITotalSupply} from "../../../interfaces/ITotalSupply.sol";
@@ -28,6 +28,9 @@ abstract contract TotalSupplyCapManager is CapAccounting, TokenSupplyReader, Rul
     ITotalSupply public tokenContract;
     /**
      * @notice Maximum total supply; minting that would exceed this value is rejected.
+     * @dev In token BASE UNITS, compared as-is with `totalSupply()`: no decimals scaling is applied.
+     * WARNING: on an 18-decimal token, `1_000_000` caps the supply at 10^-12 tokens and freezes minting;
+     * one million whole tokens is `1_000_000 * 10 ** 18`.
      */
     uint256 public maxTotalSupply;
 
@@ -40,23 +43,53 @@ abstract contract TotalSupplyCapManager is CapAccounting, TokenSupplyReader, Rul
         _;
     }
 
+    modifier onlyTokenContractManager() {
+        _authorizeTokenContractManager();
+        _;
+    }
+
     /*//////////////////////////////////////////////////////////////
                         PUBLIC FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Updates the maximum total supply.
-     * @param newMaxTotalSupply New maximum total supply value.
+     * @param newMaxTotalSupply New maximum total supply, in token base units (see {maxTotalSupply}).
      */
     function setMaxTotalSupply(uint256 newMaxTotalSupply) public virtual onlyMaxTotalSupplyManager {
         _setMaxTotalSupply(newMaxTotalSupply);
     }
 
     /**
+     * @notice Raises the cap by `amount`.
+     * @dev Relative, so two independently approved increases compose (each adds its own amount),
+     * where two absolute {setMaxTotalSupply} calls computed from the same old cap would overwrite each
+     * other. Emits {MaxTotalSupplyUpdated} with the previous and new cap.
+     * @param amount Amount to add, in token base units (see {maxTotalSupply}).
+     */
+    function increaseMaxTotalSupply(uint256 amount) public virtual onlyMaxTotalSupplyManager {
+        uint256 current = maxTotalSupply;
+        require(amount <= type(uint256).max - current, RuleMaxTotalSupply_IncreaseOverflow(current, amount));
+        _setMaxTotalSupply(current + amount);
+    }
+
+    /**
+     * @notice Lowers the cap by `amount`; reverts if `amount` exceeds the current cap.
+     * @dev Lowering the cap below the current supply is allowed: it freezes minting while transfers
+     * and burns continue. Emits {MaxTotalSupplyUpdated} with the previous and new cap.
+     * @param amount Amount to subtract, in token base units (see {maxTotalSupply}).
+     */
+    function decreaseMaxTotalSupply(uint256 amount) public virtual onlyMaxTotalSupplyManager {
+        uint256 current = maxTotalSupply;
+        require(amount <= current, RuleMaxTotalSupply_DecreaseBelowZero(current, amount));
+        _setMaxTotalSupply(current - amount);
+    }
+
+    /**
      * @notice Updates the token contract whose total supply is checked.
      * @param newTokenContract New token contract address; must not be the zero address.
      */
-    function setTokenContract(address newTokenContract) public virtual onlyMaxTotalSupplyManager {
+    function setTokenContract(address newTokenContract) public virtual onlyTokenContractManager {
         _setTokenContract(newTokenContract);
     }
 
@@ -71,8 +104,9 @@ abstract contract TotalSupplyCapManager is CapAccounting, TokenSupplyReader, Rul
      * @param newMaxTotalSupply The new maximum total supply.
      */
     function _setMaxTotalSupply(uint256 newMaxTotalSupply) internal virtual {
+        uint256 previousMaxTotalSupply = maxTotalSupply;
         maxTotalSupply = newMaxTotalSupply;
-        emit MaxTotalSupplyUpdated(newMaxTotalSupply);
+        emit MaxTotalSupplyUpdated(previousMaxTotalSupply, newMaxTotalSupply);
     }
 
     /**
@@ -101,10 +135,18 @@ abstract contract TotalSupplyCapManager is CapAccounting, TokenSupplyReader, Rul
     }
 
     /**
-     * @notice Authorization hook invoked before updating the max total supply or token contract.
+     * @notice Authorization hook invoked before updating the max total supply.
      * @dev Implemented by concrete subclasses with the desired access-control policy.
      */
     function _authorizeMaxTotalSupplyManager() internal view virtual;
+
+    /**
+     * @notice Authorization hook invoked before repointing the observed token.
+     * @dev Separate from {_authorizeMaxTotalSupplyManager} on purpose: repointing the token changes the
+     * protected supply as thoroughly as changing the cap, so it can stay with a stricter authority than
+     * the one allowed to adjust the cap.
+     */
+    function _authorizeTokenContractManager() internal view virtual;
 
     /**
      * @inheritdoc TokenSupplyReader
@@ -130,5 +172,23 @@ abstract contract TotalSupplyCapManager is CapAccounting, TokenSupplyReader, Rul
             return (false, false);
         }
         return (true, _capExceededBy(currentSupply, maxTotalSupply, value));
+    }
+
+    /**
+     * @notice How much may still be minted before total supply reaches the cap, without ever reverting.
+     * @dev Kept `internal`: the rule wraps it in a public `remainingMintable` that reports an ERC-1404
+     * restriction code, a concern this contract does not carry. Saturates at `0` when the cap has been
+     * lowered below the current supply.
+     * @return supplyAvailable False when `totalSupply()` could not be read; `headroom` is then
+     * meaningless and the caller should treat the query as failed.
+     * @return headroom Remaining mintable amount in token units.
+     */
+    function _remainingMintable() internal view virtual returns (bool supplyAvailable, uint256 headroom) {
+        uint256 currentSupply;
+        (supplyAvailable, currentSupply) = _currentSupply();
+        if (!supplyAvailable) {
+            return (false, 0);
+        }
+        return (true, _capHeadroom(currentSupply, maxTotalSupply));
     }
 }

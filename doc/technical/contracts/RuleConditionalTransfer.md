@@ -1,6 +1,28 @@
 # Rule ConditionalTransfer
 
-[TOC]
+<!-- toc -->
+
+- [Introduction](#introduction)
+  - [Swiss Law requirement](#swiss-law-requirement)
+- [Configuration](#configuration)
+  - [Options/Parameters](#optionsparameters)
+  - [Conditional Whitelist](#conditional-whitelist)
+  - [Automatic transfer after approval](#automatic-transfer-after-approval)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+  - [Flow with a CMTAT token](#flow-with-a-cmtat-token)
+  - [Workflow](#workflow)
+- [Request](#request)
+  - [Status](#status-1)
+  - [Attributes](#attributes)
+  - [Initiate by the token holder(sender)](#initiate-by-the-token-holdersender)
+  - [Initiate by the operator](#initiate-by-the-operator)
+- [Access Control](#access-control)
+  - [Graph](#graph-1)
+- [Time Condition](#time-condition)
+
+<!-- /toc -->
 
 This page describes a Conditional Transfer implementation. This rule requires that transfers have to be approved before being executed by the token holders.
 
@@ -16,7 +38,7 @@ The ConditionalTransfer rule has been implemented as an operation rule with the 
 
 Why use a dedicated rule instead of directly implementing the solution directly in the CMTAT ?
 
-1. This feature is not a standard features common to all tokens. 
+1. This feature is not a standard features common to all tokens.
 2. The CMTAT is curently too “heavy” and its contract code size is close to the maximum size limit (if the snapshot module is included), it is not possible to include new features inside.
 3. With the new version of the RuleEngine, it is now possible to update the storage of a rule during a transfer call from the CMTAT by using an operation rule.
 
@@ -68,6 +90,12 @@ To perform the transfer, the token holder has to `approve` the rule to spend tok
 _Diagram: `conditionalTransfer-automaticTransfer.drawio.png` — see [the upstream repository](https://github.com/CMTA/RuleConditionalTransfer)._
 
 ## Schema
+
+The **Graph** and **Inheritance** diagrams are generated from the source code with [Surya](https://github.com/Consensys/surya), by the scripts in `doc/script/`, and must be regenerated after a code change:
+
+- **Graph** (`surya graph`): the call graph of the contract's source file. Each node is a function, grouped by contract, and each arrow is a call from one function to another, including calls to other contracts. Only that file is parsed, so logic inherited from a base contract appears in that base contract's own graph.
+- **Inheritance** (`surya inheritance`): the contracts and interfaces this contract inherits from, which tells you where each inherited function and modifier is defined.
+- **Flow with a CMTAT token**: a sequence diagram, written by hand in PlantUML (source in `doc/img/`), of how the rule takes part in a token transfer.
 
 ### Graph
 
@@ -184,7 +212,7 @@ The default admin is the address put in argument(`admin`) inside the constructor
 ## Time Condition
 
 - Once a request is `Approved`, the token holder has a date limit (e.g. 7 days) to perform the transfer. After that, he has to begin the whole process again. This parameter can be changed by the rule operator.
-- Once a request is created `Wait`, the operator has a date limit (e.g. 7 days) to  approve the transfer. After that, the token holder has to begin the whole process again. This parameter can be changed by the rule operator.
+- Once a request is created `Wait`, the operator has a date limit (e.g. 7 days) to approve the transfer. After that, the token holder has to begin the whole process again. This parameter can be changed by the rule operator.
 
 # FAQ
 
@@ -196,6 +224,6 @@ There is no control performed on the sender of the `transferFrom` call
 
 > Can I create several transfer requests with the same value/amount?
 
-No, it is not possible since each request has a key under the form of 
+No, it is not possible since each request has a key under the form of
 
 `hash(from, to, value`)

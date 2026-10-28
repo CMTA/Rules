@@ -1,6 +1,27 @@
 # Rule Receiver Whitelist
 
-[TOC]
+<!-- toc -->
+
+- [Why receiver-only](#why-receiver-only)
+- [Behaviour](#behaviour)
+  - [Burn is exempted explicitly](#burn-is-exempted-explicitly)
+  - [Mint has no opt-out flag](#mint-has-no-opt-out-flag)
+- [Restriction codes](#restriction-codes)
+- [Schema](#schema)
+  - [Graph](#graph)
+  - [Inheritance](#inheritance)
+- [Configuration](#configuration)
+  - [Constructor parameters](#constructor-parameters)
+- [Access Control](#access-control)
+- [Methods](#methods)
+- [Usage](#usage)
+  - [Behind a RuleEngine, for a CMTAT token](#behind-a-ruleengine-for-a-cmtat-token)
+  - [As the compliance contract of an ERC-3643 token](#as-the-compliance-contract-of-an-erc-3643-token)
+- [Tests](#tests)
+- [Deployment guides](#deployment-guides)
+- [CMTAT v3.0.0](#cmtat-v300)
+
+<!-- /toc -->
 
 `RuleReceiverWhitelist` is a whitelist that screens **only the receiver**, reproducing ERC-3643's eligibility rule as a CMTAT compliance rule. The sender and the spender are never checked.
 
@@ -47,6 +68,11 @@ The constant is named `RECEIVER` rather than `TO` so it does not collide with `R
 
 ## Schema
 
+The **Graph** and **Inheritance** diagrams are generated from the source code with [Surya](https://github.com/Consensys/surya), by the scripts in `doc/script/`, and must be regenerated after a code change:
+
+- **Graph** (`surya graph`): the call graph of the contract's source file. Each node is a function, grouped by contract, and each arrow is a call from one function to another, including calls to other contracts. Only that file is parsed, so logic inherited from a base contract appears in that base contract's own graph.
+- **Inheritance** (`surya inheritance`): the contracts and interfaces this contract inherits from, which tells you where each inherited function and modifier is defined.
+
 ### Graph
 
 ![surya_graph_RuleReceiverWhitelist](../../surya/surya_graph/surya_graph_RuleReceiverWhitelist.sol.png)
@@ -73,7 +99,7 @@ Available as `RuleReceiverWhitelist` (AccessControl) and `RuleReceiverWhitelistO
 | `ADDRESS_LIST_ADD_ROLE` | May call `addAddress` / `addAddresses` |
 | `ADDRESS_LIST_REMOVE_ROLE` | May call `removeAddress` / `removeAddresses` |
 
-Identical to the other address-set rules: the list machinery is `RuleAddressSet`, so batch operations skip duplicates, single operations revert on invalid input, and the zero address can never be listed.
+Identical to the other address-set rules: the list is implemented by `RuleAddressSet`, so batch operations skip duplicates, single operations revert on invalid input, and the zero address can never be listed.
 
 ## Methods
 
@@ -107,6 +133,18 @@ Because the rule's semantics match the token's own, it composes with the identit
 | `test/RuleReceiverWhitelist/Ownable/RuleReceiverWhitelistOwnable2Step.t.sol` | Ownable2Step variant |
 | `test/ERC3643Real/ERC3643ReceiverWhitelistParity.t.sol` | **Equivalence against the real vendored ERC-3643 token** |
 
-The parity suite is the one that matters for the conformance claim. It runs the rule in the compliance slot of the genuine `Token.sol` over the *same address set* the identity registry holds, and asserts the rule never changes the outcome — a de-listed holder still exits, an unlisted spender is not blocked, burn still works. A rule that screened the sender would break those while every unit test still passed. A final test confirms the rule is genuinely consulted (it blocks when its list is narrower than the registry's), so the parity results are not vacuous.
+The parity suite is the one that matters for the conformance claim. It runs the rule in the compliance slot of the genuine `Token.sol` over the *same address set* the identity registry holds, and asserts the rule never changes the outcome — a de-listed holder still exits, an unlisted spender is not blocked, burn still works. A rule that screened the sender would break those while every unit test still passed. A final test confirms the rule is consulted (it blocks when its list is narrower than the registry's), so the parity results are not vacuous.
 
 Run it with `FOUNDRY_PROFILE=erc3643 forge test`; see `foundry.toml` for why that suite needs its own profile.
+
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with a sequence diagram per setup and per operation: [`DEPLOY_RULE_RECEIVER_WHITELIST_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_RECEIVER_WHITELIST_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_RECEIVER_WHITELIST_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_RECEIVER_WHITELIST_CMTAT_V3.3.0.md) for v3.3.0.
+
+## CMTAT v3.0.0
+
+✅ Supported, identical to v3.3.
+
+- Only the receiver is screened, on transfers and mints; burns are exempt. The rule never reads a spender, so the v3.0.0 mint path makes no difference.
+
+Tested against a real CMTAT **v3.0.0** token (the last audited release), Standard and Debt variants, both set directly on the token and behind a `RuleEngine`: `test/CMTATv3.0.0/RuleReceiverWhitelistV300.t.sol`.

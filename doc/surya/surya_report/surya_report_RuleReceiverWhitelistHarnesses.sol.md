@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./mocks/harness/RuleReceiverWhitelistHarnesses.sol | ec8b9e5451f50ceab5872d4360f7c60f19292691 |
+| ./mocks/harness/RuleReceiverWhitelistHarnesses.sol | ee27e03e42af4fabc7ed8f68e940918f28c49d48 |
 
 
 ### Contracts Description Table

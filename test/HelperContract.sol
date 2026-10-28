@@ -5,7 +5,7 @@ import {CMTATStandardStandalone} from "CMTAT/deployment/CMTATStandardStandalone.
 
 // RuleEngine
 import {RuleEngineInvariantStorage} from "RuleEngine/modules/library/RuleEngineInvariantStorage.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
 
 // RUleBlackList
 import {RuleBlacklist} from "src/rules/validation/deployment/RuleBlacklist.sol";

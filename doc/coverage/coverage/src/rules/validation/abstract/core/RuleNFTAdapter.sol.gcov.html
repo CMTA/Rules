@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - lcov2.info - src/rules/validation/abstract/core/RuleNFTAdapter.sol</title>
+  <title>LCOV - lcov.info - src/rules/validation/abstract/core/RuleNFTAdapter.sol</title>
   <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
 </head>
 
@@ -28,21 +28,21 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">lcov2.info</td>
+            <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntry">24</td>
-            <td class="headerCovTableEntry">26</td>
-            <td class="headerCovTableEntryHi">92.3 %</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-08-19 15:38:25</td>
+            <td class="headerValue">2026-10-28 09:57:31</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">9</td>
-            <td class="headerCovTableEntry">11</td>
-            <td class="headerCovTableEntryMed">81.8 %</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr>
             <td></td>
@@ -70,7 +70,7 @@
 <pre class="sourceHeading">           Branch data     Line data    Source code</pre>
 <pre class="source">
 <a name="1"><span class="lineNum">       1 </span>                :            : // SPDX-License-Identifier: MPL-2.0</a>
-<a name="2"><span class="lineNum">       2 </span>                :            : pragma solidity ^0.8.20;</a>
+<a name="2"><span class="lineNum">       2 </span>                :            : pragma solidity ^0.8.27;</a>
 <a name="3"><span class="lineNum">       3 </span>                :            : </a>
 <a name="4"><span class="lineNum">       4 </span>                :            : import {IERC1404Extend} from &quot;CMTAT/interfaces/tokenization/draft-IERC1404.sol&quot;;</a>
 <a name="5"><span class="lineNum">       5 </span>                :            : import {IERC3643IComplianceContract} from &quot;CMTAT/interfaces/tokenization/IERC3643Partial.sol&quot;;</a>
@@ -292,7 +292,7 @@
 <a name="221"><span class="lineNum">     221 </span>                :            :      * @param to Address tokens are transferred to.</a>
 <a name="222"><span class="lineNum">     222 </span>                :            :      * @param value Amount transferred.</a>
 <a name="223"><span class="lineNum">     223 </span>                :            :      */</a>
-<a name="224"><span class="lineNum">     224 </span>                :<span class="lineNoCov">          0 :     function _transferred(address from, address to, uint256 value) internal virtual;</span></a>
+<a name="224"><span class="lineNum">     224 </span>                :            :     function _transferred(address from, address to, uint256 value) internal virtual;</a>
 <a name="225"><span class="lineNum">     225 </span>                :            : </a>
 <a name="226"><span class="lineNum">     226 </span>                :            :     /**</a>
 <a name="227"><span class="lineNum">     227 </span>                :            :      * @notice Internal hook for post-transfer validation or state updates (spender-aware).</a>
@@ -301,7 +301,7 @@
 <a name="230"><span class="lineNum">     230 </span>                :            :      * @param to Address tokens are transferred to.</a>
 <a name="231"><span class="lineNum">     231 </span>                :            :      * @param value Amount transferred.</a>
 <a name="232"><span class="lineNum">     232 </span>                :            :      */</a>
-<a name="233"><span class="lineNum">     233 </span>                :<span class="lineNoCov">          0 :     function _transferredFrom(address spender, address from, address to, uint256 value) internal virtual;</span></a>
+<a name="233"><span class="lineNum">     233 </span>                :            :     function _transferredFrom(address spender, address from, address to, uint256 value) internal virtual;</a>
 <a name="234"><span class="lineNum">     234 </span>                :            : }</a>
 </pre>
       </td>

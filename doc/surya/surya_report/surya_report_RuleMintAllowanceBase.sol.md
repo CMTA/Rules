@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/operation/abstract/RuleMintAllowanceBase.sol | 579db19d0f10e2d0f5e6df95220dc1fd4d3fff42 |
+| ./rules/operation/abstract/RuleMintAllowanceBase.sol | f6bd8256c7e76b1d2ea980fbfd3c2bb7aa1ee453 |
 
 
 ### Contracts Description Table
@@ -15,7 +15,7 @@
 |:----------:|:-------------------:|:----------------:|:----------------:|:---------------:|
 |     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 ||||||
-| **RuleMintAllowanceBase** | Implementation | VersionModule, ERC3643ComplianceModule, RuleMintAllowanceInvariantStorage, IRule |||
+| **RuleMintAllowanceBase** | Implementation | VersionModule, ERC3643ComplianceModule, RuleMintAllowanceInvariantStorage, IRuleEngineERC1404, IRule |||
 | └ | created | External ❗️ | 🛑  | onlyBoundToken |
 | └ | destroyed | External ❗️ | 🛑  | onlyBoundToken |
 | └ | canReturnTransferRestrictionCode | External ❗️ |   |NO❗️ |
@@ -35,6 +35,7 @@
 | └ | _transferredFrom | Internal 🔒 | 🛑  | |
 | └ | _setMintAllowance | Internal 🔒 | 🛑  | |
 | └ | _detectTransferRestrictionFrom | Internal 🔒 |   | |
+| └ | _ruleNotBound | Internal 🔒 |   | |
 | └ | _authorizeSetMintAllowance | Internal 🔒 |   | |
 
 

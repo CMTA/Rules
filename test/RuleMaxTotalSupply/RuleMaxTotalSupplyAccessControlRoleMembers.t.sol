@@ -20,5 +20,7 @@ contract RuleMaxTotalSupplyAccessControlRoleMembers is AccessControlEnumerableTe
         singleAdmin[0] = admin;
 
         _assertRoleMembers(DEFAULT_ADMIN_ROLE, singleAdmin);
+        // The admin holds MAX_TOTAL_SUPPLY_ROLE implicitly but is not enumerated as a member.
+        _assertRoleMembers(keccak256("MAX_TOTAL_SUPPLY_ROLE"), new address[](0));
     }
 }

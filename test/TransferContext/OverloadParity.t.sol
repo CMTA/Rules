@@ -127,14 +127,9 @@ contract OverloadParity is Test, HelperContract {
     }
 
     /// @dev The write-path overloads must accept/reject identically to their fungible counterparts.
-    function _assertWriteParity(
-        address rule,
-        address spender,
-        address from,
-        address to,
-        uint256 value,
-        string memory w
-    ) internal {
+    function _assertWriteParity(address rule, address spender, address from, address to, uint256 value, string memory w)
+        internal
+    {
         bool direct = _try3(rule, from, to, value);
         bool directNft = _try4Nft(rule, from, to, value);
         assertEq(direct, directNft, string.concat(w, ": transferred(from,to,value) vs tokenId overload"));

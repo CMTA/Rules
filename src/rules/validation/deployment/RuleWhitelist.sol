@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {AccessControlEnumerable} from "@openzeppelin/contracts/access/extensions/AccessControlEnumerable.sol";
 import {Context} from "@openzeppelin/contracts/utils/Context.sol";
@@ -26,7 +26,7 @@ contract RuleWhitelist is RuleWhitelistBase, AccessControlModuleStandalone {
      * @param admin Address of the contract (Access Control)
      * @param forwarderIrrevocable Address of the forwarder, required for the gasless support
      * @param checkSpender_ Enables spender checks for transferFrom when true.
-     * @param allowMintBurn Pre-lists `address(0)` at deployment when true.
+     * @param allowMintBurn When true, permits both minting and burning (sets `allowMint` and `allowBurn`).
      */
     constructor(address admin, address forwarderIrrevocable, bool checkSpender_, bool allowMintBurn)
         RuleWhitelistBase(forwarderIrrevocable, checkSpender_, allowMintBurn)

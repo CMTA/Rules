@@ -3,7 +3,8 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 import {CMTATStandardStandalone} from "CMTAT/deployment/CMTATStandardStandalone.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
+import {RuleEngine2771} from "RuleEngine/deployment/accessControl/RuleEngine2771.sol";
 import {RuleBlacklist} from "src/rules/validation/deployment/RuleBlacklist.sol";
 import {RuleMaxTotalSupply} from "src/rules/validation/deployment/RuleMaxTotalSupply.sol";
 import {RuleSanctionsList} from "src/rules/validation/deployment/RuleSanctionsList.sol";
@@ -38,6 +39,7 @@ contract DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupplyTest is
     RuleMaxTotalSupplyInvariantStorage
 {
     address private constant ADMIN = address(1);
+    address private constant FORWARDER = address(0xF0);
     address private constant ADDRESS1 = address(5);
     address private constant ADDRESS2 = address(6);
     address private constant ADDRESS3 = address(7);
@@ -71,6 +73,28 @@ contract DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupplyTest is
     /*//////////////////////////////////////////////////////////////
                         DEPLOYMENT / WIRING
     //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice ERC-2771 is opt-in since RuleEngine v3.0.0-rc7: without a forwarder the script deploys the
+     *         plain `RuleEngine`, which has no forwarder surface at all.
+     */
+    function testRuleEngineHasNoForwarderWhenNoneIsGiven() public view {
+        (bool ok,) = address(ruleEngine).staticcall(abi.encodeWithSignature("isTrustedForwarder(address)", FORWARDER));
+        assertFalse(ok);
+    }
+
+    /**
+     * @notice With a forwarder the script deploys `RuleEngine2771`, so the engine trusts the same forwarder
+     *         as the token and the rules.
+     */
+    function testRuleEngineTrustsTheForwarderWhenOneIsGiven() public {
+        DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply script =
+            new DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply();
+        (CMTATStandardStandalone t, RuleEngine engine,,,) =
+            script.deploy(ADMIN, address(script), FORWARDER, ISanctionsList(address(oracle)), MAX_SUPPLY);
+        assertTrue(RuleEngine2771(address(engine)).isTrustedForwarder(FORWARDER));
+        assertEq(address(t.ruleEngine()), address(engine));
+    }
 
     function testRuleEngineIsSetOnTheToken() public view {
         assertEq(address(token.ruleEngine()), address(ruleEngine));

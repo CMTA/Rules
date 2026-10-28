@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import {CMTATStandardStandalone} from "CMTAT/deployment/CMTATStandardStandalone.sol";
 import {IRuleEngine} from "CMTAT/interfaces/engine/IRuleEngine.sol";
-import {RuleEngine} from "RuleEngine/deployment/RuleEngine.sol";
+import {RuleEngine} from "RuleEngine/deployment/accessControl/RuleEngine.sol";
+import {RuleEngine2771} from "RuleEngine/deployment/accessControl/RuleEngine2771.sol";
 import {RuleBlacklist} from "src/rules/validation/deployment/RuleBlacklist.sol";
 import {RuleSanctionsList} from "src/rules/validation/deployment/RuleSanctionsList.sol";
 import {ISanctionsList} from "src/rules/interfaces/ISanctionsList.sol";
@@ -15,12 +16,12 @@ import {CMTATDeploymentBase} from "./base/CMTATDeploymentBase.sol";
  *         sanctions screening.
  *
  *         Deployment order:
- *         1. `CMTATStandardStandalone` — the token, with `deployer` as temporary admin
- *         2. `RuleBlacklist`           — blocks blacklisted sender / recipient / spender
- *         3. `RuleSanctionsList`       — blocks sanctioned addresses via a Chainalysis-style oracle
- *         4. `RuleEngine`              — aggregates both; the token is bound at construction
- *         5. `token.setRuleEngine(...)`
- *         6. Hand every admin role to `admin`, renounce the deployer's
+ *         1. `RuleBlacklist` — blocks blacklisted sender / recipient / spender
+ *         2. `RuleSanctionsList` — blocks sanctioned addresses via a Chainalysis-style oracle
+ *         3. `RuleEngine` — no token yet, `deployer` as temporary admin; `addRule` both
+ *         4. `CMTATStandardStandalone` — the token, created with `admin` and the engine in its constructor
+ *         5. `ruleEngine.bindToken(token)` — last, so nothing moves before the rules are in place
+ *         6. Hand `DEFAULT_ADMIN_ROLE` on the engine to `admin`, renounce the deployer's
  *
  * @dev **Topology A (RuleEngine).** Rules are reached through the engine, so inside a rule
  *      `msg.sender` is the RuleEngine rather than the token. See `CLAUDE.md`, "The two integration
@@ -57,30 +58,37 @@ contract DeployCMTATWithBlacklistAndSanctionsList is CMTATDeploymentBase {
             RuleSanctionsList ruleSanctionsList
         )
     {
-        // 1. The token, with the deployer as temporary admin so the wiring below is permitted.
-        token = new CMTATStandardStandalone(
-            forwarder, deployer, _erc20Attributes(), _extraInformationAttributes(), _emptyEngine()
-        );
-
-        // 2-3. Address-screening rules; each is owned by the intended admin from the start.
+        // 1-2. Address-screening rules; each is owned by the intended admin from the start.
         ruleBlacklist = new RuleBlacklist(admin, forwarder);
         ruleSanctionsList = new RuleSanctionsList(admin, forwarder, sanctionsOracle);
 
-        // 4. The engine, deployer-owned for now so rules can be added. Binding the token at
-        //    construction is what authorises it to call `transferred()` on the engine.
-        ruleEngine = new RuleEngine(deployer, forwarder, address(token));
+        // 3. The engine, with no token yet. The deployer is its temporary admin so that it can add the
+        //    rules and bind the token below. ERC-2771 is opt-in since RuleEngine v3.0.0-rc7: only the
+        //    `2771` variant takes a forwarder.
+        ruleEngine = forwarder == address(0)
+            ? new RuleEngine(deployer, address(0))
+            : new RuleEngine2771(deployer, forwarder, address(0));
         ruleEngine.addRule(ruleBlacklist);
         ruleEngine.addRule(ruleSanctionsList);
 
-        // 5. Connect the engine to the token.
-        token.setRuleEngine(IRuleEngine(address(ruleEngine)));
+        // 4. The token, created with `admin` and the engine in its constructor: no temporary admin on it.
+        //    Until step 5 the engine rejects every call from it, so nothing moves unscreened.
+        token = new CMTATStandardStandalone(
+            forwarder,
+            admin,
+            _erc20Attributes(),
+            _extraInformationAttributes(),
+            _engine(IRuleEngine(address(ruleEngine)))
+        );
 
-        // 6. Hand over, and drop the deployer's rights so the deployment key is not a standing risk.
+        // 5. Bind the token last: from now on it may call `transferred()` on the engine.
+        ruleEngine.bindToken(address(token));
+
+        // 6. Hand the engine over. Skipped when both are the same address: the renounce would then
+        //    remove the only admin.
         if (admin != deployer) {
             ruleEngine.grantRole(ruleEngine.DEFAULT_ADMIN_ROLE(), admin);
             ruleEngine.renounceRole(ruleEngine.DEFAULT_ADMIN_ROLE(), deployer);
-            token.grantRole(token.DEFAULT_ADMIN_ROLE(), admin);
-            token.renounceRole(token.DEFAULT_ADMIN_ROLE(), deployer);
         }
 
         _logDeployment("CMTAT token      ", address(token));
