@@ -230,6 +230,7 @@ Commit:
 - Tables of contents: the `[TOC]` placeholder, which GitHub shows as plain text, is replaced in 51 documents (`doc/technical/`, `doc/TOOLCHAIN.md`) by a generated list of links to the level-2 and level-3 headings, between `<!-- toc -->` markers so it can be regenerated.
 - Static analysis re-run before tagging (2026-10-28, solc `0.8.38`, EVM `osaka`): Slither 47 results (one more `dead-code` false positive), Aderyn 383 instances (+6 one-per-file for the three new storage contracts). Nothing to fix.
 - First static analysis of the deployment scripts: `slither-report-script.md`, `aderyn-report-script.md` and `script-report-feedback.md` in `doc/security/audits/tools/v0.7.0/`. Slither's default build skips `script/` and Aderyn does not accept it as a source folder; both reports record the command that brings the scripts into scope.
+- `doc/README.md` code list: each row now names every rule that can return the code (the whitelist wrapper for 21-25, both conditional-transfer rules for 46, the `…ERC3643` variants for 50-51 and 75-79, `RuleIssuanceCap` for 50-51), and the note on unique codes lists the shared exceptions.
 
 ### Testing
 

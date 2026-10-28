@@ -260,59 +260,58 @@ That is deliberate. The batch convention skips duplicates because a duplicate is
 
 ### Rule - Code list
 
-> It is very important that each rule uses a unique code
+> It is very important that each rule uses a unique code. The only exceptions are codes shared by rules that mean the same thing and return the same message: 21-25 (the whitelist rule and the wrapper), 46, 50-51, 75-79 (a rule and its `…ERC3643` variant or extension) and 85.
 
-Here is the list of codes used by the different rules
+Here is the list of codes used by the different rules. Each row names every rule that can return the code; the `Ownable2Step` variant of a rule returns the same codes as the rule.
 
-| Contract                     | Constant name                        | Value |
-| ---------------------------- | ------------------------------------ | ----- |
-| All                          | TRANSFER_OK (from CMTAT)             | 0     |
-| RuleWhitelist                | CODE_ADDRESS_FROM_NOT_WHITELISTED    | 21    |
-|                              | CODE_ADDRESS_TO_NOT_WHITELISTED      | 22    |
-|                              | CODE_ADDRESS_SPENDER_NOT_WHITELISTED | 23    |
-|                              | CODE_MINT_NOT_ALLOWED                | 24    |
-|                              | CODE_BURN_NOT_ALLOWED                | 25    |
-|                              | Reserved slot                        | 26-29 |
-| RuleSanctionsList            | CODE_ADDRESS_FROM_IS_SANCTIONED      | 30    |
-|                              | CODE_ADDRESS_TO_IS_SANCTIONED        | 31    |
-|                              | CODE_ADDRESS_SPENDER_IS_SANCTIONED   | 32    |
-|                              | Reserved slot                        | 33-35 |
-| RuleBlacklist                | CODE_ADDRESS_FROM_IS_BLACKLISTED     | 36    |
-|                              | CODE_ADDRESS_TO_IS_BLACKLISTED       | 37    |
-|                              | CODE_ADDRESS_SPENDER_IS_BLACKLISTED  | 38    |
-|                              | Reserved slot                        | 39-45 |
-| RuleConditionalTransferLight | CODE_TRANSFER_REQUEST_NOT_APPROVED   | 46    |
-|                              | Reserved slot                        | 47-49 |
-| RuleMaxTotalSupply           | CODE_MAX_TOTAL_SUPPLY_EXCEEDED       | 50    |
-|                              | CODE_SUPPLY_ORACLE_UNAVAILABLE       | 51    |
-|                              | Reserved slot                        | 52-54 |
-| RuleIdentityRegistry         | CODE_ADDRESS_FROM_NOT_VERIFIED       | 55    |
-|                              | CODE_ADDRESS_TO_NOT_VERIFIED         | 56    |
-|                              | CODE_ADDRESS_SPENDER_NOT_VERIFIED    | 57    |
-|                              | Reserved slot                        | 58-59 |
-| RuleERC2980                  | CODE_ADDRESS_FROM_IS_FROZEN          | 60    |
-|                              | CODE_ADDRESS_TO_IS_FROZEN            | 61    |
-|                              | CODE_ADDRESS_SPENDER_IS_FROZEN       | 62    |
-|                              | CODE_ADDRESS_TO_NOT_WHITELISTED      | 63    |
-|                              | CODE_MINT_NOT_ALLOWED                | 64    |
-|                              | CODE_BURN_NOT_ALLOWED                | 65    |
-| RuleSpenderWhitelist         | CODE_ADDRESS_SPENDER_NOT_WHITELISTED | 66    |
-|                              | Reserved slot                        | 67-69 |
-| RuleMintAllowance            | CODE_MINTER_ALLOWANCE_EXCEEDED       | 70    |
-| RuleIssuanceCap              | CODE_ISSUANCE_CAP_EXCEEDED           | 71    |
-|                              | (also 50, 51, shared with RuleMaxTotalSupply) |       |
-|                              | Reserved slot                        | 72-74 |
-| RuleChainlinkPoR             | CODE_RESERVES_EXCEEDED               | 75    |
-|                              | CODE_RESERVES_FEED_STALE             | 76    |
-|                              | CODE_RESERVES_ANSWER_INVALID         | 77    |
-|                              | CODE_TOTAL_SUPPLY_UNAVAILABLE        | 78    |
-|                              | CODE_RESERVES_FEED_UNAVAILABLE       | 79    |
-|                              | Reserved slot                        | 80    |
-| RuleReceiverWhitelist        | CODE_ADDRESS_RECEIVER_NOT_WHITELISTED | 81   |
-| RuleMaxBalance               | CODE_MAX_BALANCE_EXCEEDED             | 82   |
-|                              | CODE_BALANCE_UNAVAILABLE              | 83   |
-|                              | Reserved slot                        | 84    |
-| RuleConditionalTransferLight, RuleMintAllowance, RuleIssuanceCap | CODE_RULE_NOT_BOUND (shared, same message) | 85 |
+| Contract                                                             | Constant name                                             | Value |
+| -------------------------------------------------------------------- | --------------------------------------------------------- | ----- |
+| All                                                                  | TRANSFER_OK (from CMTAT)                                  | 0     |
+| RuleWhitelist, RuleWhitelistWrapper                                  | CODE_ADDRESS_FROM_NOT_WHITELISTED                         | 21    |
+|                                                                      | CODE_ADDRESS_TO_NOT_WHITELISTED                           | 22    |
+|                                                                      | CODE_ADDRESS_SPENDER_NOT_WHITELISTED                      | 23    |
+|                                                                      | CODE_MINT_NOT_ALLOWED                                     | 24    |
+|                                                                      | CODE_BURN_NOT_ALLOWED                                     | 25    |
+|                                                                      | Reserved slot                                             | 26-29 |
+| RuleSanctionsList                                                    | CODE_ADDRESS_FROM_IS_SANCTIONED                           | 30    |
+|                                                                      | CODE_ADDRESS_TO_IS_SANCTIONED                             | 31    |
+|                                                                      | CODE_ADDRESS_SPENDER_IS_SANCTIONED                        | 32    |
+|                                                                      | Reserved slot                                             | 33-35 |
+| RuleBlacklist                                                        | CODE_ADDRESS_FROM_IS_BLACKLISTED                          | 36    |
+|                                                                      | CODE_ADDRESS_TO_IS_BLACKLISTED                            | 37    |
+|                                                                      | CODE_ADDRESS_SPENDER_IS_BLACKLISTED                       | 38    |
+|                                                                      | Reserved slot                                             | 39-45 |
+| RuleConditionalTransferLight, RuleConditionalTransferLightMultiToken | CODE_TRANSFER_REQUEST_NOT_APPROVED (shared, same message) | 46    |
+|                                                                      | Reserved slot                                             | 47-49 |
+| RuleMaxTotalSupply, RuleMaxTotalSupplyERC3643, RuleIssuanceCap       | CODE_MAX_TOTAL_SUPPLY_EXCEEDED                            | 50    |
+|                                                                      | CODE_SUPPLY_ORACLE_UNAVAILABLE                            | 51    |
+|                                                                      | Reserved slot                                             | 52-54 |
+| RuleIdentityRegistry                                                 | CODE_ADDRESS_FROM_NOT_VERIFIED                            | 55    |
+|                                                                      | CODE_ADDRESS_TO_NOT_VERIFIED                              | 56    |
+|                                                                      | CODE_ADDRESS_SPENDER_NOT_VERIFIED                         | 57    |
+|                                                                      | Reserved slot                                             | 58-59 |
+| RuleERC2980                                                          | CODE_ADDRESS_FROM_IS_FROZEN                               | 60    |
+|                                                                      | CODE_ADDRESS_TO_IS_FROZEN                                 | 61    |
+|                                                                      | CODE_ADDRESS_SPENDER_IS_FROZEN                            | 62    |
+|                                                                      | CODE_ADDRESS_TO_NOT_WHITELISTED                           | 63    |
+|                                                                      | CODE_MINT_NOT_ALLOWED                                     | 64    |
+|                                                                      | CODE_BURN_NOT_ALLOWED                                     | 65    |
+| RuleSpenderWhitelist                                                 | CODE_ADDRESS_SPENDER_NOT_WHITELISTED                      | 66    |
+|                                                                      | Reserved slot                                             | 67-69 |
+| RuleMintAllowance                                                    | CODE_MINTER_ALLOWANCE_EXCEEDED                            | 70    |
+| RuleIssuanceCap                                                      | CODE_ISSUANCE_CAP_EXCEEDED                                | 71    |
+|                                                                      | Reserved slot                                             | 72-74 |
+| RuleChainlinkPoR, RuleChainlinkPoRERC3643                            | CODE_RESERVES_EXCEEDED                                    | 75    |
+|                                                                      | CODE_RESERVES_FEED_STALE                                  | 76    |
+|                                                                      | CODE_RESERVES_ANSWER_INVALID                              | 77    |
+|                                                                      | CODE_TOTAL_SUPPLY_UNAVAILABLE                             | 78    |
+|                                                                      | CODE_RESERVES_FEED_UNAVAILABLE                            | 79    |
+|                                                                      | Reserved slot                                             | 80    |
+| RuleReceiverWhitelist                                                | CODE_ADDRESS_RECEIVER_NOT_WHITELISTED                     | 81    |
+| RuleMaxBalance                                                       | CODE_MAX_BALANCE_EXCEEDED                                 | 82    |
+|                                                                      | CODE_BALANCE_UNAVAILABLE                                  | 83    |
+|                                                                      | Reserved slot                                             | 84    |
+| RuleConditionalTransferLight, RuleMintAllowance, RuleIssuanceCap     | CODE_RULE_NOT_BOUND (shared, same message)                | 85    |
 
 Note:
 
