@@ -215,6 +215,10 @@ Two consequences follow:
 1. **A runtime code-length re-check would be pointless**, which is why there is none. `_setTokenContract` requires code at configuration, and **EIP-6780** (Cancun) restricts `SELFDESTRUCT` to accounts created in the same transaction, so a validated token cannot become codeless afterwards. On a chain *without* EIP-6780 this does not hold and the guard should be re-introduced (~100 gas per call site; the account is warm either way, so it is not a full cold `EXTCODESIZE`).
 2. **Having code is necessary but not sufficient.** The guarantee is that the token returns a well-formed `uint256`, not merely that it exists. A proxy upgraded to an implementation whose fallback returns empty data keeps its code and still breaks the read path — the ABI decoder reverts and `CODE_SUPPLY_ORACLE_UNAVAILABLE` is never returned. `try/catch` covers a token that *reverts*; it cannot cover one that returns nothing. `tokenContract` is a trusted input for this reason, and pointing the rule at an untrusted proxy is outside the model.
 
+## Deployment guides
+
+Step-by-step deployment with a CMTAT token, with deployment, mint, transfer and burn diagrams: [`DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.0.0.md`](../guides/DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.0.0.md) for v3.0.0, [`DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md`](../guides/DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md) for v3.3.0.
+
 ## Usage scenario
 
 The operator deploys `RuleMaxTotalSupply` with `tokenContract = CMTAT_address` (0 decimals, so base units are whole tokens) and `maxTotalSupply = 1_000_000`. The rule is registered in the `RuleEngine`. When the issuer mints 100,000 tokens and total supply is already 950,000, the mint is rejected with code 50. Transfers between existing holders continue unaffected.

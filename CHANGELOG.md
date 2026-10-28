@@ -185,11 +185,15 @@ Commit:
   - A table lists the differences from `v3.0.0`: constructor `Engine` struct, mint path and error, token-side errors, reentrancy guard.
   - Both guides draw each workflow twice: rule plugged directly into the token, and rule behind a RuleEngine.
   - Both guides also draw each of the four deployment setups as a sequence diagram (rule on the token or in a RuleEngine, installed in the constructor or after).
+- New guides `doc/technical/guides/DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.0.0.md` and `DEPLOY_RULE_MAX_TOTAL_SUPPLY_CMTAT_V3.3.0.md`: step-by-step deployment of `RuleMaxTotalSupply` with a CMTAT `v3.0.0` or `v3.3.0` token.
+  - The rule's constructor needs the token's address, so it cannot be passed in the token constructor; the recommended setup passes a RuleEngine there instead and binds the token last, which leaves no unscreened window.
+  - Mermaid diagrams of the three deployment setups, of a mint (rule on the token, behind a RuleEngine, and a happy path with numbers), of a transfer and of a burn.
 - Contract pages (`doc/technical/contracts/`): the Schema section now opens with a short explanation of the Surya call graph and inheritance diagrams, and of the CMTAT flow diagram where there is one.
 - `RuleWhitelist` / `RuleWhitelistOwnable2Step` NatSpec: the `allowMintBurn` constructor parameter said it pre-lists `address(0)`; it sets the `allowMint` and `allowBurn` flags, and the zero address is never listed.
 
 ### Testing
 
+- `RuleMaxTotalSupplyCMTATIntegration.t.sol` (CMTAT `v3.3.0-rc4`): `RuleMaxTotalSupply` set directly on the token after deployment, and a RuleEngine passed in the token constructor that binds the token last. `RuleMaxTotalSupplyV300Deployment.t.sol` covers the RuleEngine order on CMTAT `v3.0.0`, and that the rule cannot be deployed before its token.
 - `RuleWhitelistCMTATConstructor.t.sol` (CMTAT `v3.3.0-rc4`): `RuleWhitelist`, or a RuleEngine holding it, passed in the token constructor; a non-whitelisted minter can still issue to a whitelisted receiver with `checkSpender` on, a non-whitelisted `transferFrom` spender cannot, and with a RuleEngine nothing moves until the engine binds the token.
 - `RuleWhitelistV300Deployment.t.sol` (CMTAT `v3.0.0`): `RuleWhitelist`, or a RuleEngine holding it, passed in the token constructor; the first mint is screened, and with a RuleEngine nothing moves until the engine binds the token.
 - `test/InterfaceId/RuleInterfaceIdCompatibility.t.sol` (3 tests): pins the two `IRule` id literals and checks that each distinct `supportsInterface` implementation advertises the new id, the legacy id and `IRuleEngine`.
@@ -212,7 +216,7 @@ Commit:
   - Negative controls: three mutations (off-by-one cap, over-strict cap, wrong headroom view) each fail the suite. A first version missed the off-by-one on the safety invariant, because random amounts never hit `headroom + 1`; the `mintAtBoundary` action fixes that. Recorded in `INVARIANT_TESTS.md` §4.
   - Documented in `INVARIANT_TESTS.md` §3.3 and in the "Invariant testing" section of `doc/README.md`.
 - `remainingMintable()`: unit tests (headroom, exact fit, cap below supply, unreadable supply), a fuzz property that the headroom is exactly the largest mint the pre-flight check accepts, the ERC-3643 variant, and a real CMTAT v3.0.0 token across mints and burns.
-- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,314 tests pass in the default profile and 53 in the `erc3643` profile.
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,318 tests pass in the default profile and 53 in the `erc3643` profile.
 - **Security-review tests** (`CLAUDE_AUDIT.md` v0.7.0):
   - 16 proof-of-concept tests in `test/ThreatModel/ThreatModelV070Tests.t.sol` (4 fuzz). Tests suffixed `_CurrentBehaviour` must fail once a finding is fixed.
   - `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow` (`RuleIssuanceCapCMTATIntegration`): the gap-free deployment order of F-4 on a real CMTAT `v3.3` token and RuleEngine `rc7`; every mint, the admin's included, reverts until the cap rule is installed.
