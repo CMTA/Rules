@@ -2039,7 +2039,7 @@ Run **2026-10-26** for the v0.7.0 release and **re-run 2026-10-28** before taggi
 |---|---|---|---|---|---|
 | [Slither](https://github.com/crytic/slither) 0.11.6 | 2 | 5 | 18 | 22 | **No** — [feedback](./security/audits/tools/v0.7.0/slither-report-feedback.md) |
 | [Aderyn](https://github.com/Cyfrin/aderyn) 0.6.5 | 0 | 0 | 10 categories (381 instances) | 0 | **No** — [feedback](./security/audits/tools/v0.7.0/aderyn-report-feedback.md) |
-| Slither 0.11.6 and Aderyn 0.6.5 on `script/` | 0 | 0 | 1 category (18 instances, Aderyn) | 0 | **No** after one fix — [feedback](./security/audits/tools/v0.7.0/script-report-feedback.md) |
+| Slither 0.11.6 and Aderyn 0.6.5 on `script/` | 0 | 0 | 2 categories (36 instances, Aderyn) | 0 | **No** after one fix — [feedback](./security/audits/tools/v0.7.0/script-report-feedback.md) |
 
 **Nothing to fix.**
 - Slither: on 0.11.5 the code delta is nil, identical to v0.6.0 result for result, although this release added `RuleIssuanceCap`. The upgrade to 0.11.6 keeps 46 results but trades six `unused-return` hits for six `dead-code` false positives.

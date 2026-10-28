@@ -39,7 +39,7 @@ Run **2026-10-26** for the `v0.7.0` release at solc `0.8.36`, and **re-run 2026-
 | Slither 0.11.6 | 2 | 5 | 18 | 22 | **No** — 47 results: the first run's 46, plus one `dead-code` false positive (an override called through virtual dispatch); see [feedback](./tools/v0.7.0/slither-report-feedback.md) |
 | Aderyn 0.6.5 | 0 | 0 | 10 categories (381 instances) | 0 | **No** — every Low is by design, environmental, cosmetic or a verified false positive; see [feedback](./tools/v0.7.0/aderyn-report-feedback.md) |
 | Slither 0.11.6, `script/` | 0 | 0 | 0 | 0 | **No** — nothing reported; see [feedback](./tools/v0.7.0/script-report-feedback.md) |
-| Aderyn 0.6.5, `script/` | 0 | 0 | 1 category (18 instances) | 0 | **No** after the fix — the five large literals (default caps) were replaced by named defaults, which also fixed their scaling for tokens with decimals |
+| Aderyn 0.6.5, `script/` | 0 | 0 | 2 categories (36 instances) | 0 | **No** after the fix — the five large literals (default caps) were replaced by named defaults, which also fixed their scaling for tokens with decimals |
 
 **Nothing to fix in `v0.7.0`; one cosmetic defect was fixed before the committed run.**
 

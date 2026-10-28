@@ -10,6 +10,7 @@ Reports: [`slither-report-script.md`](./slither-report-script.md) · [`aderyn-re
 |---|---|---|---|
 | Slither | — | 0 | Nothing reported |
 | Aderyn | L-1 Unspecific Solidity Pragma | 18 | **By design** — `^0.8.27` as in `src/`; `foundry.toml` pins solc `0.8.38` for every build |
+| Aderyn | PUSH0 Opcode | 18 | **Environment** — `osaka` target, as for `src/`; first reported by the re-run below |
 | Aderyn | Large Numeric Literal | 5 → 0 | **Fixed**, see below |
 
 ## Large Numeric Literal: fixed, and a decimals bug behind it
@@ -26,6 +27,10 @@ The literal itself is cosmetic, but looking at it showed two real problems:
 - Behaviour at the default `CMTAT_DECIMALS = 0` is unchanged: the same 1 000 000 / 100 000 / 1 000 000.
 - Pinned by `test/DeploymentScripts/CMTATDeploymentBase.t.sol` (defaults at 0 and at 18 decimals). The harness overrides the decimals instead of calling `vm.setEnv`, which is process-wide and would leak into the deployment tests running in parallel.
 - All 17 scripts still dry-run with no environment.
+
+## Re-run after the deployment-order change
+
+The scripts were changed to create the token with its final `admin` and the rule (or RuleEngine) in its constructor where possible, so most no longer hold a temporary admin role on the token. Both tools were re-run on the result: Slither still reports nothing; Aderyn reports the same pragma category plus `PUSH0 Opcode`, one per file, which is environmental. Nothing to fix.
 
 ## Tooling notes
 
