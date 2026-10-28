@@ -12,7 +12,7 @@ contract DeployCMTATWithReceiverWhitelistTest is Test {
     address constant OTHER = address(3);
 
     /// RuleReceiverWhitelistInvariantStorage.CODE_ADDRESS_RECEIVER_NOT_WHITELISTED
-    uint8 constant CODE_ADDRESS_RECEIVER_NOT_WHITELISTED = 81;
+    uint8 constant CODE_ADDRESS_RECEIVER_NOT_WHITELISTED = 90;
 
     DeployCMTATWithReceiverWhitelist script;
     CMTATStandardStandalone token;

@@ -37,7 +37,7 @@ Run **2026-10-26** for the `v0.7.0` release at solc `0.8.36`, and **re-run 2026-
 | Tool | High | Medium | Low | Info | Relevant to fix? |
 |---|---|---|---|---|---|
 | Slither 0.11.6 | 2 | 5 | 18 | 22 | **No** — 47 results: the first run's 46, plus one `dead-code` false positive (an override called through virtual dispatch); see [feedback](./tools/v0.7.0/slither-report-feedback.md) |
-| Aderyn 0.6.5 | 0 | 0 | 10 categories (381 instances) | 0 | **No** — every Low is by design, environmental, cosmetic or a verified false positive; see [feedback](./tools/v0.7.0/aderyn-report-feedback.md) |
+| Aderyn 0.6.5 | 0 | 0 | 10 categories (383 instances) | 0 | **No** — every Low is by design, environmental, cosmetic or a verified false positive; see [feedback](./tools/v0.7.0/aderyn-report-feedback.md) |
 | Slither 0.11.6, `script/` | 0 | 0 | 0 | 0 | **No** — nothing reported; see [feedback](./tools/v0.7.0/script-report-feedback.md) |
 | Aderyn 0.6.5, `script/` | 0 | 0 | 2 categories (36 instances) | 0 | **No** after the fix — the five large literals (default caps) were replaced by named defaults, which also fixed their scaling for tokens with decimals |
 
@@ -46,7 +46,7 @@ Run **2026-10-26** for the `v0.7.0` release at solc `0.8.36`, and **re-run 2026-
 - **Slither, code delta (0.11.5 on both releases): 46 → 46, no result changed.** The release added `RuleIssuanceCap`, made `RuleMaxTotalSupplyBase.transferred` non-`view` with a new hook, and migrated to RuleEngine `v3.0.0-rc7`. None of it produced a new result.
 - **Slither, tool delta (0.11.5 → 0.11.6 on `v0.7.0`): still 46**, redistributed: `unused-return` 9 → 3 and `dead-code` 3 → 9. All six new `dead-code` hits are called through virtual dispatch. That includes `RuleIssuanceCapBase._afterMintChecked`, the counter itself, which deleting would make the cap replenishing.
 - **Slither blind spot (both versions, pre-existing):** no IR is generated for `_addAddresses` / `_removeAddresses` in `RuleMaxBalance` and `IdentityRegistryWhitelist`, a function pointer passed to `AddressSetBatchLib`, so no detector analyses those two copies. The same inherited code is analysed in the other address-set rules. Check stderr for `Impossible to generate IR` on every run.
-- **Pre-release re-run (2026-10-28):** Slither 46 → 47, the new result a `dead-code` false positive on `RuleIssuanceCapBase._remainingMintable()`; Aderyn 377 → 381, one pragma and one PUSH0 line for each of the two new storage contracts. Nothing new to fix.
+- **Pre-release re-run (2026-10-28):** Slither 46 → 47, the new result a `dead-code` false positive on `RuleIssuanceCapBase._remainingMintable()`; Aderyn 377 → 383, one pragma and one PUSH0 line for each of the three new storage contracts. Nothing new to fix.
 - **Deployment scripts, first run:** Slither has no result; Aderyn reported large numeric literals, the default caps. Fixing them showed the defaults were base units, so with `CMTAT_DECIMALS = 18` the default cap allowed almost nothing: the defaults are now whole tokens scaled by the decimals.
 - **Aderyn 346 → 377 (+31) in the first run, one new category**, all attributed file by file:
   - `RuleIssuanceCap`'s four files in `L-2` / `L-5` (+4 each);

@@ -62,7 +62,7 @@ Unlike `RuleWhitelist`, there is no `allowMint`/`allowBurn`. ERC-3643 gates mint
 
 | Constant | Code | Meaning |
 | --- | --- | --- |
-| `CODE_ADDRESS_RECEIVER_NOT_WHITELISTED` | 81 | The receiver is not on the whitelist |
+| `CODE_ADDRESS_RECEIVER_NOT_WHITELISTED` | 90 | The receiver is not on the whitelist |
 
 The constant is named `RECEIVER` rather than `TO` so it does not collide with `RuleWhitelist`'s `CODE_ADDRESS_TO_NOT_WHITELISTED` (22) when a test contract inherits both invariant stores.
 

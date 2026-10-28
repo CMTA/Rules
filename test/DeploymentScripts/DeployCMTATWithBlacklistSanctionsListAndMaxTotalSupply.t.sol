@@ -266,7 +266,7 @@ contract DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupplyTest is
     /**
      * @notice And the converse: a clean address is still stopped by the cap.
      */
-    function testACleanAddressIsStillStoppedByTheCap() public {
+    function testACleanAddressIsStillStoppedByTheCap() public view {
         uint256 headroom = MAX_SUPPLY - token.totalSupply();
         assertFalse(ruleBlacklist.isAddressListed(ADDRESS3));
         assertFalse(oracle.isSanctioned(ADDRESS3));

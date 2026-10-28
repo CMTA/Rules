@@ -21,7 +21,7 @@ import {RuleIssuanceCap} from "src/rules/operation/RuleIssuanceCap.sol";
  */
 contract RuleIssuanceCapV300DeploymentTest is Test, HelperContract {
     uint256 private constant CAP = 100;
-    uint8 private constant CODE_ISSUANCE_CAP = 71;
+    uint8 private constant CODE_ISSUANCE_CAP = 86;
 
     function _deployTokenWithEngine(address engine) private returns (CMTATStandalone) {
         return new CMTATStandalone(

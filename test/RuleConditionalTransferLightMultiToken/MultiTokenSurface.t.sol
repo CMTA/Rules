@@ -65,8 +65,7 @@ contract MultiTokenSurface is Test, HelperContract {
 
     function test_MessageForTransferRestriction() public view {
         assertEq(
-            rule.messageForTransferRestriction(CODE_NOT_APPROVED),
-            "ConditionalTransferLightMultiToken: The request is not approved"
+            rule.messageForTransferRestriction(CODE_NOT_APPROVED), "ConditionalTransfer: The request is not approved"
         );
         assertEq(rule.messageForTransferRestriction(CODE_NONEXISTENT), TEXT_CODE_NOT_FOUND);
     }

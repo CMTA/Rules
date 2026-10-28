@@ -13,7 +13,7 @@ abstract contract RuleReceiverWhitelistInvariantStorage is RuleSharedInvariantSt
      * @dev Named `RECEIVER` rather than `TO` so it does not collide with `RuleWhitelist`'s
      * `CODE_ADDRESS_TO_NOT_WHITELISTED` (22) when a test contract inherits both invariant stores.
      */
-    uint8 public constant CODE_ADDRESS_RECEIVER_NOT_WHITELISTED = 81;
+    uint8 public constant CODE_ADDRESS_RECEIVER_NOT_WHITELISTED = 90;
     /**
      * @notice Restriction message returned when the receiver is not whitelisted.
      */

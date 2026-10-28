@@ -81,7 +81,7 @@ contract RuleMaxBalanceUnit is Test, RuleMaxBalanceInvariantStorage, RuleAddress
     /**
      * @notice A token with code whose `balanceOf` reverts is rejected at configuration time.
      * @dev Covers the `catch` in `_setBalanceToken`. Code alone is not enough: the probe must
-     *      actually succeed, otherwise every transfer would later be blocked with code 83 by a
+     *      actually succeed, otherwise every transfer would later be blocked with code 82 by a
      *      misconfiguration that could have been caught at setup.
      */
     function testConstructorRejectsTokenWhoseBalanceOfReverts() public {

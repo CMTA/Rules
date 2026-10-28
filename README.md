@@ -87,7 +87,7 @@ Each rule splits into a `*Base` contract holding the logic and a deployable vari
 | Rule | Enforces | Codes |
 | --- | --- | --- |
 | `RuleWhitelist` | Transfers only between whitelisted addresses | 21–25 |
-| `RuleReceiverWhitelist` | Receiver only, reproducing ERC-3643 eligibility | 81 |
+| `RuleReceiverWhitelist` | Receiver only, reproducing ERC-3643 eligibility | 90 |
 | `RuleSpenderWhitelist` | `transferFrom` only when the spender is whitelisted | 66 |
 | `RuleWhitelistWrapper` | Aggregates several whitelists with OR logic | 21–23 |
 | `RuleBlacklist` | Blocks blacklisted participants | 36–38 |
@@ -96,14 +96,14 @@ Each rule splits into a `*Base` contract holding the logic and a deployable vari
 | `RuleIdentityRegistry` | Consults an ERC-3643 identity registry | 55–57 |
 | `RuleMaxTotalSupply` | Caps total supply on mint | 50, 51 |
 | `RuleMaxTotalSupplyERC3643` | Caps total supply on mint, for tokens that mint *first* and call the rule after | 50, 51 |
-| `RuleMaxBalance` | Caps how many tokens one address may hold | 82, 83 |
+| `RuleMaxBalance` | Caps how many tokens one address may hold | 81, 82 |
 | `RuleChainlinkPoR` | Caps minting at Chainlink Proof of Reserve reserves | 75–79 |
 | `RuleChainlinkPoRERC3643` | Caps minting at reported reserves, for tokens that mint *first* and call the rule after | 75–79 |
 | `RuleConditionalTransferLight` | Requires operator approval per transfer | 46, 85 (not bound) |
 | `RuleMintAllowance` | Per-minter mint quota | 70, 85 (not bound) |
-| `RuleIssuanceCap` | Caps cumulative issuance on mint; burns do **not** restore room (fixed issue volume) | 71, 85 (not bound), and 50, 51 shared with `RuleMaxTotalSupply` |
+| `RuleIssuanceCap` | Caps cumulative issuance on mint; burns do **not** restore room (fixed issue volume) | 86, 85 (not bound), and 50, 51 shared with `RuleMaxTotalSupply` |
 
-Codes must stay unique across rules, since a RuleEngine returns the first non-zero one. Two deliberate exceptions, each with one meaning and one message: `RuleIssuanceCap` reuses 50 and 51 from `RuleMaxTotalSupply`, which it extends, and 85 ("rule not bound") is shared by the three stateful rules that need binding.
+Codes must stay unique across rules, since a RuleEngine returns the first non-zero one. Three deliberate exceptions, each with one meaning and one message: `RuleIssuanceCap` reuses 50 and 51 from `RuleMaxTotalSupply`, which it extends; 46 ("transfer not approved") is shared by the two conditional-transfer rules; and 85 ("rule not bound") is shared by the three stateful rules that need binding.
 
 **The two `…ERC3643` variants differ only in *when* they expect to be called**, and that is what to pick them by. CMTAT asks the rule before it moves the value, so the stock rule adds the pending amount to the supply it reads; ERC-3643 / T-REX mints first, so the variant must not add it again. Both mismatches are silent: the stock rule on an ERC-3643 token counts the amount twice and rejects mints that are inside the cap, and a variant on a CMTAT token stops enforcing the ceiling on the write path.
 
@@ -210,7 +210,7 @@ No formal third-party audit has been carried out. The code has had automated sta
 
 Scope is the production contracts under `src/`; mocks, tests and vendored dependencies are excluded.
 
-Every finding carries a written triage, including the ones dismissed as false positives or by-design. Nothing is outstanding as of `v0.7.0`: the static analysers report nothing to fix, since Slither's 47 results and Aderyn's 381 Low instances are all false-positive, by-design, environmental or cosmetic. The AuditAgent scan is fully dispositioned.
+Every finding carries a written triage, including the ones dismissed as false positives or by-design. Nothing is outstanding as of `v0.7.0`: the static analysers report nothing to fix, since Slither's 47 results and Aderyn's 383 Low instances are all false-positive, by-design, environmental or cosmetic. The AuditAgent scan is fully dispositioned.
 
 ### Nethermind AuditAgent (v0.5.0)
 

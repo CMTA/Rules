@@ -163,7 +163,7 @@ That second case is the reason the two contracts compose, and it is pinned end t
 
 ERC-3643 requires that **only the receiver** be verified: `transferFrom` works the same way, `mint` and `forcedTransfer` check only the receiver, and `burn` bypasses eligibility entirely. That asymmetry is deliberate — screening the sender would trap a de-listed holder in their position.
 
-- [`RuleReceiverWhitelist`](./technical/contracts/RuleReceiverWhitelist.md) reproduces this exactly (code `81`).
+- [`RuleReceiverWhitelist`](./technical/contracts/RuleReceiverWhitelist.md) reproduces this exactly (code `90`).
 - [`RuleIdentityRegistry`](./technical/contracts/RuleIdentityRegistry.md) defaults to the same behaviour, with `checkSender` / `checkSpender` available as explicit opt-ins, both `false` by default.
 
 Every rule and the registry implement `IERC3643Version`, so `version()` is queryable on-chain.
@@ -260,59 +260,60 @@ That is deliberate. The batch convention skips duplicates because a duplicate is
 
 ### Rule - Code list
 
-> It is very important that each rule uses a unique code
+> It is very important that each rule uses a unique code. The only exceptions are codes shared by rules that mean the same thing and return the same message: 21-25 (the whitelist rule and the wrapper), 46, 50-51, 75-79 (a rule and its `…ERC3643` variant or extension) and 85.
 
-Here is the list of codes used by the different rules
+Here is the list of codes used by the different rules. Each row names every rule that can return the code; the `Ownable2Step` variant of a rule returns the same codes as the rule.
 
-| Contract                     | Constant name                        | Value |
-| ---------------------------- | ------------------------------------ | ----- |
-| All                          | TRANSFER_OK (from CMTAT)             | 0     |
-| RuleWhitelist                | CODE_ADDRESS_FROM_NOT_WHITELISTED    | 21    |
-|                              | CODE_ADDRESS_TO_NOT_WHITELISTED      | 22    |
-|                              | CODE_ADDRESS_SPENDER_NOT_WHITELISTED | 23    |
-|                              | CODE_MINT_NOT_ALLOWED                | 24    |
-|                              | CODE_BURN_NOT_ALLOWED                | 25    |
-|                              | Reserved slot                        | 26-29 |
-| RuleSanctionsList            | CODE_ADDRESS_FROM_IS_SANCTIONED      | 30    |
-|                              | CODE_ADDRESS_TO_IS_SANCTIONED        | 31    |
-|                              | CODE_ADDRESS_SPENDER_IS_SANCTIONED   | 32    |
-|                              | Reserved slot                        | 33-35 |
-| RuleBlacklist                | CODE_ADDRESS_FROM_IS_BLACKLISTED     | 36    |
-|                              | CODE_ADDRESS_TO_IS_BLACKLISTED       | 37    |
-|                              | CODE_ADDRESS_SPENDER_IS_BLACKLISTED  | 38    |
-|                              | Reserved slot                        | 39-45 |
-| RuleConditionalTransferLight | CODE_TRANSFER_REQUEST_NOT_APPROVED   | 46    |
-|                              | Reserved slot                        | 47-49 |
-| RuleMaxTotalSupply           | CODE_MAX_TOTAL_SUPPLY_EXCEEDED       | 50    |
-|                              | CODE_SUPPLY_ORACLE_UNAVAILABLE       | 51    |
-|                              | Reserved slot                        | 52-54 |
-| RuleIdentityRegistry         | CODE_ADDRESS_FROM_NOT_VERIFIED       | 55    |
-|                              | CODE_ADDRESS_TO_NOT_VERIFIED         | 56    |
-|                              | CODE_ADDRESS_SPENDER_NOT_VERIFIED    | 57    |
-|                              | Reserved slot                        | 58-59 |
-| RuleERC2980                  | CODE_ADDRESS_FROM_IS_FROZEN          | 60    |
-|                              | CODE_ADDRESS_TO_IS_FROZEN            | 61    |
-|                              | CODE_ADDRESS_SPENDER_IS_FROZEN       | 62    |
-|                              | CODE_ADDRESS_TO_NOT_WHITELISTED      | 63    |
-|                              | CODE_MINT_NOT_ALLOWED                | 64    |
-|                              | CODE_BURN_NOT_ALLOWED                | 65    |
-| RuleSpenderWhitelist         | CODE_ADDRESS_SPENDER_NOT_WHITELISTED | 66    |
-|                              | Reserved slot                        | 67-69 |
-| RuleMintAllowance            | CODE_MINTER_ALLOWANCE_EXCEEDED       | 70    |
-| RuleIssuanceCap              | CODE_ISSUANCE_CAP_EXCEEDED           | 71    |
-|                              | (also 50, 51, shared with RuleMaxTotalSupply) |       |
-|                              | Reserved slot                        | 72-74 |
-| RuleChainlinkPoR             | CODE_RESERVES_EXCEEDED               | 75    |
-|                              | CODE_RESERVES_FEED_STALE             | 76    |
-|                              | CODE_RESERVES_ANSWER_INVALID         | 77    |
-|                              | CODE_TOTAL_SUPPLY_UNAVAILABLE        | 78    |
-|                              | CODE_RESERVES_FEED_UNAVAILABLE       | 79    |
-|                              | Reserved slot                        | 80    |
-| RuleReceiverWhitelist        | CODE_ADDRESS_RECEIVER_NOT_WHITELISTED | 81   |
-| RuleMaxBalance               | CODE_MAX_BALANCE_EXCEEDED             | 82   |
-|                              | CODE_BALANCE_UNAVAILABLE              | 83   |
-|                              | Reserved slot                        | 84    |
-| RuleConditionalTransferLight, RuleMintAllowance, RuleIssuanceCap | CODE_RULE_NOT_BOUND (shared, same message) | 85 |
+| Contract                                                             | Constant name                                             | Value |
+| -------------------------------------------------------------------- | --------------------------------------------------------- | ----- |
+| All                                                                  | TRANSFER_OK (from CMTAT)                                  | 0     |
+| RuleWhitelist, RuleWhitelistWrapper                                  | CODE_ADDRESS_FROM_NOT_WHITELISTED                         | 21    |
+|                                                                      | CODE_ADDRESS_TO_NOT_WHITELISTED                           | 22    |
+|                                                                      | CODE_ADDRESS_SPENDER_NOT_WHITELISTED                      | 23    |
+|                                                                      | CODE_MINT_NOT_ALLOWED                                     | 24    |
+|                                                                      | CODE_BURN_NOT_ALLOWED                                     | 25    |
+|                                                                      | Reserved slot                                             | 26-29 |
+| RuleSanctionsList                                                    | CODE_ADDRESS_FROM_IS_SANCTIONED                           | 30    |
+|                                                                      | CODE_ADDRESS_TO_IS_SANCTIONED                             | 31    |
+|                                                                      | CODE_ADDRESS_SPENDER_IS_SANCTIONED                        | 32    |
+|                                                                      | Reserved slot                                             | 33-35 |
+| RuleBlacklist                                                        | CODE_ADDRESS_FROM_IS_BLACKLISTED                          | 36    |
+|                                                                      | CODE_ADDRESS_TO_IS_BLACKLISTED                            | 37    |
+|                                                                      | CODE_ADDRESS_SPENDER_IS_BLACKLISTED                       | 38    |
+|                                                                      | Reserved slot                                             | 39-45 |
+| RuleConditionalTransferLight, RuleConditionalTransferLightMultiToken | CODE_TRANSFER_REQUEST_NOT_APPROVED (shared, same message) | 46    |
+|                                                                      | Reserved slot                                             | 47-49 |
+| RuleMaxTotalSupply, RuleMaxTotalSupplyERC3643, RuleIssuanceCap       | CODE_MAX_TOTAL_SUPPLY_EXCEEDED                            | 50    |
+|                                                                      | CODE_SUPPLY_ORACLE_UNAVAILABLE                            | 51    |
+|                                                                      | Reserved slot                                             | 52-54 |
+| RuleIdentityRegistry                                                 | CODE_ADDRESS_FROM_NOT_VERIFIED                            | 55    |
+|                                                                      | CODE_ADDRESS_TO_NOT_VERIFIED                              | 56    |
+|                                                                      | CODE_ADDRESS_SPENDER_NOT_VERIFIED                         | 57    |
+|                                                                      | Reserved slot                                             | 58-59 |
+| RuleERC2980                                                          | CODE_ADDRESS_FROM_IS_FROZEN                               | 60    |
+|                                                                      | CODE_ADDRESS_TO_IS_FROZEN                                 | 61    |
+|                                                                      | CODE_ADDRESS_SPENDER_IS_FROZEN                            | 62    |
+|                                                                      | CODE_ADDRESS_TO_NOT_WHITELISTED                           | 63    |
+|                                                                      | CODE_MINT_NOT_ALLOWED                                     | 64    |
+|                                                                      | CODE_BURN_NOT_ALLOWED                                     | 65    |
+| RuleSpenderWhitelist                                                 | CODE_ADDRESS_SPENDER_NOT_WHITELISTED                      | 66    |
+|                                                                      | Reserved slot                                             | 67-69 |
+| RuleMintAllowance                                                    | CODE_MINTER_ALLOWANCE_EXCEEDED                            | 70    |
+|                                                                      | Reserved slot                                             | 71-74 |
+| RuleChainlinkPoR, RuleChainlinkPoRERC3643                            | CODE_RESERVES_EXCEEDED                                    | 75    |
+|                                                                      | CODE_RESERVES_FEED_STALE                                  | 76    |
+|                                                                      | CODE_RESERVES_ANSWER_INVALID                              | 77    |
+|                                                                      | CODE_TOTAL_SUPPLY_UNAVAILABLE                             | 78    |
+|                                                                      | CODE_RESERVES_FEED_UNAVAILABLE                            | 79    |
+|                                                                      | Reserved slot                                             | 80    |
+| RuleMaxBalance                                                       | CODE_MAX_BALANCE_EXCEEDED                                 | 81    |
+|                                                                      | CODE_BALANCE_UNAVAILABLE                                  | 82    |
+|                                                                      | Reserved slot                                             | 83-84 |
+| RuleConditionalTransferLight, RuleMintAllowance, RuleIssuanceCap     | CODE_RULE_NOT_BOUND (shared, same message)                | 85    |
+| RuleIssuanceCap                                                      | CODE_ISSUANCE_CAP_EXCEEDED                                | 86    |
+|                                                                      | Reserved slot                                             | 87-89 |
+| RuleReceiverWhitelist                                                | CODE_ADDRESS_RECEIVER_NOT_WHITELISTED                     | 90    |
+|                                                                      | Reserved slot                                             | 91-93 |
 
 Note:
 
@@ -321,6 +322,7 @@ Note:
 - Reserved slots are intentionally left unused for future rule expansion (maximum of 3 per rule).
 - New rule code blocks should start at codes ending in `1` or `6` (e.g., `21`, `26`), leaving the remaining codes in the previous block for that prior rule’s reserved slots.
 - Current allocations are legacy; new rules should follow the start-at-1-or-6 policy without changing existing codes.
+- `RuleERC2980` has no reserved slot, because the next code was already taken (60-65, followed by `RuleSpenderWhitelist` at 66). A new code for it takes the next free block starting at a code ending in `1` or `6` (currently `96`), and the code list records which rule it belongs to.
 
 ### Rules as Standalone Compliance Contracts
 
@@ -920,7 +922,7 @@ Caps how many tokens a single address may hold. One cap applies to every holder,
 
 **Usage scenario**
 
-An issuer must keep any single investor below 5% of a 1,000,000-token issue. They deploy `RuleWhitelist` and `RuleMaxBalance(admin, cmtat, 50_000)` in the same RuleEngine, admit exactly one address per onboarded investor, and exempt the treasury address holding the unsold allocation. An investor at 50,000 tokens can still sell, and can buy again once below the cap; a mint that would push them over is rejected with code `82`.
+An issuer must keep any single investor below 5% of a 1,000,000-token issue. They deploy `RuleWhitelist` and `RuleMaxBalance(admin, cmtat, 50_000)` in the same RuleEngine, admit exactly one address per onboarded investor, and exempt the treasury address holding the unsold allocation. An investor at 50,000 tokens can still sell, and can buy again once below the cap; a mint that would push them over is rejected with code `81`.
 
 #### Chainlink Proof of Reserve
 
@@ -989,7 +991,7 @@ The compliance manager binds the rule to the RuleEngine with `bindToken(ruleEngi
 
 #### Issuance cap
 
-This rule caps the **cumulative issuance** of one token: the total ever minted cannot exceed `maxTotalSupply`, and burns do not restore room. It extends `RuleMaxTotalSupply` with a `totalIssued` counter raised on every accepted mint (code `71` when it would pass the cap), while the inherited live-supply check (code `50`) stays active against the same cap. It works on CMTAT v3.0.0, whose mints carry no minter, because the cap is per token. For a cap that burns do restore, use `RuleMaxTotalSupply`. See [RuleIssuanceCap.md](./technical/contracts/RuleIssuanceCap.md).
+This rule caps the **cumulative issuance** of one token: the total ever minted cannot exceed `maxTotalSupply`, and burns do not restore room. It extends `RuleMaxTotalSupply` with a `totalIssued` counter raised on every accepted mint (code `86` when it would pass the cap), while the inherited live-supply check (code `50`) stays active against the same cap. It works on CMTAT v3.0.0, whose mints carry no minter, because the cap is per token. For a cap that burns do restore, use `RuleMaxTotalSupply`. See [RuleIssuanceCap.md](./technical/contracts/RuleIssuanceCap.md).
 
 **Usage scenario**
 
@@ -2038,13 +2040,13 @@ Run **2026-10-26** for the v0.7.0 release and **re-run 2026-10-28** before taggi
 | Tool | High | Medium | Low | Info | Anything to fix? |
 |---|---|---|---|---|---|
 | [Slither](https://github.com/crytic/slither) 0.11.6 | 2 | 5 | 18 | 22 | **No** — [feedback](./security/audits/tools/v0.7.0/slither-report-feedback.md) |
-| [Aderyn](https://github.com/Cyfrin/aderyn) 0.6.5 | 0 | 0 | 10 categories (381 instances) | 0 | **No** — [feedback](./security/audits/tools/v0.7.0/aderyn-report-feedback.md) |
+| [Aderyn](https://github.com/Cyfrin/aderyn) 0.6.5 | 0 | 0 | 10 categories (383 instances) | 0 | **No** — [feedback](./security/audits/tools/v0.7.0/aderyn-report-feedback.md) |
 | Slither 0.11.6 and Aderyn 0.6.5 on `script/` | 0 | 0 | 2 categories (36 instances, Aderyn) | 0 | **No** after one fix — [feedback](./security/audits/tools/v0.7.0/script-report-feedback.md) |
 
 **Nothing to fix.**
 - Slither: on 0.11.5 the code delta is nil, identical to v0.6.0 result for result, although this release added `RuleIssuanceCap`. The upgrade to 0.11.6 keeps 46 results but trades six `unused-return` hits for six `dead-code` false positives.
 - Slither cannot analyse `_addAddresses` / `_removeAddresses` in `RuleMaxBalance` and `IdentityRegistryWhitelist` (no IR, both versions). The same inherited code is analysed elsewhere; see the feedback.
-- Aderyn's +31 is fully attributed to the new rule and the `RuleMaxTotalSupply` hooks. The pre-release re-run adds one Slither `dead-code` false positive and four Aderyn one-per-file instances for the two new storage contracts.
+- Aderyn's +31 is fully attributed to the new rule and the `RuleMaxTotalSupply` hooks. The pre-release re-run adds one Slither `dead-code` false positive and six Aderyn one-per-file instances for the three new storage contracts.
 - Deployment scripts, analysed separately for the first time: Slither reports nothing. Aderyn's large-numeric-literal finding on the default caps was fixed; the fix also made the defaults whole tokens scaled by `CMTAT_DECIMALS`, where they had been base units.
 - Its one new category, `State Change Without Event` on the now non-`view` `RuleMaxTotalSupplyBase.transferred`, is a false positive pinned by a no-write test.
 - The first Aderyn run also found nine unused `IRuleEngine` imports left by the RuleEngine rc7 migration; they were removed before the committed run.

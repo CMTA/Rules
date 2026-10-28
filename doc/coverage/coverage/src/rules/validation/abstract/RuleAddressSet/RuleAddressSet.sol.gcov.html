@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-28 09:57:31</td>
+            <td class="headerValue">2026-10-28 14:13:45</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">13</td>
@@ -158,10 +158,10 @@
 <a name="87"><span class="lineNum">      87 </span>                :            :      * - Accessible only by accounts with the `ADDRESS_LIST_ADD_ROLE`.</a>
 <a name="88"><span class="lineNum">      88 </span>                :            :      * @param targetAddress The address to be added.</a>
 <a name="89"><span class="lineNum">      89 </span>                :            :      */</a>
-<a name="90"><span class="lineNum">      90 </span>                :<span class="lineCov">        671 :     function addAddress(address targetAddress) public virtual onlyAddressListAdd {</span></a>
-<a name="91"><span class="lineNum">      91 </span>        [<span class="branchCov" title="Branch 0 was taken 3 times"> + </span><span class="branchCov" title="Branch 1 was taken 661 times"> + </span>]:<span class="lineCov">        664 :         require(targetAddress != address(0), RuleAddressSet_ZeroAddressNotAllowed());</span></a>
-<a name="92"><span class="lineNum">      92 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 660 times"> + </span>]:<span class="lineCov">        661 :         require(_addAddress(targetAddress), RuleAddressSet_AddressAlreadyListed());</span></a>
-<a name="93"><span class="lineNum">      93 </span>                :<span class="lineCov">        660 :         emit AddAddress(targetAddress);</span></a>
+<a name="90"><span class="lineNum">      90 </span>                :<span class="lineCov">        675 :     function addAddress(address targetAddress) public virtual onlyAddressListAdd {</span></a>
+<a name="91"><span class="lineNum">      91 </span>        [<span class="branchCov" title="Branch 0 was taken 3 times"> + </span><span class="branchCov" title="Branch 1 was taken 665 times"> + </span>]:<span class="lineCov">        668 :         require(targetAddress != address(0), RuleAddressSet_ZeroAddressNotAllowed());</span></a>
+<a name="92"><span class="lineNum">      92 </span>        [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 664 times"> + </span>]:<span class="lineCov">        665 :         require(_addAddress(targetAddress), RuleAddressSet_AddressAlreadyListed());</span></a>
+<a name="93"><span class="lineNum">      93 </span>                :<span class="lineCov">        664 :         emit AddAddress(targetAddress);</span></a>
 <a name="94"><span class="lineNum">      94 </span>                :            :     }</a>
 <a name="95"><span class="lineNum">      95 </span>                :            : </a>
 <a name="96"><span class="lineNum">      96 </span>                :            :     /**</a>
@@ -237,8 +237,8 @@
 <a name="166"><span class="lineNum">     166 </span>                :            :     /**</a>
 <a name="167"><span class="lineNum">     167 </span>                :            :      * @inheritdoc ERC2771Context</a>
 <a name="168"><span class="lineNum">     168 </span>                :            :      */</a>
-<a name="169"><span class="lineNum">     169 </span>                :<span class="lineCov">       2174 :     function _msgSender() internal view virtual override(ERC2771Context) returns (address sender) {</span></a>
-<a name="170"><span class="lineNum">     170 </span>                :<span class="lineCov">       2174 :         return ERC2771Context._msgSender();</span></a>
+<a name="169"><span class="lineNum">     169 </span>                :<span class="lineCov">       2178 :     function _msgSender() internal view virtual override(ERC2771Context) returns (address sender) {</span></a>
+<a name="170"><span class="lineNum">     170 </span>                :<span class="lineCov">       2178 :         return ERC2771Context._msgSender();</span></a>
 <a name="171"><span class="lineNum">     171 </span>                :            :     }</a>
 <a name="172"><span class="lineNum">     172 </span>                :            : </a>
 <a name="173"><span class="lineNum">     173 </span>                :            :     /**</a>
@@ -251,8 +251,8 @@
 <a name="180"><span class="lineNum">     180 </span>                :            :     /**</a>
 <a name="181"><span class="lineNum">     181 </span>                :            :      * @inheritdoc ERC2771Context</a>
 <a name="182"><span class="lineNum">     182 </span>                :            :      */</a>
-<a name="183"><span class="lineNum">     183 </span>                :<span class="lineCov">       2186 :     function _contextSuffixLength() internal view virtual override(ERC2771Context) returns (uint256) {</span></a>
-<a name="184"><span class="lineNum">     184 </span>                :<span class="lineCov">       2186 :         return ERC2771Context._contextSuffixLength();</span></a>
+<a name="183"><span class="lineNum">     183 </span>                :<span class="lineCov">       2190 :     function _contextSuffixLength() internal view virtual override(ERC2771Context) returns (uint256) {</span></a>
+<a name="184"><span class="lineNum">     184 </span>                :<span class="lineCov">       2190 :         return ERC2771Context._contextSuffixLength();</span></a>
 <a name="185"><span class="lineNum">     185 </span>                :            :     }</a>
 <a name="186"><span class="lineNum">     186 </span>                :            : }</a>
 </pre>

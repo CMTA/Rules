@@ -21,7 +21,7 @@ import {
  * path with the minter as spender, which the rule never screens.
  */
 contract RuleReceiverWhitelistCMTATDeploymentTest is Test, HelperContract {
-    uint8 private constant CODE_RECEIVER = 81;
+    uint8 private constant CODE_RECEIVER = 90;
     address private constant MINTER = address(0x4D1);
     RuleReceiverWhitelist private rule;
 

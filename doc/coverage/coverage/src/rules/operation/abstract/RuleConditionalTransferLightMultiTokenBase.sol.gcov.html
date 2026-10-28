@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-28 09:57:31</td>
+            <td class="headerValue">2026-10-28 14:13:45</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">26</td>
@@ -142,28 +142,28 @@
 <a name="71"><span class="lineNum">      71 </span>                :            :     /**</a>
 <a name="72"><span class="lineNum">      72 </span>                :            :      * @inheritdoc IRule</a>
 <a name="73"><span class="lineNum">      73 </span>                :            :      */</a>
-<a name="74"><span class="lineNum">      74 </span>                :<span class="lineCov">          2 :     function canReturnTransferRestrictionCode(uint8 restrictionCode)</span></a>
+<a name="74"><span class="lineNum">      74 </span>                :<span class="lineCov">          3 :     function canReturnTransferRestrictionCode(uint8 restrictionCode)</span></a>
 <a name="75"><span class="lineNum">      75 </span>                :            :         external</a>
 <a name="76"><span class="lineNum">      76 </span>                :            :         pure</a>
 <a name="77"><span class="lineNum">      77 </span>                :            :         virtual</a>
 <a name="78"><span class="lineNum">      78 </span>                :            :         override(IRule)</a>
 <a name="79"><span class="lineNum">      79 </span>                :            :         returns (bool)</a>
 <a name="80"><span class="lineNum">      80 </span>                :            :     {</a>
-<a name="81"><span class="lineNum">      81 </span>                :<span class="lineCov">          2 :         return restrictionCode == CODE_TRANSFER_REQUEST_NOT_APPROVED;</span></a>
+<a name="81"><span class="lineNum">      81 </span>                :<span class="lineCov">          3 :         return restrictionCode == CODE_TRANSFER_REQUEST_NOT_APPROVED;</span></a>
 <a name="82"><span class="lineNum">      82 </span>                :            :     }</a>
 <a name="83"><span class="lineNum">      83 </span>                :            : </a>
 <a name="84"><span class="lineNum">      84 </span>                :            :     /**</a>
 <a name="85"><span class="lineNum">      85 </span>                :            :      * @inheritdoc IERC1404</a>
 <a name="86"><span class="lineNum">      86 </span>                :            :      */</a>
-<a name="87"><span class="lineNum">      87 </span>                :<span class="lineCov">          2 :     function messageForTransferRestriction(uint8 restrictionCode)</span></a>
+<a name="87"><span class="lineNum">      87 </span>                :<span class="lineCov">          4 :     function messageForTransferRestriction(uint8 restrictionCode)</span></a>
 <a name="88"><span class="lineNum">      88 </span>                :            :         external</a>
 <a name="89"><span class="lineNum">      89 </span>                :            :         pure</a>
 <a name="90"><span class="lineNum">      90 </span>                :            :         virtual</a>
 <a name="91"><span class="lineNum">      91 </span>                :            :         override(IERC1404)</a>
 <a name="92"><span class="lineNum">      92 </span>                :            :         returns (string memory)</a>
 <a name="93"><span class="lineNum">      93 </span>                :            :     {</a>
-<a name="94"><span class="lineNum">      94 </span>           [<span class="branchCov" title="Branch 0 was taken 1 time"> + </span>]:<span class="lineCov">          2 :         if (restrictionCode == CODE_TRANSFER_REQUEST_NOT_APPROVED) {</span></a>
-<a name="95"><span class="lineNum">      95 </span>                :<span class="lineCov">          1 :             return TEXT_TRANSFER_REQUEST_NOT_APPROVED;</span></a>
+<a name="94"><span class="lineNum">      94 </span>           [<span class="branchCov" title="Branch 0 was taken 3 times"> + </span>]:<span class="lineCov">          4 :         if (restrictionCode == CODE_TRANSFER_REQUEST_NOT_APPROVED) {</span></a>
+<a name="95"><span class="lineNum">      95 </span>                :<span class="lineCov">          3 :             return TEXT_TRANSFER_REQUEST_NOT_APPROVED;</span></a>
 <a name="96"><span class="lineNum">      96 </span>                :            :         }</a>
 <a name="97"><span class="lineNum">      97 </span>                :<span class="lineCov">          1 :         return TEXT_CODE_NOT_FOUND;</span></a>
 <a name="98"><span class="lineNum">      98 </span>                :            :     }</a>

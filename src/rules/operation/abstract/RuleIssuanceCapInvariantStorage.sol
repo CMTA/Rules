@@ -17,7 +17,7 @@ abstract contract RuleIssuanceCapInvariantStorage is RuleBindingInvariantStorage
     /**
      * @notice Restriction code returned when cumulative issuance would exceed the cap.
      */
-    uint8 public constant CODE_ISSUANCE_CAP_EXCEEDED = 71;
+    uint8 public constant CODE_ISSUANCE_CAP_EXCEEDED = 86;
 
     /**
      * @notice Emitted once at deployment with the issuance already counted.

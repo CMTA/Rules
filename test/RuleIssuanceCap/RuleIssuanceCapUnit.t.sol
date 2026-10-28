@@ -353,7 +353,7 @@ contract RuleIssuanceCapUnit is Test, HelperContract, RuleIssuanceCapInvariantSt
         assertEq(rule.messageForTransferRestriction(CODE_ISSUANCE_CAP_EXCEEDED), TEXT_ISSUANCE_CAP_EXCEEDED);
         assertEq(rule.messageForTransferRestriction(CODE_MAX_TOTAL_SUPPLY_EXCEEDED), TEXT_MAX_TOTAL_SUPPLY_EXCEEDED);
         assertEq(rule.messageForTransferRestriction(CODE_NONEXISTENT), TEXT_CODE_NOT_FOUND);
-        assertEq(rule.CODE_ISSUANCE_CAP_EXCEEDED(), 71);
+        assertEq(rule.CODE_ISSUANCE_CAP_EXCEEDED(), 86);
     }
 
     /// @notice Burns and transfers are never blocked, even with the cap exhausted.

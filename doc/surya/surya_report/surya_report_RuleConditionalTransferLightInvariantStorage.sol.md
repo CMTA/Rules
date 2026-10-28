@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/operation/abstract/RuleConditionalTransferLightInvariantStorage.sol | 0fb61fe11fdebb662c8d1e0616bd40baedac0205 |
+| ./rules/operation/abstract/RuleConditionalTransferLightInvariantStorage.sol | 2206cc7a8768fcedb77fe72865b556013b0c64a0 |
 
 
 ### Contracts Description Table
@@ -15,7 +15,7 @@
 |:----------:|:-------------------:|:----------------:|:----------------:|:---------------:|
 |     └      |  **Function Name**  |  **Visibility**  |  **Mutability**  |  **Modifiers**  |
 ||||||
-| **RuleConditionalTransferLightInvariantStorage** | Implementation | RuleSharedInvariantStorage, RuleBindingInvariantStorage |||
+| **RuleConditionalTransferLightInvariantStorage** | Implementation | RuleSharedInvariantStorage, RuleBindingInvariantStorage, RuleConditionalTransferInvariantStorage |||
 
 
 ### Legend

@@ -41,9 +41,9 @@ Every setup below is tested against a real v3.0.0 token:
 
 | Operation | Checked by `RuleReceiverWhitelist` | Rejected with |
 | --- | --- | --- |
-| Transfer `from → to` | `to` is whitelisted. `from` is never checked | 81 (receiver) |
-| `transferFrom` by a spender | `to` is whitelisted. Neither `from` nor the spender is checked | 81 |
-| Mint to `to` | `to` is whitelisted | 81 |
+| Transfer `from → to` | `to` is whitelisted. `from` is never checked | 90 (receiver) |
+| `transferFrom` by a spender | `to` is whitelisted. Neither `from` nor the spender is checked | 90 |
+| Mint to `to` | `to` is whitelisted | 90 |
 | Burn from `from` | nothing: a burn is always allowed by the rule | never |
 
 There is **no `allowMint` flag**, unlike `RuleWhitelist`: ERC-3643 gates minting on receiver eligibility alone, so any mint to a listed address passes. To cap or close issuance, add `RuleMaxTotalSupply` next to it in a RuleEngine, or control who holds `MINTER_ROLE` on the token.
@@ -102,7 +102,7 @@ Each setup lists its steps, then draws them as a sequence diagram. The calls are
 2. **Fill the whitelist:** `addAddresses([investor1, investor2, ...])`, as the admin or an `ADDRESS_LIST_ADD_ROLE` holder. This can also happen after step 3; until then every mint and transfer is rejected, but burns pass.
 3. **Deploy the token** with `Engine(ruleEngine = rule, snapshotEngine = 0, documentEngine = 0)`.
 4. **Grant `MINTER_ROLE`** to the issuer's minting address, if it is not the admin.
-5. **Check the setup:** `token.ruleEngine() == rule`; on the Standard variant, `token.detectTransferRestriction(address(0), investor1, 1) == 0` and the same call to an unlisted address returns 81.
+5. **Check the setup:** `token.ruleEngine() == rule`; on the Standard variant, `token.detectTransferRestriction(address(0), investor1, 1) == 0` and the same call to an unlisted address returns 90.
 
 ```mermaid
 sequenceDiagram
@@ -223,9 +223,9 @@ sequenceDiagram
         Token-->>Minter: revert CMTAT_InvalidTransfer
     end
     Token->>Rule: transferred(address(0), to, value)
-    Rule->>Rule: receiver whitelisted? (else code 81)
+    Rule->>Rule: receiver whitelisted? (else code 90)
     alt rejected
-        Rule-->>Token: revert RuleReceiverWhitelist_InvalidTransfer(rule, 0, to, value, 81)
+        Rule-->>Token: revert RuleReceiverWhitelist_InvalidTransfer(rule, 0, to, value, 90)
         Token-->>Minter: whole mint reverts
     else accepted
         Rule-->>Token: return
@@ -255,9 +255,9 @@ sequenceDiagram
     Token->>Engine: transferred(address(0), to, value)
     Engine->>Engine: onlyBoundToken (caller is the bound token?)
     Engine->>Rule: transferred(address(0), to, value)
-    Rule->>Rule: receiver whitelisted? (else code 81)
+    Rule->>Rule: receiver whitelisted? (else code 90)
     alt rejected
-        Rule-->>Engine: revert RuleReceiverWhitelist_InvalidTransfer(rule, 0, to, value, 81)
+        Rule-->>Engine: revert RuleReceiverWhitelist_InvalidTransfer(rule, 0, to, value, 90)
         Engine-->>Token: revert bubbles up
         Token-->>Minter: whole mint reverts
     else accepted
@@ -311,9 +311,9 @@ sequenceDiagram
     end
     Token->>Rule: transferred(from, to, value)
     Rule->>Rule: sender not screened
-    Rule->>Rule: receiver whitelisted? (else code 81)
+    Rule->>Rule: receiver whitelisted? (else code 90)
     alt rejected
-        Rule-->>Token: revert RuleReceiverWhitelist_InvalidTransfer(rule, from, to, value, 81)
+        Rule-->>Token: revert RuleReceiverWhitelist_InvalidTransfer(rule, from, to, value, 90)
         Token-->>Holder: whole transfer reverts
     else accepted
         Rule-->>Token: return
@@ -344,9 +344,9 @@ sequenceDiagram
     Engine->>Engine: onlyBoundToken
     Engine->>Rule: transferred(from, to, value)
     Rule->>Rule: sender not screened
-    Rule->>Rule: receiver whitelisted? (else code 81)
+    Rule->>Rule: receiver whitelisted? (else code 90)
     alt rejected
-        Rule-->>Engine: revert RuleReceiverWhitelist_InvalidTransfer(rule, from, to, value, 81)
+        Rule-->>Engine: revert RuleReceiverWhitelist_InvalidTransfer(rule, from, to, value, 90)
         Engine-->>Token: revert bubbles up
         Token-->>Holder: whole transfer reverts
     else accepted

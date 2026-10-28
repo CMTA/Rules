@@ -47,7 +47,7 @@ contract RuleMaxBalanceCMTATDeployment is Test, HelperContract {
 
         vm.startPrank(MINTER);
         token.mint(ADDRESS1, 60);
-        assertEq(token.detectTransferRestriction(ZERO_ADDRESS, ADDRESS1, 41), 82);
+        assertEq(token.detectTransferRestriction(ZERO_ADDRESS, ADDRESS1, 41), 81);
         vm.expectPartialRevert(RuleMaxBalanceInvariantStorage.RuleMaxBalance_InvalidTransferFrom.selector);
         token.mint(ADDRESS1, 41);
         token.mint(ADDRESS1, 40);

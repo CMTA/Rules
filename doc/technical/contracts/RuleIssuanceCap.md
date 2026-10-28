@@ -43,7 +43,7 @@ The choice is made at deployment by picking the contract; there is no mode flag.
 | --- | --- |
 | [`TotalSupplyCapManager`](../../../src/rules/validation/abstract/core/TotalSupplyCapManager.sol) | The cap, `set` / `increase` / `decreaseMaxTotalSupply`, `MaxTotalSupplyUpdated(previous, new)`, the revert-free `totalSupply()` read |
 | [`RuleMaxTotalSupplyBase`](../../../src/rules/validation/abstract/base/RuleMaxTotalSupplyBase.sol) | The mint-only live-supply check (codes 50 / 51), the ERC-1404 surface, `remainingMintable()`, and the `_afterMintChecked` hook |
-| [`RuleIssuanceCapBase`](../../../src/rules/operation/abstract/RuleIssuanceCapBase.sol) | The `totalIssued` counter (code 71), binding (`onlyBoundToken`), the `initialIssued` check, the locked token |
+| [`RuleIssuanceCapBase`](../../../src/rules/operation/abstract/RuleIssuanceCapBase.sol) | The `totalIssued` counter (code 86), binding (`onlyBoundToken`), the `initialIssued` check, the locked token |
 | [`RuleIssuanceCap`](../../../src/rules/operation/RuleIssuanceCap.sol) / [`RuleIssuanceCapOwnable2Step`](../../../src/rules/operation/RuleIssuanceCapOwnable2Step.sol) | Access control only |
 
 ## How it decides
@@ -52,7 +52,7 @@ On a mint of `value`, two checks run against the same cap (`maxTotalSupply`):
 
 | Check | Rejects when | Code |
 | --- | --- | --- |
-| Counter | `totalIssued + value > cap` | **71** |
+| Counter | `totalIssued + value > cap` | **86** |
 | Live supply (inherited) | `totalSupply() + value > cap` | 50 (51 if `totalSupply()` is unreadable) |
 
 If both pass, `totalIssued += value` and `IssuanceRecorded(value, totalIssued)` is emitted. Transfers and burns are never checked and never change the counter. A zero-value mint is a no-op.
@@ -115,7 +115,7 @@ Pinned by `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow`, and by
 
 | Constant | Code | Meaning |
 | --- | --- | --- |
-| `CODE_ISSUANCE_CAP_EXCEEDED` | 71 | Cumulative issuance would exceed the cap |
+| `CODE_ISSUANCE_CAP_EXCEEDED` | 86 | Cumulative issuance would exceed the cap |
 | `CODE_MAX_TOTAL_SUPPLY_EXCEEDED` | 50 | Live supply would exceed the cap (shared with `RuleMaxTotalSupply`, same message) |
 | `CODE_SUPPLY_ORACLE_UNAVAILABLE` | 51 | `totalSupply()` could not be read |
 | `CODE_RULE_NOT_BOUND` | 85 | No caller is bound yet (`bindToken`), so every operation would revert. Shared, with the same message, by `RuleConditionalTransferLight`, `RuleMintAllowance` and `RuleIssuanceCap` |

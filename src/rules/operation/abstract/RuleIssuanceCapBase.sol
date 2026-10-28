@@ -117,7 +117,7 @@ abstract contract RuleIssuanceCapBase is
     }
 
     /**
-     * @notice Returns whether this rule can produce the given restriction code (71, 50 or 51).
+     * @notice Returns whether this rule can produce the given restriction code (86, 50 or 51).
      */
     function canReturnTransferRestrictionCode(uint8 restrictionCode) public pure virtual override returns (bool) {
         return restrictionCode == CODE_ISSUANCE_CAP_EXCEEDED || restrictionCode == CODE_RULE_NOT_BOUND
@@ -141,7 +141,7 @@ abstract contract RuleIssuanceCapBase is
     //////////////////////////////////////////////////////////////*/
 
     /**
-     * @notice Read path: the counter leg (code 71), then the inherited live-supply leg (codes 50 / 51).
+     * @notice Read path: the counter leg (code 86), then the inherited live-supply leg (codes 50 / 51).
      */
     function _detectTransferRestriction(address from, address to, uint256 value)
         internal
