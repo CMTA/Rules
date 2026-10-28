@@ -25,7 +25,7 @@ The compiled contracts contain no Osaka-only opcode (`CLZ`), so they also run on
 
   - Foundry [v1.5.0](https://github.com/foundry-rs/foundry)
 
-  - Forge std [v1.12.0](https://github.com/foundry-rs/forge-std/releases/tag/v1.12.0)
+  - Forge std [v1.17.0](https://github.com/foundry-rs/forge-std/releases/tag/v1.17.0)
 
   - OpenZeppelin Contracts (submodule) [v5.7.0](https://github.com/OpenZeppelin/openzeppelin-contracts/releases/tag/v5.7.0)
 

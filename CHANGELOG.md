@@ -128,7 +128,7 @@ Commit:
   - Behaviour change for integrators: a pre-flight on an unbound rule now fails instead of passing. Once bound, every view answers exactly as before. `RuleConditionalTransferLight` counts as bound when either a token or a RuleEngine is bound.
 - CI: `forge build --sizes` failed because the test helper `test/utils/CMTATDeploymentV300.sol` held the creation code of both CMTAT v3.0.0 variants (54 KB, over the EIP-170 limit). The helper is removed and `CMTATv300TestBase` deploys the token itself; test contracts are exempt from the size check.
 - CI warnings removed.
-  - `foundry.lock` recorded the previous dependency commits, so every Foundry command printed a revision mismatch for five submodules. It now records the pinned commits and tags of all nine (OpenZeppelin `v5.7.0`, CMTAT `v3.3.0-rc4` and `v3.0.0`, RuleEngine `v3.0.0-rc7`, forge-std `v1.12.0`, ERC-3643 `4.2.0-beta1`, and the two Chainlink reference repositories).
+  - `foundry.lock` recorded the previous dependency commits, so every Foundry command printed a revision mismatch for five submodules. It now records the pinned commits and tags of all nine (OpenZeppelin `v5.7.0`, CMTAT `v3.3.0-rc4` and `v3.0.0`, RuleEngine `v3.0.0-rc7`, forge-std `v1.17.0`, ERC-3643 `4.2.0-beta1`, and the two Chainlink reference repositories).
   - The workflow installs Foundry `v1.5.0` instead of `nightly`.
   - `foundry.toml` sets `ignored_warnings_from = ['lib']`, so compiler warnings from vendored dependencies (deprecated `pragma experimental ABIEncoderV2`, `at` and `error` becoming keywords) no longer flood the log.
 
@@ -152,6 +152,7 @@ Commit:
   - Token callbacks are identified by `msg.sender`, not `_msgSender()`, so a trusted forwarder can no longer act as a bound token. The rules never relied on relayed callbacks: no change needed.
 - Test-only submodule `lib/CMTATv3.0.0`, pinned to CMTAT tag `v3.0.0`, with the remapping `CMTATv3.0.0/=lib/CMTATv3.0.0/contracts/` (same approach as RuleEngine). It compiles with this repository's solc 0.8.38 and OpenZeppelin `v5.7.0`; nothing in `src/` imports it.
 - `pragma solidity` raised from `^0.8.20` to `^0.8.27` in every `src/` and `script/` file. `require(condition, CustomError())`, used throughout, needs solc 0.8.27 in the legacy pipeline, and RuleEngine rc7 now declares `^0.8.27` on the files every rule imports, so `^0.8.20` was no longer the real floor. Tests keep their pragma.
+- **forge-std `v1.12.0` → `v1.17.0`** (test-only). All tests, both profiles, and the deployment-script dry runs pass unchanged.
 
 ### Documentation
 
