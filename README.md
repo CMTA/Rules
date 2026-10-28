@@ -67,7 +67,7 @@ _Diagram source: [`doc/schema/architecture-topologies.puml`](./doc/schema/archit
 
 Behind a RuleEngine the engine returns the **first non-zero** restriction code, so rule order decides which code a rejection reports. In direct mode the rule is installed with `token.setRuleEngine(rule)`.
 
-**Operation rules** keep state keyed on the caller, so the two are not interchangeable for them: `RuleConditionalTransferLightMultiToken` is direct-binding only, `RuleMintAllowance` requires the engine path, and `RuleIssuanceCap` works under either but must be bound to its caller (the token directly, or the engine). Validation rules work under either.
+**Operation rules** keep state keyed on the caller, so the two are not interchangeable for them: `RuleConditionalTransferLightMultiToken` is direct-binding only, while `RuleConditionalTransferLight`, `RuleMintAllowance` and `RuleIssuanceCap` work under either but must be bound to their caller (the token directly, or the engine). Validation rules work under either.
 
 ### Layout
 
@@ -89,7 +89,7 @@ Each rule splits into a `*Base` contract holding the logic and a deployable vari
 | `RuleWhitelist` | Transfers only between whitelisted addresses | 21–25 |
 | `RuleReceiverWhitelist` | Receiver only, reproducing ERC-3643 eligibility | 90 |
 | `RuleSpenderWhitelist` | `transferFrom` only when the spender is whitelisted | 66 |
-| `RuleWhitelistWrapper` | Aggregates several whitelists with OR logic | 21–23 |
+| `RuleWhitelistWrapper` | Aggregates several whitelists with OR logic | 21–25 |
 | `RuleBlacklist` | Blocks blacklisted participants | 36–38 |
 | `RuleSanctionsList` | Blocks sanctioned addresses via a Chainalysis oracle | 30–32 |
 | `RuleERC2980` | ERC-2980 whitelist plus frozenlist | 60–65 |
@@ -100,6 +100,7 @@ Each rule splits into a `*Base` contract holding the logic and a deployable vari
 | `RuleChainlinkPoR` | Caps minting at Chainlink Proof of Reserve reserves | 75–79 |
 | `RuleChainlinkPoRERC3643` | Caps minting at reported reserves, for tokens that mint *first* and call the rule after | 75–79 |
 | `RuleConditionalTransferLight` | Requires operator approval per transfer | 46, 85 (not bound) |
+| `RuleConditionalTransferLightMultiToken` | Requires operator approval per transfer, one rule for several tokens (set directly on each token, never in a RuleEngine) | 46 |
 | `RuleMintAllowance` | Per-minter mint quota | 70, 85 (not bound) |
 | `RuleIssuanceCap` | Caps cumulative issuance on mint; burns do **not** restore room (fixed issue volume) | 86, 85 (not bound), and 50, 51 shared with `RuleMaxTotalSupply` |
 
@@ -162,7 +163,7 @@ Every rule and the registry implement `IERC3643Version`, so `version()` is query
 
 ### Tested against a real ERC-3643 token
 
-`test/ERC3643Real/` runs against the actual ERC-3643 `Token.sol` and `IdentityRegistry.sol`, not mocks: the RuleEngine integration, the identity rule against a real registry, and receiver-whitelist parity with the spec's eligibility. 31 tests, run with `FOUNDRY_PROFILE=erc3643 forge test`.
+`test/ERC3643Real/` runs against the actual ERC-3643 `Token.sol` and `IdentityRegistry.sol`, not mocks: the RuleEngine integration, the identity rule against a real registry, receiver-whitelist parity with the spec's eligibility, and the two `…ERC3643` supply-cap variants. 53 tests, run with `FOUNDRY_PROFILE=erc3643 forge test`.
 
 ## Quick start
 

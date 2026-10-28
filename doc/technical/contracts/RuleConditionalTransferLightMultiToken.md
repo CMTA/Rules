@@ -52,10 +52,10 @@ Behind a `RuleEngine` (`CMTAT.setRuleEngine(engine)` + `engine.addRule(rule)`), 
 
 | # | Wiring | Outcome |
 | --- | --- | --- |
-| A | Nothing bound | Engine calls `transferred` → not bound → reverts `TransferExecutorUnauthorized`. Every transfer fails. |
+| A | Nothing bound | Engine calls `transferred` → not bound → reverts `RuleConditionalTransferLightMultiToken_TransferExecutorUnauthorized`. Every transfer fails. |
 | B | Bind the **token** | The engine is still the caller and is not bound → same revert. Binding the token achieves nothing, because the token never calls the rule. |
 | C | Bind the **engine**, approve with the **token** address | `approveTransfer(token, …)` → `token` is not bound → reverts `RuleConditionalTransferLightMultiToken_InvalidToken`. The approval cannot even be recorded. |
-| C′ | Bind **both**, approve with the **token** address | Approval stored under `H(token, …)`; the engine consumes under `H(engine, …)` → reverts `TransferNotApproved`, and the approval is **stranded in storage permanently**. |
+| C′ | Bind **both**, approve with the **token** address | Approval stored under `H(token, …)`; the engine consumes under `H(engine, …)` → reverts `RuleConditionalTransferLightMultiToken_TransferNotApproved`, and the approval is **stranded in storage permanently**. |
 | D | Bind the **engine**, approve with the **engine** address | The only configuration that runs, and it defeats the rule's purpose (see below). |
 
 Case D "works" but is not a valid deployment:

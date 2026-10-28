@@ -46,9 +46,9 @@ The rule keeps a counter of approvals per `(token, from, to, value)`. An operato
 | `transferFrom` by a spender | the same: the spender is ignored, any spender consumes the approval | 46 |
 | Mint to `to` | no approval needed | never by the approval check |
 | Burn from `from` | no approval needed | never by the approval check |
-| Any operation from a token that is not bound | the caller is not a bound token | revert on the write path; the views return 46 |
+| Any operation from a token that is not bound | the caller is not a bound token | revert on the write path; the views return 46 for a transfer, 0 for a mint or burn |
 
-Mint and burn are exempt from approvals, but **not from binding**: `transferred` checks that its caller is a bound token before it looks at the addresses, so until a token is bound every mint, burn and transfer on it reverts with `RuleConditionalTransferLightMultiToken_TransferExecutorUnauthorized(token)`. This rule has no code 85: an unbound token reads as 46.
+Mint and burn are exempt from approvals, but **not from binding**: `transferred` checks that its caller is a bound token before it looks at the addresses, so until a token is bound every mint, burn and transfer on it reverts with `RuleConditionalTransferLightMultiToken_TransferExecutorUnauthorized(token)`. This rule has no code 85: on an unbound token a transfer reads as 46, while a mint or burn reads as 0 although it reverts.
 
 The approval is matched on the exact value: an approval for 100 does not cover a transfer of 60.
 
@@ -199,7 +199,7 @@ sequenceDiagram
     Rule->>Rule: msg.sender is a bound token? (else TransferExecutorUnauthorized)
     Rule->>Rule: count for (msg.sender, from, to, value) > 0? (else code 46)
     alt not approved
-        Rule-->>Token: revert TransferNotApproved()
+        Rule-->>Token: revert RuleConditionalTransferLightMultiToken_TransferNotApproved()
         Token-->>Holder: whole transfer reverts
     else approved
         Rule->>Rule: count -= 1, event TransferExecuted
@@ -252,7 +252,7 @@ sequenceDiagram
     Alice->>TokenB: transfer(bob, 100)
     TokenB->>Rule: transferred(alice, bob, 100)
     Rule->>Rule: count for (tokenB, alice, bob, 100) is 0
-    Rule-->>TokenB: revert TransferNotApproved()
+    Rule-->>TokenB: revert RuleConditionalTransferLightMultiToken_TransferNotApproved()
     TokenB-->>Alice: whole transfer reverts, balances unchanged
 ```
 

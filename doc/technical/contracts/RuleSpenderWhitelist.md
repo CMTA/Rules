@@ -85,7 +85,7 @@ Owner can manage the spender list and transfer ownership with two-step acceptanc
 ### Spender path (`transferFrom`)
 
 `detectTransferRestrictionFrom(spender, from, to, value)` returns:
-- `66` if `spender` is not listed
+- `66` if `spender` is not listed, except on a mint or burn (`from` or `to` is `address(0)`), which is exempt
 - `0` otherwise
 
 `transferred(spender, from, to, value)` reverts with `RuleSpenderWhitelist_InvalidTransferFrom` when the spender is not listed.

@@ -123,7 +123,7 @@ Add a `RuleBlacklist` as a child and the wrapper reports its blacklisted address
 | `RuleReceiverWhitelist`, `RuleReceiverWhitelistOwnable2Step` | `RuleSpenderWhitelist` — its set is spenders, not holders |
 | Any custom rule whose listed addresses are the **permitted** ones | Any rule whose `IAddressList` set means something other than "eligible holder" |
 
-**This is now enforced, not merely documented.** It could not be caught by ERC-165 alone — `RuleBlacklist` advertises the same `IAddressList` ids as the whitelist rules, because `IAddressList` describes *membership* and both kinds of list have members. The fix is the separate marker interface that observation implies: [`IAddressListPolarity`](#child-rules-are-erc-165-checked) adds a single `isAllowList()` function, the wrapper requires it and refuses any child answering `false`. Pinned by `test_WW2_DenyListChildIsRejectedAtAddRule`.
+**This is now enforced, not merely documented.** It could not be caught by ERC-165 alone — `RuleBlacklist` advertises the same `IAddressList` ids as the whitelist rules, because `IAddressList` describes *membership* and both kinds of list have members. The fix is the separate marker interface that observation implies: [`IAddressListPolarity`](#children-are-erc-165-checked) adds a single `isAllowList()` function, the wrapper requires it and refuses any child answering `false`. Pinned by `test_WW2_DenyListChildIsRejectedAtAddRule`.
 
 #### Children are ERC-165-checked
 

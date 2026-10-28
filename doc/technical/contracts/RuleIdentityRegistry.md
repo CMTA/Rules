@@ -14,6 +14,7 @@
 - [Methods](#methods)
   - [setIdentityRegistry(address newRegistry)](#setidentityregistryaddress-newregistry)
   - [clearIdentityRegistry()](#clearidentityregistry)
+  - [setCheckSender(bool value) / setCheckSpender(bool value)](#setchecksenderbool-value--setcheckspenderbool-value)
   - [identityRegistry() → IIdentityRegistryVerified](#identityregistry--iidentityregistryverified)
 - [Transfer restriction logic](#transfer-restriction-logic)
   - [Note for subclasses: the two hooks cannot diverge](#note-for-subclasses-the-two-hooks-cannot-diverge)
@@ -94,7 +95,7 @@ _Diagram source: doc/img/rule-identity-registry-flow.puml._
 
 | Role | Description |
 | --- | --- |
-| `DEFAULT_ADMIN_ROLE` | May set or clear the identity registry address |
+| `DEFAULT_ADMIN_ROLE` | May set or clear the identity registry address, and toggle `checkSender` / `checkSpender` |
 
 
 ## Methods
@@ -106,6 +107,10 @@ Sets the identity registry contract. Reverts if the address is zero. Restricted 
 ### `clearIdentityRegistry()`
 
 Removes the identity registry (sets it to `address(0)`), disabling verification checks. Restricted to `DEFAULT_ADMIN_ROLE`. Emits `IdentityRegistryUpdated`.
+
+### `setCheckSender(bool value)` / `setCheckSpender(bool value)`
+
+Enables or disables the opt-in sender / spender verification (both stricter than ERC-3643). Restricted to `DEFAULT_ADMIN_ROLE`. Emit `IdentityCheckSenderUpdated` / `IdentityCheckSpenderUpdated`.
 
 ### `identityRegistry() → IIdentityRegistryVerified`
 

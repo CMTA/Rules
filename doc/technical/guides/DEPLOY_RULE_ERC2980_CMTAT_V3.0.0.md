@@ -89,7 +89,7 @@ Constructor flags of the rule:
 - `allowMintBurn = true` to be able to issue and redeem. With `false`, every mint is rejected with code 64 and every burn with code 65. Both flags can be changed later with `setAllowMint` / `setAllowBurn`, for example to close issuance for good while keeping redemptions open.
 - `forwarderIrrevocable = address(0)` unless you use ERC-2771 meta-transactions for the rule's admin calls.
 
-**Two frozen lists.** The rule's frozenlist is separate from the token's own freeze (`token.setAddressFrozen`, `ENFORCER_ROLE`). The token's freeze is checked first and reverts with `CMTAT_InvalidTransfer`; the rule's frozenlist reverts with `RuleERC2980_InvalidTransfer` and codes 60 to 62. Use one of them as the reference, so that operators know where to look.
+**Two frozen lists.** The rule's frozenlist is separate from the token's own freeze (`token.setAddressFrozen`, `ENFORCER_ROLE`). The token's freeze is checked first and reverts with `CMTAT_InvalidTransfer`; the rule's frozenlist reverts with `RuleERC2980_InvalidTransfer` and codes 60 or 61, or on a `transferFrom` with `RuleERC2980_InvalidTransferFrom` and codes 60 to 62. Use one of them as the reference, so that operators know where to look.
 
 ## 4. Deployment steps
 

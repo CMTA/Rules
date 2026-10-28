@@ -113,7 +113,7 @@ Constructor arguments of the rule:
 
 `IdentityRegistryWhitelist.registerIdentity(wallet, identity, country)` keeps only the wallet: `identity` is echoed in the `IdentityRegistered` event and `country` is ignored, so `address(0)` and `0` are fine on a CMTAT deployment. On CMTAT the token never calls the registry, so the token does not need `IDENTITY_REGISTRAR_ROLE` (an ERC-3643 token does, for `recoveryAddress`).
 
-The repository script `script/DeployCMTATWithIdentityRegistry.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+The repository script `script/DeployCMTATWithIdentityRegistry.s.sol` deploys an `IdentityRegistryWhitelist` and this rule on a v3.3.0 token, the rule passed in the token constructor (setup 5.1, with no investor registered), in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
 
 ## 5. Deployment steps
 

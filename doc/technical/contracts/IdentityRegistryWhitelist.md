@@ -45,7 +45,7 @@ The design goal is a **wrapper, not a registry**: it adapts the calls an ERC-364
 
 ## Which ERC-3643 functions call the registry, and how
 
-Transcribed from the reference `Token.sol` (vendored at `lib/ERC-3643/contracts/token/Token.sol`).
+Transcribed from the reference T-REX `Token.sol` as reproduced by `ERC3643TokenMock` (`src/mocks/`). The copy vendored at `lib/ERC-3643/contracts/token/Token.sol` is 4.2.0-beta1, which uses custom errors instead of these revert strings and has a different `recoveryAddress` (see the note under the sequence below).
 
 | Token function | Registry call | When | Effect if it returns false / reverts |
 | --- | --- | --- | --- |
@@ -77,7 +77,9 @@ Two consequences worth internalising:
 
 **Step 1 does not involve this registry.** Supply the investor's ONCHAINID, or any ERC-734 contract, as `_investorOnchainID`.
 
-An earlier revision implemented `keyHasPurpose` here so the registry could be passed as that argument, removing the ONCHAINID dependency entirely. It was **removed**, because it bought nothing: `Token.recoveryAddress` calls `keyHasPurpose` on the address the agent supplies and never cross-checks it against the registry (`Token.sol:303-305`), so an agent who wants to skip the gate simply passes a different contract. It was convenience for an honest agent, not a control — and it cost a reverse index plus two behavioural divergences from the reference registry, both of which are now gone.
+WARNING: this is the sequence `ERC3643TokenMock` reproduces. The vendored 4.2.0-beta1 `Token.recoveryAddress` is different: it calls no `keyHasPurpose`, requires `contains(lostWallet) || contains(newWallet)`, moves the balance with an internal `_transfer` (no `isVerified` re-entry), and registers the new wallet only if `contains(newWallet)` is false. This registry does not implement `contains`, so on that version every recovery reverts.
+
+An earlier revision implemented `keyHasPurpose` here so the registry could be passed as that argument, removing the ONCHAINID dependency entirely. It was **removed**, because it bought nothing: `Token.recoveryAddress` calls `keyHasPurpose` on the address the agent supplies and never cross-checks it against the registry, so an agent who wants to skip the gate simply passes a different contract. It was convenience for an honest agent, not a control — and it cost a reverse index plus two behavioural divergences from the reference registry, both of which are now gone.
 
 Steps 3 and 5 mean **the token itself is a caller of the registry's write functions**, which drives the access-control setup below.
 
@@ -134,7 +136,7 @@ Reverts on an already-registered wallet, matching the reference registry's `"add
 
 ### `deleteIdentity(address _userAddress)`
 
-Removes a wallet from the whitelist and clears its reverse-index entry. Reverts if the wallet is not registered. Restricted to `IDENTITY_REGISTRAR_ROLE`. Emits `IdentityRemoved`.
+Removes a wallet from the whitelist. Reverts if the wallet is not registered. Restricted to `IDENTITY_REGISTRAR_ROLE`. Emits `IdentityRemoved`.
 
 ### `isVerified(address _userAddress) → bool`
 
@@ -146,7 +148,7 @@ Whitelist membership. **`isVerified(address(0))` is always `false`**: the zero a
 
 ### `version() → string`
 
-Returns the library release the contract was deployed from (currently `"0.5.0"`), via `VersionModule`. The registry is not a rule, but it is a deployable production contract wired into a token's identity slot, so being able to identify its release matters for the same reasons it does for the rules.
+Returns the library release the contract was deployed from (currently `"0.7.0"`), via `VersionModule`. The registry is not a rule, but it is a deployable production contract wired into a token's identity slot, so being able to identify its release matters for the same reasons it does for the rules.
 
 ### `registeredIdentityCount() → uint256`
 
@@ -182,16 +184,15 @@ Less than it sounds, because the token barely uses it. Auditing the reference im
 
 | Location | Role |
 | --- | --- |
-| `token/Token.sol:308` (`recoveryAddress`) | **The only use in the token.** A pure pass-through: reads the lost wallet's country and hands it straight to `registerIdentity` for the new wallet. The token never branches on the value, never stores it, and exposes no getter — `IToken.sol` does not mention country at all. |
-| `registry/implementation/IdentityRegistryStorage.sol:91,112,177` | Storage: writes and reads the field. |
-| `registry/implementation/IdentityRegistry.sol:132,226` | Forwards to storage. |
-| `compliance/legacy/BasicCompliance.sol:175` | `_getCountry()`, the only place country drives *logic*, and it has **no caller** in the vendored tree; it exists for country-restriction modules built on top. Note the path: `legacy`. |
-| `_testContracts/` | `MockContract`, `LegacyToken_3_5_2`. |
+| `token/Token.sol:411` (`recoveryAddress`) | **The only use in the token.** A pure pass-through: reads the lost wallet's country and hands it straight to `registerIdentity` for the new wallet. The token never branches on the value, never stores it, and exposes no getter — `IToken.sol` does not mention country at all. |
+| `registry/implementation/IdentityRegistryStorage.sol:110,134,196` | Storage: writes and reads the field. |
+| `registry/implementation/IdentityRegistry.sol:142,258` | Forwards to storage. |
+| `_testContracts/` | `MockContract`. |
 
 Two things follow:
 
 - **The token is unaffected.** Its single use is a round trip that starts and ends in the registry, so a constant `0` in and a discarded `0` out changes nothing. Recovery works exactly as it does with a full registry.
-- **The current modular compliance framework has no country module.** `compliance/modular/modules/` contains only `AbstractModule`, `AbstractModuleUpgradeable`, `IModule`, `ModuleProxy` and `TestModule` — none reference country.
+- **The current modular compliance framework has no country module.** `compliance/modular/modules/` contains only `AbstractModule`, `AbstractModuleUpgradeable`, `IModule` and `ModuleProxy` (plus `TestModule` under `_testContracts/`) — none reference country, and nothing in the vendored tree drives logic from it.
 
 So the real exposure is narrow and specific: **a custom compliance module that calls `investorCountry` will see every investor as country 0**, and will therefore apply whatever rule it has for country 0 to everyone. Nothing shipped in ERC-3643 does this, but a jurisdiction-restriction module is a plausible thing to write. If that is on your roadmap, this registry is the wrong base — use the full ERC-3643 registry stack, which stores the country properly.
 
@@ -203,7 +204,7 @@ If you need investor metadata on-chain generally, the same conclusion applies: t
 
 ### 5. Only the token-facing interface exists
 
-`contains`, `identity`, `updateIdentity`, `updateCountry`, `batchRegisterIdentity`, `identityStorage`, `issuersRegistry` and `topicsRegistry` are **not** implemented. None are called by `Token.sol`, so the registry is a complete drop-in for a token, but it is **not** a complete `IIdentityRegistry`: third-party tooling that expects the full interface will revert. To update a country, call `registerIdentity` again (see Limitation 2).
+`contains`, `identity`, `updateIdentity`, `updateCountry`, `batchRegisterIdentity`, `identityStorage`, `issuersRegistry` and `topicsRegistry` are **not** implemented. None are called by the `Token.sol` that `ERC3643TokenMock` reproduces, so the registry is a complete drop-in for that token, but it is **not** a complete `IIdentityRegistry`: third-party tooling that expects the full interface will revert. WARNING: the vendored 4.2.0-beta1 `Token.recoveryAddress` does call `contains`, so recovery reverts against this registry on that version. There is no country to update (see Limitation 3).
 
 ## Tests
 
@@ -213,4 +214,4 @@ If you need investor metadata on-chain generally, the same conclusion applies: t
 | `test/IdentityRegistryWhitelist/IdentityRegistryWhitelistERC3643.t.sol` | End-to-end against an ERC-3643 token: `mint`, `transfer`, `transferFrom`, `forcedTransfer`, `burn`, `recoveryAddress` |
 | `test/ERC3643Compliance/ERC3643RuleEngineWhitelist.t.sol` | The **other** slot: an ERC-3643 token with a `RuleEngine` as its compliance contract, enforcing `RuleWhitelist`, alongside this registry on the identity slot |
 
-The integration tests use `ERC3643TokenMock` plus `OnchainIdMock` (a minimal ERC-734 stub standing in for the investor's identity), whose registry call sequences and revert strings are transcribed from the reference `Token.sol`. The real implementation is not used because it imports the ONCHAINID Solidity package (not vendored) and targets OpenZeppelin v4 upgradeable contracts, while this repository vendors OZ v5 — it does not compile in this build. The mock keeps the registry interaction faithful and omits what is orthogonal to it (compliance module, pausing, partial-freeze accounting).
+The integration tests use `ERC3643TokenMock` plus `OnchainIdMock` (a minimal ERC-734 stub standing in for the investor's identity), whose registry call sequences and revert strings are transcribed from the reference `Token.sol`. The vendored real token (4.2.0-beta1) compiles only under `FOUNDRY_PROFILE=erc3643`, with minimal ONCHAINID stubs, and is not exercised against this registry. The mock keeps the registry interaction faithful and omits what is orthogonal to it (compliance module, pausing, partial-freeze accounting).

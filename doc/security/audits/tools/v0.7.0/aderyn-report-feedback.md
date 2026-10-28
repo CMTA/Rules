@@ -4,7 +4,7 @@
 aderyn -x mocks --output doc/security/audits/tools/v0.7.0/aderyn-report.md
 ```
 
-Tool: **Aderyn 0.6.5** · Compiler: solc `0.8.38`, EVM `osaka` · Run date: **2026-10-28** (pre-release re-run, see [Pre-release re-run](#pre-release-re-run-2026-10-28); the two 2026-10-26 runs are described under [First run: nine unused imports, fixed](#first-run-nine-unused-imports-fixed)) Scope: production contracts only, mocks excluded via `-x mocks`. 98 source files. **4 354 nSLOC.** **0 High · 10 Low categories, 377 instances.**
+Tool: **Aderyn 0.6.5** · Compiler: solc `0.8.38`, EVM `osaka` · Run date: **2026-10-28** (pre-release re-run, see [Pre-release re-run](#pre-release-re-run-2026-10-28); the two 2026-10-26 runs are described under [First run: nine unused imports, fixed](#first-run-nine-unused-imports-fixed)) Scope: production contracts only, mocks excluded via `-x mocks`. 101 source files. **4 507 nSLOC.** **0 High · 10 Low categories, 383 instances.**
 
 **Executive triage: nothing to fix.** Aderyn reports no High or Medium finding. Every Low category is by design, environmental, cosmetic or a verified false positive. The one real defect it found this release, nine unused imports, was fixed before the committed run.
 

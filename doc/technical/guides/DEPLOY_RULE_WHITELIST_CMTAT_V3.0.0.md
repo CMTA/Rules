@@ -102,8 +102,7 @@ Each setup lists its steps, then draws them as a sequence diagram. The calls are
 2. **Fill the whitelist:** `addAddresses([investor1, investor2, ...])`, as the admin or an `ADDRESS_LIST_ADD_ROLE` holder. This can also happen after step 3; until then every mint and transfer is rejected.
 3. **Deploy the token** with `Engine(ruleEngine = rule, snapshotEngine = 0, documentEngine = 0)`.
 4. **Grant `MINTER_ROLE`** to the issuer's minting address, if it is not the admin.
-5. **Check the setup:** `token.ruleEngine() == rule`; on the Standard variant, `token.detectTransferRestriction(address(0), investor1, 1) == 0` and the same call to an unlisted address returns
-   22. A small test mint confirms it end to end.
+5. **Check the setup:** `token.ruleEngine() == rule`; on the Standard variant, `token.detectTransferRestriction(address(0), investor1, 1) == 0` and the same call to an unlisted address returns 22. A small test mint confirms it end to end.
 
 ```mermaid
 sequenceDiagram

@@ -118,7 +118,7 @@ Not the v0.4.0 `CLAUDE_AUDIT.md`, whose F-1 is an unrelated `RuleIdentityRegistr
 
 | | |
 |---|---|
-| Location | `src/rules/operation/abstract/RuleIssuanceCapBase.sol:79`, `bindToken` |
+| Location | `src/rules/operation/abstract/RuleIssuanceCapBase.sol:83`, `bindToken` |
 | Code | `function bindToken(address token)` |
 | Comment before | `@dev Reverts while a caller is bound; call `unbindToken` first to migrate.` / `@param token The token or RuleEngine to bind.` |
 | Comment now | adds `WARNING: a bound RuleEngine MUST serve only `tokenContract`. The counter does not know which token minted, so every token the engine serves would consume this token's issuance budget.` and, on `@param token`, `A RuleEngine MUST serve only `tokenContract`.` |
@@ -129,7 +129,7 @@ Not the v0.4.0 `CLAUDE_AUDIT.md`, whose F-1 is an unrelated `RuleIdentityRegistr
 
 | | |
 |---|---|
-| Location | `src/rules/validation/abstract/base/RuleMaxTotalSupplyBase.sol:208`, `_afterMintChecked` |
+| Location | `src/rules/validation/abstract/base/RuleMaxTotalSupplyBase.sol:213`, `_afterMintChecked` |
 | Code | `function _afterMintChecked(uint256 value) internal virtual {}` |
 | Comment before | `@dev The extension point for a subclass that must record accepted mints (`RuleIssuanceCap`). … cannot be skipped by the re-phasing.` |
 | Comment now | adds `WARNING: both `transferred` overloads are public and ungated here, which is safe only because this contract writes nothing. A subclass that writes state in this hook MUST restrict both overloads to its bound caller (as `RuleIssuanceCap` does with `onlyBoundToken`), or anyone can record mints.` |

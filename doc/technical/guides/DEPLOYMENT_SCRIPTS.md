@@ -133,9 +133,9 @@ Values come from the environment, with the previous hard-coded constants as defa
 | `CMTAT_INFORMATION` | `CMTAT_info` | all |
 | `CMTAT_FORWARDER` | `address(0)` | all |
 | `SANCTIONS_ORACLE` | `address(0)` | the three sanctions scripts |
-| `CMTAT_MAX_SUPPLY` | `1000000` | the two scripts deploying `RuleMaxTotalSupply` |
-| `CMTAT_MAX_BALANCE` | `100000` | `DeployCMTATWithMaxBalance` |
-| `CMTAT_ISSUANCE_CAP` | `1000000` | `DeployCMTATWithIssuanceCap` |
+| `CMTAT_MAX_SUPPLY` | `1000000` whole tokens (scaled by `CMTAT_DECIMALS`) | the two scripts deploying `RuleMaxTotalSupply` |
+| `CMTAT_MAX_BALANCE` | `100000` whole tokens (scaled by `CMTAT_DECIMALS`) | `DeployCMTATWithMaxBalance` |
+| `CMTAT_ISSUANCE_CAP` | `1000000` whole tokens (scaled by `CMTAT_DECIMALS`) | `DeployCMTATWithIssuanceCap` |
 | `CHAINLINK_POR_FEED` | `address(0)`: a mock feed on chain 31337, a revert elsewhere | `DeployCMTATWithChainlinkPoR` |
 | `CHAINLINK_POR_MAX_STALENESS` | `86400` | `DeployCMTATWithChainlinkPoR` |
 
@@ -185,9 +185,9 @@ This is the inverse default of the whitelist script, and worth being deliberate 
 
 ### DeployCMTATWithMaxTotalSupply
 
-Signature: `deploy(admin, deployer, forwarder, maxTotalSupply)`. `run()` reads the cap from `CMTAT_MAX_SUPPLY`, default `1000000`.
+Signature: `deploy(admin, deployer, forwarder, maxTotalSupply)`. `run()` reads the cap from `CMTAT_MAX_SUPPLY`, default `1000000` whole tokens.
 
-Caps mints so that `totalSupply()` never exceeds `maxTotalSupply` (code `50`, or `51` when the supply cannot be read). Transfers and burns always pass, and a burn frees room for a later mint. The cap is in base units: with the default `CMTAT_DECIMALS = 0` that is whole tokens.
+Caps mints so that `totalSupply()` never exceeds `maxTotalSupply` (code `50`, or `51` when the supply cannot be read). Transfers and burns always pass, and a burn frees room for a later mint. The cap is in base units; the default is scaled by `CMTAT_DECIMALS`, so with the default `0` decimals it is `1000000` base units.
 
 **Step order matters.** `RuleMaxTotalSupply` validates its token at construction (non-zero, has code, `totalSupply()` callable), so the script deploys the token first, then the rule, then calls `setRuleEngine`. The rule is constructed with `admin`, so `MAX_TOTAL_SUPPLY_ROLE` and `setTokenContract` belong to the final admin from the start.
 
@@ -231,7 +231,7 @@ Deploys an `IdentityRegistryWhitelist` owned by `admin` as the registry, and `Ru
 
 ### DeployCMTATWithMaxBalance
 
-Signature: `deploy(admin, deployer, forwarder, maxBalance)`. `run()` reads the cap from `CMTAT_MAX_BALANCE`, default `100000` base units.
+Signature: `deploy(admin, deployer, forwarder, maxBalance)`. `run()` reads the cap from `CMTAT_MAX_BALANCE` (base units), default `100000` whole tokens.
 
 Caps what one address may hold (codes `81`, `82`), screening the receiver; burns are exempt. Deployed after the token, which its constructor validates. **Bypassable by splitting a position across wallets**: in production combine it behind a RuleEngine with a one-address-per-investor rule. `maxBalance = 0` forbids holding, it does not disable the rule.
 
@@ -261,7 +261,7 @@ A per-minter quota debited on each mint (code `70`), needing CMTAT v3.3 or later
 
 ### DeployCMTATWithIssuanceCap
 
-Signature: `deploy(admin, deployer, forwarder, issuanceCap)`. `run()` reads the cap from `CMTAT_ISSUANCE_CAP`, default `1000000` base units; `initialIssued` is `0` (new token).
+Signature: `deploy(admin, deployer, forwarder, issuanceCap)`. `run()` reads the cap from `CMTAT_ISSUANCE_CAP` (base units), default `1000000` whole tokens; `initialIssued` is `0` (new token).
 
 Caps cumulative issuance: burns never free room (code `86`, and `50` / `51` from the inherited supply check). Deployed after the token and bound to it, with the same temporary-admin and hand-over pattern. The observed token is locked and the rule accepts one binding, so it serves one token. Not for bridged tokens: each bridge round trip uses up the cap.
 
@@ -269,7 +269,7 @@ Caps cumulative issuance: burns never free room (code `86`, and `50` / `51` from
 
 Signature: `deploy(admin, deployer, forwarder, sanctionsOracle)`.
 
-Adds a `RuleEngine` holding `RuleBlacklist` then `RuleSanctionsList` (codes `30` to `32`). The engine is deployed with no token and the deployer as temporary admin, the rules are added, the token is created with `admin` and the engine in its constructor, and the engine binds the token last; only the engine is handed over. Rule order affects only *which* code a rejected transfer reports, since the engine returns the first non-zero one, not whether it is rejected. `testBlacklistTakesPriorityOverSanctions` pins that ordering.
+Adds a `RuleEngine` holding `RuleBlacklist` then `RuleSanctionsList` (codes `36` to `38` and `30` to `32`). The engine is deployed with no token and the deployer as temporary admin, the rules are added, the token is created with `admin` and the engine in its constructor, and the engine binds the token last; only the engine is handed over. Rule order affects only *which* code a rejected transfer reports, since the engine returns the first non-zero one, not whether it is rejected. `testBlacklistTakesPriorityOverSanctions` pins that ordering.
 
 **Which engine is deployed depends on `forwarder`.** Since RuleEngine `v3.0.0-rc7`, ERC-2771 is opt-in: the plain `RuleEngine(admin, token)` has no trusted forwarder, and `RuleEngine2771(admin, forwarder, token)` is the variant that has one. Both engine scripts deploy `RuleEngine` when `forwarder == address(0)` and `RuleEngine2771` otherwise, so the engine trusts the same forwarder as the token and the rules. The returned value is typed `RuleEngine` in both cases (`RuleEngine2771` extends it). Either way, token callbacks (`transferred`, `created`, `destroyed`) are never relayable: rc7 identifies the token by `msg.sender`. The same choice applies to the next script; `testRuleEngineHasNoForwarderWhenNoneIsGiven` and `testRuleEngineTrustsTheForwarderWhenOneIsGiven` pin it in both.
 
@@ -331,7 +331,7 @@ Nothing below can be done by the script, because only the operator knows the val
 
 Two layers, and they cover different things.
 
-**Unit tests**, in [`test/DeploymentScripts/`](../../../test/DeploymentScripts/), call `deploy()` directly and assert the wiring, the role hand-over, and the resulting compliance behaviour end to end: 145 tests across the seventeen scripts, including that the admin owns everything and the deployer owns nothing.
+**Unit tests**, in [`test/DeploymentScripts/`](../../../test/DeploymentScripts/), call `deploy()` directly and assert the wiring, the role hand-over, and the resulting compliance behaviour end to end: 153 tests across the seventeen scripts (plus 2 for the shared `CMTATDeploymentBase` defaults), including that the admin owns everything and the deployer owns nothing.
 
 **A `forge script` dry run in CI**, one per script, in `.github/workflows/test.yml`.
 

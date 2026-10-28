@@ -120,6 +120,8 @@ sequenceDiagram
     Admin->>Token: detectTransferRestriction(0, investor1, 1) returns 0
 ```
 
+The repository script `script/DeployCMTATWithReceiverWhitelist.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
+
 ### 4.2 Rule set directly, after deployment
 
 1. **Deploy the token** with `Engine(ruleEngine = address(0))`. Do not mint yet.
@@ -201,8 +203,6 @@ sequenceDiagram
 ```
 
 A RuleEngine serving one token is the intended setup. `RuleReceiverWhitelist` itself would work for several tokens (it reads no token state), but every token would then share one list.
-
-The repository script `script/DeployCMTATWithReceiverWhitelist.s.sol` deploys this rule on a v3.3.0 token, set directly on it, in one run. See [`DEPLOYMENT_SCRIPTS.md`](./DEPLOYMENT_SCRIPTS.md).
 
 ## 5. Mint workflow
 

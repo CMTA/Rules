@@ -10,11 +10,11 @@ Tool: **Slither 0.11.6** (latest release; run through `uvx --from slither-analyz
 Scope: production contracts only — **mocks excluded**, vendored dependencies (including the test-only
 `lib/CMTATv3.0.0`) excluded via the `lib` filter. 232 contracts, 102 detectors, **47 results**.
 
-**0 High\* · 2 High-impact (both false positives) · 5 Medium · 18 Low · 21 Informational.**
+**0 High\* · 2 High-impact (both false positives) · 5 Medium · 18 Low · 22 Informational.**
 
 | Detector | Impact | Instances | Assessment |
 |---|---|---|---|
-| `arbitrary-send-erc20` | High | 2 | **False positive** — `approveAndTransferIfAllowed`, gated by `onlyTransferApprover`, a recorded approval, an allowance check and a bound token. NOTE: 0.11.6 omits this detector from the checklist summary list below, but reports both results in the body |
+| `arbitrary-send-erc20` | High | 2 | **False positive** — `approveAndTransferIfAllowed`, gated by `onlyTransferApprover`, a recorded approval, an allowance check and a bound token. |
 | `uninitialized-local` | Medium | 2 | False positive — assigned inside a `try` whose `catch` returns or reverts |
 | `unused-return` | Medium | 3 | False positive — configuration probes and an oracle read whose discarded values are the point |
 | `calls-loop` | Low | 17 | By design — the wrapper's bounded child scan and its `_checkRule` guard |

@@ -5,7 +5,7 @@ slither . --checklist --filter-paths "node_modules,lib,test,forge-std,mocks" \
   > doc/security/audits/tools/v0.7.0/slither-report.md
 ```
 
-Tool: **Slither 0.11.6**, the latest release, run through `uvx --from slither-analyzer==0.11.6` · Compiler: solc `0.8.38`, EVM `osaka` · Run date: **2026-10-28** (pre-release re-run; first run 2026-10-26 at solc `0.8.36`, see [Pre-release re-run](#pre-release-re-run-2026-10-28)) Scope: production contracts only. Mocks excluded via the `mocks` filter, vendored dependencies via `lib`. 229 contracts, 102 detectors, **46 results**.
+Tool: **Slither 0.11.6**, the latest release, run through `uvx --from slither-analyzer==0.11.6` · Compiler: solc `0.8.38`, EVM `osaka` · Run date: **2026-10-28** (pre-release re-run; first run 2026-10-26 at solc `0.8.36`, see [Pre-release re-run](#pre-release-re-run-2026-10-28)) Scope: production contracts only. Mocks excluded via the `mocks` filter, vendored dependencies via `lib`. 232 contracts, 102 detectors, **47 results**.
 
 A second run with **Slither 0.11.5**, the version of the `v0.4.0`–`v0.6.0` reports, is kept as [`slither-report-0.11.5.md`](./slither-report-0.11.5.md). It separates what changed in the code from what changed in the tool: see [Two runs, two questions](#two-runs-two-questions).
 
@@ -44,7 +44,7 @@ grep -c 'test/\|src/mocks/'   slither-report.md   → 0 findings (same echo line
 | `naming-convention` | Informational | 6 | By design |
 | `unused-state` | Informational | 4 | Cosmetic |
 
-NOTE: Slither 0.11.6 leaves `arbitrary-send-erc20` out of the checklist's summary list at the top of the raw output, which therefore adds up to 44. Both results are in the body and on stderr. 46 is the correct count.
+NOTE: in the first run, Slither 0.11.6 left `arbitrary-send-erc20` out of the checklist's summary list at the top of the raw output, which therefore added up to 44 for 46 results. The committed re-run lists all nine detectors, adding up to 47.
 
 - **`arbitrary-send-erc20` (2)** — `approveAndTransferIfAllowed` in both conditional-transfer bases. `from` is caller-chosen, but the function is gated by `onlyTransferApprover`, consumes a recorded approval, checks the allowance and transfers only on the bound token.
 - **`uninitialized-local` (2)** — `ChainlinkPoRFeedManager` locals assigned inside `try`, whose `catch` returns or reverts before any read.
