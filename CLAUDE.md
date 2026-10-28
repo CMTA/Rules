@@ -83,7 +83,7 @@ Rules that implement a standardized interface must match that standard's semanti
 | `RuleConditionalTransferLightOwnable2Step` | Owner-only approval and execution for conditional transfers |
 | `RuleConditionalTransferLightMultiToken` / `…Ownable2Step` | Conditional transfers with approvals keyed `(token, from, to, value)`. **Direct-binding-only (Topology B)** — approvals are *consumed* under `msg.sender`, so this rule must NOT be added to a RuleEngine; behind an engine it either reverts or loses all per-token isolation. See `CLAUDE_AUDIT.md` F-4 and `doc/technical/contracts/RuleConditionalTransferLightMultiToken.md` |
 | `RuleMintAllowance` / `RuleMintAllowanceOwnable2Step` | Per-minter mint quota, debited on the 4-arg `transferred(spender, from=0, to, value)` path. Requires CMTAT ≥ v3.3. `canTransfer` is **not** authoritative for this rule — use `canTransferFrom(minter, address(0), to, value)` |
-| `RuleIssuanceCap` / `RuleIssuanceCapOwnable2Step` | **Non-replenishing** per-token issuance cap (CMTA/Rules#16): a `totalIssued` counter raised on every accepted mint, never lowered by burns. **Extends `RuleMaxTotalSupplyBase`** (no duplicated cap logic) through the `_afterMintChecked` hook, and keeps its live-supply check against the same cap as a backstop for mints the counter missed (rule detached). Stateful: `transferred` is `onlyBoundToken` (bind the token, or the RuleEngine), single binding; the observed token is locked (`setTokenContract` reverts); `initialIssued >= totalSupply()` at construction. For a replenishing cap deploy `RuleMaxTotalSupply`, deliberately no mode flag. ERC-3643 not supported in v1. Code 71 |
+| `RuleIssuanceCap` / `RuleIssuanceCapOwnable2Step` | **Non-replenishing** per-token issuance cap (CMTA/Rules#16): a `totalIssued` counter raised on every accepted mint, never lowered by burns. **Extends `RuleMaxTotalSupplyBase`** (no duplicated cap logic) through the `_afterMintChecked` hook, and keeps its live-supply check against the same cap as a backstop for mints the counter missed (rule detached). Stateful: `transferred` is `onlyBoundToken` (bind the token, or the RuleEngine), single binding; the observed token is locked (`setTokenContract` reverts); `initialIssued >= totalSupply()` at construction. For a replenishing cap deploy `RuleMaxTotalSupply`, deliberately no mode flag. ERC-3643 not supported in v1. Code 86 |
 | `AccessControlModuleStandalone` | Base RBAC module; admin implicitly holds all roles |
 | `MetaTxModuleStandalone` | ERC-2771 meta-transaction support. Note: the operation rules deliberately do **not** inherit this, so `_msgSender()` used as a binding identity is never forwarder-controlled |
 | `Ownable2StepERC165Module` | Shared ERC-165 advertisement (`IERC173`, `IOwnable2Step`) for the Ownable2Step variants |
@@ -128,7 +128,7 @@ That remapping is declared as `remappings = [...]` inside `[profile.erc3643]` in
 | RuleERC2980 | 60–63, 64 (mint not allowed), 65 (burn not allowed) |
 | RuleSpenderWhitelist | 66 |
 | RuleMintAllowance | 70 |
-| RuleIssuanceCap | 71 (and 50, 51 inherited from RuleMaxTotalSupply) |
+| RuleIssuanceCap | 86 (and 50, 51 inherited from RuleMaxTotalSupply) |
 | RuleChainlinkPoR | 75 (reserves exceeded), 76 (feed stale), 77 (answer returned but unusable), 78 (total supply unavailable), 79 (feed unreadable) |
 | RuleReceiverWhitelist | 81 |
 | RuleMaxBalance | 82, 83 (balance unavailable) |

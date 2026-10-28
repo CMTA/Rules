@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-28 13:18:27</td>
+            <td class="headerValue">2026-10-28 13:44:39</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">12</td>
@@ -222,8 +222,8 @@
 <a name="151"><span class="lineNum">     151 </span>                :            :     /**</a>
 <a name="152"><span class="lineNum">     152 </span>                :            :      * @inheritdoc TokenSupplyReader</a>
 <a name="153"><span class="lineNum">     153 </span>                :            :      */</a>
-<a name="154"><span class="lineNum">     154 </span>                :<span class="lineCov">      20248 :     function _supplyToken() internal view virtual override returns (ITotalSupply) {</span></a>
-<a name="155"><span class="lineNum">     155 </span>                :<span class="lineCov">      20248 :         return tokenContract;</span></a>
+<a name="154"><span class="lineNum">     154 </span>                :<span class="lineCov">      20370 :     function _supplyToken() internal view virtual override returns (ITotalSupply) {</span></a>
+<a name="155"><span class="lineNum">     155 </span>                :<span class="lineCov">      20370 :         return tokenContract;</span></a>
 <a name="156"><span class="lineNum">     156 </span>                :            :     }</a>
 <a name="157"><span class="lineNum">     157 </span>                :            : </a>
 <a name="158"><span class="lineNum">     158 </span>                :            :     /**</a>
@@ -236,13 +236,13 @@
 <a name="165"><span class="lineNum">     165 </span>                :            :      * is then meaningless and the caller should treat the check as failed.</a>
 <a name="166"><span class="lineNum">     166 </span>                :            :      * @return exceeded True when the mint would push total supply past {maxTotalSupply}.</a>
 <a name="167"><span class="lineNum">     167 </span>                :            :      */</a>
-<a name="168"><span class="lineNum">     168 </span>                :<span class="lineCov">      19341 :     function _capExceeded(uint256 value) internal view virtual returns (bool supplyAvailable, bool exceeded) {</span></a>
-<a name="169"><span class="lineNum">     169 </span>                :<span class="lineCov">      19341 :         uint256 currentSupply;</span></a>
-<a name="170"><span class="lineNum">     170 </span>                :<span class="lineCov">      19341 :         (supplyAvailable, currentSupply) = _currentSupply();</span></a>
-<a name="171"><span class="lineNum">     171 </span>           [<span class="branchCov" title="Branch 0 was taken 5 times"> + </span>]:<span class="lineCov">      19341 :         if (!supplyAvailable) {</span></a>
+<a name="168"><span class="lineNum">     168 </span>                :<span class="lineCov">      19463 :     function _capExceeded(uint256 value) internal view virtual returns (bool supplyAvailable, bool exceeded) {</span></a>
+<a name="169"><span class="lineNum">     169 </span>                :<span class="lineCov">      19463 :         uint256 currentSupply;</span></a>
+<a name="170"><span class="lineNum">     170 </span>                :<span class="lineCov">      19463 :         (supplyAvailable, currentSupply) = _currentSupply();</span></a>
+<a name="171"><span class="lineNum">     171 </span>           [<span class="branchCov" title="Branch 0 was taken 5 times"> + </span>]:<span class="lineCov">      19463 :         if (!supplyAvailable) {</span></a>
 <a name="172"><span class="lineNum">     172 </span>                :<span class="lineCov">          5 :             return (false, false);</span></a>
 <a name="173"><span class="lineNum">     173 </span>                :            :         }</a>
-<a name="174"><span class="lineNum">     174 </span>                :<span class="lineCov">      19336 :         return (true, _capExceededBy(currentSupply, maxTotalSupply, value));</span></a>
+<a name="174"><span class="lineNum">     174 </span>                :<span class="lineCov">      19458 :         return (true, _capExceededBy(currentSupply, maxTotalSupply, value));</span></a>
 <a name="175"><span class="lineNum">     175 </span>                :            :     }</a>
 <a name="176"><span class="lineNum">     176 </span>                :            : </a>
 <a name="177"><span class="lineNum">     177 </span>                :            :     /**</a>

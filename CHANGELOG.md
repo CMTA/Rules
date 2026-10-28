@@ -69,7 +69,7 @@ Commit:
 
 ### Added
 
-- **`RuleIssuanceCap` / `RuleIssuanceCapOwnable2Step`**: non-replenishing issuance cap. The total ever minted cannot exceed `maxTotalSupply`; burns, forced burns and `crosschainBurn` never restore room. Code `71`.
+- **`RuleIssuanceCap` / `RuleIssuanceCapOwnable2Step`**: non-replenishing issuance cap. The total ever minted cannot exceed `maxTotalSupply`; burns, forced burns and `crosschainBurn` never restore room. Code `86`.
   - Design: extends `RuleMaxTotalSupplyBase` through the new `_afterMintChecked` hook, adding only a `totalIssued` counter and caller binding (~45 code lines). The cap setters, `MAX_TOTAL_SUPPLY_ROLE`, `MaxTotalSupplyUpdated(previous, new)`, `remainingMintable()`, the safe `totalSupply()` read and the ERC-1404 surface are inherited.
   - The inherited live-supply check (code `50`) stays active against the same cap. It never rejects a mint the counter accepts while every mint is counted, and it stops minting if the counter was bypassed (rule detached).
   - Stateful: `transferred` is restricted to the single bound caller (`bindToken`: the token directly, or the RuleEngine); `COMPLIANCE_MANAGER_ROLE` binds. The observed token is locked (`setTokenContract` reverts with `RuleIssuanceCap_TokenContractLocked`), and `initialIssued` must be at least the token's current supply.
@@ -123,6 +123,7 @@ Commit:
   - Seven single-rule scripts (whitelist, receiver whitelist, spender whitelist, blacklist, sanctions list, ERC-2980, identity registry) no longer take a `deployer` argument: `deploy(admin, forwarder, ...)`. The deployer never holds a role, and the token never exists without its rule.
   - The wrapper, conditional-transfer and mint-allowance scripts keep a temporary admin on the wrapper or the rule only, for `addRule` / `bindToken`. The two RuleEngine scripts keep one on the engine only: it is deployed without a token, passed to the token's constructor, and binds the token last.
   - The max-total-supply, max-balance, Chainlink PoR and issuance-cap scripts keep the token's temporary admin, because their rule needs the token's address and can only be installed with `setRuleEngine` afterwards. Every script that keeps a temporary admin explains why in a comment above its hand-over.
+- `RuleIssuanceCap` restriction code is **86**, with 87-89 reserved. It used 71 during development, which took `RuleMintAllowance`'s reserved slots right after its code 70; 71-74 are reserved for `RuleMintAllowance` again. Not a breaking change: the rule is new in this release.
 
 ### Fixed
 

@@ -299,8 +299,7 @@ Here is the list of codes used by the different rules. Each row names every rule
 | RuleSpenderWhitelist                                                 | CODE_ADDRESS_SPENDER_NOT_WHITELISTED                      | 66    |
 |                                                                      | Reserved slot                                             | 67-69 |
 | RuleMintAllowance                                                    | CODE_MINTER_ALLOWANCE_EXCEEDED                            | 70    |
-| RuleIssuanceCap                                                      | CODE_ISSUANCE_CAP_EXCEEDED                                | 71    |
-|                                                                      | Reserved slot                                             | 72-74 |
+|                                                                      | Reserved slot                                             | 71-74 |
 | RuleChainlinkPoR, RuleChainlinkPoRERC3643                            | CODE_RESERVES_EXCEEDED                                    | 75    |
 |                                                                      | CODE_RESERVES_FEED_STALE                                  | 76    |
 |                                                                      | CODE_RESERVES_ANSWER_INVALID                              | 77    |
@@ -312,6 +311,8 @@ Here is the list of codes used by the different rules. Each row names every rule
 |                                                                      | CODE_BALANCE_UNAVAILABLE                                  | 83    |
 |                                                                      | Reserved slot                                             | 84    |
 | RuleConditionalTransferLight, RuleMintAllowance, RuleIssuanceCap     | CODE_RULE_NOT_BOUND (shared, same message)                | 85    |
+| RuleIssuanceCap                                                      | CODE_ISSUANCE_CAP_EXCEEDED                                | 86    |
+|                                                                      | Reserved slot                                             | 87-89 |
 
 Note:
 
@@ -988,7 +989,7 @@ The compliance manager binds the rule to the RuleEngine with `bindToken(ruleEngi
 
 #### Issuance cap
 
-This rule caps the **cumulative issuance** of one token: the total ever minted cannot exceed `maxTotalSupply`, and burns do not restore room. It extends `RuleMaxTotalSupply` with a `totalIssued` counter raised on every accepted mint (code `71` when it would pass the cap), while the inherited live-supply check (code `50`) stays active against the same cap. It works on CMTAT v3.0.0, whose mints carry no minter, because the cap is per token. For a cap that burns do restore, use `RuleMaxTotalSupply`. See [RuleIssuanceCap.md](./technical/contracts/RuleIssuanceCap.md).
+This rule caps the **cumulative issuance** of one token: the total ever minted cannot exceed `maxTotalSupply`, and burns do not restore room. It extends `RuleMaxTotalSupply` with a `totalIssued` counter raised on every accepted mint (code `86` when it would pass the cap), while the inherited live-supply check (code `50`) stays active against the same cap. It works on CMTAT v3.0.0, whose mints carry no minter, because the cap is per token. For a cap that burns do restore, use `RuleMaxTotalSupply`. See [RuleIssuanceCap.md](./technical/contracts/RuleIssuanceCap.md).
 
 **Usage scenario**
 

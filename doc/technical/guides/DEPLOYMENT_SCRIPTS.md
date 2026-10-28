@@ -263,7 +263,7 @@ A per-minter quota debited on each mint (code `70`), needing CMTAT v3.3 or later
 
 Signature: `deploy(admin, deployer, forwarder, issuanceCap)`. `run()` reads the cap from `CMTAT_ISSUANCE_CAP`, default `1000000` base units; `initialIssued` is `0` (new token).
 
-Caps cumulative issuance: burns never free room (code `71`, and `50` / `51` from the inherited supply check). Deployed after the token and bound to it, with the same temporary-admin and hand-over pattern. The observed token is locked and the rule accepts one binding, so it serves one token. Not for bridged tokens: each bridge round trip uses up the cap.
+Caps cumulative issuance: burns never free room (code `86`, and `50` / `51` from the inherited supply check). Deployed after the token and bound to it, with the same temporary-admin and hand-over pattern. The observed token is locked and the rule accepts one binding, so it serves one token. Not for bridged tokens: each bridge round trip uses up the cap.
 
 ### DeployCMTATWithBlacklistAndSanctionsList
 

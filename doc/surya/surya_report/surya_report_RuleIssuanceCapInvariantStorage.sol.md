@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/operation/abstract/RuleIssuanceCapInvariantStorage.sol | df13e92a66b47564301809b3144d35ca18185899 |
+| ./rules/operation/abstract/RuleIssuanceCapInvariantStorage.sol | b07820c80358ec3b9f37ff60d72cb0a35c3388a9 |
 
 
 ### Contracts Description Table

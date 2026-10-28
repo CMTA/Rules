@@ -11,7 +11,7 @@ import {RuleIssuanceCap} from "src/rules/operation/RuleIssuanceCap.sol";
  * path of v3.0.0. Burns never restore room. The rule is bound to the token (direct) or to the RuleEngine.
  */
 abstract contract RuleIssuanceCapV300Test is CMTATv300TestBase {
-    uint8 constant CODE_ISSUANCE_CAP = 71;
+    uint8 constant CODE_ISSUANCE_CAP = 86;
     uint256 constant CAP = 100;
     RuleIssuanceCap internal rule;
 

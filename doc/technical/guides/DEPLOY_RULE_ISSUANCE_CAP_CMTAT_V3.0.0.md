@@ -38,7 +38,7 @@ Every step below is tested against a real v3.0.0 token:
 
 | Operation | Checked by `RuleIssuanceCap` | Rejected with |
 | --- | --- | --- |
-| Mint of `value` | `totalIssued + value <= cap` (the counter), then `totalSupply() + value <= cap` (the live supply, read before the mint) | 71 (issuance cap exceeded), 50 (supply cap exceeded), 51 (`totalSupply()` unreadable) |
+| Mint of `value` | `totalIssued + value <= cap` (the counter), then `totalSupply() + value <= cap` (the live supply, read before the mint) | 86 (issuance cap exceeded), 50 (supply cap exceeded), 51 (`totalSupply()` unreadable) |
 | Transfer, `transferFrom` | nothing; the counter does not change | never |
 | Burn | nothing, and the burn does **not** free room for a later mint | never |
 | Any operation while no caller is bound | the rule rejects its caller | reverts `TokenBinding_UnauthorizedCaller`; views report 85 |
@@ -97,7 +97,7 @@ Each setup lists its steps, then draws them as a sequence diagram. The calls are
 | --- | --- | --- | --- |
 | `admin` | `address` | Receives `DEFAULT_ADMIN_ROLE`, which implicitly holds every role of the rule. Set it to the account (ideally a multisig) that will operate the rule. | Reverts if `address(0)`. On the `Ownable2Step` variant this parameter is `owner`, who then holds every privileged function |
 | `tokenContract_` | `address` | The token whose mints are counted. Fixed for the life of the rule: `setTokenContract` always reverts. | Must be non-zero, have code and answer `totalSupply()`, so the rule is deployed after the token |
-| `issuanceCap_` | `uint256` | The maximum cumulative issuance, in base units. A mint that would push `totalIssued` above it is refused (code 71); burns never free room. | Raise later with `increaseMaxTotalSupply` |
+| `issuanceCap_` | `uint256` | The maximum cumulative issuance, in base units. A mint that would push `totalIssued` above it is refused (code 86); burns never free room. | Raise later with `increaseMaxTotalSupply` |
 | `initialIssued_` | `uint256` | The issuance already made before the rule was installed: the starting value of `totalIssued`. | Must be at least the token's current `totalSupply()`, else the constructor reverts. `0` for a new token |
 
 ### 4.1 Behind a RuleEngine, set at deployment (recommended)
@@ -109,7 +109,7 @@ Each setup lists its steps, then draws them as a sequence diagram. The calls are
 5. **Add it:** `engine.addRule(rule)` (`RULES_MANAGEMENT_ROLE`), plus any other rules.
 6. **Bind the token last:** `engine.bindToken(token)` (engine `COMPLIANCE_MANAGER_ROLE`). From now on the token works, and the rule counts the first mint.
 7. **Grant `MINTER_ROLE`** to the issuer's minting address, if it is not the admin. A minter granted the role before step 6 is blocked like the admin.
-8. **Check the setup:** `rule.remainingMintable()` returns `(0, cap)`, `rule.totalIssued()` returns `0`; on the Standard variant, `token.detectTransferRestriction(address(0), investor, cap + 1)` returns 71.
+8. **Check the setup:** `rule.remainingMintable()` returns `(0, cap)`, `rule.totalIssued()` returns `0`; on the Standard variant, `token.detectTransferRestriction(address(0), investor, cap + 1)` returns 86.
 
 ```mermaid
 sequenceDiagram
@@ -212,7 +212,7 @@ sequenceDiagram
     end
     Token->>Rule: transferred(address(0), to, value)
     Rule->>Rule: onlyBoundToken (caller is the token?)
-    Rule->>Rule: totalIssued + value > cap? (code 71)
+    Rule->>Rule: totalIssued + value > cap? (code 86)
     Rule->>Token: totalSupply()
     Token-->>Rule: supply (excludes value)
     Rule->>Rule: supply unreadable? (code 51) supply + value > cap? (code 50)
@@ -251,7 +251,7 @@ sequenceDiagram
     Engine->>Engine: onlyBoundToken (caller is the bound token?)
     Engine->>Rule: transferred(address(0), to, value)
     Rule->>Rule: onlyBoundToken (caller is the bound engine?)
-    Rule->>Rule: totalIssued + value > cap? (code 71)
+    Rule->>Rule: totalIssued + value > cap? (code 86)
     Rule->>Token: totalSupply()
     Token-->>Rule: supply (excludes value)
     Rule->>Rule: supply unreadable? (code 51) supply + value > cap? (code 50)

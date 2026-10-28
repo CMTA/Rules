@@ -101,7 +101,7 @@ Each rule splits into a `*Base` contract holding the logic and a deployable vari
 | `RuleChainlinkPoRERC3643` | Caps minting at reported reserves, for tokens that mint *first* and call the rule after | 75–79 |
 | `RuleConditionalTransferLight` | Requires operator approval per transfer | 46, 85 (not bound) |
 | `RuleMintAllowance` | Per-minter mint quota | 70, 85 (not bound) |
-| `RuleIssuanceCap` | Caps cumulative issuance on mint; burns do **not** restore room (fixed issue volume) | 71, 85 (not bound), and 50, 51 shared with `RuleMaxTotalSupply` |
+| `RuleIssuanceCap` | Caps cumulative issuance on mint; burns do **not** restore room (fixed issue volume) | 86, 85 (not bound), and 50, 51 shared with `RuleMaxTotalSupply` |
 
 Codes must stay unique across rules, since a RuleEngine returns the first non-zero one. Three deliberate exceptions, each with one meaning and one message: `RuleIssuanceCap` reuses 50 and 51 from `RuleMaxTotalSupply`, which it extends; 46 ("transfer not approved") is shared by the two conditional-transfer rules; and 85 ("rule not bound") is shared by the three stateful rules that need binding.
 

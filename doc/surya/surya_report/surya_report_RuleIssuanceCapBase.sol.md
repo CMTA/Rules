@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/operation/abstract/RuleIssuanceCapBase.sol | aeeeb9b06417869af07eef8f3ea8df36fb72c4d3 |
+| ./rules/operation/abstract/RuleIssuanceCapBase.sol | a70b9c4df97ddf7b95a82eeaf25268338ea3c81e |
 
 
 ### Contracts Description Table

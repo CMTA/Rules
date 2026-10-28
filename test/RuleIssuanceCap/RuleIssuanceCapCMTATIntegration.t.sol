@@ -61,11 +61,11 @@ contract RuleIssuanceCapCMTATIntegration is Test, HelperContract {
     function testTokenViewReportsTheIssuanceCode() public {
         _setUpTopology(true);
         assertEq(cmtatContract.detectTransferRestriction(ZERO_ADDRESS, ADDRESS2, 40), TRANSFER_OK);
-        assertEq(cmtatContract.detectTransferRestriction(ZERO_ADDRESS, ADDRESS2, 41), 71);
-        // The burn frees live-supply room (supply 30) but not issuance room: still 71, not OK.
+        assertEq(cmtatContract.detectTransferRestriction(ZERO_ADDRESS, ADDRESS2, 41), 86);
+        // The burn frees live-supply room (supply 30) but not issuance room: still 86, not OK.
         vm.prank(DEFAULT_ADMIN_ADDRESS);
         cmtatContract.burn(ADDRESS1, 30);
-        assertEq(cmtatContract.detectTransferRestriction(ZERO_ADDRESS, ADDRESS2, 41), 71);
+        assertEq(cmtatContract.detectTransferRestriction(ZERO_ADDRESS, ADDRESS2, 41), 86);
     }
 
     /// @dev A CMTAT whose RuleEngine is set in the constructor, as `CMTATDeployment` does with `address(0)`.
