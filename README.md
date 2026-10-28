@@ -205,7 +205,7 @@ No formal third-party audit has been carried out. The code has had automated sta
 | Static analysis | [Aderyn](https://github.com/Cyfrin/aderyn) 0.6.5 | v0.7.0 |
 | AI automated scan | [Nethermind AuditAgent](https://auditagent.nethermind.io/) | v0.5.0 |
 | AI-assisted review | Claude Code (Anthropic) | v0.7.0 |
-| AI-assisted review | Claude + custom security-audit skills | v0.4.0 |
+| AI-assisted review | Claude Code (Anthropic) | v0.4.0 |
 | AI-assisted review | [Wake Arena](https://getwake.io) (Ackee Blockchain Security) | v0.2.0 |
 
 Scope is the production contracts under `src/`; mocks, tests and vendored dependencies are excluded.
