@@ -46,6 +46,7 @@ Custom changelog tag
 - Documentation
   - Perform a code coverage and update the files in the corresponding directory [./doc/coverage](./doc/coverage)
   - Perform an audit with several audit tools (Mythril and Slither), update the report in the corresponding directory [./doc/security/audits/tools](./doc/security/audits/tools)
+  - Run the static analysers on `script/` as well (`slither-report-script.md`, `aderyn-report-script.md`): their default commands leave the deployment scripts out
   - Update surya doc by running the 3 scripts in [./doc/script](./doc/script)
   - Check that the compilation artifacts of the release are in [./doc/compilation](./doc/compilation), in a `vX.Y.Z` directory (`foundry/` from `forge build`, `hardhat/` from `npx hardhat compile --force`, one entry per deployable contract). Artifacts of a previous version may stay alongside, but the latest one must be present.
   - Check that the Solidity version and the EVM version in `foundry.toml` and `hardhat.config.js` are the latest ones; if not, state the reason clearly in the documentation ([./doc/FOUNDRY.md](./doc/FOUNDRY.md)).
@@ -115,6 +116,9 @@ Commit:
 - EVM target raised from `prague` to `osaka` in `foundry.toml` (both profiles) and `hardhat.config.js`; solc stays at `0.8.38`, the latest release.
   - The compiled contracts contain no Osaka-only opcode (`CLZ`), so they still run on Prague and Cancun chains.
 - `RuleSpenderWhitelist_InvalidTransferFrom`: first parameter renamed `ruleEngine` → `rule`. It always carried the rule's own address, and every other rule error already names it `rule`. The selector is unchanged; only the parameter name in the ABI differs.
+- Deployment scripts: the default caps (`CMTAT_MAX_SUPPLY`, `CMTAT_MAX_BALANCE`, `CMTAT_ISSUANCE_CAP`) are now read by `_maxTotalSupply()`, `_maxBalance()` and `_issuanceCap()` in `CMTATDeploymentBase`, with defaults in whole tokens scaled by `CMTAT_DECIMALS`.
+  - Before, the defaults were base units, so with `CMTAT_DECIMALS = 18` the default supply cap allowed 0.000000000001 tokens and every mint failed. Unchanged at the default 0 decimals; a value set in the environment is still base units.
+  - `CMTAT_MAX_SUPPLY` was read in two scripts, each with its own copy of the default. Found by the first static analysis of `script/` (Aderyn, large numeric literals); pinned by `test/DeploymentScripts/CMTATDeploymentBase.t.sol`.
 
 ### Fixed
 
@@ -209,6 +213,8 @@ Commit:
   - `RuleSanctionsList.md`: warns that an oracle without code, or a reverting one, makes every operation and view revert. `IdentityRegistryWhitelist.md`: `RuleIdentityRegistry` can also be set directly on the token.
   - NatSpec: `RuleWhitelistWrapperBase` no longer says polarity is unchecked; the `ReservesFeedUpdated` event no longer says the feed decimals are cached.
 - Tables of contents: the `[TOC]` placeholder, which GitHub shows as plain text, is replaced in 51 documents (`doc/technical/`, `doc/TOOLCHAIN.md`) by a generated list of links to the level-2 and level-3 headings, between `<!-- toc -->` markers so it can be regenerated.
+- Static analysis re-run before tagging (2026-10-28, solc `0.8.38`, EVM `osaka`): Slither 47 results (one more `dead-code` false positive), Aderyn 381 instances (+4 one-per-file for the two new storage contracts). Nothing to fix.
+- First static analysis of the deployment scripts: `slither-report-script.md`, `aderyn-report-script.md` and `script-report-feedback.md` in `doc/security/audits/tools/v0.7.0/`. Slither's default build skips `script/` and Aderyn does not accept it as a source folder; both reports record the command that brings the scripts into scope.
 
 ### Testing
 
@@ -237,7 +243,7 @@ Commit:
   - Negative controls: three mutations (off-by-one cap, over-strict cap, wrong headroom view) each fail the suite. A first version missed the off-by-one on the safety invariant, because random amounts never hit `headroom + 1`; the `mintAtBoundary` action fixes that. Recorded in `INVARIANT_TESTS.md` §4.
   - Documented in `INVARIANT_TESTS.md` §3.3 and in the "Invariant testing" section of `doc/README.md`.
 - `remainingMintable()`: unit tests (headroom, exact fit, cap below supply, unreadable supply), a fuzz property that the headroom is exactly the largest mint the pre-flight check accepts, the ERC-3643 variant, and a real CMTAT v3.0.0 token across mints and burns.
-- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,489 tests pass in the default profile and 53 in the `erc3643` profile.
+- All `new RuleEngine(admin, address(0), token)` calls in the tests use the 2-argument constructor. 1,491 tests pass in the default profile and 53 in the `erc3643` profile.
 - **Security-review tests** (`CLAUDE_AUDIT.md` v0.7.0):
   - 16 proof-of-concept tests in `test/ThreatModel/ThreatModelV070Tests.t.sol` (4 fuzz). Tests suffixed `_CurrentBehaviour` must fail once a finding is fixed.
   - `testDeploymentWithEngineInConstructorLeavesNoUncountedWindow` (`RuleIssuanceCapCMTATIntegration`): the gap-free deployment order of F-4 on a real CMTAT `v3.3` token and RuleEngine `rc7`; every mint, the admin's included, reverts until the cap rule is installed.

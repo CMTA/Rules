@@ -121,7 +121,8 @@ contract DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply is CMTATDeployme
     }
 
     /**
-     * @notice Broadcast entrypoint. Deploys with no sanctions oracle and a 1 000 000 unit cap.
+     * @notice Broadcast entrypoint. Deploys with no sanctions oracle and the cap from `CMTAT_MAX_SUPPLY`
+     *         (default 1 000 000 whole tokens).
      * @dev The oracle is left unset because its address is chain-specific (Chainalysis publishes one
      *      per network). **Until it is set, sanctions screening is disabled and passes everything** —
      *      call `setSanctionListOracle` before the token goes live.
@@ -145,7 +146,7 @@ contract DeployCMTATWithBlacklistSanctionsListAndMaxTotalSupply is CMTATDeployme
             msg.sender,
             _forwarder(),
             ISanctionsList(vm.envOr("SANCTIONS_ORACLE", address(0))),
-            vm.envOr("CMTAT_MAX_SUPPLY", uint256(1_000_000))
+            _maxTotalSupply()
         );
         vm.stopBroadcast();
     }

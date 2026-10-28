@@ -14,8 +14,9 @@
 |---|---|---|---|---|
 | 2026-10-26 | AI-assisted security review | Claude Code (Anthropic) | v0.7.0 | [**CLAUDE_AUDIT.md**](./tools/v0.7.0/CLAUDE_AUDIT.md) (security, delta since v0.6.0: 0 Low/Medium/High, 5 Info, 16 PoCs) |
 | 2026-10-26 | AI-assisted review | Claude Code (Anthropic) | v0.7.0 | [**CLAUDE_ANALYSIS.md**](./tools/v0.7.0/CLAUDE_ANALYSIS.md) (code quality, `src/`: 24 findings, 10 fixed, nothing exploitable) |
-| 2026-10-26 | Static analysis | Slither 0.11.6 | v0.7.0 | [report](./tools/v0.7.0/slither-report.md) · [feedback](./tools/v0.7.0/slither-report-feedback.md) · [0.11.5 comparison run](./tools/v0.7.0/slither-report-0.11.5.md) |
-| 2026-10-26 | Static analysis | Aderyn 0.6.5 | v0.7.0 | [report](./tools/v0.7.0/aderyn-report.md) · [feedback](./tools/v0.7.0/aderyn-report-feedback.md) — second run, after fixing the nine unused imports the first run reported |
+| 2026-10-28 | Static analysis | Slither 0.11.6 | v0.7.0 | [report](./tools/v0.7.0/slither-report.md) · [feedback](./tools/v0.7.0/slither-report-feedback.md) · [0.11.5 comparison run](./tools/v0.7.0/slither-report-0.11.5.md) — pre-release re-run at solc `0.8.38`, supersedes 2026-10-26 |
+| 2026-10-28 | Static analysis, `script/` | Slither 0.11.6, Aderyn 0.6.5 | v0.7.0 | [Slither](./tools/v0.7.0/slither-report-script.md) · [Aderyn](./tools/v0.7.0/aderyn-report-script.md) · [feedback](./tools/v0.7.0/script-report-feedback.md) — the deployment scripts, first run; one finding fixed |
+| 2026-10-28 | Static analysis | Aderyn 0.6.5 | v0.7.0 | [report](./tools/v0.7.0/aderyn-report.md) · [feedback](./tools/v0.7.0/aderyn-report-feedback.md) — pre-release re-run at solc `0.8.38`, supersedes the two 2026-10-26 runs (the first reported nine unused imports, fixed) |
 | 2026-08-18 | AI-assisted review | Claude Code (Anthropic) | v0.6.0 | [**CLAUDE_ANALYSIS.md**](./tools/v0.6.0/CLAUDE_ANALYSIS.md) (code quality, `src/`) |
 | 2026-08-21 | Static analysis | Slither 0.11.5 | v0.6.0 | [report](./tools/v0.6.0/slither-report.md) · [feedback](./tools/v0.6.0/slither-report-feedback.md) — re-run after the RuleEngine `v3.0.0-rc6` bump, supersedes 2026-08-18 |
 | 2026-08-21 | Static analysis | Aderyn 0.6.5 | v0.6.0 | [report](./tools/v0.6.0/aderyn-report.md) · [feedback](./tools/v0.6.0/aderyn-report-feedback.md) — re-run after the RuleEngine `v3.0.0-rc6` bump, supersedes 2026-08-18 |
@@ -31,19 +32,23 @@
 
 ## Static-analysis results (v0.7.0)
 
-Run **2026-10-26** for the `v0.7.0` release, at solc `0.8.36`. Slither moves to its latest release, **0.11.6**; a second run with 0.11.5, the version of `v0.4.0`–`v0.6.0`, isolates the code delta from the tool change. Aderyn stays at 0.6.5. Scope: production contracts only — mocks excluded, vendored dependencies (including the test-only `lib/CMTATv3.0.0`) excluded via the `lib` filter.
+Run **2026-10-26** for the `v0.7.0` release at solc `0.8.36`, and **re-run 2026-10-28** before tagging at solc `0.8.38` / EVM `osaka`, after the code-quality changes; the table gives the re-run. Slither moves to its latest release, **0.11.6**; a second run with 0.11.5, the version of `v0.4.0`–`v0.6.0`, isolates the code delta from the tool change. Aderyn stays at 0.6.5. Scope: production contracts only — mocks excluded, vendored dependencies (including the test-only `lib/CMTATv3.0.0`) excluded via the `lib` filter.
 
 | Tool | High | Medium | Low | Info | Relevant to fix? |
 |---|---|---|---|---|---|
-| Slither 0.11.6 | 2 | 5 | 18 | 21 | **No** — same 46 results as 0.11.5, redistributed by the tool upgrade; see [feedback](./tools/v0.7.0/slither-report-feedback.md) |
-| Aderyn 0.6.5 | 0 | 0 | 10 categories (377 instances) | 0 | **No** — every Low is by design, environmental, cosmetic or a verified false positive; see [feedback](./tools/v0.7.0/aderyn-report-feedback.md) |
+| Slither 0.11.6 | 2 | 5 | 18 | 22 | **No** — 47 results: the first run's 46, plus one `dead-code` false positive (an override called through virtual dispatch); see [feedback](./tools/v0.7.0/slither-report-feedback.md) |
+| Aderyn 0.6.5 | 0 | 0 | 10 categories (381 instances) | 0 | **No** — every Low is by design, environmental, cosmetic or a verified false positive; see [feedback](./tools/v0.7.0/aderyn-report-feedback.md) |
+| Slither 0.11.6, `script/` | 0 | 0 | 0 | 0 | **No** — nothing reported; see [feedback](./tools/v0.7.0/script-report-feedback.md) |
+| Aderyn 0.6.5, `script/` | 0 | 0 | 1 category (18 instances) | 0 | **No** after the fix — the five large literals (default caps) were replaced by named defaults, which also fixed their scaling for tokens with decimals |
 
 **Nothing to fix in `v0.7.0`; one cosmetic defect was fixed before the committed run.**
 
 - **Slither, code delta (0.11.5 on both releases): 46 → 46, no result changed.** The release added `RuleIssuanceCap`, made `RuleMaxTotalSupplyBase.transferred` non-`view` with a new hook, and migrated to RuleEngine `v3.0.0-rc7`. None of it produced a new result.
 - **Slither, tool delta (0.11.5 → 0.11.6 on `v0.7.0`): still 46**, redistributed: `unused-return` 9 → 3 and `dead-code` 3 → 9. All six new `dead-code` hits are called through virtual dispatch. That includes `RuleIssuanceCapBase._afterMintChecked`, the counter itself, which deleting would make the cap replenishing.
 - **Slither blind spot (both versions, pre-existing):** no IR is generated for `_addAddresses` / `_removeAddresses` in `RuleMaxBalance` and `IdentityRegistryWhitelist`, a function pointer passed to `AddressSetBatchLib`, so no detector analyses those two copies. The same inherited code is analysed in the other address-set rules. Check stderr for `Impossible to generate IR` on every run.
-- **Aderyn 346 → 377 (+31), one new category**, all attributed file by file:
+- **Pre-release re-run (2026-10-28):** Slither 46 → 47, the new result a `dead-code` false positive on `RuleIssuanceCapBase._remainingMintable()`; Aderyn 377 → 381, one pragma and one PUSH0 line for each of the two new storage contracts. Nothing new to fix.
+- **Deployment scripts, first run:** Slither has no result; Aderyn reported large numeric literals, the default caps. Fixing them showed the defaults were base units, so with `CMTAT_DECIMALS = 18` the default cap allowed almost nothing: the defaults are now whole tokens scaled by the decimals.
+- **Aderyn 346 → 377 (+31) in the first run, one new category**, all attributed file by file:
   - `RuleIssuanceCap`'s four files in `L-2` / `L-5` (+4 each);
   - its privileged functions in `L-1` (+9);
   - its no-op and role-check hooks in `L-7` (+11);

@@ -210,7 +210,7 @@ No formal third-party audit has been carried out. The code has had automated sta
 
 Scope is the production contracts under `src/`; mocks, tests and vendored dependencies are excluded.
 
-Every finding carries a written triage, including the ones dismissed as false positives or by-design. Nothing is outstanding as of `v0.7.0`: the static analysers report nothing to fix, since Slither's 46 results and Aderyn's 377 Low instances are all false-positive, by-design, environmental or cosmetic. The AuditAgent scan is fully dispositioned.
+Every finding carries a written triage, including the ones dismissed as false positives or by-design. Nothing is outstanding as of `v0.7.0`: the static analysers report nothing to fix, since Slither's 47 results and Aderyn's 381 Low instances are all false-positive, by-design, environmental or cosmetic. The AuditAgent scan is fully dispositioned.
 
 ### Nethermind AuditAgent (v0.5.0)
 

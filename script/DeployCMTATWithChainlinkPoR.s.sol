@@ -38,7 +38,7 @@ contract DeployCMTATWithChainlinkPoR is CMTATDeploymentBase {
     /**
      * @notice Reserves reported by the stand-in mock feed, in whole tokens.
      */
-    uint256 internal constant MOCK_RESERVES = 1_000_000;
+    uint256 internal constant MOCK_RESERVES = 1e6;
 
     /**
      * @notice `CHAINLINK_POR_FEED` is unset on a chain where no mock may be substituted.
@@ -89,7 +89,7 @@ contract DeployCMTATWithChainlinkPoR is CMTATDeploymentBase {
      */
     function run() external virtual returns (CMTATStandardStandalone token, RuleChainlinkPoR rule) {
         address feed = vm.envOr("CHAINLINK_POR_FEED", address(0));
-        uint256 maxStaleness = vm.envOr("CHAINLINK_POR_MAX_STALENESS", uint256(86_400));
+        uint256 maxStaleness = vm.envOr("CHAINLINK_POR_MAX_STALENESS", uint256(1 days));
         vm.startBroadcast();
         if (feed == address(0)) {
             require(block.chainid == LOCAL_CHAIN_ID, DeployCMTATWithChainlinkPoR_FeedNotConfigured(block.chainid));

@@ -23,8 +23,9 @@ import {CMTATDeploymentBase} from "./base/CMTATDeploymentBase.sol";
  * @dev **Step 2 must follow step 1.** The rule validates its token at construction (non-zero, has
  *      code, `totalSupply()` callable), so it cannot be deployed before the token exists.
  *
- * @dev The cap is in the token's base units, compared as-is with `totalSupply()`. With the default
- *      0 decimals that is whole tokens; on an 18-decimal token pass `cap * 10**18`.
+ * @dev The cap is in the token's base units, compared as-is with `totalSupply()`. A value set in
+ *      `CMTAT_MAX_SUPPLY` is base units (on an 18-decimal token pass `cap * 10**18`); the default is
+ *      scaled by the token's decimals.
  */
 contract DeployCMTATWithMaxTotalSupply is CMTATDeploymentBase {
     /**
@@ -62,11 +63,11 @@ contract DeployCMTATWithMaxTotalSupply is CMTATDeploymentBase {
     }
 
     /**
-     * @notice Broadcast entrypoint. The cap is read from `CMTAT_MAX_SUPPLY`, default 1 000 000 base units.
+     * @notice Broadcast entrypoint. The cap is read from `CMTAT_MAX_SUPPLY`, default 1 000 000 whole tokens.
      */
     function run() external virtual returns (CMTATStandardStandalone token, RuleMaxTotalSupply rule) {
         vm.startBroadcast();
-        (token, rule) = deploy(msg.sender, msg.sender, _forwarder(), vm.envOr("CMTAT_MAX_SUPPLY", uint256(1_000_000)));
+        (token, rule) = deploy(msg.sender, msg.sender, _forwarder(), _maxTotalSupply());
         vm.stopBroadcast();
     }
 }

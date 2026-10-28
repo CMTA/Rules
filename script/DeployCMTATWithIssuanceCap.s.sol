@@ -21,7 +21,7 @@ import {CMTATDeploymentBase} from "./base/CMTATDeploymentBase.sol";
  *      (`setTokenContract` always reverts) and the rule accepts a single binding.
  * @dev **Not for bridged tokens:** a burn-and-remint cycle consumes the budget twice. For a replenishing
  *      cap use `RuleMaxTotalSupply`. Every step runs in one call, so no mint escapes the counter.
- * @dev Env: `CMTAT_ISSUANCE_CAP` (default 1 000 000), in base units. To raise it later the admin uses
+ * @dev Env: `CMTAT_ISSUANCE_CAP` in base units (default 1 000 000 whole tokens). To raise it later the admin uses
  *      `increaseMaxTotalSupply` (`MAX_TOTAL_SUPPLY_ROLE`).
  */
 contract DeployCMTATWithIssuanceCap is CMTATDeploymentBase {
@@ -62,11 +62,11 @@ contract DeployCMTATWithIssuanceCap is CMTATDeploymentBase {
     }
 
     /**
-     * @notice Broadcast entrypoint. The cap is read from `CMTAT_ISSUANCE_CAP`, default 1 000 000 base units.
+     * @notice Broadcast entrypoint. The cap is read from `CMTAT_ISSUANCE_CAP`, default 1 000 000 whole tokens.
      */
     function run() external virtual returns (CMTATStandardStandalone token, RuleIssuanceCap rule) {
         vm.startBroadcast();
-        (token, rule) = deploy(msg.sender, msg.sender, _forwarder(), vm.envOr("CMTAT_ISSUANCE_CAP", uint256(1_000_000)));
+        (token, rule) = deploy(msg.sender, msg.sender, _forwarder(), _issuanceCap());
         vm.stopBroadcast();
     }
 }

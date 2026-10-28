@@ -4,9 +4,15 @@
 aderyn -x mocks --output doc/security/audits/tools/v0.7.0/aderyn-report.md
 ```
 
-Tool: **Aderyn 0.6.5** · Compiler: solc `0.8.36` · Run date: **2026-10-26** (two runs; the committed report is the second, see [First run: nine unused imports, fixed](#first-run-nine-unused-imports-fixed)) Scope: production contracts only, mocks excluded via `-x mocks`. 98 source files. **4 354 nSLOC.** **0 High · 10 Low categories, 377 instances.**
+Tool: **Aderyn 0.6.5** · Compiler: solc `0.8.38`, EVM `osaka` · Run date: **2026-10-28** (pre-release re-run, see [Pre-release re-run](#pre-release-re-run-2026-10-28); the two 2026-10-26 runs are described under [First run: nine unused imports, fixed](#first-run-nine-unused-imports-fixed)) Scope: production contracts only, mocks excluded via `-x mocks`. 98 source files. **4 354 nSLOC.** **0 High · 10 Low categories, 377 instances.**
 
 **Executive triage: nothing to fix.** Aderyn reports no High or Medium finding. Every Low category is by design, environmental, cosmetic or a verified false positive. The one real defect it found this release, nine unused imports, was fixed before the committed run.
+
+## Pre-release re-run (2026-10-28)
+
+Re-run before tagging, after the code-quality changes made since the first runs (37 files under `src/`) and the compiler and EVM bump (solc `0.8.36` → `0.8.38`, `prague` → `osaka`).
+
+**377 → 381 instances (+4)** on **4 354 → 4 501 nSLOC**, 98 → 100 files. The four new instances are one `Unspecific Solidity Pragma` and one `PUSH0 Opcode` in each of the two files added by those changes, `RuleBindingInvariantStorage` and `RuleMaxTotalSupplyRolesStorage`. Every other category is unchanged, and nothing new needs fixing. The delta table below compares the first run with `v0.6.0`.
 
 ### Scope check
 
@@ -17,10 +23,10 @@ Tool: **Aderyn 0.6.5** · Compiler: solc `0.8.36` · Run date: **2026-10-26** (t
 | ID | Finding | Instances | Disposition | Why |
 |---|---|---|---|---|
 | L-1 | Centralization Risk | 89 | **By design** | The regulated-issuer model. Roles gating configuration *are* the product; the trust model is documented in `CLAUDE_AUDIT.md` |
-| L-2 | Unspecific Solidity Pragma | 96 | **By design** | `^0.8.27` is deliberate — a library consumed by projects that pin their own compiler. Raised from `^0.8.20` this release: `require(cond, CustomError())` needs 0.8.27, and RuleEngine rc7 declares the same floor |
+| L-2 | Unspecific Solidity Pragma | 98 | **By design** | `^0.8.27` is deliberate — a library consumed by projects that pin their own compiler. Raised from `^0.8.20` this release: `require(cond, CustomError())` needs 0.8.27, and RuleEngine rc7 declares the same floor |
 | L-3 | Address State Variable Set Without Checks | 3 | **False positive** | Each setter validates: non-zero, `code.length != 0`, and a probe call that must not revert |
 | L-4 | Literal Instead of Constant | 2 | Cosmetic | Unchanged (`ChainlinkPoRFeedManager`) |
-| L-5 | PUSH0 Opcode | 98 | **Environment** | solc `0.8.36` targeting `prague`. Relevant only to a chain without PUSH0, which this library does not target |
+| L-5 | PUSH0 Opcode | 100 | **Environment** | solc `0.8.38` targeting `osaka`. Relevant only to a chain without PUSH0, which this library does not target |
 | L-6 | Modifier Invoked Only Once | 2 | **By design** | One modifier per capability. New: `TotalSupplyCapManager.onlyTokenContractManager`, used by `setTokenContract` only, because repointing the token is deliberately a separate permission from changing the cap |
 | L-7 | Empty Block | 81 | **By design** | `_authorize*()` overrides whose whole body is `onlyRole(...)` / `onlyOwner`, plus intentional no-op hooks |
 | L-8 | Costly operations inside loop | 3 | **By design** | Bounded batch operations over an operator-supplied array |

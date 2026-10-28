@@ -23,7 +23,7 @@ import {CMTATDeploymentBase} from "./base/CMTATDeploymentBase.sol";
  *      `RuleReceiverWhitelist`, `RuleIdentityRegistry`) behind a RuleEngine, under a one-address-per-
  *      entity onboarding policy. Used alone, as here, that guarantee must come from another control.
  *
- * @dev Env: `CMTAT_MAX_BALANCE`, default 100 000 base units. `maxBalance = 0` forbids holding, it
+ * @dev Env: `CMTAT_MAX_BALANCE` in base units (default 100 000 whole tokens). `maxBalance = 0` forbids holding, it
  *      does not disable the rule. **After deployment**, exempt the treasury or custodian that must
  *      hold more than the cap with `addExemptAddresses` (`MAX_BALANCE_ROLE`).
  */
@@ -62,11 +62,11 @@ contract DeployCMTATWithMaxBalance is CMTATDeploymentBase {
     }
 
     /**
-     * @notice Broadcast entrypoint. The cap is read from `CMTAT_MAX_BALANCE`, default 100 000 base units.
+     * @notice Broadcast entrypoint. The cap is read from `CMTAT_MAX_BALANCE`, default 100 000 whole tokens.
      */
     function run() external virtual returns (CMTATStandardStandalone token, RuleMaxBalance rule) {
         vm.startBroadcast();
-        (token, rule) = deploy(msg.sender, msg.sender, _forwarder(), vm.envOr("CMTAT_MAX_BALANCE", uint256(100_000)));
+        (token, rule) = deploy(msg.sender, msg.sender, _forwarder(), _maxBalance());
         vm.stopBroadcast();
     }
 }

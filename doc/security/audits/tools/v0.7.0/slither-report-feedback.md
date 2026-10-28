@@ -5,13 +5,21 @@ slither . --checklist --filter-paths "node_modules,lib,test,forge-std,mocks" \
   > doc/security/audits/tools/v0.7.0/slither-report.md
 ```
 
-Tool: **Slither 0.11.6**, the latest release, run through `uvx --from slither-analyzer==0.11.6` · Compiler: solc `0.8.36` · Run date: **2026-10-26** Scope: production contracts only. Mocks excluded via the `mocks` filter, vendored dependencies via `lib`. 229 contracts, 102 detectors, **46 results**.
+Tool: **Slither 0.11.6**, the latest release, run through `uvx --from slither-analyzer==0.11.6` · Compiler: solc `0.8.38`, EVM `osaka` · Run date: **2026-10-28** (pre-release re-run; first run 2026-10-26 at solc `0.8.36`, see [Pre-release re-run](#pre-release-re-run-2026-10-28)) Scope: production contracts only. Mocks excluded via the `mocks` filter, vendored dependencies via `lib`. 229 contracts, 102 detectors, **46 results**.
 
 A second run with **Slither 0.11.5**, the version of the `v0.4.0`–`v0.6.0` reports, is kept as [`slither-report-0.11.5.md`](./slither-report-0.11.5.md). It separates what changed in the code from what changed in the tool: see [Two runs, two questions](#two-runs-two-questions).
 
 **Executive triage: nothing to fix.** No finding is exploitable. Both High-impact results are the same false positive dismissed since `v0.4.0`, on a permissioned path. Every `dead-code` result, including the new one on `RuleIssuanceCapBase._afterMintChecked`, is reachable through virtual dispatch.
 
 One **analysis blind spot**, present in both versions and in earlier releases without being recorded, is documented [below](#blind-spot-functions-slither-cannot-analyse). It does not hide a defect, but it limits what this report covers.
+
+## Pre-release re-run (2026-10-28)
+
+The report was re-run before tagging, after the code-quality changes made since the first run (37 files under `src/`: code 85 on the conditional-transfer rule, `RuleBindingInvariantStorage`, `RuleMaxTotalSupplyRolesStorage`, 63 functions marked `virtual`, comment fixes) and the compiler and EVM bump (solc `0.8.36` → `0.8.38`, `prague` → `osaka`).
+
+**46 → 47 results.** The only new result is `dead-code` on `RuleIssuanceCapBase._remainingMintable()`. **False positive:** it overrides `TotalSupplyCapManager._remainingMintable()` and is reached through virtual dispatch from `RuleMaxTotalSupplyBase.remainingMintable()` (line 59), which `RuleIssuanceCap` inherits; the issuance-cap tests call that view and check it returns the smaller of the counter room and the supply room. Every other detector reports the same results as the first run.
+
+The blind spot below is unchanged: the same three contracts' `_addAddresses` / `_removeAddresses` are reported as "Impossible to generate IR" in the stderr log.
 
 ### Scope check
 
@@ -32,7 +40,7 @@ grep -c 'test/\|src/mocks/'   slither-report.md   → 0 findings (same echo line
 | `calls-loop` | Low | 17 | By design |
 | `timestamp` | Low | 1 | By design |
 | `assembly` | Informational | 2 | By design |
-| `dead-code` | Informational | 9 | False positive |
+| `dead-code` | Informational | 10 | False positive |
 | `naming-convention` | Informational | 6 | By design |
 | `unused-state` | Informational | 4 | Cosmetic |
 
@@ -43,7 +51,7 @@ NOTE: Slither 0.11.6 leaves `arbitrary-send-erc20` out of the checklist's summar
 - **`unused-return` (3)** — `BalanceCapManager._setBalanceToken` and `TokenSupplyReader._probeTotalSupplyCallable`, configuration probes whose only purpose is to learn whether the call reverts; and `ChainlinkPoRFeedManager._maxBackedSupply`, which uses two of the five `latestRoundData()` fields by design.
 - **`calls-loop` (17)** — the `RuleWhitelistWrapper` child scan and its `_checkRule` interface and polarity guard: bounded by `maxRules`, configuration-time only.
 - **`timestamp` (1)** — the Proof-of-Reserve staleness check, which is the feature.
-- **`dead-code` (9)** — all reachable:
+- **`dead-code` (10)** — all reachable (the tenth, `RuleIssuanceCapBase._remainingMintable()`, is described in [Pre-release re-run](#pre-release-re-run-2026-10-28)):
   - `_contextSuffixLength()` in `RuleWhitelist`, `RuleBlacklist`, `RuleERC2980` and their Ownable2Step variants (6): the override that resolves the `ERC2771Context` / `Context` diamond. OpenZeppelin's `ERC2771Context._msgSender()` and `_msgData()` call it (`ERC2771Context.sol:57, :74`) on every relayed call.
   - `RuleIssuanceCapBase._afterMintChecked` (1, **new this release**): the counter. `RuleMaxTotalSupplyBase._transferred` / `_transferredFrom` call it on every accepted mint. Coverage of `RuleIssuanceCapBase` is 100%, and deleting its write fails four invariants (mutation M4 in `INVARIANT_TESTS.md`). Acting on this finding would turn the rule back into a replenishing cap.
   - `RuleERC2980Internal._requireNotZeroAddress` and `RuleAddressSetInternal._requireNotZeroAddress` (2): passed as a function pointer to `AddressSetBatchLib.addBatch`, which Slither does not follow.
