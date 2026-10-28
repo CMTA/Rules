@@ -233,7 +233,7 @@ Deploys an `IdentityRegistryWhitelist` owned by `admin` as the registry, and `Ru
 
 Signature: `deploy(admin, deployer, forwarder, maxBalance)`. `run()` reads the cap from `CMTAT_MAX_BALANCE`, default `100000` base units.
 
-Caps what one address may hold (codes `80`, `81`), screening the receiver; burns are exempt. Deployed after the token, which its constructor validates. **Bypassable by splitting a position across wallets**: in production combine it behind a RuleEngine with a one-address-per-investor rule. `maxBalance = 0` forbids holding, it does not disable the rule.
+Caps what one address may hold (codes `81`, `82`), screening the receiver; burns are exempt. Deployed after the token, which its constructor validates. **Bypassable by splitting a position across wallets**: in production combine it behind a RuleEngine with a one-address-per-investor rule. `maxBalance = 0` forbids holding, it does not disable the rule.
 
 ### DeployCMTATWithChainlinkPoR
 

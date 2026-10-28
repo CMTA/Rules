@@ -69,8 +69,8 @@ The **Graph** and **Inheritance** diagrams are generated from the source code wi
 
 | Constant | Code | Meaning |
 | --- | --- | --- |
-| `CODE_MAX_BALANCE_EXCEEDED` | 80 | The transfer would push the receiver's balance above `maxBalance` |
-| `CODE_BALANCE_UNAVAILABLE` | 81 | `balanceOf(to)` could not be read, so the cap cannot be verified |
+| `CODE_MAX_BALANCE_EXCEEDED` | 81 | The transfer would push the receiver's balance above `maxBalance` |
+| `CODE_BALANCE_UNAVAILABLE` | 82 | `balanceOf(to)` could not be read, so the cap cannot be verified |
 
 ## Who is screened
 
@@ -125,7 +125,7 @@ A holder whose balance is **above** the cap — after the operator lowered it, o
 | Receiver's balance | `value` | Code |
 | --- | --- | --- |
 | exactly at the cap | `0` | `0` (allowed) |
-| **above** the cap | `0` | **`80`** |
+| **above** the cap | `0` | **`81`** |
 
 Receiving nothing cannot breach a holding cap, so this is a false rejection. It also makes the token non-conformant to ERC-20 for that receiver, since the standard requires a zero-value transfer to be treated as a normal transfer.
 
@@ -145,7 +145,7 @@ The rule reads balances from the `balanceToken` it was configured with, never fr
 
 ## Usage scenario
 
-An issuer must keep any single investor below 5% of a 1,000,000-token issue. They deploy `RuleWhitelist` and `RuleMaxBalance(admin, cmtat, 50_000)` in the same RuleEngine, admit exactly one address per onboarded investor, and exempt the treasury address that holds the unsold allocation. An investor at 50,000 tokens can still sell, and can buy again once below the cap; a mint that would push them over is rejected with code `80`.
+An issuer must keep any single investor below 5% of a 1,000,000-token issue. They deploy `RuleWhitelist` and `RuleMaxBalance(admin, cmtat, 50_000)` in the same RuleEngine, admit exactly one address per onboarded investor, and exempt the treasury address that holds the unsold allocation. An investor at 50,000 tokens can still sell, and can buy again once below the cap; a mint that would push them over is rejected with code `81`.
 
 ## Deployment guides
 

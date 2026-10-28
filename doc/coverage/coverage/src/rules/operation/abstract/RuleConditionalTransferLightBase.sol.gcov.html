@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-28 14:03:03</td>
+            <td class="headerValue">2026-10-28 14:13:45</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">17</td>
@@ -224,13 +224,13 @@
 <a name="153"><span class="lineNum">     153 </span>                :            :     /**</a>
 <a name="154"><span class="lineNum">     154 </span>                :            :      * @inheritdoc IERC3643IComplianceContract</a>
 <a name="155"><span class="lineNum">     155 </span>                :            :      */</a>
-<a name="156"><span class="lineNum">     156 </span>                :<span class="lineCov">       6269 :     function transferred(address from, address to, uint256 value)</span></a>
+<a name="156"><span class="lineNum">     156 </span>                :<span class="lineCov">       6335 :     function transferred(address from, address to, uint256 value)</span></a>
 <a name="157"><span class="lineNum">     157 </span>                :            :         public</a>
 <a name="158"><span class="lineNum">     158 </span>                :            :         virtual</a>
 <a name="159"><span class="lineNum">     159 </span>                :            :         override(IERC3643IComplianceContract)</a>
 <a name="160"><span class="lineNum">     160 </span>                :            :         onlyTransferExecutor</a>
 <a name="161"><span class="lineNum">     161 </span>                :            :     {</a>
-<a name="162"><span class="lineNum">     162 </span>                :<span class="lineCov">       6261 :         _transferred(from, to, value);</span></a>
+<a name="162"><span class="lineNum">     162 </span>                :<span class="lineCov">       6327 :         _transferred(from, to, value);</span></a>
 <a name="163"><span class="lineNum">     163 </span>                :            :     }</a>
 <a name="164"><span class="lineNum">     164 </span>                :            : </a>
 <a name="165"><span class="lineNum">     165 </span>                :            :     /**</a>
@@ -320,7 +320,7 @@
 <a name="249"><span class="lineNum">     249 </span>                :            :      * @return True if `caller` is the bound token or the bound RuleEngine.</a>
 <a name="250"><span class="lineNum">     250 </span>                :            :      */</a>
 <a name="251"><span class="lineNum">     251 </span>                :<span class="lineCov">          8 :     function isTransferExecutor(address caller) public view virtual returns (bool) {</span></a>
-<a name="252"><span class="lineNum">     252 </span>                :<span class="lineCov">       6314 :         return isTokenBound(caller) || (caller != address(0) &amp;&amp; caller == ruleEngine);</span></a>
+<a name="252"><span class="lineNum">     252 </span>                :<span class="lineCov">       6380 :         return isTokenBound(caller) || (caller != address(0) &amp;&amp; caller == ruleEngine);</span></a>
 <a name="253"><span class="lineNum">     253 </span>                :            :     }</a>
 <a name="254"><span class="lineNum">     254 </span>                :            : </a>
 <a name="255"><span class="lineNum">     255 </span>                :            :     /**</a>
@@ -408,8 +408,8 @@
 <a name="337"><span class="lineNum">     337 </span>                :            :      *         execution hooks. Both topologies are therefore supported without conflating the two</a>
 <a name="338"><span class="lineNum">     338 </span>                :            :      *         roles of the binding — see {ruleEngine}.</a>
 <a name="339"><span class="lineNum">     339 </span>                :            :      */</a>
-<a name="340"><span class="lineNum">     340 </span>                :<span class="lineCov">       6306 :     function _authorizeTransferExecution() internal view virtual override {</span></a>
-<a name="341"><span class="lineNum">     341 </span>        [<span class="branchCov" title="Branch 0 was taken 10 times"> + </span><span class="branchCov" title="Branch 1 was taken 6296 times"> + </span>]:<span class="lineCov">       6306 :         require(</span></a>
+<a name="340"><span class="lineNum">     340 </span>                :<span class="lineCov">       6372 :     function _authorizeTransferExecution() internal view virtual override {</span></a>
+<a name="341"><span class="lineNum">     341 </span>        [<span class="branchCov" title="Branch 0 was taken 10 times"> + </span><span class="branchCov" title="Branch 1 was taken 6362 times"> + </span>]:<span class="lineCov">       6372 :         require(</span></a>
 <a name="342"><span class="lineNum">     342 </span>                :            :             isTransferExecutor(_msgSender()), RuleConditionalTransferLight_TransferExecutorUnauthorized(_msgSender())</a>
 <a name="343"><span class="lineNum">     343 </span>                :            :         );</a>
 <a name="344"><span class="lineNum">     344 </span>                :            :     }</a>

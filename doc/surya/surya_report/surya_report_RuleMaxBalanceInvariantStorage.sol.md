@@ -5,7 +5,7 @@
 
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
-| ./rules/validation/abstract/invariant/RuleMaxBalanceInvariantStorage.sol | ebe43bc5cc5d3283757e7bdd6ba17efdf75429a0 |
+| ./rules/validation/abstract/invariant/RuleMaxBalanceInvariantStorage.sol | 8245b12b4aafa4973bf7c61f8b2661df832de7a9 |
 
 
 ### Contracts Description Table

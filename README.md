@@ -96,7 +96,7 @@ Each rule splits into a `*Base` contract holding the logic and a deployable vari
 | `RuleIdentityRegistry` | Consults an ERC-3643 identity registry | 55–57 |
 | `RuleMaxTotalSupply` | Caps total supply on mint | 50, 51 |
 | `RuleMaxTotalSupplyERC3643` | Caps total supply on mint, for tokens that mint *first* and call the rule after | 50, 51 |
-| `RuleMaxBalance` | Caps how many tokens one address may hold | 80, 81 |
+| `RuleMaxBalance` | Caps how many tokens one address may hold | 81, 82 |
 | `RuleChainlinkPoR` | Caps minting at Chainlink Proof of Reserve reserves | 75–79 |
 | `RuleChainlinkPoRERC3643` | Caps minting at reported reserves, for tokens that mint *first* and call the rule after | 75–79 |
 | `RuleConditionalTransferLight` | Requires operator approval per transfer | 46, 85 (not bound) |

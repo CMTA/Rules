@@ -25,14 +25,14 @@ abstract contract RuleMaxBalanceInvariantStorage is RuleSharedInvariantStorage {
     /**
      * @notice Restriction code returned when the transfer would push the receiver above {maxBalance}.
      */
-    uint8 public constant CODE_MAX_BALANCE_EXCEEDED = 80;
+    uint8 public constant CODE_MAX_BALANCE_EXCEEDED = 81;
     /**
      * @notice Restriction code returned when `balanceToken.balanceOf(to)` reverts or the token has
      * lost its code, so the receiver's balance cannot be established.
      * @dev Fail-closed: without a balance the cap cannot be verified, so the transfer is blocked
      * rather than assumed safe.
      */
-    uint8 public constant CODE_BALANCE_UNAVAILABLE = 81;
+    uint8 public constant CODE_BALANCE_UNAVAILABLE = 82;
 
     /**
      * @notice Emitted when the maximum balance per holder is updated.

@@ -13,7 +13,7 @@ import {
  * @notice v3.0.0 notifies before moving the value, so `balanceOf(to)` excludes the amount in flight.
  */
 abstract contract RuleMaxBalanceV300Test is CMTATv300TestBase {
-    uint8 constant CODE_MAX_BALANCE = 80;
+    uint8 constant CODE_MAX_BALANCE = 81;
     uint256 constant MAX = 50;
     RuleMaxBalance internal rule;
 

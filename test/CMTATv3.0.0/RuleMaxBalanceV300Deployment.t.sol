@@ -48,7 +48,7 @@ contract RuleMaxBalanceV300DeploymentTest is Test, HelperContract {
         (uint8 code, uint256 headroom) = rule.remainingCapacity(ADDRESS1);
         assertEq(code, TRANSFER_OK);
         assertEq(headroom, CAP);
-        assertEq(token.detectTransferRestriction(ZERO_ADDRESS, ADDRESS1, CAP + 1), 80);
+        assertEq(token.detectTransferRestriction(ZERO_ADDRESS, ADDRESS1, CAP + 1), 81);
 
         token.mint(ADDRESS1, CAP);
         token.mint(ADDRESS2, CAP);
